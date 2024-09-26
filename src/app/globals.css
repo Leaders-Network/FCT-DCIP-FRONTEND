@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 @import "~@fortawesome/fontawesome-free/css/all.min.css";
-
+html{
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
