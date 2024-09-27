@@ -26,7 +26,7 @@ export function Login() {
 export function LoginButton() {
   return (
     <div className="w-[200px] h-[50px] left-[15%] top-[528px] absolute">
-      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold font-['Inter']">
+      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold ">
         Continue
         <span className="w-[30px] h-[30px] absolute right-[15px] top-[9px] flex items-center justify-center bg-white rounded-[50px]">
           <MoveRight color="#000000" />
@@ -41,12 +41,12 @@ export function LoginForm() {
     <form className="w-[400px] h-[163px] left-[15%] top-[100px] absolute">
       <FormInput type="password" placeholder="Password" top="[185]" />
       <div className="w-[198px] h-[30px] relative top-[370px]">
-        <div className="left-0 top-[3px] absolute opacity-50 text-center text-black text-lg font-bold font-['Inter'] leading-[27px]">
+        <div className="left-0 top-[3px] absolute opacity-50 text-center text-black text-lg font-bold  leading-[27px]">
           _______________________
         </div>
         <Link
           href="/reset"
-          className=" left-[4px] top-0 absolute text-center text-black text-lg font-semibold font-['Inter'] leading-[27px]"
+          className=" left-[4px] top-0 absolute text-center text-black text-lg font-semibold  leading-[27px]"
         >
           Reset your password?
         </Link>
@@ -64,7 +64,7 @@ export function FormInput({ type, placeholder, top }: any) {
         <input
           type="password"
           placeholder="Password"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
       <div
@@ -73,7 +73,7 @@ export function FormInput({ type, placeholder, top }: any) {
         <input
           type="email"
           placeholder="Email"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
     </>
@@ -85,14 +85,14 @@ export function Header() {
     <header className="w-[801px] h-[68px] left-[5%] top-[20px] absolute">
       <hr className="left-0 top-[61px] absolute opacity-40 w-full border-t border-[#817e7e]/80" />
       <Logo />
-      <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold font-['Inter'] leading-[27px]">
+      <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold  leading-[27px]">
         Don't have an account?
       </p>
       <Link
         href="/signup"
-        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold font-['Inter'] leading-[27px]"
+        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold  leading-[27px]"
       >
-        Signup
+        Register
       </Link>
     </header>
   );
@@ -146,7 +146,7 @@ export function Logo() {
         />
       </svg>
 
-      <h1 className="ml-4 text-black text-[23px] font-bold font-['Inter']">
+      <h1 className="ml-4 text-black text-[23px] font-bold ">
         FCT- DCIP
       </h1>
     </div>
@@ -156,10 +156,10 @@ export function Logo() {
 export function LoginTitle() {
   return (
     <div className="w-[300px] h-[80px] left-[15%] top-[146px] absolute">
-      <h2 className="text-black text-[35px] font-bold font-['Inter'] leading-[40px]">
+      <h2 className="text-black text-[35px] font-bold  leading-[40px]">
         Log-In
       </h2>
-      <p className="text-black text-[17px] font-semibold font-['Inter'] leading-normal mt-2">
+      <p className="text-black text-[17px] font-semibold  whitespace-nowrap leading-normal mt-2">
         Welcome back! Please enter your details.
       </p>
     </div>

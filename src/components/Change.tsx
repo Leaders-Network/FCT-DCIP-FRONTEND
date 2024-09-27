@@ -2,7 +2,7 @@ import { MoveRight } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-export function ChangePassword() {
+export function Change() {
   return (
     <div className="w-full h-[900px] relative bg-white">
       <div className="w-2/3 h-[900px] left-0 top-0 absolute bg-white" />
@@ -15,18 +15,18 @@ export function ChangePassword() {
         <div className="w-full h-[900px] left-0 top-0 absolute opacity-20 bg-black" />
       </div>
 
-      <SubmitButton />
-      <PasswordForm />
-      <PageHeader />
-      <PasswordChangeTitle />
+      <LoginButton />
+      <LoginForm />
+      <Header />
+      <LoginTitle />
     </div>
   );
 }
 
-export function SubmitButton() {
+export function LoginButton() {
   return (
-    <div className="w-[200px] h-[50px] left-[15%] top-[407px] absolute">
-      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold font-['Inter']">
+    <div className="w-[200px] h-[50px] left-[15%] top-[428px] absolute">
+      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold ">
         Submit
         <span className="w-[30px] h-[30px] absolute right-[15px] top-[9px] flex items-center justify-center bg-white rounded-[50px]">
           <MoveRight color="#000000" />
@@ -36,52 +36,50 @@ export function SubmitButton() {
   );
 }
 
-export function PasswordForm() {
+export function LoginForm() {
   return (
-    <form className="w-[400px] h-[163px] left-[15%] top-[30px] absolute">
-      <PasswordInput type="password" placeholder="New password" top="[189px]" />
-      {/* <PasswordInput type="password" placeholder="Confirm password" top="[285px]" /> */}
-      <div className="w-[198px] h-[30px] relative top-[370px]"></div>
+    <form className="w-[400px] h-[163px] left-[15%] top-[90px] absolute">
+      <FormInput type="password" placeholder="Password" top="[185]" />
     </form>
   );
 }
 
-export function PasswordInput({ type, placeholder, top }: any) {
+export function FormInput({ type, placeholder, top }: any) {
   return (
     <>
       <div
-        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-160px]`}
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-140px]`}
       >
         <input
           type="password"
-          placeholder="Password"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          placeholder="Confirm Password"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
       <div
-        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-80px]`}
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-40px]`}
       >
         <input
-          type="email"
-          placeholder="Email"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          type="password"
+          placeholder="New Password"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
     </>
   );
 }
 
-export function PageHeader() {
+export function Header() {
   return (
     <header className="w-[801px] h-[68px] left-[5%] top-[20px] absolute">
       <hr className="left-0 top-[61px] absolute opacity-40 w-full border-t border-[#817e7e]/80" />
-      <LogoComponent />
-      <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold font-['Inter'] leading-[27px]">
+      <Logo />
+      <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold  leading-[27px]">
         Don't have an account?
       </p>
       <Link
         href="/signup"
-        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold font-['Inter'] leading-[27px]"
+        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold  leading-[27px]"
       >
         Register
       </Link>
@@ -89,7 +87,7 @@ export function PageHeader() {
   );
 }
 
-export function LogoComponent() {
+export function Logo() {
   return (
     <div className="flex items-center">
       <svg
@@ -137,18 +135,16 @@ export function LogoComponent() {
         />
       </svg>
 
-      <h1 className="ml-4 text-black text-[23px] font-bold font-['Inter']">
-        FCT- DCIP
-      </h1>
+      <h1 className="ml-4 text-black text-[23px] font-bold ">FCT- DCIP</h1>
     </div>
   );
 }
 
-export function PasswordChangeTitle() {
+export function LoginTitle() {
   return (
     <div className="w-[300px] h-[80px] left-[15%] top-[146px] absolute">
-      <h2 className="text-black text-[35px] font-bold font-['Inter'] leading-[40px] whitespace-nowrap">
-        Enter new password
+      <h2 className="text-black text-[35px] font-bold whitespace-nowrap leading-[40px]">
+        Enter a new password
       </h2>
     </div>
   );

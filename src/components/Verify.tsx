@@ -28,7 +28,7 @@ export function VerifyPage() {
 export function ContinueButton() {
   return (
     <div className="w-[200px] h-[50px] left-[15%] top-[390px] absolute">
-      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold font-['Inter']">
+      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold ">
         Continue
         <span className="w-[30px] h-[30px] absolute right-[15px] top-[9px] flex items-center justify-center bg-white rounded-[50px]">
           <MoveRight color="#000000" />
@@ -69,13 +69,13 @@ export function OtpInputForm() {
               value={data}
               onChange={(e) => handleChange(e, index)}
               onFocus={(e) => e.target.select()}
-              className="w-[60px] h-[70px] bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 text-center text-2xl font-medium font-['Inter']"
+              className="w-[60px] h-[70px] bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 text-center text-2xl font-medium "
             />
           );
         })}
       </div>
       <div className="w-[198px] h-[30px] relative top-[05px]">
-        <span className="left-[4px] top-0 absolute text-center text-black text-lg font-semibold font-['Inter'] leading-[27px] whitespace-nowrap">
+        <span className="left-[4px] top-0 absolute text-center text-black text-lg font-semibold  leading-[27px] whitespace-nowrap">
           Didn't see it ? Send a new code in {" "}
           <Link href="/resend" className="underline">
             00:59sec
@@ -91,12 +91,12 @@ export function PageHeader() {
     <header className="w-[801px] h-[68px] left-[5%] top-[20px] absolute">
       <hr className="left-0 top-[61px] absolute opacity-40 w-full border-t border-[#817e7e]/80" />
       <LogoComponent />
-      {/* <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold font-['Inter'] leading-[27px]">
+      {/* <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold  leading-[27px]">
         Don't have an account?
       </p> */}
       <Link
         href="/signup"
-        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold font-['Inter'] leading-[27px]"
+        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold  leading-[27px]"
       >
         Login
       </Link>
@@ -152,7 +152,7 @@ export function LogoComponent() {
         />
       </svg>
 
-      <h1 className="ml-4 text-black text-[23px] font-bold font-['Inter']">
+      <h1 className="ml-4 text-black text-[23px] font-bold ">
         FCT- DCIP
       </h1>
     </div>
@@ -162,10 +162,10 @@ export function LogoComponent() {
 export function VerifyTitle() {
   return (
     <div className="w-[300px] h-[80px] left-[15%] top-[146px] absolute">
-      <h2 className="text-black text-[35px] font-bold font-['Inter'] leading-[40px] whitespace-nowrap">
+      <h2 className="text-black text-[35px] font-bold  leading-[40px] whitespace-nowrap">
         OTP Authentication
       </h2>
-      <p className="text-black text-[17px] font-semibold font-['Inter'] leading-normal mt-2">
+      <p className="text-black text-[17px] font-semibold  leading-normal mt-2">
         Please enter the OTP sent to your email.
       </p>
     </div>

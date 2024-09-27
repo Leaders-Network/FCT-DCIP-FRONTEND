@@ -26,7 +26,7 @@ export function Signup() {
 export function SignupButton() {
   return (
     <div className="w-[200px] h-[50px] left-[15%] top-[628px] absolute mt-5">
-      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold font-['Inter']">
+      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold ">
         Sign Up
         <span className="w-[30px] h-[30px] absolute right-[15px] top-[9px] flex items-center justify-center bg-white rounded-[50px]">
           <MoveRight color="#000000" />
@@ -53,7 +53,7 @@ export function FormInput({ type, placeholder, top }: any) {
         <input
           type="password"
           placeholder="Confirm password"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
       <div
@@ -62,7 +62,7 @@ export function FormInput({ type, placeholder, top }: any) {
         <input
           type="password"
           placeholder="Password"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
       <div
@@ -71,7 +71,7 @@ export function FormInput({ type, placeholder, top }: any) {
         <input
           type="email"
           placeholder="Email address"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
       <div
@@ -80,7 +80,7 @@ export function FormInput({ type, placeholder, top }: any) {
         <input
           type="password"
           placeholder="Password"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
       <div
@@ -89,7 +89,7 @@ export function FormInput({ type, placeholder, top }: any) {
         <input
           type="number"
           placeholder="Phone Number"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
       <div
@@ -98,7 +98,7 @@ export function FormInput({ type, placeholder, top }: any) {
         <input
           type="text"
           placeholder="Full name"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
         />
       </div>
     </>
@@ -110,12 +110,12 @@ export function Header() {
     <header className="w-[801px] h-[68px] left-[5%] top-[20px] absolute">
       <hr className="left-0 top-[61px] absolute opacity-40 w-full border-t border-[#817e7e]/80" />
       <Logo />
-      <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold font-['Inter'] leading-[27px]">
+      <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold  leading-[27px]">
         Already have an account?
       </p>
       <Link
         href="/login"
-        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold font-['Inter'] leading-[27px]"
+        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold  leading-[27px]"
       >
         Login
       </Link>
@@ -171,7 +171,7 @@ export function Logo() {
         />
       </svg>
 
-      <h1 className="ml-4 text-black text-[23px] font-bold font-['Inter']">
+      <h1 className="ml-4 text-black text-[23px] font-bold ">
         FCT- DCIP
       </h1>
     </div>
@@ -181,10 +181,10 @@ export function Logo() {
 export function SignupTitle() {
   return (
     <div className="w-[300px] h-[80px] left-[15%] top-[146px] absolute">
-      <h2 className="text-black text-[35px] font-bold font-['Inter'] leading-[40px]">
+      <h2 className="text-black text-[35px] font-bold  leading-[40px]">
         Sign Up
       </h2>
-      <p className="text-black text-[17px] font-semibold font-['Inter'] leading-normal mt-2">
+      <p className="text-black text-[17px] font-semibold  leading-normal mt-2">
         Create an account to get started.
       </p>
     </div>
