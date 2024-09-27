@@ -40,7 +40,7 @@ export function PasswordForm() {
   return (
     <form className="w-[400px] h-[163px] left-[15%] top-[30px] absolute">
       <PasswordInput type="password" placeholder="New password" top="[189px]" />
-      <PasswordInput type="password" placeholder="Confirm password" top="[285px]" />
+      {/* <PasswordInput type="password" placeholder="Confirm password" top="[285px]" /> */}
       <div className="w-[198px] h-[30px] relative top-[370px]"></div>
     </form>
   );
@@ -48,13 +48,26 @@ export function PasswordForm() {
 
 export function PasswordInput({ type, placeholder, top }: any) {
   return (
-    <div className={`w-[400px] h-[70px] left-0 top-${top} absolute`}>
-      <input
-        type={type}
-        placeholder={placeholder}
-        className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
-      />
-    </div>
+    <>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-160px]`}
+      >
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-80px]`}
+      >
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+    </>
   );
 }
 

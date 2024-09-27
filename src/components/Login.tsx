@@ -39,8 +39,7 @@ export function LoginButton() {
 export function LoginForm() {
   return (
     <form className="w-[400px] h-[163px] left-[15%] top-[100px] absolute">
-      <FormInput type="email" placeholder="Email address" top="[189px]" />
-      <FormInput type="password" placeholder="Password" top="[285px]" />
+      <FormInput type="password" placeholder="Password" top="[185]" />
       <div className="w-[198px] h-[30px] relative top-[370px]">
         <div className="left-0 top-[3px] absolute opacity-50 text-center text-black text-lg font-bold font-['Inter'] leading-[27px]">
           _______________________
@@ -58,13 +57,26 @@ export function LoginForm() {
 
 export function FormInput({ type, placeholder, top }: any) {
   return (
-    <div className={`w-[400px] h-[70px] left-0 top-${top} absolute`}>
-      <input
-        type={type}
-        placeholder={placeholder}
-        className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
-      />
-    </div>
+    <>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-140px]`}
+      >
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-40px]`}
+      >
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+    </>
   );
 }
 

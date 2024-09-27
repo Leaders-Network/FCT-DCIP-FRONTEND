@@ -54,7 +54,7 @@ export function ResetForm() {
 
 export function ResetFormInput({ type, placeholder, top }: any) {
   return (
-    <div className={`w-[400px] h-[70px] left-0 top-${top} absolute`}>
+    <div className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-90px]`}>
       <input
         type={type}
         placeholder={placeholder}

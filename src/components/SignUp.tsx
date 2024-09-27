@@ -1,7 +1,8 @@
 import { MoveRight } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
-export function SignUp() {
+export function Signup() {
   return (
     <div className="w-full h-[900px] relative bg-white">
       <div className="w-2/3 h-[900px] left-0 top-0 absolute bg-white" />
@@ -14,19 +15,19 @@ export function SignUp() {
         <div className="w-full h-[900px] left-0 top-0 absolute opacity-20 bg-black" />
       </div>
 
-      <SignUpButton />
-      <SignUpForm />
+      <SignupButton />
+      <SignupForm />
       <Header />
-      <SignUpTitle />
+      <SignupTitle />
     </div>
   );
 }
 
-export function SignUpButton() {
+export function SignupButton() {
   return (
-    <div className="w-[200px] h-[50px] left-[15%] top-[732px] absolute">
+    <div className="w-[200px] h-[50px] left-[15%] top-[628px] absolute mt-5">
       <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold font-['Inter']">
-        Sign-up
+        Sign Up
         <span className="w-[30px] h-[30px] absolute right-[15px] top-[9px] flex items-center justify-center bg-white rounded-[50px]">
           <MoveRight color="#000000" />
         </span>
@@ -35,27 +36,72 @@ export function SignUpButton() {
   );
 }
 
-export function SignUpForm() {
+export function SignupForm() {
   return (
-    <form className="w-[400px] h-[451px] left-[15%] top-[243px] absolute">
-      <FormInput type="text" placeholder="Full name" top="0" />
-      <FormInput type="tel" placeholder="Phone number" top="[93px]" />
-      <FormInput type="email" placeholder="Email address" top="[189px]" />
-      <FormInput type="password" placeholder="Password" top="[285px]" />
-      <FormInput type="password" placeholder="Confirm password" top="[381px]" />
+    <form className="w-[400px] h-[263px] left-[15%] top-[6px] absolute">
+      <FormInput type="text" placeholder="Full Name" />
     </form>
   );
 }
 
 export function FormInput({ type, placeholder, top }: any) {
   return (
-    <div className={`w-[400px] h-[70px] left-0 top-${top} absolute`}>
-      <input
-        type={type}
-        placeholder={placeholder}
-        className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
-      />
-    </div>
+    <>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-340px]`}
+      >
+        <input
+          type="password"
+          placeholder="Confirm password"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-340px]`}
+      >
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-340px]`}
+      >
+        <input
+          type="email"
+          placeholder="Email address"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-240px]`}
+      >
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-140px]`}
+      >
+        <input
+          type="number"
+          placeholder="Phone Number"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+      <div
+        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-40px]`}
+      >
+        <input
+          type="text"
+          placeholder="Full name"
+          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium font-['Inter'] leading-[27px] placeholder-[#222121]/60"
+        />
+      </div>
+    </>
   );
 }
 
@@ -67,12 +113,12 @@ export function Header() {
       <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold font-['Inter'] leading-[27px]">
         Already have an account?
       </p>
-      <a
+      <Link
         href="/login"
         className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold font-['Inter'] leading-[27px]"
       >
         Login
-      </a>
+      </Link>
     </header>
   );
 }
@@ -132,14 +178,14 @@ export function Logo() {
   );
 }
 
-export function SignUpTitle() {
+export function SignupTitle() {
   return (
-    <div className="w-[201px] h-[60px] left-[15%] top-[146px] absolute">
-      <h2 className="text-black text-[35px] font-bold font-['Inter'] leading-[27px]">
-        Sign-Up
+    <div className="w-[300px] h-[80px] left-[15%] top-[146px] absolute">
+      <h2 className="text-black text-[35px] font-bold font-['Inter'] leading-[40px]">
+        Sign Up
       </h2>
-      <p className="text-black text-[17px] font-semibold font-['Inter'] leading-[27px] mt-2">
-        Kindly fill in your details
+      <p className="text-black text-[17px] font-semibold font-['Inter'] leading-normal mt-2">
+        Create an account to get started.
       </p>
     </div>
   );
