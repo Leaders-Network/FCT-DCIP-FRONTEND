@@ -1,104 +1,48 @@
+"use client";
 import { MoveRight } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 
 export function Login() {
   return (
-    <div className="w-full h-[900px] relative bg-white">
-      <div className="w-2/3 h-[900px] left-0 top-0 absolute bg-white" />
-      <div className="w-1/3 h-[900px] right-0 top-0 absolute">
+    <div className="flex h-screen bg-white">
+      <div className="w-2/3 flex flex-col p-8">
+        <Header />
+        <div className="w-full h-px bg-gray-300 mb-6"></div>
+        <main className="flex flex-col justify-center flex-grow max-w-md mx-auto w-full">
+          <LoginTitle />
+          <LoginForm />
+        </main>
+      </div>
+      <div className="w-1/3 relative">
         <img
-          className="w-full h-[900px] left-0 top-0 absolute object-cover"
+          className="w-full h-full object-cover"
           src="/abuja-bg.png"
           alt="Abuja background"
         />
-        <div className="w-full h-[900px] left-0 top-0 absolute opacity-20 bg-black" />
+        <div className="absolute inset-0 bg-black opacity-20" />
       </div>
-
-      <LoginButton />
-      <LoginForm />
-      <Header />
-      <LoginTitle />
     </div>
   );
 }
 
-export function LoginButton() {
+function Header() {
   return (
-    <div className="w-[200px] h-[50px] left-[15%] top-[528px] absolute">
-      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold ">
-        Continue
-        <span className="w-[30px] h-[30px] absolute right-[15px] top-[9px] flex items-center justify-center bg-white rounded-[50px]">
-          <MoveRight color="#000000" />
-        </span>
-      </button>
-    </div>
-  );
-}
-
-export function LoginForm() {
-  return (
-    <form className="w-[400px] h-[163px] left-[15%] top-[100px] absolute">
-      <FormInput type="password" placeholder="Password" top="[185]" />
-      <div className="w-[198px] h-[30px] relative top-[370px]">
-        <div className="left-0 top-[3px] absolute opacity-50 text-center text-black text-lg font-bold  leading-[27px]">
-          _______________________
-        </div>
-        <Link
-          href="/reset"
-          className=" left-[4px] top-0 absolute text-center text-black text-lg font-semibold  leading-[27px]"
-        >
-          Reset your password?
+    <header className="flex justify-between items-center w-full mb-8">
+      <Logo />
+      <div className="flex items-center gap-4">
+        <p className="text-black text-base font-semibold">
+          Don't have an account?
+        </p>
+        <Link href="/signup" className="text-black text-base font-bold">
+          Register
         </Link>
       </div>
-    </form>
-  );
-}
-
-export function FormInput({ type, placeholder, top }: any) {
-  return (
-    <>
-      <div
-        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-140px]`}
-      >
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
-        />
-      </div>
-      <div
-        className={`w-[400px] h-[70px] left-0 top-${top} absolute bottom-[-40px]`}
-      >
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-[400px] h-[70px] left-0 top-0 absolute bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 px-6 text-base font-medium  leading-[27px] placeholder-[#222121]/60"
-        />
-      </div>
-    </>
-  );
-}
-
-export function Header() {
-  return (
-    <header className="w-[801px] h-[68px] left-[5%] top-[20px] absolute">
-      <hr className="left-0 top-[61px] absolute opacity-40 w-full border-t border-[#817e7e]/80" />
-      <Logo />
-      <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold  leading-[27px]">
-        Don't have an account?
-      </p>
-      <Link
-        href="/signup"
-        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold  leading-[27px]"
-      >
-        Register
-      </Link>
     </header>
   );
 }
 
-export function Logo() {
+function Logo() {
   return (
     <div className="flex items-center">
       <svg
@@ -108,6 +52,7 @@ export function Logo() {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
+        {/* SVG path data */}
         <path
           d="M8.25807 27.8996H8.21777L8.85317 30.1912L15.3693 31.1403L14.9389 27.1307C12.7278 27.4867 10.498 27.7432 8.25807 27.8996Z"
           fill="#028835"
@@ -145,23 +90,76 @@ export function Logo() {
           fill="#333F4D"
         />
       </svg>
-
-      <h1 className="ml-4 text-black text-[23px] font-bold ">
-        FCT- DCIP
-      </h1>
+      <h1 className="ml-4 text-black text-2xl font-bold">FCT- DCIP</h1>
     </div>
   );
 }
 
-export function LoginTitle() {
+function LoginTitle() {
   return (
-    <div className="w-[300px] h-[80px] left-[15%] top-[146px] absolute">
-      <h2 className="text-black text-[35px] font-bold  leading-[40px]">
-        Log-In
-      </h2>
-      <p className="text-black text-[17px] font-semibold  whitespace-nowrap leading-normal mt-2">
+    <div className="mb-8">
+      <h2 className="text-black text-4xl font-bold mb-2">Log-In</h2>
+      <p className="text-black text-base font-semibold">
         Welcome back! Please enter your details.
       </p>
     </div>
+  );
+}
+
+function LoginForm() {
+  return (
+    <form className="w-full">
+      <div className="mb-4 relative">
+        <input
+          type="email"
+          id="email"
+          placeholder=" "
+          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+        <label
+          htmlFor="email"
+          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
+        >
+          Email
+        </label>
+      </div>
+
+      <div className="mb-4 relative">
+        <input
+          type="password"
+          id="password"
+          placeholder=" "
+          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+        <label
+          htmlFor="password"
+          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
+        >
+          Password
+        </label>
+      </div>
+
+      <div className="mb-6">
+        <Link
+          href="/reset"
+          className="text-black text-base underline font-medium"
+        >
+          Reset your password?
+        </Link>
+      </div>
+
+      <LoginButton />
+    </form>
+  );
+}
+
+function LoginButton() {
+  return (
+    <button className="w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-base font-semibold flex items-center justify-evenly">
+      Continue
+      <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
+        <MoveRight color="#000000" size={20} />
+      </span>
+    </button>
   );
 }

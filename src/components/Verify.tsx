@@ -4,107 +4,46 @@ import { MoveRight } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 
-export function VerifyPage() {
+export default function Verify() {
   return (
-    <div className="w-full h-[900px] relative bg-white">
-      <div className="w-2/3 h-[900px] left-0 top-0 absolute bg-white" />
-      <div className="w-1/3 h-[900px] right-0 top-0 absolute">
+    <div className="flex h-screen bg-white">
+      <div className="w-2/3 flex flex-col p-8">
+        <Header />
+        <div className="w-full h-px bg-gray-300 mb-6"></div>
+        <main className="flex flex-col justify-center flex-grow max-w-md mx-auto w-full">
+          <VerifyTitle />
+          <OtpInputForm />
+        </main>
+      </div>
+      <div className="w-1/3 relative">
         <img
-          className="w-full h-[900px] left-0 top-0 absolute object-cover"
+          className="w-full h-[900px] object-cover"
           src="/abuja-bg.png"
           alt="Abuja background"
         />
-        <div className="w-full h-[900px] left-0 top-0 absolute opacity-20 bg-black" />
+        <div className="absolute inset-0 bg-black opacity-20" />
       </div>
-
-      <ContinueButton />
-      <OtpInputForm />
-      <PageHeader />
-      <VerifyTitle />
     </div>
   );
 }
 
-export function ContinueButton() {
+function Header() {
   return (
-    <div className="w-[200px] h-[50px] left-[15%] top-[390px] absolute">
-      <button className="w-[200px] h-[50px] left-0 top-0 absolute bg-[#028835] rounded-[50px] text-white text-lg font-semibold ">
-        Continue
-        <span className="w-[30px] h-[30px] absolute right-[15px] top-[9px] flex items-center justify-center bg-white rounded-[50px]">
-          <MoveRight color="#000000" />
-        </span>
-      </button>
-    </div>
-  );
-}
-
-export function OtpInputForm() {
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-
-  const handleChange = (
-    element: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) => {
-    if (isNaN(Number(element.target.value))) return false;
-
-    setOtp([
-      ...otp.map((d, idx) => (idx === index ? element.target.value : d)),
-    ]);
-
-    if (element.target.nextSibling && element.target.value !== "") {
-      (element.target.nextSibling as HTMLElement).focus();
-    }
-  };
-
-  return (
-    <form className="w-[400px] h-[163px] left-[15%] top-[250px] absolute">
-      <div className="flex justify-between mb-4">
-        {otp.map((data, index) => {
-          return (
-            <input
-              key={index}
-              type="text"
-              name="otp"
-              maxLength={1}
-              value={data}
-              onChange={(e) => handleChange(e, index)}
-              onFocus={(e) => e.target.select()}
-              className="w-[60px] h-[70px] bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 text-center text-2xl font-medium "
-            />
-          );
-        })}
+    <header className="flex justify-between items-center w-full mb-8">
+      <Logo />
+      <div className="flex items-center gap-4">
+        <Link
+          href="/signup"
+          className="text-black text-[17px] font-bold leading-[27px]"
+        >
+          Login
+        </Link>
       </div>
-      <div className="w-[198px] h-[30px] relative top-[05px]">
-        <span className="left-[4px] top-0 absolute text-center text-black text-lg font-semibold  leading-[27px] whitespace-nowrap">
-          Didn't see it ? Send a new code in {" "}
-          <Link href="/resend" className="underline">
-            00:59sec
-          </Link>
-        </span>
-      </div>
-    </form>
-  );
-}
-
-export function PageHeader() {
-  return (
-    <header className="w-[801px] h-[68px] left-[5%] top-[20px] absolute">
-      <hr className="left-0 top-[61px] absolute opacity-40 w-full border-t border-[#817e7e]/80" />
-      <LogoComponent />
-      {/* <p className="right-[100px] top-[12px] absolute text-center text-black text-[17px] font-semibold  leading-[27px]">
-        Don't have an account?
-      </p> */}
-      <Link
-        href="/signup"
-        className="right-0 top-[12px] absolute text-center text-black text-[17px] font-bold  leading-[27px]"
-      >
-        Login
-      </Link>
     </header>
   );
 }
 
-export function LogoComponent() {
+function Logo() {
   return (
     <div className="flex items-center">
       <svg
@@ -151,23 +90,80 @@ export function LogoComponent() {
           fill="#333F4D"
         />
       </svg>
-
-      <h1 className="ml-4 text-black text-[23px] font-bold ">
-        FCT- DCIP
-      </h1>
+      <h1 className="ml-4 text-black text-[23px] font-bold">FCT- DCIP</h1>
     </div>
   );
 }
 
-export function VerifyTitle() {
+function VerifyTitle() {
   return (
-    <div className="w-[300px] h-[80px] left-[15%] top-[146px] absolute">
-      <h2 className="text-black text-[35px] font-bold  leading-[40px] whitespace-nowrap">
+    <div className="mb-8">
+      <h2 className="text-black text-[35px] font-bold leading-[40px] whitespace-nowrap">
         OTP Authentication
       </h2>
-      <p className="text-black text-[17px] font-semibold  leading-normal mt-2">
+      <p className="text-black text-[17px] font-semibold leading-normal mt-2">
         Please enter the OTP sent to your email.
       </p>
     </div>
+  );
+}
+
+function OtpInputForm() {
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+
+  const handleChange = (
+    element: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    if (isNaN(Number(element.target.value))) return false;
+
+    setOtp([
+      ...otp.map((d, idx) => (idx === index ? element.target.value : d)),
+    ]);
+
+    if (element.target.nextSibling && element.target.value !== "") {
+      (element.target.nextSibling as HTMLElement).focus();
+    }
+  };
+
+  return (
+    <form className="w-full gap-2">
+      <div className="flex justify-between mb-4">
+        {otp.map((data, index) => {
+          return (
+            <input
+              key={index}
+              type="text"
+              name="otp"
+              maxLength={1}
+              value={data}
+              onChange={(e) => handleChange(e, index)}
+              onFocus={(e) => e.target.select()}
+              className="w-[60px] h-[70px] bg-[#f6f6f6] rounded-[10px] border border-[#a8a8a8]/50 text-center text-2xl font-medium"
+            />
+          );
+        })}
+      </div>
+      <div className="w-[198px] h-[30px] relative top-[05px] mb-8">
+        <span className="left-[4px] top-0 absolute text-center text-black text-lg font-semibold leading-[27px] whitespace-nowrap">
+          Didn't see it ? Send a new code in{" "}
+          <Link href="/resend" className="underline">
+            00:59sec
+          </Link>
+        </span>
+      </div>
+      <ContinueButton />
+    </form>
+  );
+}
+
+function ContinueButton() {
+  return (
+    <button className="w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-lg font-semibold flex items-center justify-evenly">
+      Continue
+      <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
+        <MoveRight color="#000000" size={20} />
+      </span>
+    </button>
   );
 }
