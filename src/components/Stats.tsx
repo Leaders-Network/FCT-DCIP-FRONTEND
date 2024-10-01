@@ -26,7 +26,7 @@ const stats = [
 
 const Stats = () => {
   return (
-    <section className="bg-[#004C3F] py-8"> {/* Adjusted padding */}
+    <section className="bg-[#004C3F] py-8 relative"> {/* Adjusted padding */}
       <div className="container mx-auto px-4">
         <div className="flex justify-between"> {/* Changed to flex layout */}
           {stats.map((stat, index) => (
