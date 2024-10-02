@@ -1,87 +1,123 @@
-import React from 'react';
+'use client'
+import React, { useState } from 'react';
 import { MapPin, Clock, Phone } from 'lucide-react';
-import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa'; // Import the correct icons
-
+import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 import Link from 'next/link';
 import { FiSearch } from 'react-icons/fi';
-import { CgMenuLeft } from 'react-icons/cg';
+import { CgMenuLeft, CgClose } from 'react-icons/cg';
 
 const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <header className="bg-white shadow-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-2 text-sm">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <MapPin className="w-4 h-4 text-green-600 mr-1" />
-              <span>Abuja, Nigeria 110111</span>
+      {/* Top bar */}
+      <div className="bg-gray-100 py-2 hidden md:block">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center text-sm">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center">
+                <MapPin className="w-4 h-4 text-green-600 mr-1" />
+                <span className="text-gray-600">Abuja, Nigeria 110111</span>
+              </div>
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 text-green-600 mr-1" />
+                <span className="text-gray-600">Sunday-Friday 9am-8pm</span>
+              </div>
             </div>
-            <div className="flex items-center">
-              <Clock className="w-4 h-4 text-green-600 mr-1" />
-              <span>Sunday-Friday 9am-8pm</span> {/* Updated time */}
+            <div className="flex items-center space-x-4">
+              <a href="#" className="text-gray-600 hover:text-green-600">
+                <FaFacebookF size={16} />
+              </a>
+              <a href="#" className="text-gray-600 hover:text-green-600">
+                <FaInstagram size={16} />
+              </a>
+              <a href="#" className="text-gray-600 hover:text-green-600">
+                <FaTwitter size={16} />
+              </a>
+              <a href="#" className="text-gray-600 hover:text-green-600">
+                <FaLinkedinIn size={16} />
+              </a>
             </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <a
-              href="#"
-              className="text-gray-600 cursor-pointer hover:text-green-600"
-            >
-              <FaFacebookF size={16} /> {/* Updated icon */}
-            </a>
-            <a href="#" className="text-gray-600 hover:text-green-600">
-              <FaInstagram size={16} color="currentColor" /> {/* Updated icon */}
-            </a>
-            <a href="#" className="text-gray-600 hover:text-green-600">
-              <FaTwitter size={16} color="currentColor" /> {/* Updated icon */}
-            </a>
-            <a href="#" className="text-gray-600 hover:text-green-600">
-              <FaLinkedinIn size={16} /> {/* Updated icon */}
-            </a>
-            <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
-              Get Started <span className="ml-2">→</span> {/* Added arrow */}
-            </button>
           </div>
         </div>
       </div>
-      <nav className="bg-white border-t border-gray-200">
+
+      {/* Main navigation */}
+      <nav className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-4">
             <Link href="/" className="text-2xl font-bold text-green-600">
               FCT-DCIP
             </Link>
-            <div className="flex items-center space-x-6">
+
+            {/* Desktop menu */}
+            <div className="hidden md:flex items-center space-x-6">
               <Link href="/" className="text-gray-600 hover:text-green-600">
                 Home
               </Link>
-              <Link
-                href="/about"
-                className="text-gray-600 hover:text-green-600"
-              >
+              <Link href="/about" className="text-gray-600 hover:text-green-600">
                 About
               </Link>
               <Link href="/faq" className="text-gray-600 hover:text-green-600">
                 FAQ
               </Link>
-              <Link
-                href="/contact"
-                className="text-gray-600 hover:text-green-600"
-              >
+              <Link href="/contact" className="text-gray-600 hover:text-green-600">
                 Contact
               </Link>
             </div>
-            <div className="flex items-center space-x-4">
-              <Phone className="w-5 h-5 text-green-600" />
-              <span className="font-semibold">(234) 555-0129</span>
-              <span className="w-5 h-5 ">
-                <FiSearch />
-              </span>
 
-              <span className="w-5 h-5  cursor-pointer">
-                <CgMenuLeft />
-              </span>
+            {/* Desktop actions */}
+            <div className="hidden md:flex items-center space-x-4">
+              <div className="flex items-center">
+                <Phone className="w-5 h-5 text-green-600 mr-2" />
+                <span className="font-semibold">(234) 555-0129</span>
+              </div>
+              <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
+                Get Started <span className="ml-2">→</span>
+              </button>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-gray-600 hover:text-green-600 focus:outline-none"
+              >
+                {isMenuOpen ? <CgClose size={24} /> : <CgMenuLeft size={24} />}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <Link href="/" className="block px-3 py-2 text-gray-600 hover:text-green-600">
+                Home
+              </Link>
+              <Link href="/about" className="block px-3 py-2 text-gray-600 hover:text-green-600">
+                About
+              </Link>
+              <Link href="/faq" className="block px-3 py-2 text-gray-600 hover:text-green-600">
+                FAQ
+              </Link>
+              <Link href="/contact" className="block px-3 py-2 text-gray-600 hover:text-green-600">
+                Contact
+              </Link>
+            </div>
+            <div className="px-4 py-3 border-t border-gray-200">
+              <div className="flex items-center mb-3">
+                <Phone className="w-5 h-5 text-green-600 mr-2" />
+                <span className="font-semibold">(234) 555-0129</span>
+              </div>
+              <button className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center">
+                Get Started <span className="ml-2">→</span>
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
     </header>
   );
