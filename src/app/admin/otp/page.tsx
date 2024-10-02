@@ -1,25 +1,10 @@
 'use client'
-import AuthLayout from '@/components/admin/AuthLayout'
 import OTPAuthentication from '@/components/admin/OTPAuthentication'
 import Image from 'next/image';
 import React, { useState } from 'react'
 
-const page = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showOTP, setShowOTP] = useState(false);
-
-  const handleLogin = () => {
-    // Simulating successful login
-    setShowOTP(true);
-  };
-
-  const handleOTPVerify = (otp: string) => {
-    // Simulating OTP verification
-    console.log("OTP verified:", otp);
-    setIsLoggedIn(true);
-    setShowOTP(false);
-  };
-
+const Page = () => {
+ 
   return (
     <div
       className="items-center justify-center bg-cover bg-center min-h-screen"
@@ -39,7 +24,7 @@ const page = () => {
             </h3>
           </div>
         <div className="w-full max-w-md">
-          <OTPAuthentication onVerify={handleOTPVerify} />
+          <OTPAuthentication onVerify={() => {}} />
           
           </div>
        </main>
@@ -48,4 +33,4 @@ const page = () => {
   );
 }
 
-export default page
+export default Page

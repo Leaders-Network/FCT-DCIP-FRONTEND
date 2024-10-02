@@ -1,7 +1,8 @@
 "use client";
 import { MoveRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React from "react";
 
 export default function Reset() {
   return (
@@ -16,7 +17,7 @@ export default function Reset() {
         </main>
       </div>
       <div className="w-1/3 relative">
-        <img
+        <Image
           className="w-full h-[900px] object-cover"
           src="/abuja-bg.png"
           alt="Abuja background"

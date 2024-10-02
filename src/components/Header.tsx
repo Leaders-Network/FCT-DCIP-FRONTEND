@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { MapPin, Clock, Phone } from 'lucide-react';
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 import Link from 'next/link';
-import { FiSearch } from 'react-icons/fi';
 import { CgMenuLeft, CgClose } from 'react-icons/cg';
 
 const Header = () => {

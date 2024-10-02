@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { ArrowRight } from "lucide-react";
 import Button from "../Button";
 import Input from "../Input";
 
