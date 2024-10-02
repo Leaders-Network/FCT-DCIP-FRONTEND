@@ -26,19 +26,32 @@ const stats = [
 
 const Stats = () => {
   return (
-    <section className="bg-[#004C3F] py-8 relative"> {/* Adjusted padding */}
+    <section className="bg-[#004C3F] py-8 relative">
+      {" "}
+      {/* Adjusted padding */}
       <div className="container mx-auto px-4">
-        <div className="flex justify-between"> {/* Changed to flex layout */}
+        <div className="flex justify-between">
+          {" "}
+          {/* Changed to flex layout */}
           {stats.map((stat, index) => (
-            <div key={index} className="flex items-center"> {/* Changed to horizontal layout */}
-              <div className="bg-green-500 rounded-full p-3 mr-3"> {/* Added circular green background */}
+            <div
+              key={index}
+              className="flex flex-col md:flex-row items-center "
+            >
+              {" "}
+              {/* Changed to horizontal layout */}
+              <div className="bg-green-500 rounded-full p-3 md:mr-3">
+                {" "}
+                {/* Added circular green background */}
                 {stat.icon}
               </div>
-              <div>
-                <div className="text-2xl text-white font-bold"> {/* Adjusted text size */}
+              <div className=" mx-4">
+                <div className="text-xl md:text-2xl text-white font-bold">
+                  {" "}
                   {stat.value}
                 </div>
-                <div className="text-white text-sm"> {/* Adjusted text size */}
+                <div className="text-white text-xs md:text-base">
+                  {" "}
                   {stat.label}
                 </div>
               </div>

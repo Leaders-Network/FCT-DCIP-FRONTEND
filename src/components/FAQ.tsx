@@ -34,8 +34,8 @@ const FAQ = () => {
   return (
     <section className="py-16 bg-[#004C3F]">
       <div className="container mx-auto px-4">
-        <div className="flex">
-          <div className="w-1/2 pr-8">
+        <div className="flex flex-col md:flex-row">
+          <div className="w-full items-center justify-center md:pr-8">
             <Image
               src="/house.png"
               alt="House protected by hands"
@@ -44,8 +44,8 @@ const FAQ = () => {
               className="rounded-lg"
             />
           </div>
-          <div className="w-1/2">
-            <h2 className="text-3xl font-bold text-white mb-8">
+          <div className="w-full">
+            <h2 className="text-xl md:text-3xl mt-3 font-bold text-white mb-8">
               Frequently Asked Questions
             </h2>
             <div className="bg-white rounded-lg p-6">
