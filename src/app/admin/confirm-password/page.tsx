@@ -1,12 +1,12 @@
 import AuthLayout from '@/components/admin/AuthLayout'
-import NewPassword from '@/components/admin/NewPassword'
+import Success from '@/components/admin/Success'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
       <AuthLayout>
-        <NewPassword />
+        <Success />
       </AuthLayout>
     </div>
   )
