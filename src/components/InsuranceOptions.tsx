@@ -66,7 +66,7 @@ const InsuranceOptions = () => {
 
           <div className="grid grid-cols-1  gap-8">
             <div className="bg-gray-100 p-6 rounded-md">
-              <img
+              <Image
                 src="/occup.jpg"
                 alt="Occupier Liability Insurance Icon"
                 className="w-12 h-auto mb-4"
@@ -84,7 +84,7 @@ const InsuranceOptions = () => {
               </p>
             </div>
             <div className="bg-gray-100 p-6 rounded-md">
-              <img
+              <Image
                 src="/occup.jpg"
                 alt="Builders Liability Insurance Icon"
                 className="w-12 h-auto mb-4"

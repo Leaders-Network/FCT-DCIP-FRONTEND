@@ -1,5 +1,5 @@
 import React from "react";
-import { MapPin, Phone, Mail } from "lucide-react";
+import { MapPin} from "lucide-react";
 
 const ContactForm = () => {
   return (
@@ -43,8 +43,7 @@ const ContactForm = () => {
               <div className="mb-4">
                 <textarea
                   placeholder="Message"
-                  //@ts-ignore
-                  rows="4"
+                  // rows="4"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
                 ></textarea>
               </div>

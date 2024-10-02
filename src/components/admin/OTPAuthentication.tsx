@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Button from "../Button";
 
@@ -65,7 +64,7 @@ const OTPAuthentication: React.FC<OTPAuthenticationProps> = ({ onVerify }) => {
         </div>
         <div className="flex items-center justify-between mb-6">
           <span className="text-sm text-gray-600">
-            Didn't see it?{" "}
+            Didn't see it?
             {timer > 0 ? (
               <span>
                 Send a new code in {timer.toString().padStart(2, "0")}sec

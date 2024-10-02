@@ -6,10 +6,10 @@ import Image from 'next/image';
 const Success = () => {
  
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle login logic here
-  };
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     // Handle login logic here
+//   };
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
