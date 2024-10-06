@@ -35,7 +35,7 @@ function Header() {
       <Logo />
       <div className="flex items-center gap-4">
         <p className="text-black text-base font-semibold">
-          Don't have an account?
+          Don&apos;t have an account?
         </p>
         <Link href="/signup" className="text-black text-base font-bold">
           Register
