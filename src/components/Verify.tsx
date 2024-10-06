@@ -149,7 +149,7 @@ function OtpInputForm() {
       </div>
       <div className="w-[198px] h-[30px] relative top-[05px] mb-8">
         <span className="left-[4px] top-0 absolute text-center text-black text-lg font-semibold leading-[27px] whitespace-nowrap">
-          Didn't see it ? Send a new code in{" "}
+          Didn&apos;t see it ? Send a new code in{" "}
           <Link href="/resend" className="underline">
             00:59sec
           </Link>
