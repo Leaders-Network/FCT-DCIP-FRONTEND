@@ -18,6 +18,8 @@ export default function Verify() {
       </div>
       <div className="w-1/3 relative">
         <Image
+          width={100}
+          height={100}
           className="w-full h-[900px] object-cover"
           src="/abuja-bg.png"
           alt="Abuja background"

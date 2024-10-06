@@ -18,6 +18,8 @@ export function Login() {
       <div className="w-1/3 relative">
         <Image
           className="w-full h-full object-cover"
+          width={100}
+          height={100}
           src="/abuja-bg.png"
           alt="Abuja background"
         />
