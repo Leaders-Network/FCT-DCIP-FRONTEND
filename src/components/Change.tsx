@@ -19,6 +19,8 @@ export default function Change() {
       <div className="w-1/3 relative">
         <Image
           className="w-full h-[900px] object-cover"
+          width={100}
+          height={100}
           src="/abuja-bg.png"
           alt="Abuja background"
         />
