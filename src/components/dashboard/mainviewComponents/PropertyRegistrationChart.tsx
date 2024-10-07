@@ -27,7 +27,7 @@ const PropertyRegistrationChart: React.FC = () => {
       {
         label: "Property Registrations",
         data: [92, 68, 58, 110, 98, 50, 78, 72],
-        backgroundColor: "#4CAF50",
+        backgroundColor: "#028835", // Updated color
       },
     ],
   };
@@ -44,6 +44,10 @@ const PropertyRegistrationChart: React.FC = () => {
         text: "Property Registration Report",
         font: {
           size: 16, // Smaller font size for mobile
+        },
+        align: "start" as const,
+        padding: {
+          bottom: 20, // Add bottom padding to create margin
         },
       },
     },
@@ -63,6 +67,11 @@ const PropertyRegistrationChart: React.FC = () => {
             size: 12, // Smaller font size for axis labels
           },
         },
+      },
+    },
+    elements: {
+      bar: {
+        borderRadius: 20, // This adds rounded corners to the top of the bars
       },
     },
   };

@@ -1,6 +1,7 @@
 "use client";
 
 import { MoveRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
@@ -16,7 +17,7 @@ export default function SignUp() {
         </main>
       </div>
       <div className="w-1/3 relative">
-        <img
+        <Image
           className="w-full h-[900px] object-cover"
           src="/abuja-bg.png"
           alt="Abuja background"
