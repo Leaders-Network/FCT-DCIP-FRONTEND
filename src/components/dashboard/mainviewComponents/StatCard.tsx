@@ -1,8 +1,8 @@
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
 import React from "react";
 
 interface StatCardProps {
-  icon: any;
+  icon: string | StaticImageData;
   value: string;
   label: string;
   color: string;

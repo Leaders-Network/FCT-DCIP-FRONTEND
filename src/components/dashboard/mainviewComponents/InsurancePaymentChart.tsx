@@ -43,6 +43,13 @@ const InsurancePaymentChart: React.FC = () => {
       title: {
         display: true,
         text: "Insurance Payment Report",
+        align: "start" as const,
+        font: {
+          size: 16, // Smaller font size for mobile
+        },
+        padding: {
+          bottom: 20, // Add bottom padding to create margin
+        },
       },
     },
     scales: {

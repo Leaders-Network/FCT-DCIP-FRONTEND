@@ -37,25 +37,29 @@ const Sidebar = () => {
           href="/dashboard"
           className="flex items-center px-4 py-2 bg-green-500 text-white"
         >
-          <span className="mr-2">⊞</span> Dashboard
+          <Image src="/dashboard/dashboard.png" alt="Dashboard" className="mr-2" width={20} height={20} />
+          Dashboard
         </Link>
         <Link
           href="/insurance"
           className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
         >
-          <span className="mr-2">🏠</span> Insurance
+          <Image src="/dashboard/insurance.png" alt="Insurance" className="mr-2" width={20} height={20} />
+          Insurance
         </Link>
         <Link
           href="/users"
           className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
         >
-          <span className="mr-2">👥</span> Users
+          <Image src="/dashboard/people.png" alt="Users" className="mr-2" width={20} height={20} />
+          Users
         </Link>
         <Link
           href="/settings"
           className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
         >
-          <span className="mr-2">⚙️</span> Settings
+          <Image src="/dashboard/setting.png" alt="Settings" className="mr-2" width={20} height={20} />
+          Settings
         </Link>
       </nav>
     </aside>
