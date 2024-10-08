@@ -53,7 +53,7 @@ const PropertyStatusChart: React.FC = () => {
         <div className="w-2/3">
           <Pie
             data={data}
-            //@ts-expect-error
+            //@ts-expect-error the option must be an object
             options={options}
           />
         </div>

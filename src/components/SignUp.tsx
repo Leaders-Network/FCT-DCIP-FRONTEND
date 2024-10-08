@@ -21,6 +21,8 @@ export default function SignUp() {
           className="w-full h-[900px] object-cover"
           src="/abuja-bg.png"
           alt="Abuja background"
+          width={500}
+          height={900}
         />
         <div className="absolute inset-0 bg-black opacity-20" />
       </div>
