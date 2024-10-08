@@ -1,5 +1,5 @@
 import React from "react";
-import { Bell, Search, Users, Settings } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import Link from "next/link";
 
 const Dashboard = () => {
@@ -100,7 +100,10 @@ const Dashboard = () => {
               </Link>
             </div>
             <div className="flex items-center px-4">
-              <Link className="flex gap-1 items-center" href="/dashboard/insurance">
+              <Link
+                className="flex gap-1 items-center"
+                href="/dashboard/insurance"
+              >
                 <svg
                   width="21"
                   height="21"
@@ -120,7 +123,10 @@ const Dashboard = () => {
               </Link>
             </div>
             <div className="flex items-center px-4">
-              <Link className="flex gap-1 items-center" href="/dashbaord/claims">
+              <Link
+                className="flex gap-1 items-center"
+                href="/dashbaord/claims"
+              >
                 <svg
                   width="20"
                   height="20"
@@ -218,7 +224,10 @@ const Dashboard = () => {
               </Link>
             </div>
             <div className="flex items-center px-4">
-              <Link className="flex gap-1 items-center" href="/dashboard/settings">
+              <Link
+                className="flex gap-1 items-center"
+                href="/dashboard/settings"
+              >
                 <svg
                   width="24"
                   height="24"
