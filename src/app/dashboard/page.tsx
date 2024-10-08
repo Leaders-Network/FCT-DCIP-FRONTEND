@@ -148,12 +148,12 @@ const Dashboard = () => {
               </div>
               <div className="absolute inset-0 flex flex-col justify-center p-4">
                 <div className="text-white text-sm sm:text-base md:text-lg lg:text-[17px] font-bold mb-2">
-                  Life is unpredictable, but your home insurance doesn't have to
-                  be.
+                  Life is unpredictable, but your home insurance doesn&apos;t
+                  have to be.
                 </div>
                 <div className="text-white text-xs sm:text-sm md:text-base lg:text-[13px] font-medium">
-                  Get peace of mind with a policy that covers you against life's
-                  unexpected twists
+                  Get peace of mind with a policy that covers you against
+                  life&apos;s unexpected twists
                 </div>
               </div>
               <div className="absolute right-2 sm:right-4 bottom-2 sm:bottom-4">
