@@ -276,7 +276,7 @@ const Dashboard = () => {
 
           {/* Full-width Banner */}
           <div className="px-4 sm:px-8">
-            <div className="w-full h-[133px] sm:h-[160px] md:h-[180px] lg:h-[200px] relative mb-6">
+            <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] lg:h-[160px] relative mb-6">
               <div className="w-full h-full absolute">
                 <div className="w-full h-full absolute opacity-20 bg-white rounded-xl border border-black" />
                 <img
@@ -288,15 +288,15 @@ const Dashboard = () => {
               </div>
               <div className="absolute inset-0 flex flex-col justify-center p-4">
                 <div className="text-white text-sm sm:text-base md:text-lg lg:text-[17px] font-bold mb-2">
-                  Life is unpredictable, but your home insurance doesn&apos;t
+                  Life is unpredictable, but your home insurance doesn't
                   have to be.
                 </div>
                 <div className="text-white text-xs sm:text-sm md:text-base lg:text-[13px] font-medium">
                   Get peace of mind with a policy that covers you against
-                  life&apos;s unexpected twists
+                  life's unexpected twists
                 </div>
               </div>
-              <div className="absolute lg:mb-16 right-2 sm:right-4 bottom-2 sm:bottom-4">
+              <div className="absolute lg:mb-12 right-2 sm:right-4 bottom-2 sm:bottom-4">
                 <button className="px-2 sm:px-4 py-1 sm:py-2 bg-white rounded-[40px] text-[#028835] text-sm sm:text-base lg:text-lg font-semibold flex items-center">
                   <div className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 bg-[#028835] rounded-full mr-1 sm:mr-2 flex items-center justify-center">
                     <svg
