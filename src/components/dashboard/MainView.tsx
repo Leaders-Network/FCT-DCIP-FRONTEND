@@ -18,41 +18,42 @@ const MainView = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold">Hi Blessing</h1>
           <button className="bg-[#028835] text-white px-4 py-2 rounded-full flex items-center">
-            <span className="bg-black rounded-full w-6 h-6 pt-[2px] items-center justify-center mr-2  leading-none">+</span>
+            <span className="bg-black rounded-full w-6 h-6 pt-[2px] items-center justify-center mr-2  leading-none">
+              +
+            </span>
             New Insurance
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon={profile}
-          value="12,481"
-          label="Total Users"
-          color="bg-pink-100"
-        />
-        <StatCard
-          icon={property}
-          value="42,432"
-          label="Total Properties"
-          color="bg-cyan-100"
-        />
-        <StatCard
-          icon={lga}
-          value="2,567"
-          label="L.G.A Covered"
-          color="bg-yellow-100"
-        />
-        <StatCard
-          icon={insurance}
-          value="57,480"
-          label="Insurance Company"
-          color="bg-blue-100"
-        />
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <StatCard
+              icon={profile}
+              value="12,481"
+              label="Total Users"
+              color="bg-pink-100"
+            />
+            <StatCard
+              icon={property}
+              value="42,432"
+              label="Total Properties"
+              color="bg-cyan-100"
+            />
+            <StatCard
+              icon={lga}
+              value="2,567"
+              label="L.G.A Covered"
+              color="bg-yellow-100"
+            />
+            <StatCard
+              icon={insurance}
+              value="57,480"
+              label="Insurance Company"
+              color="bg-blue-100"
+            />
+          </div>
           <PropertyRegistrationChart />
           <InsurancePaymentChart />
         </div>
