@@ -2,65 +2,73 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
 
   const toggleSidebar = () => {
-    setIsOpen(!isOpen);
+    setIsCollapsed(!isCollapsed);
   };
 
-  if (!isOpen) {
-    return (
-      <button
-        onClick={toggleSidebar}
-        className="fixed top-4 left-4 p-2 bg-white shadow-md rounded-full"
-      >
-        ☰
-      </button>
-    );
-  }
+  const menuItems = [
+    { href: "/admin/dashboard", label: "Dashboard", icon: "/dashboard/dashboard.png" },
+    { href: "/admin/dashboard/insurance", label: "Insurance", icon: "/dashboard/insurance.png" },
+    { href: "/admin/dashboard/users", label: "Users", icon: "/dashboard/user.png" },
+    { href: "/admin/dashboard/members", label: "Members", icon: "/dashboard/people.png" },
+    { href: "/admin/dashboard/settings", label: "Settings", icon: "/dashboard/setting.png" },
+  ];
 
   return (
-    <aside className="w-64 bg-white shadow-md">
-      <div className="p-4 flex justify-between items-center">
-        <Image src="/logoblack.svg" alt="FCT-DCIP Logo" className="bg-black-500" width={100} height={100} />
-        <button
-          onClick={toggleSidebar}
-          className="p-2 rounded-full hover:bg-gray-100"
-        >
-          ✕
-        </button>
+    <aside
+      className={`bg-white shadow-md transition-all duration-300 ${
+        isCollapsed ? "w-16" : "w-64"
+      }`}
+    >
+      <div></div>
+      <div className="p-4 flex justify-between items-center relative">
+        {!isCollapsed ? (
+          <Image
+            src="/logoblack.svg"
+            alt="FCT-DCIP Logo"
+            className="bg-black-500"
+            width={isCollapsed ? 150 : 300}
+            height={isCollapsed ? 150 : 300}
+            onClick={toggleSidebar}
+          />
+        ) : (
+          <button
+            onClick={toggleSidebar}
+            className="p-1 text-2xl rounded-full hover:bg-gray-100 "
+          >
+            ☰{/* {isCollapsed ? "☰" : "✕"} */}
+          </button>
+        )}
       </div>
       <nav className="mt-8">
-        <Link
-          href="/dashboard"
-          className="flex items-center px-4 py-2 bg-green-500 text-white"
-        >
-          <Image src="/dashboard/dashboard.png" alt="Dashboard" className="mr-2" width={20} height={20} />
-          Dashboard
-        </Link>
-        <Link
-          href="/insurance"
-          className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-        >
-          <Image src="/dashboard/insurance.png" alt="Insurance" className="mr-2" width={20} height={20} />
-          Insurance
-        </Link>
-        <Link
-          href="/users"
-          className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-        >
-          <Image src="/dashboard/people.png" alt="Users" className="mr-2" width={20} height={20} />
-          Users
-        </Link>
-        <Link
-          href="/settings"
-          className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-        >
-          <Image src="/dashboard/setting.png" alt="Settings" className="mr-2" width={20} height={20} />
-          Settings
-        </Link>
+        {menuItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center px-4 py-2 ${
+              pathname === item.href
+                ? "bg-green-500 text-white"
+                : "text-gray-700 hover:bg-gray-100"
+            } ${isCollapsed ? "justify-center" : ""}`}
+          >
+            <Image
+              src={item.icon}
+              alt={item.label}
+              className={`${isCollapsed ? "" : "mr-2"} ${
+                pathname === item.href ? "filter invert" : ""
+              }`}
+              width={20}
+              height={20}
+            />
+            {!isCollapsed && item.label}
+          </Link>
+        ))}
       </nav>
     </aside>
   );

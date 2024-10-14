@@ -3,7 +3,7 @@ import React from "react";
 
 const NotificationPanel: React.FC = () => {
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
+    <div className="bg-white p-4 rounded-lg shadow lg:h-[600px]">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Notifications</h2>
         <button className="text-blue-500">View All</button>
