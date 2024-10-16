@@ -1,8 +1,15 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { Bell, Search } from "lucide-react";
 import Link from "next/link";
+import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty";
 
 const Dashboard = () => {
+  const [showAddNewProperty, setShowAddNewProperty] = useState(false);
+
+  const toggleAddNewProperty = () => {
+    setShowAddNewProperty(!showAddNewProperty);
+  };
   return (
     <div className="w-full min-h-screen bg-[#f8f8f8] font-sans flex flex-col">
       {/* Header */}
@@ -297,7 +304,10 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="absolute lg:mb-12 right-2 sm:right-4 bottom-2 sm:bottom-4">
-                <button className="px-2 sm:px-4 py-1 sm:py-2 bg-white rounded-[40px] text-[#028835] text-sm sm:text-base lg:text-lg font-semibold flex items-center">
+                <button
+                  onClick={toggleAddNewProperty}
+                  className="px-2 sm:px-4 py-1 sm:py-2 bg-white rounded-[40px] text-[#028835] text-sm sm:text-base lg:text-lg font-semibold flex items-center"
+                >
                   <div className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 bg-[#028835] rounded-full mr-1 sm:mr-2 flex items-center justify-center">
                     <svg
                       width="12"
@@ -668,6 +678,10 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      <AddNewProperty
+        isOpen={showAddNewProperty}
+        onClose={() => setShowAddNewProperty(false)}
+      />
     </div>
   );
 };
