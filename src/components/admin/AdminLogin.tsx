@@ -28,7 +28,7 @@ const AdminLogin: React.FC = () => {
             type="email"
             placeholder="Enter your email Address"
             value={email}
-            onChange={setEmail}
+            handleChange={setEmail}
             required
           />
         </div>
@@ -38,7 +38,7 @@ const AdminLogin: React.FC = () => {
             type="password"
             placeholder="Enter your password"
             value={password}
-            onChange={setPassword}
+            handleChange={setPassword}
             required
           />
         </div>
