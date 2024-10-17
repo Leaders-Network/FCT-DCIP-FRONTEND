@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+"use client";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 import Image from "next/image";
 
 interface AddNewPropertyProps {
@@ -6,32 +7,42 @@ interface AddNewPropertyProps {
   onClose: () => void;
 }
 
+interface FormData {
+  category: string;
+  address: string;
+  contactOnProperty: string;
+}
+
 const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     category: "",
     address: "",
     contactOnProperty: "",
   });
 
+  const [images, setImages] = useState<string[]>([]);
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
     onClose();
   };
-  const [images, setImages] = useState([]);
 
-  const handleImageUpload = (event: any) => {
-    const files = Array.from(event.target.files);
-    const newImages = files.map((file) => URL.createObjectURL(file));
-    setImages((prevImages) => [...prevImages, ...newImages]);
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const files = Array.from(event.target.files);
+      const newImages = files.map((file) => URL.createObjectURL(file));
+      setImages((prevImages) => [...prevImages, ...newImages]);
+    }
   };
+
   return (
     <>
       {isOpen && (
