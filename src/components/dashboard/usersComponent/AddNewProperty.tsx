@@ -32,6 +32,12 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
+    setFormData({
+      category: "",
+      address: "",
+      contactOnProperty: "",
+    });
+    setImages([]);
     onClose();
   };
 
