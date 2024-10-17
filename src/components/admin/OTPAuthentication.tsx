@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import Button from "../Button";
 
@@ -7,40 +7,41 @@ interface OTPAuthenticationProps {
 }
 
 const OTPAuthentication: React.FC<OTPAuthenticationProps> = ({ onVerify }) => {
-  const [otp, setOtp] = useState(["", "", "", "", ""]);
+  const [otp, setOtp] = useState<string[]>(Array(5).fill(""));
   const [timer, setTimer] = useState(30);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimer((prevTimer) => (prevTimer > 0 ? prevTimer - 1 : 0));
+      setTimer((prevTimer) => Math.max(prevTimer - 1, 0));
     }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const handleChange = (index: number, value: string) => {
+  const handleChange = useCallback((index: number, value: string) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
+      setOtp((prevOtp) => {
+        const newOtp = [...prevOtp];
+        newOtp[index] = value;
+        return newOtp;
+      });
 
-      // Move focus to the next input
       if (value && index < 4) {
         const nextInput = document.getElementById(`otp-${index + 1}`);
         nextInput?.focus();
       }
     }
-  };
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     onVerify(otp.join(""));
-  };
+  }, [otp, onVerify]);
 
-  const handleResend = () => {
+  const handleResend = useCallback(() => {
     // Implement resend logic here
     setTimer(30);
-  };
+  }, []);
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
@@ -64,7 +65,7 @@ const OTPAuthentication: React.FC<OTPAuthenticationProps> = ({ onVerify }) => {
         </div>
         <div className="flex items-center justify-between mb-6">
           <span className="text-sm text-gray-600">
-            Didn&apos;t see it?
+            Didn't see it?
             {timer > 0 ? (
               <span>
                 Send a new code in {timer.toString().padStart(2, "0")}sec
@@ -80,9 +81,7 @@ const OTPAuthentication: React.FC<OTPAuthenticationProps> = ({ onVerify }) => {
             )}
           </span>
         </div>
-                  <Button title="Continue" onClick={() => {}} />
-
-      
+        <Button title="Continue" onClick={() => handleSubmit(new Event('submit') as unknown as React.FormEvent)} />
       </form>
     </div>
   );
