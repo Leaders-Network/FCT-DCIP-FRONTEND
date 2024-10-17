@@ -1,6 +1,3 @@
-import Header from "@/components/dashboard/Header";
-import MainView from "@/components/dashboard/MainView";
-import Sidebar from "@/components/dashboard/Sidebar";
 import React from "react";
 import MainViewPage from "./mainview/page";
 
