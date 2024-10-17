@@ -10,6 +10,7 @@ const AdminLogin: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle login logic here
+    //log out details 
     console.log("Login attempted with:", email, password);
   };
 
