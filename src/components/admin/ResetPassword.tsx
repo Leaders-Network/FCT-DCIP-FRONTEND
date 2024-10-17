@@ -25,7 +25,7 @@ const ResetPassword = () => {
               type="email"
               placeholder="Enter your email Address"
               value={email}
-              onChange={setEmail}
+              handleChange={setEmail}
               required
             />
           </div>

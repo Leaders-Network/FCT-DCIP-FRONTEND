@@ -25,7 +25,7 @@ const NewPassword = () => {
             type="email"
             placeholder="Enter your email Address"
             value={email}
-            onChange={setEmail}
+            handleChange={setEmail}
             required
           />
         </div>
@@ -35,7 +35,7 @@ const NewPassword = () => {
             type="password"
             placeholder="Enter your password"
             value={password}
-            onChange={setPassword}
+            handleChange={setPassword}
             required
           />
         </div>
