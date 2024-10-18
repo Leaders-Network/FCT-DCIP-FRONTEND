@@ -5,7 +5,7 @@ import Button from "../Button";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
-const OTPAuthentication = () => {
+const OTPAuthentication = ({ onVerify }: { onVerify: () => void }) => {
   const [otp, setOtp] = useState<string[]>(Array(5).fill(""));
   const [timer, setTimer] = useState(30);
   const [loading, setLoading] = useState(false);
