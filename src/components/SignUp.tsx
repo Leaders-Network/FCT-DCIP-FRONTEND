@@ -3,7 +3,7 @@
 import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 
 export default function SignUp() {
   return (
@@ -110,6 +110,11 @@ function SignUpTitle() {
 }
 
 function SignUpForm() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   return (
     <form className="w-full gap-2">
       <div className="mb-4 relative">
@@ -117,6 +122,8 @@ function SignUpForm() {
           type="text"
           id="fullName"
           placeholder=" "
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         <label
@@ -130,6 +137,8 @@ function SignUpForm() {
         <input
           type="email"
           id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder=" "
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
@@ -144,6 +153,8 @@ function SignUpForm() {
         <input
           type="tel"
           id="phone"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
           placeholder=" "
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
@@ -158,6 +169,8 @@ function SignUpForm() {
         <input
           type="password"
           id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           placeholder=" "
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
@@ -172,6 +185,8 @@ function SignUpForm() {
         <input
           type="password"
           id="confirmPassword"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder=" "
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
@@ -183,14 +198,122 @@ function SignUpForm() {
         </label>
       </div>
 
-      <SignUpButton />
+      <SignUpButton
+        fullName={fullName}
+        phone={phoneNumber}
+        email={email}
+        password={password}
+        confirmPassword={confirmPassword}
+      />
     </form>
   );
 }
 
-function SignUpButton() {
+function SignUpButton({
+  fullName,
+  phone,
+  email,
+  password,
+  confirmPassword,
+}: {
+  fullName: string;
+  phone: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Validation
+    const errors: string[] = [];
+
+    // Check if fields are present
+    if (!fullName.trim()) errors.push("Full Name is required");
+    if (!phone.trim()) errors.push("Phone is required");
+    if (!email.trim()) errors.push("Email is required");
+    if (!password.trim()) errors.push("Password is required");
+    if (!confirmPassword.trim()) errors.push("Confirm Password is required");
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email)) errors.push("Invalid email format");
+
+    // Validate phone number (simple check for digits only)
+    const phoneRegex = /^\d+$/;
+    if (phone && !phoneRegex.test(phone))
+      errors.push("Phone number should contain only digits");
+
+    // Validate password strength (example: at least 8 characters)
+    if (password && password.length < 8)
+      errors.push("Password should be at least 8 characters long");
+
+    // Check if passwords match
+    if (password !== confirmPassword) errors.push("Passwords do not match");
+
+    if (errors.length > 0) {
+      // If there are errors, log them and stop the submission
+      console.log("Validation errors:", errors);
+      alert(errors[0]);
+      setIsLoading(false);
+      return;
+    }
+
+    // If validation passes, proceed with sign-up logic
+    console.log("Full Name:", fullName);
+    console.log("Phone:", phone);
+    console.log("Email:", email);
+    console.log("Password:", password);
+    console.log("Confirm Password:", confirmPassword);
+
+    // Add your sign-up API call here
+    const ApiKey =
+      process.env.API_KEY ||
+      "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+
+    try {
+      const response = await fetch(
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/register",
+        {
+          method: "POST",
+          headers: {
+            apiKey: `${ApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fullname: fullName,
+            phonenumber: phone,
+            email,
+            password,
+            confirmpassword: confirmPassword,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(result);
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
+    } finally {
+      setIsLoading(false);
+    }
+
+  };
   return (
-    <button className="w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-base font-semibold flex items-center justify-evenly">
+    <button
+      onClick={handleSubmit}
+      disabled={isLoading}
+      className={`w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-base font-semibold flex items-center justify-evenly ${
+        isLoading ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+    >
       Sign Up
       <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
         <MoveRight color="#000000" size={20} />
