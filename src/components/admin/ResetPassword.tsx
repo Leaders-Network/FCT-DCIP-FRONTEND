@@ -17,14 +17,19 @@ const ResetPassword = () => {
         setError("");
 
         try {
-          const response = await axios.post('https://fct-dcip-backend-1.onrender.com/api/v1/auth/loginEmployee', {
-            email,
-            password: "placeholder" // We're not actually logging in, just getting a token
-          }, {
-            headers: {
-              'apiKey': '4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c'
+          const response = await axios.post(
+            "https://fct-dcip-backend-1.onrender.com/api/v1/auth/send-reset-password-otp",
+            {
+              email,
+              password: "placeholder", // We're not actually logging in, just getting a token
+            },
+            {
+              headers: {
+                apiKey:
+                  "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
+              },
             }
-          });
+          );
 
           const token = response.data.token;
           localStorage.setItem('resetToken', token);
