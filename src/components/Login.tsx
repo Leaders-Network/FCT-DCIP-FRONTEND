@@ -2,7 +2,7 @@
 import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 
 export function Login() {
   return (
@@ -110,12 +110,17 @@ function LoginTitle() {
 }
 
 function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   return (
     <form className="w-full">
       <div className="mb-4 relative">
         <input
           type="email"
           id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder=" "
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
@@ -131,6 +136,8 @@ function LoginForm() {
         <input
           type="password"
           id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           placeholder=" "
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
@@ -151,18 +158,60 @@ function LoginForm() {
         </Link>
       </div>
 
-      <LoginButton />
+      <LoginButton email={email} password={password} />
     </form>
   );
 }
 
-function LoginButton() {
+function LoginButton({ email, password }: { email: string; password: string }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    console.log("submitted", email, password);
+    const ApiKey =
+      process.env.API_KEY ||
+      "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+
+    try {
+      const response = await fetch(
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "apiKey": `${ApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(result);
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <button className="w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-base font-semibold flex items-center justify-evenly">
-      Continue
-      <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
-        <MoveRight color="#000000" size={20} />
-      </span>
+    <button
+      onClick={handleSubmit}
+      disabled={isLoading}
+      className={`w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-base font-semibold flex items-center justify-evenly ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+    >
+      {isLoading ? 'Loading...' : 'Continue'}
+      {!isLoading && (
+        <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
+          <MoveRight color="#000000" size={20} />
+        </span>
+      )}
     </button>
   );
 }
