@@ -1,16 +1,35 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import AddAdminForm from './usersComponent/AddAdminForm'
+import axios from 'axios'
 
 const Users = () => {
-  const users = [
-    { id: '001', name: 'Mike Afolabi', email: 'mikeafoo1@gmail.com', phone: '08132748906', status: 'Active', dateOfReg: 'April 02, 2024' },
-    { id: '002', name: 'Paul Blessing', email: 'pblessing731@gmail.com', phone: '08037820378', status: 'Active', dateOfReg: 'May 05, 2024' },
-    { id: '003', name: 'Emmanuel Sam', email: 'samuelsemako2@gmail.com', phone: '08109273326', status: 'Suspended', dateOfReg: 'July 20, 2024' },
-    { id: '004', name: 'Charles Clement', email: 'charlesclet@gmail.com', phone: '09093278906', status: 'Active', dateOfReg: 'Aug 23, 2024' },
-    { id: '005', name: 'Benjamin Joseph', email: 'benjaminboy@gmail.com', phone: '09001145666', status: 'Inactive', dateOfReg: 'Nov 24, 2024' },
-    
-  ]
+  const [users, setUsers] = useState([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectAll, setSelectAll] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await axios.get(
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/getUsers",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apiKey: "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
+          },
+        }
+      );
+      setUsers(response.data.users);
+    } catch (error) {
+      console.error("Failed to fetch users", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
@@ -25,13 +44,10 @@ const Users = () => {
     }
   }
 
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
-    setSelectedUsers(isChecked ? users.map(user => user.id) : []);
+    setSelectedUsers(isChecked ? users.map((user: any) => user.id) : []);
   };
 
   const handleSelectUser = (userId: string) => {
@@ -42,10 +58,12 @@ const Users = () => {
     );
   };
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
   const openForm = () => setIsFormOpen(true);
   const closeForm = () => setIsFormOpen(false);
+
+  const handleAdminAdded = () => {
+    fetchUsers();
+  };
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 relative">
@@ -83,7 +101,7 @@ const Users = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
+            {users.map((user: any) => (
               <tr key={user.id}>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                   <input
@@ -150,7 +168,7 @@ const Users = () => {
           </tbody>
         </table>
       </div>
-      <AddAdminForm isOpen={isFormOpen} onClose={closeForm} />
+      <AddAdminForm isOpen={isFormOpen} onClose={closeForm} onAdminAdded={handleAdminAdded} />
     </div>
   );
 }
