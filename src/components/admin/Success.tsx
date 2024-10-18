@@ -2,14 +2,14 @@
 import React from 'react'
 import Button from '../Button';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const Success = () => {
- 
+  const router = useRouter();
 
-//   const handleSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     // Handle login logic here
-//   };
+  const handleProceedToLogin = () => {
+    router.push('/admin/login'); // Adjust this path to your login page
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
@@ -21,7 +21,7 @@ const Success = () => {
         Your password has been changed successfully
       </p>
       <div className="flex items-center justify-between mb-6">
-        <Button title="Proceed to login" onClick={() => {}} />
+        <Button title="Proceed to login" onClick={handleProceedToLogin} />
       </div>
     </div>
   );

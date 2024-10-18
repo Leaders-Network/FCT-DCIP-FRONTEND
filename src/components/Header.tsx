@@ -7,6 +7,10 @@ import { CgMenuLeft, CgClose } from 'react-icons/cg';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   return (
     <header className="bg-white shadow-sm">
@@ -72,7 +76,10 @@ const Header = () => {
                 <Phone className="w-5 h-5 text-green-600 mr-2" />
                 <span className="font-semibold">(234) 555-0129</span>
               </div>
-              <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
+              <button
+                onClick={openModal}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center"
+              >
                 Get Started <span className="ml-2">→</span>
               </button>
             </div>
@@ -111,8 +118,44 @@ const Header = () => {
                 <Phone className="w-5 h-5 text-green-600 mr-2" />
                 <span className="font-semibold">(234) 555-0129</span>
               </div>
-              <button className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center">
+              <button
+                onClick={openModal}
+                className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
+              >
                 Get Started <span className="ml-2">→</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Login Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded-lg shadow-lg">
+              <h2 className="text-2xl font-bold mb-4">Login</h2>
+              <div className="space-y-4">
+                <button
+                  onClick={() => {/* Handle admin login */}}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Link href="/admin/login">
+                  Admin Login
+                  </Link>
+                </button>
+                <button
+                  onClick={() => {/* Handle staff login */}}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <Link href="/staff/login">
+                  Staff Login
+                  </Link>
+                </button>
+              </div>
+              <button
+                onClick={closeModal}
+                className="mt-4 text-gray-600 hover:text-gray-800"
+              >
+                Close
               </button>
             </div>
           </div>

@@ -1,21 +1,24 @@
 import Input from "@/components/Input";
 import Image from "next/image";
 import React, { useState } from "react";
+import axios from "axios";
 
 interface AddAdminFormProps {
   isOpen: boolean;
   onClose: () => void;
+  onAdminAdded: () => void;
 }
 
-const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose }) => {
+const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose, onAdminAdded }) => {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
-    phoneNumber: "",
-    role: "",
-    status: "",
+    phonenumber: "",
+    employeeRole: "",
+    employeeStatus: "",
   });
+  const [error, setError] = useState("");
 
   const handleChange = (field: string) => (value: string) => {
     setFormData((prevData) => ({ ...prevData, [field]: value }));
@@ -26,12 +29,76 @@ const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose }) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission logic here
-    console.log("Form submitted:", formData);
-    onClose();
-  };
+ const handleSubmit = async (e: React.FormEvent) => {
+   e.preventDefault();
+   setError("");
+
+   // Validate phone number
+   const phoneRegex = /^\+?[0-9]{10,14}$/;
+   if (!phoneRegex.test(formData.phonenumber)) {
+     setError("Please provide a valid phone number (10-14 digits)");
+     return;
+   }
+
+   // Ensure role and status are selected
+   if (!formData.employeeRole || !formData.employeeStatus) {
+     setError("Please select both role and status");
+     return;
+   }
+
+   try {
+     const token = localStorage.getItem("authToken");
+
+     if (!token) {
+       setError("Authentication token not found. Please log in again.");
+       return;
+     }
+
+     // Create a modified payload with the correct structure
+     const payload = {
+       ...formData,
+       // Ensure these fields are sent as proper MongoDB ObjectIds
+       roleId: formData.employeeRole.trim(),
+       statusId: formData.employeeStatus.trim(),
+     };
+
+     console.log("Modified payload being sent:", payload);
+
+     const response = await axios.post(
+       "https://fct-dcip-backend-1.onrender.com/api/v1/auth/registerEmployee",
+       payload,
+       {
+         headers: {
+           "Content-Type": "application/json",
+           apiKey:
+             "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
+           Authorization: `Bearer ${token}`,
+         },
+       }
+     );
+
+     console.log("API Response:", response.data);
+
+     if (response.data && response.data.success) {
+       onAdminAdded();
+       onClose();
+     } else {
+       setError("Failed to register new admin. Please try again.");
+     }
+   } catch (error) {
+     if (axios.isAxiosError(error) && error.response) {
+       console.error("API Error:", error.response.data);
+       const errorMessage =
+         error.response.data.error?.message ||
+         error.response.data.message ||
+         "Registration failed";
+       setError(errorMessage);
+     } else {
+       console.error("Unexpected error:", error);
+       setError("An unexpected error occurred. Please try again.");
+     }
+   }
+ };
 
   return (
     <>
@@ -88,15 +155,15 @@ const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose }) => {
                 <Input
                   label="First Name:"
                   type="text"
-                  value={formData.firstName}
-                  handleChange={handleChange("firstName")}
+                  value={formData.firstname}
+                  handleChange={handleChange("firstname")}
                   required
                 />
                 <Input
                   label="Last Name:"
                   type="text"
-                  value={formData.lastName}
-                  handleChange={handleChange("lastName")}
+                  value={formData.lastname}
+                  handleChange={handleChange("lastname")}
                   required
                 />
                 <Input
@@ -109,48 +176,51 @@ const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose }) => {
                 <Input
                   label="Phone Number:"
                   type="tel"
-                  value={formData.phoneNumber}
-                  handleChange={handleChange("phoneNumber")}
+                  value={formData.phonenumber}
+                  handleChange={handleChange("phonenumber")}
                   required
+                  placeholder="Enter 10-14 digit number"
                 />
                 <div className="relative">
                   <select
-                    name="role"
-                    value={formData.role}
+                    name="employeeRole"
+                    value={formData.employeeRole}
                     onChange={handleSelectChange}
                     className="peer w-full p-3 md:p-4 border border-gray-300 outline-none bg-gray-100 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     required
                   >
-                    {/* <option value="">--Select Role--</option> */}
-                    <option value="SuperAdmin">SuperAdmin</option>
-                    <option value="admin">Admin</option>
-                    <option value="staff">Staff</option>
+                    <option value="">--Select Role--</option>
+                    <option value="67097fb4f07f5547278be6a3">
+                      Super Admin
+                    </option>
+                    <option value="67097fb4f07f5547278be6a4">Admin</option>
+                    <option value="67097fb4f07f5547278be6a5">Staff</option>
                   </select>
                   <label className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-focus:text-green-500">
-                    --Select Role--
+                    Role
                   </label>
                 </div>
                 <div className="relative">
                   <select
-                    name="status"
-                    value={formData.status}
+                    name="employeeStatus"
+                    value={formData.employeeStatus}
                     onChange={handleSelectChange}
                     className="peer w-full p-3 md:p-4 border border-gray-300 outline-none bg-gray-100 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     required
                   >
-                    {/* <option value="">--Select Status--</option> */}
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
+                    <option value="">--Select Status--</option>
+                    <option value="67097fb3f07f5547278be69e">Active</option>
+                    <option value="67097fb3f07f5547278be69f">Inactive</option>
                   </select>
                   <label className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-focus:text-green-500">
-                    --Select Status--
+                    Status
                   </label>
                 </div>
               </div>
+              {error && <p className="text-red-500 mt-2">{error}</p>}
               <button
                 type="submit"
-                className=" mt-6 flex items-center gap-1 bg-[#028835] font-semibold text-white p-4 px-10 rounded hover:bg-[#026d2a] transition duration-300"
+                className="mt-6 flex items-center gap-1 bg-[#028835] font-semibold text-white p-4 px-10 rounded hover:bg-[#026d2a] transition duration-300"
               >
                 <Image
                   src="/dashboard/mark.png"

@@ -1,14 +1,16 @@
+'use client'
 import React, { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import Button from "../Button";
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
-interface OTPAuthenticationProps {
-  onVerify: (otp: string) => void;
-}
-
-const OTPAuthentication: React.FC<OTPAuthenticationProps> = ({ onVerify }) => {
+const OTPAuthentication = () => {
   const [otp, setOtp] = useState<string[]>(Array(5).fill(""));
   const [timer, setTimer] = useState(30);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -17,6 +19,29 @@ const OTPAuthentication: React.FC<OTPAuthenticationProps> = ({ onVerify }) => {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    sendResetPasswordOTP();
+  }, []);
+
+  const sendResetPasswordOTP = async () => {
+    const token = localStorage.getItem('resetToken');
+    if (!token) {
+      setError("No reset token found. Please try again.");
+      return;
+    }
+
+    try {
+      await axios.post('https://fct-dcip-backend-1.onrender.com/api/v1/auth/send-reset-password-otp', {}, {
+        headers: {
+          'apiKey': '4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (err) {
+      setError("Failed to send OTP. Please try again.");
+    }
+  };
 
   const handleChange = useCallback((index: number, value: string) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
@@ -33,13 +58,15 @@ const OTPAuthentication: React.FC<OTPAuthenticationProps> = ({ onVerify }) => {
     }
   }, []);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    onVerify(otp.join(""));
-  }, [otp, onVerify]);
+    const enteredOTP = otp.join("");
+    localStorage.setItem('enteredOTP', enteredOTP);
+    router.push("/admin/new-password");
+  }, [otp, router]);
 
   const handleResend = useCallback(() => {
-    // Implement resend logic here
+    sendResetPasswordOTP();
     setTimer(30);
   }, []);
 
