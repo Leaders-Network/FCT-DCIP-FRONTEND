@@ -77,6 +77,7 @@ const RegisterEmployee = () => {
           },
         }
       );
+      console.log(response.data);
 
       // Handle successful registration
       router.push("/admin/registration-success");

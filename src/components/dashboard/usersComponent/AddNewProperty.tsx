@@ -147,7 +147,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                         key={index}
                         className="w-24 h-24 bg-gray-100 flex items-center justify-center overflow-hidden"
                       >
-                        <img
+                        <Image
                           src={image}
                           alt={`Uploaded ${index + 1}`}
                           className="object-cover w-full h-full"

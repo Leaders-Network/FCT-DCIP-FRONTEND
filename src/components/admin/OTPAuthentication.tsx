@@ -5,11 +5,9 @@ import Button from "../Button";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
-const OTPAuthentication = ({ onVerify }: { onVerify: () => void }) => {
+const OTPAuthentication = () => {
   const [otp, setOtp] = useState<string[]>(Array(5).fill(""));
   const [timer, setTimer] = useState(30);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -27,7 +25,7 @@ const OTPAuthentication = ({ onVerify }: { onVerify: () => void }) => {
   const sendResetPasswordOTP = async () => {
     const token = localStorage.getItem('resetToken');
     if (!token) {
-      setError("No reset token found. Please try again.");
+      console.error("No reset token found. Please try again.");
       return;
     }
 
@@ -38,8 +36,8 @@ const OTPAuthentication = ({ onVerify }: { onVerify: () => void }) => {
           'Authorization': `Bearer ${token}`
         }
       });
-    } catch (err) {
-      setError("Failed to send OTP. Please try again.");
+    } catch {
+      console.error("Failed to send OTP. Please try again.");
     }
   };
 
@@ -115,3 +113,4 @@ const OTPAuthentication = ({ onVerify }: { onVerify: () => void }) => {
 };
 
 export default OTPAuthentication;
+

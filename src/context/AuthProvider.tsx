@@ -1,9 +1,17 @@
 "use client";
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import axios from "axios";
 
+interface User {
+  // Define user properties here, for example:
+  id: string;
+  email: string;
+  name: string;
+  firstname: string;
+}
+
 interface AuthContextType {
-  user: any;
+  user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -14,19 +22,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      // Verify token and set user
-      verifyToken(token);
-    }
-  }, []);
-
-  const verifyToken = async (token: string) => {
+  const verifyToken = useCallback(async (token: string) => {
     try {
       const response = await axios.get("https://your-api.com/verify-token", {
         headers: { Authorization: `Bearer ${token}` },
@@ -37,7 +36,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Token verification failed", error);
       logout();
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      // Verify token and set user
+      verifyToken(token);
+    }
+  }, [verifyToken]);
 
   const login = async (email: string, password: string) => {
     try {
