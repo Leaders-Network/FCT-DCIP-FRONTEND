@@ -112,7 +112,7 @@ function VerifyTitle() {
 }
 
 function OtpInputForm() {
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", ""]);
 
   const handleChange = (
     element: React.ChangeEvent<HTMLInputElement>,
@@ -155,15 +155,126 @@ function OtpInputForm() {
           </Link>
         </span>
       </div>
-      <ContinueButton />
+      <ContinueButton otp={otp} />
     </form>
   );
 }
 
-function ContinueButton() {
+function ContinueButton({ otp }: { otp: string[] }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleverify = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    setIsLoading(true);
+    if (
+      otp[0] === "" ||
+      otp[1] === "" ||
+      otp[2] === "" ||
+      otp[3] === "" ||
+      otp[4] === ""
+    ) {
+      alert("Please enter a complete OTP");
+      return;
+    }
+
+    const otpString = otp.join("");
+    console.log(otpString);
+
+    const PendinguserData = localStorage.getItem("pendinguser");
+    if (!PendinguserData) {
+      alert("User data not found. Please log in again.");
+      return;
+    }
+
+    const pendinguser = JSON.parse(PendinguserData);
+    console.log(pendinguser);
+    const email = pendinguser.email;
+
+    const ApiKey =
+      process.env.API_KEY ||
+      "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+
+    try {
+      // First API call: Verify OTP
+      const verifyResponse = await fetch(
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/verify-otp",
+        {
+          method: "POST",
+          headers: {
+            apiKey: `${ApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            otp: otpString,
+          }),
+        }
+      );
+
+      if (!verifyResponse.ok) {
+        throw new Error(`HTTP error! status: ${verifyResponse.status}`);
+      }
+
+      const verifyResult = await verifyResponse.json();
+      console.log(verifyResult);
+
+      if (verifyResult.success) {
+        alert("OTP verification successful: " + verifyResult.message);
+
+        // If verification is successful, proceed with registration
+        const registerResponse = await fetch(
+          "https://fct-dcip-backend-1.onrender.com/api/v1/auth/register",
+          {
+            method: "POST",
+            headers: {
+              apiKey: `${ApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fullname: pendinguser.fullName,
+              phonenumber: pendinguser.phone,
+              email: pendinguser.email,
+              password: pendinguser.password,
+              confirmpassword: pendinguser.password,
+            }),
+          }
+        );
+
+        if (!registerResponse.ok) {
+          throw new Error(`HTTP error! status: ${registerResponse.status}`);
+        }
+
+        const registerResult = await registerResponse.json();
+        console.log(registerResult);
+
+        if (registerResult.success) {
+          alert(
+            "Registration successful: " + "Welcome " + registerResult.user.name
+          );
+          //clear pendinguser data
+          localStorage.removeItem("pendinguser");
+          // Add code here to redirect user or update UI as needed
+        } else {
+          alert("Registration failed: " + registerResult.message);
+        }
+      } else {
+        alert("OTP verification failed: " + verifyResult.message);
+      }
+    } catch (error) {
+      console.error("There was a problem with the operation:", error);
+      alert("An error occurred. Please try again.");
+    }
+
+    setIsLoading(false);
+  };
   return (
-    <button className="w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-lg font-semibold flex items-center justify-evenly">
-      Continue
+    <button
+      onClick={handleverify}
+      disabled={isLoading}
+      className="w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-lg font-semibold flex items-center justify-evenly"
+    >
+      {isLoading ? "Verifying..." : "Verify"}
+
       <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
         <MoveRight color="#000000" size={20} />
       </span>

@@ -8,8 +8,8 @@ import { resendOTP, verifyOTP } from "@/services/api";
 const OTPAuthentication = () => {
   const [otp, setOtp] = useState<string[]>(Array(5).fill(""));
   const [timer, setTimer] = useState(30);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -138,3 +138,4 @@ const OTPAuthentication = () => {
 };
 
 export default OTPAuthentication;
+

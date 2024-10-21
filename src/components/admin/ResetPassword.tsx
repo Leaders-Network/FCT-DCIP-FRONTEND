@@ -7,8 +7,6 @@ import { initiatePasswordReset } from '@/services/api';
 
 const ResetPassword = () => {
       const [email, setEmail] = useState("");
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState("");
       const router = useRouter();
 
       const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +25,6 @@ const ResetPassword = () => {
           setLoading(false);
         }
       };
-
   return (
     <div>
       <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
@@ -65,3 +62,4 @@ const ResetPassword = () => {
 }
 
 export default ResetPassword
+

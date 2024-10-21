@@ -3,6 +3,7 @@
 import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 export default function SignUp() {
@@ -223,6 +224,7 @@ function SignUpButton({
   confirmPassword: string;
 }) {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,7 +270,7 @@ function SignUpButton({
     console.log("Email:", email);
     console.log("Password:", password);
     console.log("Confirm Password:", confirmPassword);
-
+    //store data in localstorage in json
     // Add your sign-up API call here
     const ApiKey =
       process.env.API_KEY ||
@@ -276,7 +278,7 @@ function SignUpButton({
 
     try {
       const response = await fetch(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/register",
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/request-otp",
         {
           method: "POST",
           headers: {
@@ -284,11 +286,7 @@ function SignUpButton({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            fullname: fullName,
-            phonenumber: phone,
             email,
-            password,
-            confirmpassword: confirmPassword,
           }),
         }
       );
@@ -296,9 +294,12 @@ function SignUpButton({
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+      
       const result = await response.json();
+      alert(result.message);
       console.log(result);
+      localStorage.setItem("pendinguser", JSON.stringify({ fullName, phone, email ,password}));
+      router.push("/verify")
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
     } finally {
@@ -314,7 +315,7 @@ function SignUpButton({
         isLoading ? "opacity-50 cursor-not-allowed" : ""
       }`}
     >
-      Sign Up
+      { isLoading ? "Signing Up" : " Sign Up" }
       <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
         <MoveRight color="#000000" size={20} />
       </span>
