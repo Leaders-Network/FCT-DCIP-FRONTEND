@@ -22,7 +22,7 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const response = await axios.get(
+      const response = await axios.get<{ users: User[] }>(
         "https://fct-dcip-backend-1.onrender.com/api/v1/auth/getUsers",
         {
           headers: {

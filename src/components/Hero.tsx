@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const Hero = () => {
   return (
@@ -22,7 +23,7 @@ const Hero = () => {
           </p>
           <div className="flex space-x-4">
             <button className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors">
-              Get Started
+              <Link href={"/login"}>Get Started</Link>
             </button>
             <button className="bg-white text-green-600 px-6 py-3 rounded-md hover:bg-gray-100 transition-colors">
               Request Insurance
