@@ -7,14 +7,10 @@ import axios from 'axios';
 
 const ResetPassword = () => {
       const [email, setEmail] = useState("");
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState("");
       const router = useRouter();
 
       const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        setError("");
 
         try {
           const response = await axios.post(
@@ -27,16 +23,13 @@ const ResetPassword = () => {
               },
             }
           );
-
+          console.log(response)
           localStorage.setItem("resetEmail", email);
           router.push("/admin/otp");
-        } catch (err) {
-          setError("Failed to initiate password reset. Please try again.");
-        } finally {
-          setLoading(false);
+        } catch (error) {
+          console.error("Failed to initiate password reset. Please try again." + error);
         }
       };
-
   return (
     <div>
       <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
@@ -66,3 +59,4 @@ const ResetPassword = () => {
 }
 
 export default ResetPassword
+
