@@ -3,8 +3,18 @@ import React, { useState, useEffect } from 'react'
 import AddAdminForm from './usersComponent/AddAdminForm'
 import axios from 'axios'
 
+// Add this type definition at the top of the file, after the imports
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: string;
+  dateOfReg: string;
+};
+
 const Users = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -47,7 +57,7 @@ const Users = () => {
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
-    setSelectedUsers(isChecked ? users.map((user: any) => user.id) : []);
+    setSelectedUsers(isChecked ? users.map((user: User) => user.id) : []);
   };
 
   const handleSelectUser = (userId: string) => {
@@ -101,7 +111,7 @@ const Users = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user: any) => (
+            {users.map((user: User) => (
               <tr key={user.id}>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                   <input

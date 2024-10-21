@@ -9,16 +9,18 @@ import profile from "../../../public/dashboard/profile.png"
 import property from "../../../public/dashboard/sho.png"
 import lga from "../../../public/dashboard/loca.png"
 import insurance from "../../../public/dashboard/eye.png"
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/context/useAuth";
 
 
 const MainView = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const userName = user?.name || "User";
+
   return (
     <main className="flex-1 overflow-y-auto p-4 md:p-6">
       <div className="flex flex-col mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-semibold">Hi {user?.firstname ?? "User"}</h1>
+          <h1 className="text-2xl font-semibold">Hi {userName}</h1>
           <button className="bg-[#028835] text-white px-4 py-2 rounded-full flex items-center">
             <span className="bg-black rounded-full w-6 h-6 pt-[2px] items-center justify-center mr-2  leading-none">
               +

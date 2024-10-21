@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const RegistrationSuccess = () => {
   return (
-    <div className="text-center">
+    <div className="text-center text-black">
       <h2 className="text-2xl font-bold mb-4">Registration Successful</h2>
       <p className="mb-4">The employee has been successfully registered.</p>
       <p className="mb-4">

@@ -21,8 +21,8 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         <Image src="/logo.png" alt="Logo" width={180} height={180} />
       </div>
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <main className="grid md:grid-cols-2 grid-cols-1 items-center justify-center md:space-x-10 p-5 md:p-0">
-          <div className="text-center md:text-left">
+        <main className="grid xl:grid-cols-2 grid-cols-1 items-center justify-center xl:space-x-10 p-5 md:p-0">
+          <div className="text-center xl:text-left">
             <h2 className="text-white text-2xl md:text-5xl max-w-xl font-bold mb-4">
               Defense Critical Infrastructure Program
             </h2>
@@ -30,7 +30,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               Protect your Property with Confidence
             </h3>
           </div>
-          <div className="w-full max-w-md md:max-w-lg lg:max-w-xl">
+          <div className="w-full max-w-3xl xl:max-w-lg 2xl:max-w-xl">
             {children}
           </div>
         </main>

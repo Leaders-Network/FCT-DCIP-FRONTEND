@@ -14,11 +14,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <AuthProvider>
-        <body>{children}</body>
-      </AuthProvider>
-      
-         {/* <Analytics/> */}
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
+
+      {/* <Analytics/> */}
     </html>
   );
 }
