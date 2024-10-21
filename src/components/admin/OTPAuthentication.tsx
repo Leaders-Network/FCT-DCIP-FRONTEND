@@ -30,14 +30,20 @@ const OTPAuthentication = () => {
     }
 
     try {
-      await axios.post('https://fct-dcip-backend-1.onrender.com/api/v1/auth/send-reset-password-otp', {}, {
-        headers: {
-          'apiKey': '4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c',
-          'Authorization': `Bearer ${token}`
+      await axios.post(
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/reset-password-otp",
+        // {
+        //   email,
+        // },
+        {
+          headers: {
+            apiKey:
+              "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
+          },
         }
-      });
-    } catch {
-      console.error("Failed to send OTP. Please try again.");
+      );
+    } catch (err) {
+      setError("Failed to send OTP. Please try again.");
     }
   };
 
@@ -56,12 +62,47 @@ const OTPAuthentication = () => {
     }
   }, []);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    const enteredOTP = otp.join("");
-    localStorage.setItem('enteredOTP', enteredOTP);
-    router.push("/admin/new-password");
-  }, [otp, router]);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setLoading(true);
+      setError("");
+
+      const enteredOTP = otp.join("");
+      const email = localStorage.getItem("resetEmail");
+
+      if (!email) {
+        setError("No email found. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.post(
+          "https://fct-dcip-backend-1.onrender.com/api/v1/auth/verify-otp-employee",
+          { email, otp: enteredOTP },
+          {
+            headers: {
+              apiKey:
+                "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
+            },
+          }
+        );
+
+        if (response.data.success) {
+          localStorage.setItem("enteredOTP", enteredOTP);
+          router.push("/admin/new-password");
+        } else {
+          setError("Invalid OTP. Please try again.");
+        }
+      } catch (err) {
+        setError("Failed to verify OTP. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [otp, router]
+  );
 
   const handleResend = useCallback(() => {
     sendResetPasswordOTP();
@@ -106,7 +147,12 @@ const OTPAuthentication = () => {
             )}
           </span>
         </div>
-        <Button title="Continue" onClick={() => handleSubmit(new Event('submit') as unknown as React.FormEvent)} />
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <Button 
+          title="Continue" 
+          onClick={() => handleSubmit(new Event('submit') as unknown as React.FormEvent)} 
+          isDisabled={loading}
+        />
       </form>
     </div>
   );

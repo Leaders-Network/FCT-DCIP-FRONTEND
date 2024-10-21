@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
 const NewPassword = () => {
-  const [newPassword, setNewPassword] = useState("");
+  const [newpassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -14,7 +14,7 @@ const NewPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
+    if (newpassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
@@ -22,31 +22,36 @@ const NewPassword = () => {
     setLoading(true);
     setError("");
 
-    const token = localStorage.getItem('resetToken');
-    const otp = localStorage.getItem('enteredOTP');
+    const email = localStorage.getItem("resetEmail");
+    const otp = localStorage.getItem("enteredOTP");
 
-    if (!token || !otp) {
-      setError("Missing reset information. Please try again from the beginning.");
+    if (!email || !otp) {
+      setError(
+        "Missing reset information. Please try again from the beginning."
+      );
       setLoading(false);
       return;
     }
 
     try {
-      await axios.post('https://fct-dcip-backend-1.onrender.com/api/v1/auth/reset-password', {
-        newpassword: newPassword,
-        otp
-      }, {
-        headers: {
-          'apiKey': '4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c',
-          'Authorization': `Bearer ${token}`
+      await axios.patch(
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/employee-reset-password",
+        {
+          newpassword,
+        },
+        {
+          headers: {
+            apiKey:
+              "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
+          },
         }
-      });
+      );
 
       // Clear stored reset information
-      localStorage.removeItem('resetToken');
-      localStorage.removeItem('enteredOTP');
+      localStorage.removeItem("resetEmail");
+      localStorage.removeItem("enteredOTP");
 
-      router.push("/admin/success");
+      router.push("/admin/registration-success");
     } catch (err) {
       setError("Failed to reset password. Please try again."+ err);
     } finally {
@@ -66,7 +71,7 @@ const NewPassword = () => {
             label=""
             type="password"
             placeholder="Enter new password"
-            value={newPassword}
+            value={newpassword}
             handleChange={setNewPassword}
             required
           />

@@ -14,11 +14,8 @@ const ResetPassword = () => {
 
         try {
           const response = await axios.post(
-            "https://fct-dcip-backend-1.onrender.com/api/v1/auth/send-reset-password-otp",
-            {
-              email,
-              password: "placeholder", // We're not actually logging in, just getting a token
-            },
+            "https://fct-dcip-backend-1.onrender.com/api/v1/auth/reset-password-otp",
+            { email },
             {
               headers: {
                 apiKey:
@@ -27,8 +24,7 @@ const ResetPassword = () => {
             }
           );
 
-          const token = response.data.token;
-          localStorage.setItem('resetToken', token);
+          localStorage.setItem("resetEmail", email);
           router.push("/admin/otp");
         } catch (error) {
           console.error("Failed to initiate password reset. Please try again." + error);
