@@ -4,9 +4,11 @@ import Button from '../Button';
 import Input from '../Input';
 import { useRouter } from 'next/navigation';
 import { initiatePasswordReset } from '@/services/api';
-
+  
 const ResetPassword = () => {
       const [email, setEmail] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState("");
       const router = useRouter();
 
       const handleSubmit = async (e: React.FormEvent) => {
