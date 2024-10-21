@@ -2,6 +2,7 @@
 import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 export function Login() {
@@ -165,6 +166,7 @@ function LoginForm() {
 
 function LoginButton({ email, password }: { email: string; password: string }) {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,6 +195,11 @@ function LoginButton({ email, password }: { email: string; password: string }) {
 
       const result = await response.json();
       console.log(result);
+      // save result.token and name to localstorage
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("name", result.user.name);
+      // redirect to dashboard
+      router.push("/dashboard");
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
     } finally {
@@ -206,7 +213,7 @@ function LoginButton({ email, password }: { email: string; password: string }) {
       disabled={isLoading}
       className={`w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-base font-semibold flex items-center justify-evenly ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
-      {isLoading ? 'Loading...' : 'Continue'}
+      {isLoading ? 'Logining...' : 'Continue'}
       {!isLoading && (
         <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
           <MoveRight color="#000000" size={20} />

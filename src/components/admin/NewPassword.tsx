@@ -53,7 +53,7 @@ const NewPassword = () => {
 
       router.push("/admin/registration-success");
     } catch (err) {
-      setError("Failed to reset password. Please try again.");
+      setError("Failed to reset password. Please try again."+ err);
     } finally {
       setLoading(false);
     }
