@@ -145,12 +145,13 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                     {images.map((image, index) => (
                       <div
                         key={index}
-                        className="w-24 h-24 bg-gray-100 flex items-center justify-center overflow-hidden"
+                        className="w-24 h-24 bg-gray-100 flex items-center justify-center overflow-hidden relative"
                       >
-                        <img
+                        <Image
                           src={image}
                           alt={`Uploaded ${index + 1}`}
-                          className="object-cover w-full h-full"
+                          layout="fill"
+                          objectFit="cover"
                         />
                       </div>
                     ))}

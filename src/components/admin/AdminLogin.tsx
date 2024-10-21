@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import Button from "../Button";
 import Input from "../Input";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/context/useAuth";
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -12,36 +12,17 @@ const AdminLogin: React.FC = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    // if (!isAuthenticated) {
-    //   setError("You must be logged in to perform this action.");
-    //   return;
-    // }
-
     try {
-      const response = await axios.post(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/loginEmployee",
-        { email, password },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            apiKey: "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
-          },
-        }
-      );
-
-      if (response.data && response.data.token) {
-        localStorage.setItem("authToken", response.data.token);
-        router.push("/admin/dashboard");
-      } else {
-        setError("Login failed. Please try again.");
-      }
+      await login(email, password);
+      router.push("/admin/dashboard");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         setError(`Login failed: ${error.response.data.message}`);

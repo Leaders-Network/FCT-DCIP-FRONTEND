@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import Button from '../Button';
 import Input from '../Input';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { initiatePasswordReset } from '@/services/api';
 
 const ResetPassword = () => {
       const [email, setEmail] = useState("");
@@ -17,21 +17,12 @@ const ResetPassword = () => {
         setError("");
 
         try {
-          const response = await axios.post(
-            "https://fct-dcip-backend-1.onrender.com/api/v1/auth/reset-password-otp",
-            { email },
-            {
-              headers: {
-                apiKey:
-                  "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
-              },
-            }
-          );
-
+          await initiatePasswordReset(email);
           localStorage.setItem("resetEmail", email);
           router.push("/admin/otp");
-        } catch (err) {
+        } catch (error) {
           setError("Failed to initiate password reset. Please try again.");
+          console.error("Password reset error:", error);
         } finally {
           setLoading(false);
         }
@@ -42,7 +33,7 @@ const ResetPassword = () => {
       <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
         <h2 className="text-xl md:text-3xl font-bold mb-2">Reset Password</h2>
         <p className="text-gray-600 text-sm md:text-base mb-4 md:mb-6">
-          We’ll send a confirmation code to this email
+          We&apos;ll send a confirmation code to this email
         </p>
         <form onSubmit={handleSubmit}>
           <div className="mb-8">
@@ -56,8 +47,16 @@ const ResetPassword = () => {
             />
           </div>
 
+          {error && (
+            <div className="mb-4 text-red-500 text-sm">{error}</div>
+          )}
+
           <div className="flex items-center justify-between mb-6">
-            <Button title="Send Code" onClick={() => {}} />
+            <Button 
+              title={loading ? "Sending..." : "Send Code"} 
+              onClick={() => {}}
+              isDisabled={loading}
+            />
           </div>
         </form>
       </div>

@@ -24,7 +24,7 @@ const Page = () => {
             </h3>
           </div>
         <div className="w-full max-w-md">
-          <OTPAuthentication onVerify={() => {}} />
+          <OTPAuthentication />
           
           </div>
        </main>

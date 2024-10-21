@@ -3,8 +3,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { IoMdLogOut } from "react-icons/io";
+import { useAuth } from "@/context/useAuth";
 
 const Sidebar = () => {
+  const { logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -22,7 +25,7 @@ const Sidebar = () => {
 
   return (
     <aside
-      className={`bg-white shadow-md transition-all duration-300 ${
+      className={`bg-white shadow-md transition-all duration-300 flex flex-col ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
@@ -46,7 +49,7 @@ const Sidebar = () => {
           </button>
         )}
       </div>
-      <nav className="mt-8">
+      <nav className="mt-8 flex flex-col flex-grow">
         {menuItems.map((item) => (
           <Link
             key={item.href}
@@ -69,6 +72,15 @@ const Sidebar = () => {
             {!isCollapsed && item.label}
           </Link>
         ))}
+        <div className="flex-grow"></div>
+        <button
+          onClick={logout}
+          className="flex items-center px-4 py-2 mb-4 text-gray-700 hover:bg-gray-100"
+        >
+          <IoMdLogOut className="h-6 w-6 mr-2"/>
+
+          {!isCollapsed && "Logout"}
+        </button>
       </nav>
     </aside>
   );

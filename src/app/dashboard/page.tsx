@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Bell, Search } from "lucide-react";
 import Link from "next/link";
 import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty";
+import Image from "next/image";
 
 const Dashboard = () => {
   const [showAddNewProperty, setShowAddNewProperty] = useState(false);
@@ -286,7 +287,7 @@ const Dashboard = () => {
             <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] lg:h-[160px] relative mb-6">
               <div className="w-full h-full absolute">
                 <div className="w-full h-full absolute opacity-20 bg-white rounded-xl border border-black" />
-                <img
+                <Image
                   className="w-full h-full absolute rounded-xl object-cover"
                   src="/abuja-bg.png"
                   alt="Abuja background"

@@ -1,77 +1,100 @@
 "use client";
-import React, { createContext, useState, useContext, useEffect } from "react";
-import axios from "axios";
+import React, { createContext, useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { getUserRole, loginEmployee } from "@/services/api";
+import {
+  getAuthToken,
+  setAuthToken,
+  removeAuthToken,
+} from "@/utils/auth";
+import SkeletonLoader from "@/components/SkeletonLoader";
+
+interface User {
+  id: string;
+  email: string;
+  role: string;
+  name: string;
+  // Add other user properties as needed
+}
 
 interface AuthContextType {
-  user: any;
+  user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<any>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticatedState, setIsAuthenticatedState] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const logout = useCallback(() => {
+    removeAuthToken();
+    setUser(null);
+    setIsAuthenticatedState(false);
+    router.push("/admin/login");
+  }, [router]);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      // Verify token and set user
-      verifyToken(token);
-    }
-  }, []);
+    const initializeAuth = async () => {
+      const token = getAuthToken();
+      if (token) {
+        try {
+          await verifyAndSetUser(token);
+        } catch (error) {
+          console.error("Token verification failed", error);
+          logout();
+        }
+      }
+      setIsLoading(false);
+    };
 
-  const verifyToken = async (token: string) => {
+    initializeAuth();
+  }, [logout]);
+
+  const verifyAndSetUser = async (token: string) => {
     try {
-      const response = await axios.get("https://your-api.com/verify-token", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await getUserRole(token);
       setUser(response.data.user);
-      setIsAuthenticated(true);
+      setIsAuthenticatedState(true);
     } catch (error) {
-      console.error("Token verification failed", error);
-      logout();
+      throw error;
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post("https://your-api.com/login", {
-        email,
-        password,
-      });
-      const { token, user } = response.data;
-      localStorage.setItem("authToken", token);
-      setUser(user);
-      setIsAuthenticated(true);
+      const response = await loginEmployee(email, password);
+      const { token, employee } = response.data;
+      setAuthToken(token);
+      setUser(employee);
+      setIsAuthenticatedState(true);
     } catch (error) {
       console.error("Login failed", error);
       throw error;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    setUser(null);
-    setIsAuthenticated(false);
+  
+
+  const contextValue: AuthContextType = {
+    user,
+    login,
+    logout,
+    isAuthenticated: isAuthenticatedState,
   };
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+  if (isLoading) {
+    return <SkeletonLoader />; // Or any loading component
   }
-  return context;
+
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
 };

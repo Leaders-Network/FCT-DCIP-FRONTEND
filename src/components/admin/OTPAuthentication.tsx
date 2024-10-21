@@ -2,10 +2,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import Button from "../Button";
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { resendOTP, verifyOTP } from "@/services/api";
 
-const OTPAuthentication = ({ onVerify }: { onVerify: () => void }) => {
+const OTPAuthentication = () => {
   const [otp, setOtp] = useState<string[]>(Array(5).fill(""));
   const [timer, setTimer] = useState(30);
   const [loading, setLoading] = useState(false);
@@ -24,30 +24,20 @@ const OTPAuthentication = ({ onVerify }: { onVerify: () => void }) => {
     sendResetPasswordOTP();
   }, []);
 
-  const sendResetPasswordOTP = async () => {
-    const token = localStorage.getItem('resetToken');
-    if (!token) {
-      setError("No reset token found. Please try again.");
-      return;
-    }
+ const sendResetPasswordOTP = async () => {
+   const email = localStorage.getItem("resetEmail");
+   if (!email) {
+     setError("No email found. Please try again.");
+     return;
+   }
 
-    try {
-      await axios.post(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/reset-password-otp",
-        // {
-        //   email,
-        // },
-        {
-          headers: {
-            apiKey:
-              "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
-          },
-        }
-      );
-    } catch (err) {
-      setError("Failed to send OTP. Please try again.");
-    }
-  };
+   try {
+     await resendOTP(email);
+   } catch (err) {
+     console.log(err, "err");
+     setError("Failed to send OTP. Please try again.");
+   }
+ };
 
   const handleChange = useCallback((index: number, value: string) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
@@ -80,25 +70,12 @@ const OTPAuthentication = ({ onVerify }: { onVerify: () => void }) => {
       }
 
       try {
-        const response = await axios.post(
-          "https://fct-dcip-backend-1.onrender.com/api/v1/auth/verify-otp-employee",
-          { email, otp: enteredOTP },
-          {
-            headers: {
-              apiKey:
-                "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
-            },
-          }
-        );
-
-        if (response.data.success) {
-          localStorage.setItem("enteredOTP", enteredOTP);
-          router.push("/admin/new-password");
-        } else {
-          setError("Invalid OTP. Please try again.");
-        }
+        await verifyOTP(email, enteredOTP);
+        localStorage.setItem("enteredOTP", enteredOTP);
+        router.push("/admin/new-password");
       } catch (err) {
         setError("Failed to verify OTP. Please try again.");
+        console.log(err, "err");
       } finally {
         setLoading(false);
       }
