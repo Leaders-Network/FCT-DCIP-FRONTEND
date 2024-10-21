@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 const OTPAuthentication = () => {
   const [otp, setOtp] = useState<string[]>(Array(5).fill(""));
   const [timer, setTimer] = useState(30);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -43,7 +45,7 @@ const OTPAuthentication = () => {
         }
       );
     } catch (err) {
-      setError("Failed to send OTP. Please try again.");
+      setError("Failed to send OTP. Please try again." + err);
     }
   };
 
@@ -96,7 +98,7 @@ const OTPAuthentication = () => {
           setError("Invalid OTP. Please try again.");
         }
       } catch (err) {
-        setError("Failed to verify OTP. Please try again.");
+        setError("Failed to verify OTP. Please try again." + err);
       } finally {
         setLoading(false);
       }

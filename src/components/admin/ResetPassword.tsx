@@ -23,7 +23,7 @@ const ResetPassword = () => {
               },
             }
           );
-
+          console.log(response)
           localStorage.setItem("resetEmail", email);
           router.push("/admin/otp");
         } catch (error) {
