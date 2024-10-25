@@ -2,25 +2,86 @@
 import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import { z } from "zod";
+
+const emailSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
 
 export default function Reset() {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      emailSchema.parse({ email });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setError(error.errors[0].message);
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "your_fallback_api_key";
+
+    try {
+      const response = await fetch(
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/send-reset-password-otp",
+        {
+          method: "POST",
+          headers: {
+            apiKey: ApiKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      localStorage.setItem("resetEmail", email);
+      router.push("/verify?action=reset");
+    } catch (error) {
+      console.error("Reset password error:", error);
+      setError(error instanceof Error ? error.message : "An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-white">
-      <div className="w-2/3 flex flex-col p-8">
+    <div className="flex flex-col md:flex-row h-screen bg-white">
+      <div className="w-full md:w-2/3 flex flex-col p-4 md:p-8">
         <Header />
-        {/* // add a  thick line below the header */}
         <div className="w-full h-px bg-gray-300 mb-6"></div>
         <main className="flex flex-col justify-center flex-grow max-w-md mx-auto w-full">
           <ResetPasswordTitle />
-          <ResetPasswordForm />
+          <ResetPasswordForm
+            email={email}
+            setEmail={setEmail}
+            error={error}
+            isLoading={isLoading}
+            handleSubmit={handleSubmit}
+          />
         </main>
       </div>
-      <div className="w-1/3 relative">
+      <div className="hidden md:block md:w-1/3 relative">
         <Image
-          width={100}
-          height={100}
-          className="w-full h-[900px] object-cover"
+          width={500}
+          height={900}
+          className="w-full h-full object-cover"
           src="/abuja-bg.png"
           alt="Abuja background"
         />
@@ -32,13 +93,13 @@ export default function Reset() {
 
 function Header() {
   return (
-    <header className="flex justify-between items-center w-full mb-8">
+    <header className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
       <Logo />
-      <div className="flex items-center gap-4">
-        <p className="text-black text-base font-semibold">
+      <div className="flex items-center gap-4 mt-4 md:mt-0">
+        <p className="text-black text-sm md:text-base font-semibold">
           Remember your password?
         </p>
-        <Link href="/login" className="text-black text-base font-bold">
+        <Link href="/login" className="text-black text-sm md:text-base font-bold">
           Login
         </Link>
       </div>
@@ -102,44 +163,62 @@ function Logo() {
 function ResetPasswordTitle() {
   return (
     <div className="mb-8">
-      <h2 className="text-black text-4xl font-bold mb-2">Reset Password</h2>
-      <p className="text-black text-base font-normal">
+      <h2 className="text-black text-3xl md:text-4xl font-bold mb-2">Reset Password</h2>
+      <p className="text-black text-sm md:text-base font-normal">
         Enter your email to reset your password.
       </p>
     </div>
   );
 }
 
-function ResetPasswordForm() {
+function ResetPasswordForm({ 
+  email, 
+  setEmail, 
+  error, 
+  isLoading, 
+  handleSubmit 
+}: { 
+  email: string; 
+  setEmail: (email: string) => void; 
+  error: string | null; 
+  isLoading: boolean; 
+  handleSubmit: (e: React.FormEvent) => Promise<void>;
+}) {
   return (
-    <form className="w-full gap-2">
+    <form className="w-full gap-2" onSubmit={handleSubmit}>
       <div className="mb-8 relative">
         <input
           type="email"
           id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder=" "
-          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="peer w-full h-12 md:h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         <label
           htmlFor="email"
-          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
+          className="absolute text-xs md:text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-3 md:top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
         >
           Email Address
         </label>
       </div>
 
-      <ResetPasswordButton />
-    </form>
-  );
-}
+      {error && <p className="text-red-500 text-xs md:text-sm mb-4">{error}</p>}
 
-function ResetPasswordButton() {
-  return (
-    <button className="w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-base font-semibold flex items-center justify-evenly">
-      Send code
-      <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
-        <MoveRight color="#000000" size={20} />
-      </span>
-    </button>
+      <button
+        type="submit"
+        disabled={isLoading}
+        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${
+          isLoading ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+      >
+        {isLoading ? "Sending..." : "Send code"}
+        {!isLoading && (
+          <span className="w-[30px] h-[30px] ml-2 md:ml-5 flex items-center justify-center bg-white rounded-full">
+            <MoveRight color="#000000" size={20} />
+          </span>
+        )}
+      </button>
+    </form>
   );
 }
