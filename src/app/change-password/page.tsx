@@ -1,10 +1,11 @@
-import Change from "@/components/Change";
+
+import ChangePassword from "@/components/ChangePassword";
 import React from "react";
 
 export default function page() {
   return (
     <>
-      <Change />
+      <ChangePassword />
     </>
   );
 }

@@ -1,22 +1,30 @@
 "use client";
-
 import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { z } from "zod";
 
-export default function Verify() {
-  const [otp, setOtp] = useState("");
+const passwordSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+export default function ChangePassword() {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const action = searchParams.get('action');
 
   useEffect(() => {
     const email = localStorage.getItem("resetEmail");
-    if (!email) {
+    const otp = localStorage.getItem("resetOTP");
+    if (!email || !otp) {
       router.push("/reset");
     }
   }, [router]);
@@ -25,31 +33,36 @@ export default function Verify() {
     e.preventDefault();
     setError(null);
 
-    if (otp.length !== 5) {
-      setError("OTP must be 5 digits");
-      return;
+    try {
+      passwordSchema.parse({ password, confirmPassword });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setError(error.errors[0].message);
+        return;
+      }
     }
 
     setIsLoading(true);
     const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "your_fallback_api_key";
     const email = localStorage.getItem("resetEmail");
+    const otp = localStorage.getItem("resetOTP");
 
-    if (!email) {
-      setError("Email not found. Please try the reset process again.");
+    if (!email || !otp) {
+      setError("Missing email or OTP. Please try the reset process again.");
       setIsLoading(false);
       return;
     }
 
     try {
       const response = await fetch(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/verify-otp",
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/reset-password",
         {
-          method: "POST",
+          method: "PATCH",
           headers: {
             apiKey: ApiKey,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, otp }),
+          body: JSON.stringify({ otp, newPassword: password }),
         }
       );
 
@@ -59,15 +72,11 @@ export default function Verify() {
       }
       
       const result = await response.json();
-      localStorage.setItem("resetOTP", otp);
-      if (action === 'reset') {
-        router.push("/change-password");
-      } else {
-        // Handle signup verification
-        router.push("/dashboard");
-      }
+      localStorage.removeItem("resetEmail");
+      localStorage.removeItem("resetOTP");
+      router.push("/login");
     } catch (error) {
-      console.error("OTP verification error:", error);
+      console.error("Change password error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -80,10 +89,12 @@ export default function Verify() {
         <Header />
         <div className="w-full h-px bg-gray-300 mb-6"></div>
         <main className="flex flex-col justify-center flex-grow max-w-md mx-auto w-full">
-          <VerifyTitle />
-          <VerifyForm
-            otp={otp}
-            setOtp={setOtp}
+          <ChangePasswordTitle />
+          <ChangePasswordForm
+            password={password}
+            setPassword={setPassword}
+            confirmPassword={confirmPassword}
+            setConfirmPassword={setConfirmPassword}
             error={error}
             isLoading={isLoading}
             handleSubmit={handleSubmit}
@@ -109,10 +120,10 @@ function Header() {
     <header className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
       <Logo />
       <div className="flex items-center gap-4 mt-4 md:mt-0">
-        <Link
-          href="/signup"
-          className="text-black text-sm md:text-[17px] font-bold leading-[27px]"
-        >
+        <p className="text-black text-sm md:text-base font-semibold">
+          Remember your password?
+        </p>
+        <Link href="/login" className="text-black text-sm md:text-base font-bold">
           Login
         </Link>
       </div>
@@ -167,52 +178,72 @@ function Logo() {
           fill="#333F4D"
         />
       </svg>
-      <h1 className="ml-4 text-black text-[23px] font-bold">FCT- DCIP</h1>
+      <h1 className="ml-4 text-black text-2xl font-bold">FCT- DCIP</h1>
     </div>
   );
 }
 
-function VerifyTitle() {
+function ChangePasswordTitle() {
   return (
     <div className="mb-8">
-      <h2 className="text-black text-3xl md:text-4xl font-bold mb-2">Verify OTP</h2>
+      <h2 className="text-black text-3xl md:text-4xl font-bold mb-2">Change Password</h2>
       <p className="text-black text-sm md:text-base font-normal">
-        Enter the OTP sent to your email.
+        Enter your new password.
       </p>
     </div>
   );
 }
 
-function VerifyForm({ 
-  otp, 
-  setOtp, 
+function ChangePasswordForm({ 
+  password, 
+  setPassword, 
+  confirmPassword, 
+  setConfirmPassword, 
   error, 
   isLoading, 
   handleSubmit 
 }: { 
-  otp: string; 
-  setOtp: (otp: string) => void; 
+  password: string; 
+  setPassword: (password: string) => void; 
+  confirmPassword: string; 
+  setConfirmPassword: (confirmPassword: string) => void; 
   error: string | null; 
   isLoading: boolean; 
   handleSubmit: (e: React.FormEvent) => Promise<void>;
 }) {
   return (
     <form className="w-full gap-2" onSubmit={handleSubmit}>
-      <div className="mb-8 relative">
+      <div className="mb-4 relative">
         <input
-          type="text"
-          id="otp"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
+          type="password"
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           placeholder=" "
-          maxLength={6}
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         <label
-          htmlFor="otp"
+          htmlFor="password"
           className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
         >
-          OTP
+          New Password
+        </label>
+      </div>
+
+      <div className="mb-8 relative">
+        <input
+          type="password"
+          id="confirmPassword"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder=" "
+          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+        <label
+          htmlFor="confirmPassword"
+          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
+        >
+          Confirm New Password
         </label>
       </div>
 
@@ -225,7 +256,7 @@ function VerifyForm({
           isLoading ? "opacity-50 cursor-not-allowed" : ""
         }`}
       >
-        {isLoading ? "Verifying..." : "Verify OTP"}
+        {isLoading ? "Changing..." : "Change Password"}
         {!isLoading && (
           <span className="w-[30px] h-[30px] ml-2 md:ml-5 flex items-center justify-center bg-white rounded-full">
             <MoveRight color="#000000" size={20} />
