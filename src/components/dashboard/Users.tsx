@@ -1,17 +1,8 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import AddAdminForm from './usersComponent/AddAdminForm'
-import axios from 'axios'
-
-// Add this type definition at the top of the file, after the imports
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: string;
-  dateOfReg: string;
-};
+import { getAllEmployees, } from '@/services/api'
+import { User } from '@/types/api.types'
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -21,17 +12,8 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("authToken");
-      const response = await axios.get<{ users: User[] }>(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/getUsers",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            apiKey: "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c",
-          },
-        }
-      );
-      setUsers(response.data.users);
+      const employees = await getAllEmployees();
+      setUsers(employees);
     } catch (error) {
       console.error("Failed to fetch users", error);
     }
@@ -57,7 +39,7 @@ const Users = () => {
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
-    setSelectedUsers(isChecked ? users.map((user: User) => user.id) : []);
+    setSelectedUsers(isChecked ? users.map((user: User) => user._id) : []);
   };
 
   const handleSelectUser = (userId: string) => {
@@ -112,13 +94,13 @@ const Users = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user: User) => (
-              <tr key={user.id}>
+              <tr key={user._id}>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                   <input
                     type="checkbox"
                     className="form-checkbox h-5 w-5 text-blue-600"
-                    checked={selectedUsers.includes(user.id)}
-                    onChange={() => handleSelectUser(user.id)}
+                    checked={selectedUsers.includes(user._id)}
+                    onChange={() => handleSelectUser(user._id)}
                   />
                 </td>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
@@ -126,26 +108,26 @@ const Users = () => {
                     <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
                       <div
                         className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm ${
-                          getInitials(user.name) === "MA"
+                          getInitials(`${user.firstname} ${user.lastname}`) === "MA"
                             ? "bg-[#488274]"
-                            : getInitials(user.name) === "PB"
+                            : getInitials(`${user.firstname} ${user.lastname}`) === "PB"
                             ? "bg-[#8B9FEF]"
-                            : getInitials(user.name) === "ES"
+                            : getInitials(`${user.firstname} ${user.lastname}`) === "ES"
                             ? "bg-[#FBD673]"
-                            : getInitials(user.name) === "CC"
+                            : getInitials(`${user.firstname} ${user.lastname}`) === "CC"
                             ? "bg-[#F2A4F1]"
                             : "bg-[#028835]"
                         }`}
                       >
-                        {getInitials(user.name)}
+                        {getInitials(`${user.firstname} ${user.lastname}`)}
                       </div>
                     </div>
                     <div className="ml-2 sm:ml-4">
                       <div className="text-xs sm:text-sm font-medium text-gray-900">
-                        {user.name}
+                        {`${user.firstname} ${user.lastname}`}
                       </div>
                       <div className="text-xs sm:text-sm text-[#1E1E1E]">
-                        ID: {user.id}
+                        ID: {user._id}
                       </div>
                     </div>
                   </div>
@@ -154,19 +136,19 @@ const Users = () => {
                   {user.email}
                 </td>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium text-xs sm:text-sm text-[#2B2929]">
-                  {user.phone}
+                  {user.phonenumber}
                 </td>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                   <button
                     className={`px-2 sm:px-3 py-1 rounded-md ${getStatusColor(
-                      user.status
+                      user.employeeStatus.status
                     )} text-white text-xs sm:text-sm`}
                   >
-                    {user.status}
+                    {user.employeeStatus.status}
                   </button>
                 </td>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium text-xs sm:text-sm text-[#2B2929]">
-                  {user.dateOfReg}
+                  {new Date(user.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                   <button className="text-white rounded-md hover:text-green-900 bg-[#028835] px-2 sm:px-3 py-1 sm:py-[6px]">
