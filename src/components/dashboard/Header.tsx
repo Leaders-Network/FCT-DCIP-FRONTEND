@@ -1,12 +1,22 @@
 "use client";
 import { useAuth } from "@/context/useAuth";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
 
 const Header = () => {
   const { user } = useAuth();
-  const userName = user?.name || "User";
+  // Get firstname and create initials from firstname and lastname
+  const firstName = user?.firstname || "User";
+  const initials = user ? `${user.firstname[0]}${user.lastname[0]}`.toUpperCase() : "U";
+
+  useEffect(() => {
+    console.log("Auth Context User:", user);
+    console.log("Local Storage User:", localStorage.getItem('user'));
+    console.log("Auth Token:", localStorage.getItem('authToken'));
+    console.log("First Name:", firstName);
+    console.log("Initials:", initials);
+  }, [user, firstName, initials]);
 
   return (
     <header className="bg-white shadow-sm">
@@ -28,9 +38,9 @@ const Header = () => {
             height={20}
           />
           <div className="flex items-center">
-            <span className="mr-2 font-semibold">{userName}</span>
+            <span className="mr-2 font-semibold">{firstName}</span>
             <div className="w-8 h-8 bg-[#028835] rounded-md flex items-center justify-center text-white">
-              PB
+              {initials}
             </div>
           </div>
         </div>
