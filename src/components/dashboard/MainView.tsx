@@ -14,7 +14,9 @@ import { useAuth } from "@/context/useAuth";
 
 const MainView = () => {
   const { user } = useAuth();
-  const userName = user?.name || "User";
+  const { firstname, lastname } = user || {}; 
+  const userName = `${firstname} ${lastname}` || "User";
+  console.log(user, "userName")
 
   return (
     <main className="flex-1 overflow-y-auto p-4 md:p-6">
