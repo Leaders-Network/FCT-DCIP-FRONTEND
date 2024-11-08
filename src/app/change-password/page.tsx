@@ -1,10 +1,11 @@
+
+import ChangePassword from "@/components/ChangePassword";
 import React from "react";
-import Dashview from "./_components/DashView";
 
 export default function page() {
   return (
     <>
-      <Dashview />
+      <ChangePassword />
     </>
   );
 }

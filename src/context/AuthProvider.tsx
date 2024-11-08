@@ -37,19 +37,35 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  token: string;
+  name: string;
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticatedState, setIsAuthenticatedState] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [state, setState] = useState<AuthState>({
+    isAuthenticated: false,
+    isLoading: true,
+    token: '',
+    name: '',
+  });
 
   const logout = useCallback(() => {
     removeAuthToken();
     localStorage.removeItem('user');
     setUser(null);
-    setIsAuthenticatedState(false);
+    setState({
+      isAuthenticated: false,
+      isLoading: false,
+      token: '',
+      name: '',
+    });
     router.push("/admin/login");
   }, [router]);
 
@@ -63,7 +79,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (token && storedUser) {
           const userData = JSON.parse(storedUser);
           setUser(userData);
-          setIsAuthenticatedState(true);
+          setState({
+            isAuthenticated: true,
+            isLoading: false,
+            token,
+            name: userData.firstname,
+          });
           
           // Optionally verify token with backend
           // try {
@@ -83,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } catch (error) {
         console.error("Auth initialization error:", error);
       } finally {
-        setIsLoading(false);
+        setState(prevState => ({ ...prevState, isLoading: false }));
       }
     };
 
@@ -118,7 +139,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Save to localStorage and state
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-      setIsAuthenticatedState(true);
+      setState({
+        isAuthenticated: true,
+        isLoading: false,
+        token,
+        name: userData.firstname,
+      });
 
       console.log("Stored User Data:", userData);
       
@@ -144,26 +170,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         try {
           const userData = JSON.parse(storedUser);
           setUser(userData);
-          setIsAuthenticatedState(true);
+          setState({
+            isAuthenticated: true,
+            isLoading: false,
+            token,
+            name: userData.firstname,
+          });
         } catch (error) {
           console.error("Failed to parse stored user data:", error);
           logout();
         }
       }
-      setIsLoading(false);
+      setState(prevState => ({ ...prevState, isLoading: false }));
     };
 
     loadUserData();
-  }, []);
+  }, [logout]);
 
   const contextValue: AuthContextType = {
     user,
     login,
     logout,
-    isAuthenticated: isAuthenticatedState,
+    isAuthenticated: state.isAuthenticated,
   };
 
-  if (isLoading) {
+  if (state.isLoading) {
     return <SkeletonLoader />;
   }
 

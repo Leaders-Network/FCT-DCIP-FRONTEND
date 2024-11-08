@@ -1,10 +1,15 @@
 "use client";
-import React, { useState, ChangeEvent, FormEvent } from "react";
+import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import Image from "next/image";
 
 interface AddNewPropertyProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface Category {
+  _id: string;
+  category: string;
 }
 
 interface FormData {
@@ -13,7 +18,13 @@ interface FormData {
   contactOnProperty: string;
 }
 
+const API_KEY = "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+const BASE_URL = "https://fct-dcip-backend-1.onrender.com/api/v1/auth";
+
 const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     category: "",
     address: "",
@@ -22,6 +33,44 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
 
   const [images, setImages] = useState<string[]>([]);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Authentication required. Please login again.");
+          return;
+        }
+
+        const response = await fetch(`${BASE_URL}/available-categories`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            apiKey: API_KEY,
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 304 || response.ok) {
+          const data = await response.json();
+          if (!data.mappedCategories || data.mappedCategories.length === 0) {
+            setError("No categories available. Please contact an administrator.");
+            return;
+          }
+
+          setCategories(data.mappedCategories);
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      } catch (err) {
+        setError("Failed to load categories");
+        console.error(err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -29,23 +78,120 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    setFormData({
-      category: "",
-      address: "",
-      contactOnProperty: "",
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          // Remove the data:image/xxx;base64, prefix
+          const base64String = reader.result.split(',')[1];
+          console.log(base64String)
+          resolve(base64String);
+        } else {
+          reject(new Error('Failed to convert image to base64'));
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
     });
-    setImages([]);
-    onClose();
   };
 
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const files = Array.from(event.target.files);
-      const newImages = files.map((file) => URL.createObjectURL(file));
-      setImages((prevImages) => [...prevImages, ...newImages]);
+      try {
+        const files = Array.from(event.target.files);
+        
+        // Create object URLs for preview and append to existing images
+        const newObjectUrls = files.map((file) => URL.createObjectURL(file));
+        setImages(prevImages => [...prevImages, ...newObjectUrls]);
+
+      } catch (error) {
+        console.error('Error handling image upload:', error);
+        setError('Failed to process images');
+      }
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Authentication required. Please login again.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Get the original files from input
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (!fileInput?.files?.length) {
+        throw new Error('No images selected');
+      }
+
+      // Convert all files to base64
+      const base64Images = await Promise.all(
+        Array.from(fileInput.files).map(file => convertToBase64(file))
+      );
+
+      const response = await fetch(`${BASE_URL}/user/add-property`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apiKey: API_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          categoryId: formData.category,
+          address: formData.address,
+          phonenumber: formData.contactOnProperty,
+          images: base64Images, // Already stripped of prefix by convertToBase64
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      // Clean up object URLs
+      images.forEach(url => URL.revokeObjectURL(url));
+
+      setFormData({
+        category: "",
+        address: "",
+        contactOnProperty: "",
+      });
+      setImages([]);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add property");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Clean up object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      images.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [images]);
+
+  const removeImage = (indexToRemove: number) => {
+    // Revoke the object URL to prevent memory leaks
+    URL.revokeObjectURL(images[indexToRemove]);
+    
+    // Remove the image from the images array
+    setImages(prevImages => prevImages.filter((_, index) => index !== indexToRemove));
+    
+    // Also clear the file from the input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = ''; // Reset the file input
     }
   };
 
@@ -91,6 +237,11 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
           <div className="p-4 flex-grow flex flex-col">
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                {error}
+              </div>
+            )}
             <div className="bg-[#E8F5E9] border border-[#C8E6C9] rounded p-3 mb-4">
               <p className="text-sm">
                 Kindly fill the form below to ADD NEW PROPERTY
@@ -105,9 +256,14 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                     onChange={handleChange}
                     className="w-full p-4 bg-transparent appearance-none"
                     required
+                    disabled={categories.length === 0}
                   >
                     <option value="">--Select Category--</option>
-                    <option value="option1">-Select here</option>
+                    {categories.map((category) => (
+                      <option key={category._id} value={category._id}>
+                        {category.category}
+                      </option>
+                    ))}
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                     <svg
@@ -127,6 +283,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                   placeholder="Address:"
                   className="w-full p-4 bg-[#F5F5F5] rounded"
                   required
+                  disabled={categories.length === 0}
                 />
                 <input
                   type="text"
@@ -136,6 +293,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                   placeholder="Contact on property:"
                   className="w-full p-4 bg-[#F5F5F5] rounded"
                   required
+                  disabled={categories.length === 0}
                 />
               </div>
               <div className="mb-16">
@@ -153,6 +311,26 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                           layout="fill"
                           objectFit="cover"
                         />
+                        <button
+                          type="button" // Important to prevent form submission
+                          onClick={() => removeImage(index)}
+                          className="absolute top-0 right-0 bg-red-500 rounded-full p-1 m-1 hover:bg-red-600 transition-colors"
+                        >
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
                       </div>
                     ))}
                     <label className="w-24 h-24 bg-gray-100 flex items-center justify-center cursor-pointer">
@@ -162,6 +340,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                         multiple
                         onChange={handleImageUpload}
                         className="hidden"
+                        disabled={categories.length === 0}
                       />
                       <svg
                         className="w-8 h-8 text-gray-400"
@@ -183,15 +362,24 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
               </div>
               <button
                 type="submit"
-                className="mt-auto bg-[#028835] text-white font-semibold p-4 rounded flex items-center justify-center gap-2"
+                disabled={loading || categories.length === 0}
+                className={`mt-auto bg-[#028835] text-white font-semibold p-4 rounded flex items-center justify-center gap-2 ${
+                  (loading || categories.length === 0) ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                <Image
-                  src="/dashboard/mark.png"
-                  alt="check"
-                  width={15}
-                  height={15}
-                />
-                SUBMIT
+                {loading ? (
+                  "SUBMITTING..."
+                ) : (
+                  <>
+                    <Image
+                      src="/dashboard/mark.png"
+                      alt="check"
+                      width={15}
+                      height={15}
+                    />
+                    SUBMIT
+                  </>
+                )}
               </button>
             </form>
           </div>

@@ -1,10 +1,10 @@
-import Change from "@/components/Change";
+import ResetVerify from "@/components/ResetVerify";
 import React from "react";
 
 export default function page() {
   return (
     <>
-      <Change />
+      <ResetVerify />
     </>
   );
-}
+} 

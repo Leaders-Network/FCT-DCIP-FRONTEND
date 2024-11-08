@@ -4,12 +4,24 @@ import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
+import { z } from "zod";
+
+const signUpSchema = z.object({
+  fullName: z.string().min(1, "Full Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().regex(/^\d+$/, "Phone number should contain only digits"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
 
 export default function SignUp() {
   return (
-    <div className="flex h-screen bg-white">
-      <div className="w-2/3 flex flex-col p-8">
+    <div className="flex flex-col md:flex-row h-screen bg-white">
+      <div className="w-full md:w-2/3 flex flex-col p-4 md:p-8">
         <Header />
         <div className="w-full h-px bg-gray-300 mb-6"></div>
         <main className="flex flex-col justify-center flex-grow max-w-md mx-auto w-full">
@@ -17,9 +29,9 @@ export default function SignUp() {
           <SignUpForm />
         </main>
       </div>
-      <div className="w-1/3 relative">
+      <div className="hidden md:block md:w-1/3 relative">
         <Image
-          className="w-full h-[900px] object-cover"
+          className="w-full h-full object-cover"
           src="/abuja-bg.png"
           alt="Abuja background"
           width={500}
@@ -33,13 +45,13 @@ export default function SignUp() {
 
 function Header() {
   return (
-    <header className="flex justify-between items-center w-full mb-8">
+    <header className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
       <Logo />
-      <div className="flex items-center gap-4">
-        <p className="text-black text-base font-semibold">
+      <div className="flex items-center gap-4 mt-4 md:mt-0">
+        <p className="text-black text-sm md:text-base font-semibold">
           Already have an account?
         </p>
-        <Link href="/login" className="text-black text-base font-bold">
+        <Link href="/login" className="text-black text-sm md:text-base font-bold">
           Login
         </Link>
       </div>
@@ -102,8 +114,8 @@ function Logo() {
 function SignUpTitle() {
   return (
     <div className="mb-8">
-      <h2 className="text-black text-4xl font-bold mb-2">Sign-Up</h2>
-      <p className="text-black text-base font-semibold">
+      <h2 className="text-black text-3xl md:text-4xl font-bold mb-2">Sign-Up</h2>
+      <p className="text-black text-sm md:text-base font-semibold">
         Kindly fill in your details.
       </p>
     </div>
@@ -116,97 +128,105 @@ function SignUpForm() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const validateForm = useCallback(() => {
+    try {
+      signUpSchema.parse({ fullName, email, phone: phoneNumber, password, confirmPassword });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formattedErrors = error.errors.reduce((acc, curr) => {
+          acc[curr.path[0]] = curr.message;
+          return acc;
+        }, {} as { [key: string]: string });
+        setErrors(formattedErrors);
+      }
+      return false;
+    }
+  }, [fullName, email, phoneNumber, password, confirmPassword]);
+
   return (
     <form className="w-full gap-2">
-      <div className="mb-4 relative">
-        <input
-          type="text"
-          id="fullName"
-          placeholder=" "
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        />
-        <label
-          htmlFor="fullName"
-          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
-        >
-          Full Name
-        </label>
-      </div>
-      <div className="mb-4 relative">
-        <input
-          type="email"
-          id="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder=" "
-          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        />
-        <label
-          htmlFor="email"
-          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
-        >
-          Email
-        </label>
-      </div>
-      <div className="mb-4 relative">
-        <input
-          type="tel"
-          id="phone"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder=" "
-          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        />
-        <label
-          htmlFor="phone"
-          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
-        >
-          Phone
-        </label>
-      </div>
-      <div className="mb-4 relative">
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder=" "
-          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        />
-        <label
-          htmlFor="password"
-          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
-        >
-          Password
-        </label>
-      </div>
-      <div className="mb-8 relative">
-        <input
-          type="password"
-          id="confirmPassword"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder=" "
-          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        />
-        <label
-          htmlFor="confirmPassword"
-          className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-5 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
-        >
-          Confirm Password
-        </label>
-      </div>
+      <InputField
+        id="fullName"
+        type="text"
+        label="Full Name"
+        value={fullName}
+        onChange={setFullName}
+        error={errors.fullName}
+      />
+      <InputField
+        id="email"
+        type="email"
+        label="Email"
+        value={email}
+        onChange={setEmail}
+        error={errors.email}
+      />
+      <InputField
+        id="phone"
+        type="tel"
+        label="Phone"
+        value={phoneNumber}
+        onChange={setPhoneNumber}
+        error={errors.phone}
+      />
+      <InputField
+        id="password"
+        type="password"
+        label="Password"
+        value={password}
+        onChange={setPassword}
+        error={errors.password}
+      />
+      <InputField
+        id="confirmPassword"
+        type="password"
+        label="Confirm Password"
+        value={confirmPassword}
+        onChange={setConfirmPassword}
+        error={errors.confirmPassword}
+      />
 
       <SignUpButton
         fullName={fullName}
         phone={phoneNumber}
         email={email}
         password={password}
-        confirmPassword={confirmPassword}
+        validateForm={validateForm}
       />
     </form>
+  );
+}
+
+function InputField({ id, type, label, value, onChange, error }: {
+  id: string;
+  type: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+}) {
+  return (
+    <div className="mb-4 relative">
+      <input
+        type={type}
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder=" "
+        className="peer w-full h-12 md:h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+      />
+      <label
+        htmlFor={id}
+        className="absolute text-xs md:text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-3 md:top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:left-0 peer-focus:top-0 peer-focus:px-2 peer-focus:text-green-500"
+      >
+        {label}
+      </label>
+      {error && <p className="text-red-500 text-xs md:text-sm mt-1">{error}</p>}
+    </div>
   );
 }
 
@@ -215,66 +235,28 @@ function SignUpButton({
   phone,
   email,
   password,
-  confirmPassword,
+  validateForm,
 }: {
   fullName: string;
   phone: string;
   email: string;
   password: string;
-  confirmPassword: string;
+  validateForm: () => boolean;
 }) {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter()
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError(null);
 
-    // Validation
-    const errors: string[] = [];
-
-    // Check if fields are present
-    if (!fullName.trim()) errors.push("Full Name is required");
-    if (!phone.trim()) errors.push("Phone is required");
-    if (!email.trim()) errors.push("Email is required");
-    if (!password.trim()) errors.push("Password is required");
-    if (!confirmPassword.trim()) errors.push("Confirm Password is required");
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email && !emailRegex.test(email)) errors.push("Invalid email format");
-
-    // Validate phone number (simple check for digits only)
-    const phoneRegex = /^\d+$/;
-    if (phone && !phoneRegex.test(phone))
-      errors.push("Phone number should contain only digits");
-
-    // Validate password strength (example: at least 8 characters)
-    if (password && password.length < 8)
-      errors.push("Password should be at least 8 characters long");
-
-    // Check if passwords match
-    if (password !== confirmPassword) errors.push("Passwords do not match");
-
-    if (errors.length > 0) {
-      // If there are errors, log them and stop the submission
-      console.log("Validation errors:", errors);
-      alert(errors[0]);
-      setIsLoading(false);
+    if (!validateForm()) {
       return;
     }
 
-    // If validation passes, proceed with sign-up logic
-    console.log("Full Name:", fullName);
-    console.log("Phone:", phone);
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Confirm Password:", confirmPassword);
-    //store data in localstorage in json
-    // Add your sign-up API call here
-    const ApiKey =
-      process.env.API_KEY ||
-      "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+    setIsLoading(true);
+    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
     try {
       const response = await fetch(
@@ -282,43 +264,43 @@ function SignUpButton({
         {
           method: "POST",
           headers: {
-            apiKey: `${ApiKey}`,
+            apiKey: ApiKey,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            email,
-          }),
+          body: JSON.stringify({ email }),
         }
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-      
-      const result = await response.json();
-      alert(result.message);
-      console.log(result);
-      localStorage.setItem("pendinguser", JSON.stringify({ fullName, phone, email ,password}));
-      router.push("/verify")
+
+      await response.json();
+      localStorage.setItem("pendingUser", JSON.stringify({ fullName, phone, email, password }));
+      router.push("/verify");
     } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
+      console.error("Sign-up error:", error);
+      setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
-
   };
+
   return (
-    <button
-      onClick={handleSubmit}
-      disabled={isLoading}
-      className={`w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-base font-semibold flex items-center justify-evenly ${
-        isLoading ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-    >
-      { isLoading ? "Signing Up" : " Sign Up" }
-      <span className="w-[30px] h-[30px] ml-5 flex items-center justify-center bg-white rounded-full">
-        <MoveRight color="#000000" size={20} />
-      </span>
-    </button>
+    <>
+      {error && <p className="text-red-500 text-xs md:text-sm mb-4">{error}</p>}
+      <button
+        onClick={handleSubmit}
+        disabled={isLoading}
+        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+      >
+        {isLoading ? "Signing Up..." : "Sign Up"}
+        <span className="w-[30px] h-[30px] ml-2 md:ml-5 flex items-center justify-center bg-white rounded-full">
+          <MoveRight color="#000000" size={20} />
+        </span>
+      </button>
+    </>
   );
 }
