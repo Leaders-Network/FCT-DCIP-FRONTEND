@@ -14,6 +14,7 @@ const passwordSchema = z.object({
   path: ["confirmPassword"],
 });
 
+// Component for setting new password after reset verification
 export default function ChangePassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,9 +23,8 @@ export default function ChangePassword() {
   const router = useRouter();
 
   useEffect(() => {
-    const email = localStorage.getItem("resetEmail");
-    const otp = localStorage.getItem("resetOTP");
-    if (!email || !otp) {
+    const token = localStorage.getItem("resetVerifyToken");
+    if (!token) {
       router.push("/reset");
     }
   }, [router]);
@@ -33,6 +33,7 @@ export default function ChangePassword() {
     e.preventDefault();
     setError(null);
 
+    // Validate password using Zod schema
     try {
       passwordSchema.parse({ password, confirmPassword });
     } catch (error) {
@@ -43,17 +44,17 @@ export default function ChangePassword() {
     }
 
     setIsLoading(true);
-    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "your_fallback_api_key";
-    const email = localStorage.getItem("resetEmail");
-    const otp = localStorage.getItem("resetOTP");
+    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+    const token = localStorage.getItem("resetVerifyToken");
 
-    if (!email || !otp) {
-      setError("Missing email or OTP. Please try the reset process again.");
+    if (!token) {
+      setError("Session expired. Please try the reset process again.");
       setIsLoading(false);
       return;
     }
 
     try {
+      // Step 3: Set new password
       const response = await fetch(
         "https://fct-dcip-backend-1.onrender.com/api/v1/auth/reset-password",
         {
@@ -61,8 +62,9 @@ export default function ChangePassword() {
           headers: {
             apiKey: ApiKey,
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Use verification token
           },
-          body: JSON.stringify({ otp, newPassword: password }),
+          body: JSON.stringify({ newpassword: password }),
         }
       );
 
@@ -71,17 +73,21 @@ export default function ChangePassword() {
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       
-      const result = await response.json();
+      // Clear all reset-related data after successful password change
       localStorage.removeItem("resetEmail");
-      localStorage.removeItem("resetOTP");
+      localStorage.removeItem("resetToken");
+      localStorage.removeItem("resetVerifyToken");
+      
+      // Redirect to login
       router.push("/login");
     } catch (error) {
-      console.error("Change password error:", error);
+      console.error("Password change error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">

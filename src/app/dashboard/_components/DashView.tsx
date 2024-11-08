@@ -14,7 +14,7 @@ import Image from "next/image";
 const Dashview = () => {
   const [showAddNewProperty, setShowAddNewProperty] = useState(false);
   //get user name from local storage
-  const userName = localStorage.getItem("name");
+  const userName = localStorage.getItem("fullname");
   const nameParts = userName?.split(" ") ?? [];
   const lastName = nameParts[nameParts.length - 1];
   const initials =

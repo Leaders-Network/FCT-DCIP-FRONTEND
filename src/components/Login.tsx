@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useCallback } from "react";
 import { z } from "zod";
-import { useAuth } from '../hooks/useAuth';
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -194,7 +193,7 @@ function LoginForm() {
 function LoginButton({ email, password, validateForm }: { email: string; password: string; validateForm: () => boolean }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,7 +204,7 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
     }
 
     setIsLoading(true);
-    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "your_fallback_api_key";
+    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
     try {
       const response = await fetch(
@@ -226,7 +225,13 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
       }
 
       const result = await response.json();
-      login(result.token, result.user.name);
+      
+      // Store token and user data in localStorage
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("fullname", result.user.fullname);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      
+      router.push("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");

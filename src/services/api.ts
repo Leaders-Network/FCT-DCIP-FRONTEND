@@ -19,6 +19,19 @@ const api = axios.create({
   },
 });
 
+// Property Types
+export interface Category {
+  _id: string;
+  name: string;
+}
+
+export interface AddPropertyPayload {
+  categoryId: string;
+  address: string;
+  phonenumber: string;
+  images: string[];
+}
+
 // Authentication APIs
 export const loginEmployee = async (email: string, password: string) => {
   try {
@@ -33,7 +46,36 @@ export const loginEmployee = async (email: string, password: string) => {
 export const getUserRole = (token: string) =>
   api.get("/auth/user-role", {
     headers: { Authorization: `Bearer ${token}` },
-  });
+  }); 
+
+// Property Management APIs
+export const getCategories = async ({token}: {token: string}): Promise<Category[]> => {
+  try {
+    const response = await api.get("/auth/available-categories", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log(response)
+    return response.data.categories;
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    throw error;
+  }
+};
+
+export const addProperty = async (
+  payload: AddPropertyPayload, 
+  token: string
+): Promise<Record<string, unknown>> => {
+  try {
+    const response = await api.post("/auth/user/add-property", payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to add property:", error);
+    throw error;
+  }
+};
 
 // Password Reset APIs
 export const initiatePasswordReset = (email: string) =>

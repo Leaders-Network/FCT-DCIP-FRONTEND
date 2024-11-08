@@ -195,7 +195,6 @@ function SignUpForm() {
         phone={phoneNumber}
         email={email}
         password={password}
-        confirmPassword={confirmPassword}
         validateForm={validateForm}
       />
     </form>
@@ -236,14 +235,12 @@ function SignUpButton({
   phone,
   email,
   password,
-  confirmPassword,
   validateForm,
 }: {
   fullName: string;
   phone: string;
   email: string;
   password: string;
-  confirmPassword: string;
   validateForm: () => boolean;
 }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -259,7 +256,7 @@ function SignUpButton({
     }
 
     setIsLoading(true);
-    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "your_fallback_api_key";
+    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
     try {
       const response = await fetch(
@@ -278,9 +275,9 @@ function SignUpButton({
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-      
-      const result = await response.json();
-      localStorage.setItem("pendinguser", JSON.stringify({ fullName, phone, email, password }));
+
+      await response.json();
+      localStorage.setItem("pendingUser", JSON.stringify({ fullName, phone, email, password }));
       router.push("/verify");
     } catch (error) {
       console.error("Sign-up error:", error);
@@ -296,9 +293,8 @@ function SignUpButton({
       <button
         onClick={handleSubmit}
         disabled={isLoading}
-        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${
-          isLoading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
       >
         {isLoading ? "Signing Up..." : "Sign Up"}
         <span className="w-[30px] h-[30px] ml-2 md:ml-5 flex items-center justify-center bg-white rounded-full">
