@@ -10,6 +10,7 @@ const emailSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
 
+// Component for initiating password reset
 export default function Reset() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +21,7 @@ export default function Reset() {
     e.preventDefault();
     setError(null);
 
+    // Validate email using Zod schema
     try {
       emailSchema.parse({ email });
     } catch (error) {
@@ -30,9 +32,10 @@ export default function Reset() {
     }
 
     setIsLoading(true);
-    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "your_fallback_api_key";
+    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
     try {
+      // Step 1: Request OTP for password reset
       const response = await fetch(
         "https://fct-dcip-backend-1.onrender.com/api/v1/auth/send-reset-password-otp",
         {
@@ -50,9 +53,12 @@ export default function Reset() {
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       
-      const result = await response.json();
+      const data = await response.json();
+      // Store email and token for the reset process
       localStorage.setItem("resetEmail", email);
-      router.push("/verify?action=reset");
+      localStorage.setItem("resetToken", data.token);
+      // Redirect to reset verification page
+      router.push("/reset-verify");
     } catch (error) {
       console.error("Reset password error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");

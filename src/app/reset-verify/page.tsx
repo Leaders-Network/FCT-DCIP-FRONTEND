@@ -1,10 +1,10 @@
+import ResetVerify from "@/components/ResetVerify";
 import React from "react";
-import Dashview from "./_components/DashView";
 
 export default function page() {
   return (
     <>
-      <Dashview />
+      <ResetVerify />
     </>
   );
-}
+} 

@@ -3,16 +3,15 @@
 import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
+// Component for handling new account verification
 export default function Verify() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const action = searchParams.get('action');
 
   useEffect(() => {
     const email = localStorage.getItem("resetEmail");
@@ -31,17 +30,20 @@ export default function Verify() {
     }
 
     setIsLoading(true);
-    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "your_fallback_api_key";
-    const email = localStorage.getItem("resetEmail");
+    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
-    if (!email) {
-      setError("Email not found. Please try the reset process again.");
+    const pendingUserStr = localStorage.getItem("pendingUser");
+    if (!pendingUserStr) {
+      setError("User data not found. Please try signing up again.");
       setIsLoading(false);
       return;
     }
 
+    const pendingUser = JSON.parse(pendingUserStr);
+
     try {
-      const response = await fetch(
+      // Verify OTP
+      const verifyResponse = await fetch(
         "https://fct-dcip-backend-1.onrender.com/api/v1/auth/verify-otp",
         {
           method: "POST",
@@ -49,25 +51,55 @@ export default function Verify() {
             apiKey: ApiKey,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, otp }),
+          body: JSON.stringify({
+            email: pendingUser.email,
+            otp
+          }),
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        throw new Error(errorData.message || `HTTP error! status: ${verifyResponse.status}`);
       }
-      
-      const result = await response.json();
-      localStorage.setItem("resetOTP", otp);
-      if (action === 'reset') {
-        router.push("/change-password");
-      } else {
-        // Handle signup verification
-        router.push("/dashboard");
+
+      // Complete registration
+      const registerResponse = await fetch(
+        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/register",
+        {
+          method: "POST",
+          headers: {
+            apiKey: ApiKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fullName: pendingUser.fullName,
+            email: pendingUser.email,
+            phone: pendingUser.phone,
+            password: pendingUser.password,
+          }),
+        }
+      );
+
+      if (!registerResponse.ok) {
+        const errorData = await registerResponse.json();
+        throw new Error(errorData.message || `HTTP error! status: ${registerResponse.status}`);
       }
+
+      const result = await registerResponse.json();
+
+      // Store auth data in localStorage
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("fullname", result.user.fullname);
+      localStorage.setItem("user", JSON.stringify(result.user));
+
+      // Clear signup data
+      localStorage.removeItem("pendingUser");
+      localStorage.removeItem("pendingEmail");
+
+      router.push("/dashboard");
     } catch (error) {
-      console.error("OTP verification error:", error);
+      console.error("Verification/Registration error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -183,17 +215,17 @@ function VerifyTitle() {
   );
 }
 
-function VerifyForm({ 
-  otp, 
-  setOtp, 
-  error, 
-  isLoading, 
-  handleSubmit 
-}: { 
-  otp: string; 
-  setOtp: (otp: string) => void; 
-  error: string | null; 
-  isLoading: boolean; 
+function VerifyForm({
+  otp,
+  setOtp,
+  error,
+  isLoading,
+  handleSubmit
+}: {
+  otp: string;
+  setOtp: (otp: string) => void;
+  error: string | null;
+  isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
 }) {
   return (
@@ -221,9 +253,8 @@ function VerifyForm({
       <button
         type="submit"
         disabled={isLoading}
-        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${
-          isLoading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
       >
         {isLoading ? "Verifying..." : "Verify OTP"}
         {!isLoading && (

@@ -1,32 +1,24 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useContext } from 'react';
+import { AuthContext } from '@/context/AuthProvider';
 
-export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
-  }, []);
-
-  const login = (token: string, name: string) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('name', name);
-    setIsAuthenticated(true);
-    router.push('/dashboard');
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('name');
-    setIsAuthenticated(false);
-    router.push('/login');
-  };
-
-  return { isAuthenticated, isLoading, login, logout };
+interface AuthContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  token: string;
+  login: (token: string, name: string) => void;
+  logout: () => void;
 }
+
+export const useAuth = () => {
+  const context = useContext(AuthContext) as unknown as AuthContextType;
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return {
+    isAuthenticated: context.isAuthenticated,
+    isLoading: context.isLoading || false,
+    token: context.token || '',
+    login: context.login,
+    logout: context.logout,
+  };
+};

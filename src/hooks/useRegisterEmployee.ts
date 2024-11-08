@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   getAvailableRoles,
@@ -48,7 +48,7 @@ export const useRegisterEmployee = () => {
   }, []);
 
   // Filter roles based on user's role
-  const filterRolesByPermission = (roles: Role[]) => {
+  const filterRolesByPermission = useCallback((roles: Role[], userRole: string) => {
     switch (userRole) {
       case ROLE_IDS.SUPER_ADMIN:
         return roles; // Show all roles
@@ -63,14 +63,14 @@ export const useRegisterEmployee = () => {
       default:
         return [];
     }
-  };
+  }, []);
 
   // Fetch and filter available roles
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         const response = await getAvailableRoles();
-        const filteredRoles = filterRolesByPermission(response.roles);
+        const filteredRoles = filterRolesByPermission(response.roles, userRole);
         setState((prev) => ({
           ...prev,
           availableRoles: filteredRoles,
@@ -88,11 +88,8 @@ export const useRegisterEmployee = () => {
     fetchRoles();
   }, [userRole, filterRolesByPermission]);
 
-  useEffect(() => {
-    checkAuth();
-  }, [router, state.isLoading]);
-
-  const checkAuth = async () => {
+  // Check authentication
+  const checkAuth = useCallback(async () => {
     const token = localStorage.getItem("authToken");
     if (!token) {
       router.push("/admin/login");
@@ -116,7 +113,11 @@ export const useRegisterEmployee = () => {
       console.error("Failed to fetch user role", error);
       router.push("/admin/login");
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
