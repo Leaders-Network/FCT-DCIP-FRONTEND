@@ -159,7 +159,7 @@ const Dashview = () => {
                 </svg>
 
                 <span className="text-black text-[15px] font-semibold ml-2">
-                  Insurance
+                  My Property
                 </span>
               </Link>
             </div>
@@ -222,7 +222,7 @@ const Dashview = () => {
                 </svg>
 
                 <span className="text-black text-[15px] font-semibold">
-                  Users
+                  Insurance
                 </span>
               </Link>
             </div>
