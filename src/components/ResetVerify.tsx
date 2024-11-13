@@ -4,7 +4,7 @@ import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 // Component for verifying password reset OTP
 export default function ResetVerify() {
@@ -13,12 +13,12 @@ export default function ResetVerify() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-//   useEffect(() => {
-//     const email = localStorage.getItem("resetEmail");
-//     if (!email) {
-//       router.push("/reset");
-//     }
-//   }, [router]);
+  useEffect(() => {
+    const email = localStorage.getItem("resetEmail");
+    if (!email) {
+      router.push("/reset");
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

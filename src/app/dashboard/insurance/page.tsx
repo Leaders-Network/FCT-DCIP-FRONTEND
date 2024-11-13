@@ -81,13 +81,20 @@ export default function Insurance() {
                             <div className="flex justify-between items-center">
                                 <div className="max-w-2xl">
                                     <h2 className="text-xl font-bold text-white mb-2">
-                                        Life is unpredictable, but your home insurance doesn't have to be.
+                                        Life is unpredictable, but your home insurance doesn&apos;t have to be.
                                     </h2>
                                     <p className="text-sm text-white">
-                                        Get peace of mind with a policy that covers you against life's unexpected twists
+                                        Get peace of mind with a policy that covers you against life&apos;s unexpected twists
                                     </p>
                                 </div>
-                                <button className="bg-white px-8 py-0.5 rounded-full flex items-center gap-2"><div className="w-4 h-4 bg-[#028835] rounded-full flex items-center justify-center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></div><span className="text-[#028835] text-[14px] font-semibold">New Policy</span></button>
+                                <button className="bg-white px-8 py-0.5 rounded-full flex items-center gap-2">
+                                    <div className="w-4 h-4 bg-[#028835] rounded-full flex items-center justify-center">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[#028835] text-[14px] font-semibold">New Policy</span>
+                                </button>
                             </div>
                         </div>
                     </div>

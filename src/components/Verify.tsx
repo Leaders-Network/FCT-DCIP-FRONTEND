@@ -14,9 +14,9 @@ export default function Verify() {
   const router = useRouter();
 
   useEffect(() => {
-    const email = localStorage.getItem("resetEmail");
+    const email = localStorage.getItem("pendingEmail");
     if (!email) {
-      router.push("/reset");
+      router.push("/signup");
     }
   }, [router]);
 
