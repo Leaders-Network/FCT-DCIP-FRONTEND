@@ -278,6 +278,7 @@ function SignUpButton({
 
       await response.json();
       localStorage.setItem("pendingUser", JSON.stringify({ fullName, phone, email, password }));
+      localStorage.setItem("pendingEmail", email);
       router.push("/verify");
     } catch (error) {
       console.error("Sign-up error:", error);
