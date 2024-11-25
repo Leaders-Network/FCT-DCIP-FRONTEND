@@ -6,8 +6,7 @@ import React from 'react'
 const page = () => {
   return (
     <>
-      <AuthLayout
-      >
+      <AuthLayout>
         <AdminLogin />
       </AuthLayout>
     </>

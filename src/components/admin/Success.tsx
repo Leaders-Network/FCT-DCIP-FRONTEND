@@ -2,13 +2,13 @@
 import React from 'react'
 import Button from '../Button';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 
 const Success = () => {
-  const router = useRouter();
+  // const router = useRouter();
 
   const handleProceedToLogin = () => {
-    router.push('/admin/login'); // Adjust this path to your login page
+    // router.push('/admin/login'); // Adjust this path to your login page
   };
 
   return (

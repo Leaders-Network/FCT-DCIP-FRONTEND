@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       token: '',
       name: '',
     });
-    router.push("/admin/login");
+    // router.push("/admin/login");
   }, [router]);
 
   // Check authentication status on mount and token change
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           // Only redirect to login if we're not already there
           const isLoginPage = window.location.pathname.includes('/login');
           if (!isLoginPage) {
-            router.push("/admin/login");
+            // router.push("/admin/login");
           }
         }
       } catch (error) {

@@ -90,11 +90,11 @@ export const useRegisterEmployee = () => {
 
   // Check authentication
   const checkAuth = useCallback(async () => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
+    // const token = localStorage.getItem("authToken");
+    // if (!token) {
+    //   router.push("/admin/login");
+    //   return;8
+    // }
 
     try {
       const data = await getAvailableRoles();

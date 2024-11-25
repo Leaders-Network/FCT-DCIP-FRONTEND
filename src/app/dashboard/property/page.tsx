@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function Insurance() {
+export default function Property() {
     return (
         <div className="min-h-screen bg-[#f8f8f8]">
             <div className="container mx-auto">
@@ -22,7 +22,7 @@ export default function Insurance() {
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="Search Insurance available"
+                                    placeholder="Search Property available"
                                     className="w-full h-14 pl-12 pr-4 border border-gray-300/50 rounded-md bg-white/40"
                                 />
                             </div>
@@ -57,13 +57,13 @@ export default function Insurance() {
                             </svg>
                             <span className="text-black">Dashboard</span>
                         </Link>
-                        <Link href="/dashboard/property" className="flex items-center gap-3 hover:bg-gray-100 p-2 rounded transition-colors">
+                        <Link href="/dashboard/property" className="flex items-center gap-3 bg-[#028835] text-white p-2 rounded hover:bg-[#026d2a] transition-colors">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M3 21H21M3 7V17M21 7V17M6 7H18C19.6569 7 21 5.65685 21 4V3H3V4C3 5.65685 4.34315 7 6 7ZM6 21V7M18 21V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                             <span>My Property</span>
                         </Link>
-                        <Link href="/dashboard/insurance" className="flex items-center gap-3 bg-[#028835] text-white p-2 rounded hover:bg-[#026d2a] transition-colors">
+                        <Link href="/dashboard/insurance" className="flex items-center gap-3 hover:bg-gray-100 p-2 rounded transition-colors">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -97,7 +97,7 @@ export default function Insurance() {
                                         Get peace of mind with a policy that covers you against life&apos;s unexpected twists
                                     </p>
                                 </div>
-                                <button className="bg-white px-8 py-0.5 rounded-full flex items-center gap-2" style={{ height: '46px' }} >
+                                <button className="bg-white px-8 py-0.5 rounded-full flex items-center gap-2" style={{ height: '46px' }}>
                                     <div className="w-4 h-4 bg-[#028835] rounded-full flex items-center justify-center">
                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -121,9 +121,9 @@ export default function Insurance() {
 
                         {/* Table Rows */}
                         {[
-                            { name: "Insurance Renewal", date: "June 20, 2024", id: "A012D30", status: "Pending", color: "bg-[#ffc835]" },
-                            { name: "Insurance Renewal", date: "Feb 10, 2024", id: "E712D30", status: "Processing", color: "bg-[#4eb8ca]" },
-                            { name: "Insurance Renewal", date: "July 20, 2024", id: "C712V43", status: "Expired", color: "bg-[#954535]" },
+                            { name: "Insurance Renewal", date: "..........", id: "A012D30", status: "Pending", color: "bg-[#ffc835]" },
+                            { name: "Insurance Renewal", date: "..........", id: "E712D30", status: "Processing", color: "bg-[#4eb8ca]" },
+                            { name: "Insurance Renewal", date: "July 20, 2024", id: "C712V43", status: "Cancelled", color: "bg-[#bd2721]" },
                             { name: "Insurance Renewal", date: "Jan 01, 2024", id: "Y657JB9", status: "Inactive", color: "bg-[#3f3f3f]" },
                             { name: "Insurance Renewal", date: "May 24, 2024", id: "B657B90", status: "Cancelled", color: "bg-[#bd2721]" }
                         ].map((item, index) => (
