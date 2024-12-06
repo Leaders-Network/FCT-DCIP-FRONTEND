@@ -18,7 +18,8 @@ interface FormData {
   contactOnProperty: string;
 }
 
-const API_KEY = "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+const API_KEY =
+  "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 const BASE_URL = "https://fct-dcip-backend-1.onrender.com/api/v1/auth";
 
 const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
@@ -54,7 +55,9 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
         if (response.status === 304 || response.ok) {
           const data = await response.json();
           if (!data.mappedCategories || data.mappedCategories.length === 0) {
-            setError("No categories available. Please contact an administrator.");
+            setError(
+              "No categories available. Please contact an administrator."
+            );
             return;
           }
 
@@ -82,13 +85,11 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          // Remove the data:image/xxx;base64, prefix
-          const base64String = reader.result.split(',')[1];
-          console.log(base64String)
-          resolve(base64String);
+        if (typeof reader.result === "string") {
+          // Include the full base64 string with prefix
+          resolve(reader.result);
         } else {
-          reject(new Error('Failed to convert image to base64'));
+          reject(new Error("Failed to convert image to base64"));
         }
       };
       reader.onerror = (error) => reject(error);
@@ -96,18 +97,74 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
     });
   };
 
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = document.createElement("img");
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error("Canvas to Blob conversion failed"));
+              }
+            },
+            "image/jpeg",
+            0.7 // compression quality
+          );
+        };
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       try {
         const files = Array.from(event.target.files);
-        
-        // Create object URLs for preview and append to existing images
-        const newObjectUrls = files.map((file) => URL.createObjectURL(file));
-        setImages(prevImages => [...prevImages, ...newObjectUrls]);
 
+        // Compress images before creating object URLs
+        const compressedFiles = await Promise.all(
+          files.map((file) => compressImage(file))
+        );
+        const newObjectUrls = compressedFiles.map((file) =>
+          URL.createObjectURL(file)
+        );
+        setImages((prevImages) => [...prevImages, ...newObjectUrls]);
       } catch (error) {
-        console.error('Error handling image upload:', error);
-        setError('Failed to process images');
+        console.error("Error handling image upload:", error);
+        setError("Failed to process images");
       }
     }
   };
@@ -125,15 +182,20 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
     }
 
     try {
-      // Get the original files from input
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = document.querySelector(
+        'input[type="file"]'
+      ) as HTMLInputElement;
       if (!fileInput?.files?.length) {
-        throw new Error('No images selected');
+        throw new Error("No images selected");
       }
 
-      // Convert all files to base64
+      const files = Array.from(fileInput.files);
+      // Compress images before converting to base64
+      const compressedFiles = await Promise.all(
+        files.map((file) => compressImage(file))
+      );
       const base64Images = await Promise.all(
-        Array.from(fileInput.files).map(file => convertToBase64(file))
+        compressedFiles.map((file) => convertToBase64(file))
       );
 
       const response = await fetch(`${BASE_URL}/user/add-property`, {
@@ -147,17 +209,19 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
           categoryId: formData.category,
           address: formData.address,
           phonenumber: formData.contactOnProperty,
-          images: base64Images, // Already stripped of prefix by convertToBase64
+          images: base64Images, // Now includes complete base64 strings with prefixes
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
       // Clean up object URLs
-      images.forEach(url => URL.revokeObjectURL(url));
+      images.forEach((url) => URL.revokeObjectURL(url));
 
       setFormData({
         category: "",
@@ -177,21 +241,25 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
   // Clean up object URLs when component unmounts
   useEffect(() => {
     return () => {
-      images.forEach(url => URL.revokeObjectURL(url));
+      images.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [images]);
 
   const removeImage = (indexToRemove: number) => {
     // Revoke the object URL to prevent memory leaks
     URL.revokeObjectURL(images[indexToRemove]);
-    
+
     // Remove the image from the images array
-    setImages(prevImages => prevImages.filter((_, index) => index !== indexToRemove));
-    
+    setImages((prevImages) =>
+      prevImages.filter((_, index) => index !== indexToRemove)
+    );
+
     // Also clear the file from the input
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const fileInput = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
     if (fileInput) {
-      fileInput.value = ''; // Reset the file input
+      fileInput.value = ""; // Reset the file input
     }
   };
 
@@ -364,7 +432,9 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                 type="submit"
                 disabled={loading || categories.length === 0}
                 className={`mt-auto bg-[#028835] text-white font-semibold p-4 rounded flex items-center justify-center gap-2 ${
-                  (loading || categories.length === 0) ? "opacity-50 cursor-not-allowed" : ""
+                  loading || categories.length === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                 }`}
               >
                 {loading ? (
