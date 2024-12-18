@@ -1,12 +1,27 @@
+"use client";
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function Insurance() {
+    const userName = localStorage.getItem("fullname");
+    const nameParts = userName?.split(" ") ?? [];
+    const lastName = nameParts[nameParts.length - 1];
+    const initials =
+        userName
+            ?.split(" ")
+            .map((word) => word[0])
+            .join("")
+            .toUpperCase() ??
+        ""
+            .split(" ")
+            .map((word) => word[0])
+            .join("")
+            .toUpperCase();
     return (
         <div className="min-h-screen bg-[#f8f8f8]">
             <div className="container mx-auto">
-                <div className="text-2xl font-extrabold text-black mt-8 ml-8">Hello Blessing</div>
+                <div className="text-2xl font-extrabold text-black mt-8 ml-8">Hello {lastName}</div>
 
                 {/* Header */}
                 <header className="w-full h-20 bg-white fixed top-0 left-0">
@@ -31,10 +46,10 @@ export default function Insurance() {
                         {/* User Profile */}
                         <div className="flex items-center gap-4">
                             <div className="flex flex-col items-end">
-                                <span className="font-bold">Paul Blessing</span>
+                                <span className="font-bold">{userName}</span>
                             </div>
                             <div className="h-11 w-11 bg-[#028835] rounded-md flex items-center justify-center">
-                                <span className="text-white font-bold">PB</span>
+                                <span className="text-white font-bold">{initials}</span>
                             </div>
                         </div>
                     </div>

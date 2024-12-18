@@ -73,10 +73,11 @@ export default function Verify() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            fullName: pendingUser.fullName,
+            fullname: pendingUser.fullName,
+            phonenumber: pendingUser.phone,
             email: pendingUser.email,
-            phone: pendingUser.phone,
             password: pendingUser.password,
+            confirmpassword: pendingUser.password
           }),
         }
       );
@@ -87,7 +88,7 @@ export default function Verify() {
       }
 
       const result = await registerResponse.json();
-
+      console.log("Registration result:", result);
       // Store auth data in localStorage
       localStorage.setItem("token", result.token);
       localStorage.setItem("fullname", result.user.fullname);
