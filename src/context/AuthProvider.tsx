@@ -70,46 +70,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [router]);
 
   // Check authentication status on mount and token change
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = getAuthToken();
-        const storedUser = localStorage.getItem('user');
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     try {
+  //       const token = getAuthToken();
+  //       const storedUser = localStorage.getItem('user');
 
-        if (token && storedUser) {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-          setState({
-            isAuthenticated: true,
-            isLoading: false,
-            token,
-            name: userData.firstname,
-          });
+  //       if (token && storedUser) {
+  //         const userData = JSON.parse(storedUser);
+  //         setUser(userData);
+  //         setState({
+  //           isAuthenticated: true,
+  //           isLoading: false,
+  //           token,
+  //           name: userData.firstname,
+  //         });
           
-          // Optionally verify token with backend
-          // try {
-          //   await getUserRole(token); // Verify token is still valid
-          // } catch (error) {
-          //   console.error("Token validation failed:", error);
-          //   logout();
-          //   return;
-          // }
-        } else {
-          // Only redirect to login if we're not already there
-          const isLoginPage = window.location.pathname.includes('/login');
-          if (!isLoginPage) {
-            router.push("/");
-          }
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        setState(prevState => ({ ...prevState, isLoading: false }));
-      }
-    };
+  //         // Optionally verify token with backend
+  //         // try {
+  //         //   await getUserRole(token); // Verify token is still valid
+  //         // } catch (error) {
+  //         //   console.error("Token validation failed:", error);
+  //         //   logout();
+  //         //   return;
+  //         // }
+  //       } else {
+  //         // Only redirect to login if we're not already there
+  //         const isLoginPage = window.location.pathname.includes('/login');
+  //         if (!isLoginPage) {
+  //           router.push("/");
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Auth initialization error:", error);
+  //     } finally {
+  //       setState(prevState => ({ ...prevState, isLoading: false }));
+  //     }
+  //   };
 
-    checkAuth();
-  }, [logout, router]);
+  //   checkAuth();
+  // }, [logout, router]);
 
   const login = async (email: string, password: string) => {
     try {
