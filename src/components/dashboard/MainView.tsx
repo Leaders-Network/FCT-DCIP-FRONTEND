@@ -1,75 +1,140 @@
+// "use client"
+// import React from "react";
+// import StatCard from "./mainviewComponents/StatCard";
+// import PropertyRegistrationChart from "./mainviewComponents/PropertyRegistrationChart";
+// import InsurancePaymentChart from "./mainviewComponents/InsurancePaymentChart";
+// import PropertyStatusChart from "./mainviewComponents/PropertyStatusChart";
+// import NotificationPanel from "./mainviewComponents/NotificationPanel";
+// import profile from "../../../public/dashboard/profile.png"
+// import property from "../../../public/dashboard/sho.png"
+// import lga from "../../../public/dashboard/loca.png"
+// import insurance from "../../../public/dashboard/eye.png"
+// import { useAuth } from "@/context/useAuth";
+
+
+// const MainView = () => {
+//   const { user } = useAuth();
+//   const { firstname, lastname } = user || {}; 
+//   const userName = `${firstname} ${lastname}` || "User";
+//   console.log(user, "userName")
+
+//   return (
+//     <main className="flex-1 overflow-y-auto p-4 md:p-6">
+//       <div className="flex flex-col mb-6">
+//         <div className="flex justify-between items-center mb-4">
+//           <h1 className="text-2xl font-semibold">Hi {userName}</h1>
+//           <button className="bg-[#028835] text-white px-4 py-2 rounded-full flex items-center">
+//             <span className="bg-black rounded-full w-6 h-6 pt-[2px] items-center justify-center mr-2  leading-none">
+//               +
+//             </span>
+//             New Insurance
+//           </button>
+//         </div>
+//       </div>
+
+//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+//         <div className="lg:col-span-2 space-y-6">
+//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+//             <StatCard
+//               icon={profile}
+//               value="12,481"
+//               label="Total Users"
+//               color="bg-pink-100"
+//             />
+//             <StatCard
+//               icon={property}
+//               value="42,432"
+//               label="Total Properties"
+//               color="bg-cyan-100"
+//             />
+//             <StatCard
+//               icon={lga}
+//               value="2,567"
+//               label="L.G.A Covered"
+//               color="bg-yellow-100"
+//             />
+//             <StatCard
+//               icon={insurance}
+//               value="57,480"
+//               label="Insurance Company"
+//               color="bg-blue-100"
+//             />
+//           </div>
+//           <PropertyRegistrationChart />
+//           <InsurancePaymentChart />
+//         </div>
+//         <div className="space-y-6">
+//           <PropertyStatusChart />
+//           <NotificationPanel />
+//         </div>
+//       </div>
+//     </main>
+//   );
+// };
+
+// export default MainView;
+
+
+
 "use client"
-import React from "react";
-import StatCard from "./mainviewComponents/StatCard";
-import PropertyRegistrationChart from "./mainviewComponents/PropertyRegistrationChart";
-import InsurancePaymentChart from "./mainviewComponents/InsurancePaymentChart";
-import PropertyStatusChart from "./mainviewComponents/PropertyStatusChart";
-import NotificationPanel from "./mainviewComponents/NotificationPanel";
+import { useState } from "react"
 import profile from "../../../public/dashboard/profile.png"
 import property from "../../../public/dashboard/sho.png"
 import lga from "../../../public/dashboard/loca.png"
 import insurance from "../../../public/dashboard/eye.png"
-import { useAuth } from "@/context/useAuth";
+import AdminLayout from "./usersComponent/AdminLayout"
+import PropertyStatusChart from "./mainviewComponents/PropertyStatusChart"
+import InsurancePaymentChart from "./mainviewComponents/InsurancePaymentChart"
+import PropertyRegistrationChart from "./mainviewComponents/PropertyRegistrationChart"
+import NotificationPanel from "./mainviewComponents/NotificationPanel"
+import PropertySidebar from "./usersComponent/PropertySidebar"
+import StatCard from "./mainviewComponents/StatCard"
 
+export default function DashboardPage() {
+  const [showPropertySidebar, setShowPropertySidebar] = useState(false)
 
-const MainView = () => {
-  const { user } = useAuth();
-  const { firstname, lastname } = user || {}; 
-  const userName = `${firstname} ${lastname}` || "User";
-  console.log(user, "userName")
+  // Mock user data - in a real app, this would come from your auth context
+  const user = {
+    firstname: "Paul",
+    lastname: "Blessing",
+    email: "paul.blessing@example.com",
+    role: "Super Admin",
+  }
 
   return (
-    <main className="flex-1 overflow-y-auto p-4 md:p-6">
-      <div className="flex flex-col mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-semibold">Hi {userName}</h1>
-          <button className="bg-[#028835] text-white px-4 py-2 rounded-full flex items-center">
-            <span className="bg-black rounded-full w-6 h-6 pt-[2px] items-center justify-center mr-2  leading-none">
+    <>
+      <AdminLayout user={user}>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-semibold">Hi {user.firstname} {user.lastname}</h1>
+          <button
+            onClick={() => setShowPropertySidebar(true)}
+            className="bg-[#028835] text-white px-4 py-2 rounded-full flex items-center"
+          >
+            <span className="bg-black rounded-full w-6 h-6 flex items-center justify-center mr-2 leading-none">
               +
             </span>
             New Insurance
           </button>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard
-              icon={profile}
-              value="12,481"
-              label="Total Users"
-              color="bg-pink-100"
-            />
-            <StatCard
-              icon={property}
-              value="42,432"
-              label="Total Properties"
-              color="bg-cyan-100"
-            />
-            <StatCard
-              icon={lga}
-              value="2,567"
-              label="L.G.A Covered"
-              color="bg-yellow-100"
-            />
-            <StatCard
-              icon={insurance}
-              value="57,480"
-              label="Insurance Company"
-              color="bg-blue-100"
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <StatCard icon={profile} value="12,481" label="Total Users" color="bg-pink-100" />
+              <StatCard icon={property} value="42,432" label="Total Properties" color="bg-cyan-100" />
+              <StatCard icon={lga} value="2,567" label="L.G.A Covered" color="bg-yellow-100" />
+              <StatCard icon={insurance} value="57,480" label="Insurance Company" color="bg-blue-100" />
+            </div>
+            <PropertyRegistrationChart />
+            <InsurancePaymentChart />
           </div>
-          <PropertyRegistrationChart />
-          <InsurancePaymentChart />
+          <div className="space-y-6">
+            <PropertyStatusChart />
+            <NotificationPanel />
+          </div>
         </div>
-        <div className="space-y-6">
-          <PropertyStatusChart />
-          <NotificationPanel />
-        </div>
-      </div>
-    </main>
-  );
-};
-
-export default MainView;
+      </AdminLayout>
+      <PropertySidebar isOpen={showPropertySidebar} onClose={() => setShowPropertySidebar(false)} />
+    </>
+  )
+}
