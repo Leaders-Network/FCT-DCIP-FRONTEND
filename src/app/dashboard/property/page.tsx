@@ -1,193 +1,354 @@
 "use client";
 import React, { useState } from "react";
+import { Bell, Search } from 'lucide-react';
 import Link from "next/link";
+// import PropertySidebar from "@/components/dashboard/usersComponent/PropertySidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Image from "next/image";
-import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty";
+import PropertySidebar from "@/components/dashboard/usersComponent/PropertySidebar";
 
-export default function Insurance() {
-    const [showAddNewProperty, setShowAddNewProperty] = useState(false);
-    const userName = localStorage.getItem("fullname");
-    const nameParts = userName?.split(" ") ?? [];
-    const lastName = nameParts[nameParts.length - 1];
-    const initials =
-        userName
-            ?.split(" ")
-            .map((word) => word[0])
-            .join("")
-            .toUpperCase() ??
-        ""
-            .split(" ")
-            .map((word) => word[0])
-            .join("")
-            .toUpperCase();
+const PropertyPage = () => {
+  const [showPropertySidebar, setShowPropertySidebar] = useState(false);
+  //get user name from local storage
+  const userName = localStorage.getItem("fullname");
+  const nameParts = userName?.split(" ") ?? [];
+  const lastName = nameParts[nameParts.length - 1];
+  const initials =
+    userName
+      ?.split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase() ??
+    ""
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase();
 
-    const toggleAddNewProperty = () => {
-        setShowAddNewProperty(!showAddNewProperty);
-    };
-    return (
-        <div className="min-h-screen bg-[#f8f8f8]">
-            <div className="container mx-auto">
-                <div className="text-2xl font-extrabold text-black mt-8 ml-8">Hello {lastName}</div>
-
-                {/* Header */}
-                <header className="w-full h-20 bg-white fixed top-0 left-0">
-                    <div className="container mx-auto flex items-center justify-between h-full">
-                        {/* Logo */}
-                        <div className="flex items-center">
-                            <Image src={"/logo.svg"} width={60} height={60} alt="logo" />
-                            <div className="text-2xl font-black">FCT-DCIP</div>
-                        </div>
-
-                        {/* Search Bar */}
-                        <div className="flex-1 max-w-lg mx-8">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search Insurance available"
-                                    className="w-full h-14 pl-12 pr-4 border border-gray-300/50 rounded-md bg-white/40"
-                                />
-                            </div>
-                        </div>
-
-                        {/* User Profile */}
-                        <div className="flex items-center gap-4">
-                            <div className="flex flex-col items-end">
-                                <span className="font-bold">{userName}</span>
-                            </div>
-                            <div className="h-11 w-11 bg-[#028835] rounded-md flex items-center justify-center">
-                                <span className="text-white font-bold">{initials}</span>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Sidebar */}
-                <aside className="fixed left-0 top-20 w-52 h-screen bg-white">
-                    <nav className="p-4 flex flex-col gap-6">
-                        <Link href="/dashboard" className="flex items-center gap-3 hover:bg-gray-100 p-2 rounded transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M9 22V12H15V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <span className="text-black">Dashboard</span>
-                        </Link>
-                        <Link href="/dashboard/property" className="flex items-center gap-3 bg-[#028835] text-white p-2 rounded hover:bg-[#026d2a] transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 21H21M3 7V17M21 7V17M6 7H18C19.6569 7 21 5.65685 21 4V3H3V4C3 5.65685 4.34315 7 6 7ZM6 21V7M18 21V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <span>My Property</span>
-                        </Link>
-                        <Link href="/dashboard/insurance" className="flex items-center gap-3 hover:bg-gray-100 p-2 rounded transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <span className="text-black">Insurance</span>
-                        </Link>
-                        <Link href="/dashboard/settings" className="flex items-center gap-3 hover:bg-gray-100 p-2 rounded transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.258 9.77251 19.9887C9.5799 19.7194 9.31074 19.5143 9 19.4C8.69838 19.2669 8.36381 19.2272 8.03941 19.286C7.71502 19.3448 7.41568 19.4995 7.18 19.73L7.12 19.79C6.93425 19.976 6.71368 20.1235 6.47088 20.2241C6.22808 20.3248 5.96783 20.3766 5.705 20.3766C5.44217 20.3766 5.18192 20.3248 4.93912 20.2241C4.69632 20.1235 4.47575 19.976 4.29 19.79C4.10405 19.6043 3.95653 19.3837 3.85588 19.1409C3.75523 18.8981 3.70343 18.6378 3.70343 18.375C3.70343 18.1122 3.75523 17.8519 3.85588 17.6091C3.95653 17.3663 4.10405 17.1457 4.29 16.96L4.35 16.9C4.58054 16.6643 4.73519 16.365 4.794 16.0406C4.85282 15.7162 4.81312 15.3816 4.68 15.08C4.55324 14.7842 4.34276 14.532 4.07447 14.3543C3.80618 14.1766 3.49179 14.0813 3.17 14.08H3C2.46957 14.08 1.96086 13.8693 1.58579 13.4942C1.21071 13.1191 1 12.6104 1 12.08C1 11.5496 1.21071 11.0409 1.58579 10.6658C1.96086 10.2907 2.46957 10.08 3 10.08H3.09C3.42099 10.0723 3.742 9.96512 4.0113 9.77251C4.28059 9.5799 4.48572 9.31074 4.6 9C4.73312 8.69838 4.77282 8.36381 4.714 8.03941C4.65519 7.71502 4.50054 7.41568 4.27 7.18L4.21 7.12C4.02405 6.93425 3.87653 6.71368 3.77588 6.47088C3.67523 6.22808 3.62343 5.96783 3.62343 5.705C3.62343 5.44217 3.67523 5.18192 3.77588 4.93912C3.87653 4.69632 4.02405 4.47575 4.21 4.29C4.39575 4.10405 4.61632 3.95653 4.85912 3.85588C5.10192 3.75523 5.36217 3.70343 5.625 3.70343C5.88783 3.70343 6.14808 3.75523 6.39088 3.85588C6.63368 3.95653 6.85425 4.10405 7.04 4.29L7.1 4.35C7.33568 4.58054 7.63502 4.73519 7.95941 4.794C8.28381 4.85282 8.61838 4.81312 8.92 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77282 15.9606 4.714C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <span className="text-black">Settings</span>
-                        </Link>
-                    </nav>
-                </aside>
-
-                {/* Main Content */}
-                <main className="ml-52 mt-15 py-2">
-                    <h1 className="text-[23px] font-extrabold p-4 sm:p-8 pb-4">
-                        Hello {lastName}
-                    </h1>
-
-                    {/* Banner */}
-                    <div className="px-4 sm:px-8">
-                        <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] lg:h-[160px] relative mb-6">
-                            <div className="w-full h-full absolute">
-                                <div className="w-full h-full absolute opacity-20 bg-white rounded-xl border border-black" />
-                                <Image
-                                    className="w-full h-full absolute rounded-xl object-cover"
-                                    src="/abuja-bg.png"
-                                    alt="Abuja background"
-                                    width={500}
-                                    height={500}
-                                />
-                                <div className="w-full h-full absolute opacity-20 bg-black rounded-xl" />
-                            </div>
-                            <div className="absolute inset-0 flex flex-col justify-center p-4">
-                                <div className="text-white text-sm sm:text-base md:text-lg lg:text-[17px] font-bold mb-2">
-                                    Life is unpredictable, but your home insurance doesn&apos;t
-                                    have to be.
-                                </div>
-                                <div className="text-white text-xs sm:text-sm md:text-base lg:text-[13px] font-semibold">
-                                    Get peace of mind with a policy that covers you against
-                                    life&apos;s unexpected twists
-                                </div>
-                            </div>
-                            <div className="absolute lg:mb-12 right-2 sm:right-4 bottom-2 sm:bottom-4">
-                                <button
-                                    onClick={toggleAddNewProperty}
-                                    className="px-2 sm:px-4 py-1 sm:py-2 bg-white rounded-[40px] text-[#028835] text-sm sm:text-base lg:text-lg font-semibold flex items-center"
-                                >
-                                    <div className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 bg-[#028835] rounded-full mr-1 sm:mr-2 flex items-center justify-center">
-                                        <svg
-                                            width="12"
-                                            height="13"
-                                            viewBox="0 0 12 13"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                d="M0 6.62816V5.70509H5.53846V0.166626H6.46154V5.70509H12V6.62816H6.46154V12.1666H5.53846V6.62816H0Z"
-                                                fill="white"
-                                            />
-                                        </svg>
-                                    </div>
-                                    New Property
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Insurance Table */}
-                    <div className="bg-white rounded-xl p-6 overflow-x-auto">
-                        <div className="min-w-[800px]">
-                            <div className="grid grid-cols-5 font-bold text-[#2f2f2f] pb-4 border-b">
-                                <div className="col-span-1">Name</div>
-                                <div className="col-span-1">Expiring Date</div>
-                                <div className="col-span-1">Building ID</div>
-                                <div className="col-span-1">Status</div>
-                                <div className="col-span-1"></div>
-                            </div>
-
-                            {/* Table Rows */}
-                            {[
-                                { name: "Insurance Renewal", date: "--------------", id: "A012D30", status: "Pending", color: "bg-[#ffc835]" },
-                                { name: "Insurance Renewal", date: "-------------", id: "E712D30", status: "Processing", color: "bg-[#4eb8ca]" },
-                                { name: "Insurance Renewal", date: "July 20, 2024", id: "C712V43", status: "Cancelled", color: "bg-[#bd2721]" },
-                                { name: "Insurance Renewal", date: "Jan 01, 2024", id: "Y657JB9", status: "Inactive", color: "bg-[#3f3f3f]" },
-                                { name: "Insurance Renewal", date: "May 24, 2024", id: "B657B90", status: "Cancelled", color: "bg-[#bd2721]" }
-                            ].map((item, index) => (
-                                <div key={index} className="grid grid-cols-5 items-center py-4 border-b">
-                                    <div className="col-span-1">{item.name}</div>
-                                    <div className="col-span-1">{item.date}</div>
-                                    <div className="col-span-1">{item.id}</div>
-                                    <div className="col-span-1">
-                                        <span className={`${item.color} text-white px-3 py-1 rounded`}>
-                                            {item.status}
-                                        </span>
-                                    </div>
-                                    <div className="col-span-1 text-right">...</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </main>
-            </div>
-            <AddNewProperty
-                isOpen={showAddNewProperty}
-                onClose={() => setShowAddNewProperty(false)}
+  const togglePropertySidebar = () => {
+    setShowPropertySidebar(!showPropertySidebar);
+  };
+  
+  const onLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("name");
+    window.location.href = "/";
+  };
+  
+  return (
+    <div className="w-full min-h-screen bg-[#f8f8f8] font-sans flex flex-col">
+      {/* Header */}
+      <header className="w-full h-[75px] bg-white flex items-center justify-between px-4 sticky top-0 z-10">
+        <div className="text-xl sm:text-2xl font-black flex items-center">
+          <svg
+            width="35"
+            height="25"
+            viewBox="0 0 45 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="mr-2 sm:w-[45px] sm:h-[32px]"
+          >
+            <path
+              d="M8.25807 27.8996H8.21777L8.85317 30.1912L15.3693 31.1403L14.9389 27.1307C12.7278 27.4867 10.498 27.7432 8.25807 27.8996Z"
+              fill="#028835"
             />
+            <path
+              d="M27.9856 24.2085C27.3132 24.3977 26.6407 24.581 25.9884 24.7612L25.585 29.7048L30.4535 31.1434L32.649 22.797C31.1024 23.2865 29.549 23.7641 27.9856 24.2085Z"
+              fill="#028835"
+            />
+            <path
+              d="M17.3057 26.7389L17.7428 30.2019L23.7444 29.7003L23.8587 25.3093C21.6956 25.8499 19.5113 26.3264 17.3057 26.7389Z"
+              fill="#028835"
+            />
+            <path
+              d="M36.3936 14.4504L41.0301 23.1693L44.9975 15.9131L36.3936 14.4504Z"
+              fill="#028835"
+            />
+            <path
+              d="M39.2842 15.3298C36.1741 16.8765 32.8959 18.3331 29.6211 19.6667C25.726 21.267 21.724 22.6512 17.6381 23.8114C15.5938 24.376 13.5261 24.8746 11.4415 25.253C9.3992 25.6636 7.3113 25.8651 5.21797 25.8537C4.73734 25.8404 4.25906 25.788 3.78901 25.6975C3.42092 25.6411 3.0743 25.5038 2.78034 25.2981C2.6989 25.2344 2.64235 25.1492 2.61896 25.0547C2.59188 24.9163 2.60343 24.7739 2.65258 24.6403C2.80399 24.2493 3.03165 23.8853 3.32503 23.5651C3.99598 22.8333 4.75604 22.1705 5.59118 21.5888C5.83326 21.4116 6.08543 21.2465 6.33759 21.0783L6.13922 20.3665C5.77946 20.5467 5.41634 20.7299 5.0633 20.9281C4.0842 21.451 3.17404 22.0706 2.34998 22.7752C1.88396 23.1671 1.50121 23.631 1.22026 24.1448C1.05743 24.4641 0.976997 24.812 0.984907 25.1629C1.00004 25.5598 1.15016 25.9433 1.41527 26.2621C1.87532 26.7724 2.49063 27.1531 3.18717 27.3584C3.76683 27.5451 4.36446 27.6838 4.97253 27.7729C7.248 28.0506 9.5517 28.0939 11.8382 27.902C14.0909 27.7518 16.3167 27.4815 18.5291 27.1362C22.9443 26.4296 27.2997 25.4522 31.5645 24.2108C33.6962 23.6101 35.811 22.9614 37.909 22.2646C39.3313 21.7961 40.7468 21.3095 42.1656 20.787C41.2309 18.9879 40.0508 16.7924 39.2842 15.3298Z"
+              fill="#028835"
+            />
+            <path
+              d="M23.9793 20.4699L24.4769 0.932739L15.3652 1.4403L16.8278 22.9807C19.2453 22.2359 21.6224 21.3798 23.9793 20.4699Z"
+              fill="#333F4D"
+            />
+            <path
+              d="M34.4531 15.9276L36.3965 8.54537L27.4462 7.02859L26.4375 19.4988C29.1273 18.3845 31.8406 17.1981 34.4531 15.9276Z"
+              fill="#333F4D"
+            />
+            <path
+              d="M12.4913 4.42399L6.02236 6.06386L5.82399 3.96146L1.09668 4.6072L2.69038 10.0584L5.7164 9.32252L5.87106 10.9414L3.67552 11.479L7.5085 25.3096L7.8447 25.2465C9.9293 24.8681 12.0004 24.3696 14.0447 23.805L14.5557 23.6578L12.4913 4.42399Z"
+              fill="#333F4D"
+            />
+            <path
+              d="M1.43945 13.8079L2.03793 15.8532L3.39628 15.5199L3.21135 13.5676L1.43945 13.8079Z"
+              fill="#333F4D"
+            />
+          </svg>
+          <span className="hidden sm:inline">FCT- DCIP</span>
         </div>
-    );
-}
+        <div className="flex-grow max-w-[484px] h-[40px] sm:h-[60px] bg-white border border-[#817e7e]/50 rounded-[5px] flex items-center px-2 sm:px-4 mx-2 sm:mx-4">
+          <Search className="text-gray-400 mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+          <input
+            type="text"
+            placeholder="Search Insurance available"
+            className="w-full bg-transparent outline-none text-[10px] sm:text-[14px] md:text-[17px]"
+          />
+        </div>
+        <div className="flex items-center">
+          <Bell className="mr-2 sm:mr-4 text-[#028835] w-5 h-5 sm:w-6 sm:h-6" />
+          <span className="mr-2 text-sm sm:text-lg font-bold hidden md:inline">
+            {userName}
+          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-8 h-8 sm:w-11 sm:h-11 bg-[#028835] rounded-[7px] flex items-center justify-center text-white text-base sm:text-xl font-bold">
+                {initials}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={onLogout}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside className="w-44 bg-white pt-8 hidden md:block">
+          <nav className="p-4 flex flex-col gap-6">
+            <Link href="/dashboard" className="flex items-center gap-3 hover:bg-gray-100 p-2 rounded transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 21H21M3 7V17M21 7V17M6 7H18C19.6569 7 21 5.65685 21 4V3H3V4C3 5.65685 4.34315 7 6 7ZM6 21V7M18 21V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-black">Dashboard</span>
+            </Link>
+            <Link href="/dashboard/property" className="flex items-center gap-3 bg-[#028835] text-white p-2 rounded hover:bg-[#026d2a] transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M9 22V12H15V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>My Property</span>
+            </Link>
+            <Link href="/dashboard/insurance" className="flex items-center gap-3 hover:bg-gray-100 p-2 rounded transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-black">Insurance</span>
+            </Link>
+            <Link href="/dashboard/settings" className="flex items-center gap-3 hover:bg-gray-100 p-2 rounded transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.258 9.77251 19.9887C9.5799 19.7194 9.31074 19.5143 9 19.4C8.69838 19.2669 8.36381 19.2272 8.03941 19.286C7.71502 19.3448 7.41568 19.4995 7.18 19.73L7.12 19.79C6.93425 19.976 6.71368 20.1235 6.47088 20.2241C6.22808 20.3248 5.96783 20.3766 5.705 20.3766C5.44217 20.3766 5.18192 20.3248 4.93912 20.2241C4.69632 20.1235 4.47575 19.976 4.29 19.79C4.10405 19.6043 3.95653 19.3837 3.85588 19.1409C3.75523 18.8981 3.70343 18.6378 3.70343 18.375C3.70343 18.1122 3.75523 17.8519 3.85588 17.6091C3.95653 17.3663 4.10405 17.1457 4.29 16.96L4.35 16.9C4.58054 16.6643 4.73519 16.365 4.794 16.0406C4.85282 15.7162 4.81312 15.3816 4.68 15.08C4.55324 14.7842 4.34276 14.532 4.07447 14.3543C3.80618 14.1766 3.49179 14.0813 3.17 14.08H3C2.46957 14.08 1.96086 13.8693 1.58579 13.4942C1.21071 13.1191 1 12.6104 1 12.08C1 11.5496 1.21071 11.0409 1.58579 10.6658C1.96086 10.2907 2.46957 10.08 3 10.08H3.09C3.42099 10.0723 3.742 9.96512 4.0113 9.77251C4.28059 9.5799 4.48572 9.31074 4.6 9C4.73312 8.69838 4.77282 8.36381 4.714 8.03941C4.65519 7.71502 4.50054 7.41568 4.27 7.18L4.21 7.12C4.02405 6.93425 3.87653 6.71368 3.77588 6.47088C3.67523 6.22808 3.62343 5.96783 3.62343 5.705C3.62343 5.44217 3.67523 5.18192 3.77588 4.93912C3.87653 4.69632 4.02405 4.47575 4.21 4.29C4.39575 4.10405 4.61632 3.95653 4.85912 3.85588C5.10192 3.75523 5.36217 3.70343 5.625 3.70343C5.88783 3.70343 6.14808 3.75523 6.39088 3.85588C6.63368 3.95653 6.85425 4.10405 7.04 4.29L7.1 4.35C7.33568 4.58054 7.63502 4.73519 7.95941 4.794C8.28381 4.85282 8.61838 4.81312 8.92 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77282 15.9606 4.714C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-black">Settings</span>
+            </Link>
+          </nav>
+        </aside>
+
+        {/* Main Content and Right Sidebar Container */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Greeting */}
+          <h1 className="text-[23px] font-extrabold p-4 sm:p-8 pb-4">
+            Hello {lastName}
+          </h1>
+
+          {/* Full-width Banner */}
+          <div className="px-4 sm:px-8">
+            <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] lg:h-[160px] relative mb-6">
+              <div className="w-full h-full absolute">
+                <div className="w-full h-full absolute opacity-20 bg-white rounded-xl border border-black" />
+                <Image
+                  className="w-full h-full absolute rounded-xl object-cover"
+                  src="/abuja-bg.png"
+                  alt="Abuja background"
+                  width={500}
+                  height={500}
+                />
+                <div className="w-full h-full absolute opacity-20 bg-black rounded-xl" />
+              </div>
+              <div className="absolute inset-0 flex flex-col justify-center p-4">
+                <div className="text-white text-sm sm:text-base md:text-lg lg:text-[17px] font-bold mb-2">
+                  Life is unpredictable, but your home insurance doesn&apos;t
+                  have to be.
+                </div>
+                <div className="text-white text-xs sm:text-sm md:text-base lg:text-[13px] font-semibold">
+                  Get peace of mind with a policy that covers you against
+                  life&apos;s unexpected twists
+                </div>
+              </div>
+              <div className="absolute lg:mb-12 right-2 sm:right-4 bottom-2 sm:bottom-4">
+                <button
+                  onClick={togglePropertySidebar}
+                  className="px-2 sm:px-4 py-1 sm:py-2 bg-white rounded-[40px] text-[#028835] text-sm sm:text-base lg:text-lg font-semibold flex items-center"
+                >
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 bg-[#028835] rounded-full mr-1 sm:mr-2 flex items-center justify-center">
+                    <svg
+                      width="12"
+                      height="13"
+                      viewBox="0 0 12 13"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M0 6.62816V5.70509H5.53846V0.166626H6.46154V5.70509H12V6.62816H6.46154V12.1666H5.53846V6.62816H0Z"
+                        fill="white"
+                      />
+                    </svg>
+                  </div>
+                  New Policy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <main className="flex-1 px-4 sm:px-8 pb-8 overflow-y-auto">
+            {/* Property Table */}
+            <div className="w-full bg-white rounded-xl p-4 overflow-x-auto">
+              <table className="w-full min-w-[720px]">
+                <thead>
+                  <tr className="text-left border-b">
+                    <th className="pb-2 font-bold w-5 px-4">
+                      <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
+                        <input
+                          type="checkbox"
+                          className="w-full h-full cursor-pointer opacity-0"
+                        />
+                      </div>
+                    </th>
+                    <th className="pb-2 font-bold">Name</th>
+                    <th className="pb-2 font-bold">Expiring Date</th>
+                    <th className="pb-2 font-bold">Building ID</th>
+                    <th className="pb-2 font-bold">Status</th>
+                    <th className="pb-2 font-bold">Insure</th>
+                    <th className="pb-2 font-bold w-5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="1" />
+                        <circle cx="12" cy="5" r="1" />
+                        <circle cx="12" cy="19" r="1" />
+                      </svg>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    {
+                      name: "Insurance Renewal",
+                      date: "May 02, 2024",
+                      id: "A012D30",
+                      status: "Active",
+                    },
+                    {
+                      name: "Insurance Renewal",
+                      date: "Oct 09, 2024",
+                      id: "E712D30",
+                      status: "Active",
+                    },
+                    {
+                      name: "Insurance Renewal",
+                      date: "Jan 20, 2024",
+                      id: "C712V43",
+                      status: "Expired",
+                    },
+                    {
+                      name: "Insurance Renewal",
+                      date: "Jan 01, 2024",
+                      id: "Y657JB9",
+                      status: "Inactive",
+                    },
+                    {
+                      name: "Insurance Renewal",
+                      date: "May 24, 2024",
+                      id: "B657B90",
+                      status: "Cancelled",
+                    },
+                  ].map((item, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="py-4 px-4">
+                        <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
+                          <input
+                            type="checkbox"
+                            className="w-full h-full cursor-pointer opacity-0"
+                          />
+                        </div>
+                      </td>
+                      <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
+                        {item.name}
+                      </td>
+                      <td className="py-4 text-[#2a2828] text-base font-medium">
+                        {item.date}
+                      </td>
+                      <td className="py-4 text-[#2a2828] text-base font-medium">
+                        {item.id}
+                      </td>
+                      <td className="py-4">
+                        <span
+                          className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium ${
+                            item.status === "Active"
+                              ? "bg-[#028835]"
+                              : item.status === "Inactive"
+                                ? "bg-[#2a2a29]"
+                                : item.status === "Expired"
+                                  ? "bg-[#ffc52b]"
+                                  : "bg-[#bd2721]"
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-4">
+                        <button className="px-2 py-1 bg-[#028835] text-white rounded-md text-sm">
+                          Insure
+                        </button>
+                      </td>
+                      <td className="py-4">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="12" cy="5" r="1" />
+                          <circle cx="12" cy="19" r="1" />
+                        </svg>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </main>
+        </div>
+      </div>
+      <PropertySidebar
+        isOpen={showPropertySidebar}
+        onClose={() => setShowPropertySidebar(false)}
+      />
+    </div>
+  );
+};
+
+export default PropertyPage;

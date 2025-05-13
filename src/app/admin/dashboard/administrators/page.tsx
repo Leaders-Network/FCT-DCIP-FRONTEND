@@ -66,14 +66,14 @@ export default function AdministratorsPage() {
     <>
       <AdminLayout user={user}>
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Users</h1>
+          <h1 className="text-2xl font-bold">Administrators</h1>
           <div className="flex gap-4">
             <Button
               onClick={() => setShowAdminSidebar(true)}
               className="bg-[#028835] text-white hover:bg-[#026a29] rounded-full"
             >
               <PlusCircle className="mr-2 h-5 w-5" />
-              Add New User
+              Add New Admin
             </Button>
             <Button variant="outline" className="text-gray-700">
               Export
