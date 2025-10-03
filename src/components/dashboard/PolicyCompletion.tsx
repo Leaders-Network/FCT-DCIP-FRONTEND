@@ -1,0 +1,189 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { Download, ExternalLink, CheckCircle, Clock, FileText } from "lucide-react";
+import { PolicyRequest } from "@/types/api.types";
+
+interface PolicyCompletionProps {
+  userId: string;
+}
+
+const PolicyCompletion: React.FC<PolicyCompletionProps> = ({ userId }) => {
+  const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCompletedPolicies = async () => {
+      setLoading(true);
+      // Mock data - replace with actual API call
+      const mockPolicies: PolicyRequest[] = [
+        {
+          _id: "1",
+          userId: userId,
+          propertyDetails: {
+            address: "123 Main St, Abuja, FCT",
+            propertyType: "Residential House",
+            buildingValue: 50000000,
+            yearBuilt: 2020,
+            squareFootage: 2500,
+            constructionMaterial: "Concrete Block"
+          },
+          contactDetails: {
+            fullName: "John Doe",
+            email: "john.doe@email.com",
+            phoneNumber: "+234 801 234 5678"
+          },
+          requestDetails: {
+            coverageType: "Comprehensive Coverage",
+            policyDuration: "2 Years",
+            additionalCoverage: ["Flood Coverage", "Theft Protection"]
+          },
+          status: "approved",
+          surveyDocument: "survey_report_1.pdf",
+          surveyNotes: "Property approved for comprehensive coverage. Excellent condition.",
+          adminNotes: "Survey approved. Policy ready for payment.",
+          createdAt: "2024-09-15T10:00:00Z",
+          updatedAt: "2024-10-01T15:30:00Z"
+        }
+      ];
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setCompletedPolicies(mockPolicies);
+      setLoading(false);
+    };
+
+    fetchCompletedPolicies();
+  }, [userId]);
+
+  const handleDownloadSurvey = (policyId: string, documentName: string) => {
+    // In a real implementation, this would download the actual file
+    // For demo purposes, we'll simulate the download
+    const link = document.createElement('a');
+    link.href = `/api/documents/download/${documentName}?policyId=${policyId}`;
+    link.download = documentName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleProceedToPayment = (policy: PolicyRequest) => {
+    // Redirect to the external payment verification URL
+    const paymentUrl = `https://askniid.org/VerifyBuildersPolicy.aspx?policyId=${policy._id}&userId=${userId}`;
+    window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-300 rounded w-1/3 mb-4"></div>
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">Completed Policies</h2>
+        <p className="text-gray-600">Download your approved survey reports and proceed to payment.</p>
+      </div>
+
+      {completedPolicies.length > 0 ? (
+        <div className="space-y-4">
+          {completedPolicies.map((policy) => (
+            <div key={policy._id} className="bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {policy.propertyDetails.propertyType}
+                    </h3>
+                    <p className="text-gray-600">{policy.propertyDetails.address}</p>
+                  </div>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    Approved
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Policy Details</h4>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p><span className="font-medium">Coverage:</span> {policy.requestDetails.coverageType}</p>
+                      <p><span className="font-medium">Duration:</span> {policy.requestDetails.policyDuration}</p>
+                      <p><span className="font-medium">Building Value:</span> ₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Survey Information</h4>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p><span className="font-medium">Survey Date:</span> {new Date(policy.updatedAt).toLocaleDateString()}</p>
+                      <p><span className="font-medium">Status:</span> Approved by Admin</p>
+                    </div>
+                  </div>
+                </div>
+
+                {policy.surveyNotes && (
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-2">Survey Notes</h4>
+                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                      {policy.surveyNotes}
+                    </p>
+                  </div>
+                )}
+
+                {policy.adminNotes && (
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-2">Admin Notes</h4>
+                    <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                      {policy.adminNotes}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                  {policy.surveyDocument && (
+                    <button
+                      onClick={() => handleDownloadSurvey(policy._id, policy.surveyDocument!)}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Survey Report
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={() => handleProceedToPayment(policy)}
+                    className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Proceed to Payment
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <div className="mx-auto h-12 w-12 text-gray-400">
+            <FileText className="h-full w-full" />
+          </div>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No completed policies</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Your approved policies will appear here once the survey and admin review process is complete.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PolicyCompletion;
