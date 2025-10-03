@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { Upload, FileText, Phone, Mail, Calendar, X } from "lucide-react";
+import { Upload, FileText, Phone, Mail, Calendar, X, Loader2 } from "lucide-react";
 import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
+import { uploadFile } from "@/services/fileService";
 
 interface SurveySubmissionFormProps {
   policy: PolicyRequest;
@@ -16,6 +17,11 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
 }) => {
   const [surveyNotes, setSurveyNotes] = useState("");
   const [surveyDocument, setSurveyDocument] = useState<File | null>(null);
+  const [uploadedDocument, setUploadedDocument] = useState<{
+    name: string;
+    url: string;
+    publicId: string;
+  } | null>(null);
   const [contactLog, setContactLog] = useState<ContactLogEntry[]>([]);
   const [recommendedAction, setRecommendedAction] = useState<'approve' | 'reject' | 'request_more_info'>('approve');
   const [newContact, setNewContact] = useState<ContactLogEntry>({
@@ -25,12 +31,35 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
     successful: true
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.type === 'application/pdf') {
         setSurveyDocument(file);
+        
+        // Upload to backend (which handles Cloudinary upload)
+        setUploading(true);
+        try {
+          const result = await uploadFile(file, 'survey-documents');
+          
+          if (result.success) {
+            setUploadedDocument({
+              name: result.data.originalName,
+              url: result.data.url,
+              publicId: result.data.publicId
+            });
+          } else {
+            throw new Error('Upload failed');
+          }
+        } catch (error) {
+          console.error('Upload error:', error);
+          alert('Failed to upload document. Please try again.');
+          setSurveyDocument(null);
+        } finally {
+          setUploading(false);
+        }
       } else {
         alert('Please upload a PDF file only.');
       }
@@ -56,7 +85,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!surveyDocument) {
+    if (!uploadedDocument) {
       alert('Please upload a survey document.');
       return;
     }
@@ -71,7 +100,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
       const submission: SurveySubmission = {
         policyId: policy._id,
         surveyorId: 'current_surveyor_id', // Get from auth context
-        surveyDocument,
+        surveyDocument: uploadedDocument,
         surveyNotes,
         contactLog,
         recommendedAction
@@ -184,31 +213,39 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
             </label>
             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#028835] transition-colors">
               <div className="space-y-1 text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                {uploading ? (
+                  <Loader2 className="mx-auto h-12 w-12 text-[#028835] animate-spin" />
+                ) : (
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                )}
                 <div className="flex text-sm text-gray-600">
                   <label
                     htmlFor="survey-document"
                     className="relative cursor-pointer bg-white rounded-md font-medium text-[#028835] hover:text-green-700 focus-within:outline-none"
                   >
-                    <span>Upload survey report</span>
+                    <span>{uploading ? 'Uploading...' : 'Upload survey report'}</span>
                     <input
                       id="survey-document"
                       name="survey-document"
                       type="file"
                       accept=".pdf"
                       onChange={handleFileChange}
+                      disabled={uploading}
                       className="sr-only"
                     />
                   </label>
-                  <p className="pl-1">or drag and drop</p>
+                  {!uploading && <p className="pl-1">or drag and drop</p>}
                 </div>
                 <p className="text-xs text-gray-500">PDF up to 10MB</p>
               </div>
             </div>
-            {surveyDocument && (
-              <div className="mt-2 flex items-center text-sm text-gray-600">
-                <FileText className="h-4 w-4 mr-1" />
-                {surveyDocument.name}
+            {uploadedDocument && (
+              <div className="mt-2 flex items-center justify-between text-sm">
+                <div className="flex items-center text-gray-600">
+                  <FileText className="h-4 w-4 mr-1" />
+                  {uploadedDocument.name}
+                </div>
+                <span className="text-green-600 text-xs">✓ Uploaded</span>
               </div>
             )}
           </div>
@@ -267,10 +304,10 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
             </button>
             <button
               type="submit"
-              disabled={loading || !surveyDocument || !surveyNotes.trim()}
+              disabled={loading || uploading || !uploadedDocument || !surveyNotes.trim()}
               className="px-6 py-2 bg-[#028835] text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Submitting...' : 'Submit Survey'}
+              {loading ? 'Submitting...' : uploading ? 'Uploading...' : 'Submit Survey'}
             </button>
           </div>
         </form>

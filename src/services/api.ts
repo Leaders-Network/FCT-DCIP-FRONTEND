@@ -146,7 +146,7 @@ export const getAvailableRoles = async () => {
 export const submitPolicyRequest = async (policyData: import("../types/api.types").CreatePolicyRequestData) => {
   try {
     const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-    const response = await api.post("/auth/policy-requests", policyData, {
+    const response = await api.post("/policy", policyData, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -158,11 +158,16 @@ export const submitPolicyRequest = async (policyData: import("../types/api.types
   }
 };
 
-export const getPolicyRequests = async (status?: string) => {
+export const getPolicyRequests = async (status?: string, page = 1, limit = 10) => {
   try {
     const token = localStorage.getItem("authToken");
-    const url = status ? `/auth/policy-requests?status=${status}` : "/auth/policy-requests";
-    const response = await api.get<import("../types/api.types").GetPolicyRequestsResponse>(url, {
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.append('status', status);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    const url = `/policy?${params.toString()}`;
+    const response = await api.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -174,10 +179,37 @@ export const getPolicyRequests = async (status?: string) => {
   }
 };
 
-export const assignSurveyor = async (assignment: import("../types/api.types").PolicyAssignment) => {
+export const getUserPolicyRequests = async (status?: string, page = 1, limit = 10) => {
+  try {
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.append('status', status);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    const url = `/policy/user?${params.toString()}`;
+    const response = await api.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch user policy requests", error);
+    throw error;
+  }
+};
+
+export const assignSurveyor = async (policyId: string, assignment: {
+  surveyorIds: string[];
+  deadline?: string;
+  priority?: string;
+  instructions?: string;
+  specialRequirements?: string[];
+}) => {
   try {
     const token = localStorage.getItem("authToken");
-    const response = await api.post("/auth/assign-surveyor", assignment, {
+    const response = await api.post(`/policy/${policyId}/assign`, assignment, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -189,10 +221,34 @@ export const assignSurveyor = async (assignment: import("../types/api.types").Po
   }
 };
 
-export const reviewSubmission = async (policyId: string, decision: 'approved' | 'rejected', notes: string) => {
+export const getAvailableSurveyors = async (specialization?: string, location?: string) => {
   try {
     const token = localStorage.getItem("authToken");
-    const response = await api.post("/auth/review-submission", { policyId, decision, notes }, {
+    const params = new URLSearchParams();
+    if (specialization) params.append('specialization', specialization);
+    if (location) params.append('location', location);
+    
+    const url = `/policy/surveyors/available?${params.toString()}`;
+    const response = await api.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get available surveyors", error);
+    throw error;
+  }
+};
+
+export const reviewSubmission = async (submissionId: string, decision: 'approved' | 'rejected', reviewNotes: string, qualityCheck?: any) => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await api.post(`/policy/submissions/${submissionId}/review`, { 
+      decision, 
+      reviewNotes, 
+      qualityCheck 
+    }, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -207,7 +263,7 @@ export const reviewSubmission = async (policyId: string, decision: 'approved' | 
 // Surveyor APIs
 export const loginSurveyor = async (email: string, password: string) => {
   try {
-    const response = await api.post("/auth/loginSurveyor", { email, password });
+    const response = await api.post("/auth/loginEmployee", { email, password });
     return response.data;
   } catch (error) {
     console.error("Surveyor login failed", error);
@@ -215,40 +271,74 @@ export const loginSurveyor = async (email: string, password: string) => {
   }
 };
 
-export const getAssignedPolicies = async () => {
+export const getSurveyorDashboard = async () => {
   try {
-    const token = localStorage.getItem("surveyorToken");
-    const response = await api.get<import("../types/api.types").GetAssignedPoliciesResponse>("/auth/assigned-policies", {
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+    const response = await api.get("/surveyor/dashboard", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch assigned policies", error);
+    console.error("Failed to fetch surveyor dashboard", error);
     throw error;
   }
 };
 
-export const submitSurvey = async (submission: import("../types/api.types").SurveySubmission) => {
+export const getSurveyorAssignments = async (status?: string, page = 1, limit = 10) => {
   try {
-    const token = localStorage.getItem("surveyorToken");
-    const formData = new FormData();
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.append('status', status);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
     
-    formData.append("policyId", submission.policyId);
-    formData.append("surveyorId", submission.surveyorId);
-    formData.append("surveyNotes", submission.surveyNotes);
-    formData.append("recommendedAction", submission.recommendedAction);
-    formData.append("contactLog", JSON.stringify(submission.contactLog));
-    
-    if (submission.surveyDocument instanceof File) {
-      formData.append("surveyDocument", submission.surveyDocument);
-    }
-
-    const response = await api.post("/auth/submit-survey", formData, {
+    const url = `/surveyor/assignments?${params.toString()}`;
+    const response = await api.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch surveyor assignments", error);
+    throw error;
+  }
+};
+
+export const updateAssignmentStatus = async (assignmentId: string, status: string, notes?: string) => {
+  try {
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+    const response = await api.patch(`/surveyor/assignments/${assignmentId}/status`, {
+      status,
+      notes
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update assignment status", error);
+    throw error;
+  }
+};
+
+export const submitSurvey = async (submission: {
+  policyId: string;
+  assignmentId: string;
+  surveyDetails: any;
+  surveyDocument: any;
+  surveyNotes: string;
+  contactLog: any[];
+  recommendedAction: string;
+}) => {
+  try {
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+    const response = await api.post("/surveyor/surveys", submission, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data;
@@ -258,32 +348,53 @@ export const submitSurvey = async (submission: import("../types/api.types").Surv
   }
 };
 
-export const getSurveyors = async () => {
+export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 10) => {
   try {
-    const token = localStorage.getItem("authToken");
-    const response = await api.get<import("../types/api.types").GetSurveyorsResponse>("/auth/surveyors", {
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.append('status', status);
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    const url = `/surveyor/submissions?${params.toString()}`;
+    const response = await api.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyors", error);
+    console.error("Failed to fetch surveyor submissions", error);
     throw error;
   }
 };
 
-export const getUserPolicies = async (userId: string) => {
+export const getSurveyorProfile = async () => {
   try {
-    const token = localStorage.getItem("token");
-    const response = await api.get(`/auth/user-policies/${userId}`, {
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+    const response = await api.get("/surveyor/profile", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch user policies", error);
+    console.error("Failed to fetch surveyor profile", error);
+    throw error;
+  }
+};
+
+export const updateSurveyorProfile = async (profileData: any) => {
+  try {
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+    const response = await api.patch("/surveyor/profile", profileData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update surveyor profile", error);
     throw error;
   }
 };

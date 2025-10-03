@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Download, ExternalLink, CheckCircle, Clock, FileText } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
+import { downloadFile } from "@/services/fileService";
 
 interface PolicyCompletionProps {
   userId: string;
@@ -38,7 +39,11 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = ({ userId }) => {
             additionalCoverage: ["Flood Coverage", "Theft Protection"]
           },
           status: "approved",
-          surveyDocument: "survey_report_1.pdf",
+          surveyDocument: {
+            name: "survey_report_1.pdf",
+            url: "https://res.cloudinary.com/demo/raw/upload/v1234567890/survey-documents/survey_report_1.pdf",
+            publicId: "survey-documents/survey_report_1"
+          },
           surveyNotes: "Property approved for comprehensive coverage. Excellent condition.",
           adminNotes: "Survey approved. Policy ready for payment.",
           createdAt: "2024-09-15T10:00:00Z",
@@ -55,15 +60,25 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = ({ userId }) => {
     fetchCompletedPolicies();
   }, [userId]);
 
-  const handleDownloadSurvey = (policyId: string, documentName: string) => {
-    // In a real implementation, this would download the actual file
-    // For demo purposes, we'll simulate the download
-    const link = document.createElement('a');
-    link.href = `/api/documents/download/${documentName}?policyId=${policyId}`;
-    link.download = documentName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadSurvey = async (policyId: string, documentInfo: any) => {
+    try {
+      // If documentInfo contains publicId (from Cloudinary), use backend download service
+      if (typeof documentInfo === 'object' && documentInfo.publicId) {
+        await downloadFile(documentInfo.publicId, documentInfo.name);
+      } else {
+        // Fallback for old format (string filename)
+        const documentName = typeof documentInfo === 'string' ? documentInfo : 'survey-report.pdf';
+        const link = document.createElement('a');
+        link.href = `/api/documents/download/${documentName}?policyId=${policyId}`;
+        link.download = documentName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download file. Please try again or contact support.');
+    }
   };
 
   const handleProceedToPayment = (policy: PolicyRequest) => {
