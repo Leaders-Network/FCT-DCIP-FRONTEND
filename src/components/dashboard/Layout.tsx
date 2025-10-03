@@ -1,17 +1,19 @@
-// import Header from "@/components/dashboard/Header";
-// import Sidebar from "@/components/dashboard/Sidebar";
 import React from "react";
+import AdminLayout from "./usersComponent/AdminLayout";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
+  // Mock user data - in a real app, this would come from your auth context
+  const user = {
+    firstname: "Paul",
+    lastname: "Blessing",
+    email: "paul.blessing@example.com",
+    role: "Super Admin",
+  };
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* <Header /> */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200">
-          {children}
-        </main>
-      </div>
-    </div>
+    <AdminLayout user={user}>
+      {children}
+    </AdminLayout>
   );
 };
 
