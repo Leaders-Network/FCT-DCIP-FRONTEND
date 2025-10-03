@@ -85,7 +85,11 @@ export interface PolicyRequest {
   };
   status: 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed';
   assignedSurveyors?: string[];
-  surveyDocument?: string;
+  surveyDocument?: string | {
+    name: string;
+    url: string;
+    publicId: string;
+  };
   surveyNotes?: string;
   adminNotes?: string;
   createdAt: string;
@@ -127,7 +131,11 @@ export interface Surveyor extends User {
 export interface SurveySubmission {
   policyId: string;
   surveyorId: string;
-  surveyDocument: File | string;
+  surveyDocument: File | string | {
+    name: string;
+    url: string;
+    publicId: string;
+  };
   surveyNotes: string;
   contactLog: ContactLogEntry[];
   recommendedAction: 'approve' | 'reject' | 'request_more_info';
