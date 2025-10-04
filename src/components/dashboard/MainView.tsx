@@ -78,26 +78,15 @@
 
 "use client"
 import { useState } from "react"
-import AdminLayout from "./usersComponent/AdminLayout"
 import AdminDashboard from "../admin/AdminDashboard"
 import PropertySidebar from "./usersComponent/PropertySidebar"
 
-export default function DashboardPage() {
+export default function MainView() {
   const [showPropertySidebar, setShowPropertySidebar] = useState(false)
-
-  // Mock user data - in a real app, this would come from your auth context
-  const user = {
-    firstname: "Paul",
-    lastname: "Blessing",
-    email: "paul.blessing@example.com",
-    role: "Super Admin",
-  }
 
   return (
     <>
-      <AdminLayout user={user}>
-        <AdminDashboard />
-      </AdminLayout>
+      <AdminDashboard />
       <PropertySidebar isOpen={showPropertySidebar} onClose={() => setShowPropertySidebar(false)} />
     </>
   )

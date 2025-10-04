@@ -2,21 +2,12 @@
 
 import { useState } from "react"
 import { PlusCircle, MoreVertical } from "lucide-react"
-import AdminLayout from "@/components/dashboard/usersComponent/AdminLayout"
 import AdminSidebar from "@/components/dashboard/usersComponent/AdminSideBar"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkout"
 
-export default function AdministratorsPage() {
+export default function UsersPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
-
-  // Mock user data
-  const user = {
-    firstname: "Paul",
-    lastname: "Blessing",
-    email: "paul.blessing@example.com",
-    role: "Super Admin",
-  }
 
   const administrators = [
     {
@@ -64,9 +55,8 @@ export default function AdministratorsPage() {
 
   return (
     <>
-      <AdminLayout user={user}>
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Users</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Users</h1>
           <div className="flex gap-4">
             <Button
               onClick={() => setShowAdminSidebar(true)}
@@ -174,7 +164,7 @@ export default function AdministratorsPage() {
             </table>
           </div>
         </div>
-      </AdminLayout>
+      
       <AdminSidebar isOpen={showAdminSidebar} onClose={() => setShowAdminSidebar(false)} />
     </>
   )
