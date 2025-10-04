@@ -76,12 +76,12 @@ const Header = () => {
                 <Phone className="w-5 h-5 text-green-600 mr-2" />
                 <span className="font-semibold">(234) 555-0129</span>
               </div>
-              <button
+              {/* <button
                 onClick={openModal}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center"
               >
                 Get Started <span className="ml-2">→</span>
-              </button>
+              </button> */}
             </div>
 
             {/* Mobile menu button */}
@@ -118,12 +118,12 @@ const Header = () => {
                 <Phone className="w-5 h-5 text-green-600 mr-2" />
                 <span className="font-semibold">(234) 555-0129</span>
               </div>
-              <button
+              {/* <button
                 onClick={openModal}
                 className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
               >
                 Get Started <span className="ml-2">→</span>
-              </button>
+              </button> */}
             </div>
           </div>
         )}

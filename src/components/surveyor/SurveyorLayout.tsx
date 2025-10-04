@@ -24,10 +24,10 @@ const AuthLayout: React.FC<SurveyorLayoutProps> = ({
         <main className="grid xl:grid-cols-2 grid-cols-1 items-center justify-center xl:space-x-10 p-5 md:p-0">
           <div className="text-center xl:text-left">
             <h2 className="text-white text-2xl md:text-5xl max-w-xl font-bold mb-4">
-              Defense Critical Infrastructure Program
+              Surveyor Operations Portal
             </h2>
             <h3 className="text-white text-base md:text-xl font-medium mb-8">
-              Protect your Property with Confidence
+             Supporting the Defense and Growth of Critical Infrastructure
             </h3>
           </div>
           <div className="w-full max-w-3xl xl:max-w-lg 2xl:max-w-xl">
