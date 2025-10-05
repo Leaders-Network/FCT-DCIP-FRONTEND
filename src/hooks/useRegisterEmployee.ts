@@ -99,7 +99,7 @@ export const useRegisterEmployee = () => {
     try {
       const data = await getAvailableRoles();
 
-      if (data.role !== "superAdmin") {
+      if (data.role !== "Super-admin") {
         router.push("/admin/dashboard");
         return;
       }

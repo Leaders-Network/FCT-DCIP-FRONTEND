@@ -61,73 +61,23 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const fetchSurveyors = async () => {
     setLoading(true);
     try {
-      // Mock data - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { getAdminSurveyors } = await import("@/services/api");
       
-      setSurveyors([
-        {
-          _id: "surveyor1",
-          firstname: "Sarah",
-          lastname: "Wilson",
-          email: "sarah.wilson@surveyors.com",
-          phonenumber: "+234 805 678 9012",
-          employeeStatus: { _id: "status1", status: "Active" },
-          employeeRole: { _id: "role1", role: "Senior Surveyor" },
-          deleted: false,
-          createdAt: "2024-01-15T00:00:00Z",
-          updatedAt: "2024-10-01T00:00:00Z",
-          specializations: ["Residential", "Commercial"],
-          licenseNumber: "SRV001",
-          totalSurveys: 45,
-          completedSurveys: 42,
-          rating: 4.9,
-          address: "123 Professional Ave, Abuja",
-          emergencyContact: "+234 806 789 0123",
-          notes: "Excellent track record with residential properties"
-        },
-        {
-          _id: "surveyor2",
-          firstname: "Mike",
-          lastname: "Johnson",
-          email: "mike.johnson@surveyors.com",
-          phonenumber: "+234 806 789 0123",
-          employeeStatus: { _id: "status1", status: "Active" },
-          employeeRole: { _id: "role1", role: "Surveyor" },
-          deleted: false,
-          createdAt: "2024-02-01T00:00:00Z",
-          updatedAt: "2024-09-30T00:00:00Z",
-          specializations: ["Industrial", "Commercial"],
-          licenseNumber: "SRV002",
-          totalSurveys: 38,
-          completedSurveys: 35,
-          rating: 4.7,
-          address: "456 Industry Rd, Abuja",
-          emergencyContact: "+234 807 890 1234",
-          notes: "Specialist in industrial facilities"
-        },
-        {
-          _id: "surveyor3",
-          firstname: "David",
-          lastname: "Chen",
-          email: "david.chen@surveyors.com",
-          phonenumber: "+234 807 890 1234",
-          employeeStatus: { _id: "status2", status: "On Leave" },
-          employeeRole: { _id: "role1", role: "Surveyor" },
-          deleted: false,
-          createdAt: "2024-03-15T00:00:00Z",
-          updatedAt: "2024-09-25T00:00:00Z",
-          specializations: ["Residential", "Agricultural"],
-          licenseNumber: "SRV003",
-          totalSurveys: 28,
-          completedSurveys: 26,
-          rating: 4.8,
-          address: "789 Suburban St, Abuja",
-          emergencyContact: "+234 808 901 2345",
-          notes: "Currently on medical leave until end of October"
-        }
-      ]);
+      // Fetch surveyors from the API
+      const response = await getAdminSurveyors({
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        specialization: specializationFilter !== "all" ? specializationFilter : undefined,
+        search: searchTerm || undefined
+      });
+      
+      if (response?.data) {
+        setSurveyors(response.data);
+      } else {
+        setSurveyors([]);
+      }
     } catch (error) {
-      console.error('Failed to fetch surveyors:', error);
+      console.error("Failed to fetch surveyors:", error);
+      setSurveyors([]);
     } finally {
       setLoading(false);
     }
@@ -135,11 +85,29 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
   const fetchAssignments = async () => {
     try {
-      // Mock assignments data
-      // Use real API call instead of mock data
-      setAssignments([]);
+      const { getPolicyRequests } = await import("@/services/api");
+      
+      // Fetch all policy requests with assignments
+      const response = await getPolicyRequests('all', 1, 100);
+      
+      if (response?.data) {
+        // Transform policy requests to assignment format if needed
+        const assignmentData = response.data.map((policy: any) => ({
+          _id: policy._id,
+          surveyorId: policy.assignedSurveyors?.[0] || null,
+          policyId: policy._id,
+          status: policy.status,
+          createdAt: policy.createdAt,
+          updatedAt: policy.updatedAt
+        }));
+        
+        setAssignments(assignmentData);
+      } else {
+        setAssignments([]);
+      }
     } catch (error) {
       console.error('Failed to fetch assignments:', error);
+      setAssignments([]);
     }
   };
 

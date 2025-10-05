@@ -11,12 +11,14 @@ export interface User {
   };
   employeeRole: {
     _id: string;
-    role: string;
+    role: RoleType;
   };
   deleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
+
+export type RoleType = 'Super-admin' | 'Admin' | 'Staff' | 'Surveyor';
 
 export const enum UserRoles {
   SUPER_ADMIN = "67097fb3f07f5547278be69b",
@@ -27,7 +29,7 @@ export const enum UserRoles {
 
 export interface Role {
   _id: string;
-  name: string;
+  role: RoleType;
 }
 
 export interface EmployeeRegistrationData {
@@ -47,7 +49,7 @@ export interface LoginResponse {
 }
 
 export interface AvailableRolesResponse {
-  role: string;
+  role: RoleType;
   roles: Role[];
 }
 

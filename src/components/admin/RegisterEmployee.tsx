@@ -75,7 +75,7 @@ const RegisterEmployee = () => {
           <option value="">Select Role</option>
           {availableRoles.map((role: Role) => (
             <option key={role._id} value={role._id}>
-              {role.name}
+              {role.role}
             </option>
           ))}
         </select>

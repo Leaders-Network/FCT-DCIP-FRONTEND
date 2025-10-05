@@ -6,7 +6,7 @@ import {
   SurveySubmission 
 } from '@/types/api.types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://fct-dcip-backend-1.onrender.com/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://fct-dcip-backend.vercel.app/api/v1';
 
 // Helper function for API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
