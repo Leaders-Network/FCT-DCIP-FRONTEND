@@ -1,3 +1,22 @@
+// Assignment creation API
+export const createAssignment = async (assignmentData: {
+  policyId: string;
+  surveyorId: string;
+  assignedBy?: string;
+  status?: string;
+  priority?: string;
+  deadline?: string;
+}) => {
+  try {
+    const response = await api.post('/assignment', assignmentData, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to create assignment:', error);
+    throw error;
+  }
+};
 import axios from "axios";
 import {
   EmployeeRegistrationData,
