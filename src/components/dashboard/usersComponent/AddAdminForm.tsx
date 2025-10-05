@@ -64,7 +64,7 @@ const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose, onAdminAdd
 
      console.log("Modified payload being sent:", payload);
 
-     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend-1.onrender.com/api/v1";
+     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
      const response = await axios.post(
        `${apiBaseUrl}/auth/registerEmployee`,
        payload,

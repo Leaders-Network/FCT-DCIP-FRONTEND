@@ -13,72 +13,85 @@ const SurveyorDashboard = () => {
     completed: 0
   });
 
-  // Mock data - replace with actual API calls
+  // Fetch real assignments from API
   useEffect(() => {
-    const mockAssignments: PolicyRequest[] = [
-      {
-        _id: "1",
-        userId: "user1",
-        propertyDetails: {
-          address: "123 Main St, Abuja, FCT",
-          propertyType: "Residential House",
-          buildingValue: 50000000,
-          yearBuilt: 2020,
-          squareFootage: 2500,
-          constructionMaterial: "Concrete Block"
-        },
-        contactDetails: {
-          fullName: "John Doe",
-          email: "john.doe@email.com",
-          phoneNumber: "+234 801 234 5678"
-        },
-        requestDetails: {
-          coverageType: "Comprehensive Coverage",
-          policyDuration: "2 Years",
-          additionalCoverage: ["Flood Coverage", "Theft Protection"]
-        },
-        status: "assigned",
-        assignedSurveyors: ["current_surveyor_id"],
-        createdAt: "2024-10-01T10:00:00Z",
-        updatedAt: "2024-10-01T10:00:00Z"
-      },
-      {
-        _id: "2",
-        userId: "user2",
-        propertyDetails: {
-          address: "456 Commercial Ave, Abuja, FCT",
-          propertyType: "Commercial Building",
-          buildingValue: 150000000,
-          yearBuilt: 2018,
-          squareFootage: 5000,
-          constructionMaterial: "Steel Frame"
-        },
-        contactDetails: {
-          fullName: "Jane Smith",
-          email: "jane.smith@business.com",
-          phoneNumber: "+234 803 456 7890"
-        },
-        requestDetails: {
-          coverageType: "All Risk Coverage",
-          policyDuration: "3 Years",
-          additionalCoverage: ["Business Interruption"]
-        },
-        status: "assigned",
-        assignedSurveyors: ["current_surveyor_id"],
-        createdAt: "2024-09-28T14:30:00Z",
-        updatedAt: "2024-09-30T09:15:00Z"
-      }
-    ];
+    const fetchSurveyorData = async () => {
+      try {
+        // Import API functions
+        const { getSurveyorDashboard, getSurveyorAssignments } = await import("@/services/api");
+        
+        // Fetch dashboard data and assignments
+        const [dashboardResponse, assignmentsResponse] = await Promise.allSettled([
+          getSurveyorDashboard(),
+          getSurveyorAssignments()
+        ]);
 
-    setAssignments(mockAssignments);
-    
-    // Calculate stats
-    setStats({
-      total: mockAssignments.length,
-      pending: mockAssignments.filter(a => a.status === 'assigned').length,
-      inProgress: 0, // Would be assignments where surveyor has started but not completed
-      completed: mockAssignments.filter(a => a.status === 'surveyed').length
-    });
+        let fetchedAssignments: PolicyRequest[] = [];
+
+        // Handle dashboard response
+        if (dashboardResponse.status === 'fulfilled' && dashboardResponse.value?.data) {
+          const dashboardData = dashboardResponse.value.data;
+          
+          // Use assignments from dashboard if available
+          if (dashboardData.assignments) {
+            fetchedAssignments = dashboardData.assignments;
+          }
+          
+          // Use stats from dashboard if available
+          if (dashboardData.stats) {
+            setStats({
+              total: dashboardData.stats.total || 0,
+              pending: dashboardData.stats.pending || 0,
+              inProgress: dashboardData.stats.inProgress || 0,
+              completed: dashboardData.stats.completed || 0
+            });
+          }
+        }
+
+        // Handle assignments response as fallback
+        if (fetchedAssignments.length === 0 && assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value?.data) {
+          fetchedAssignments = assignmentsResponse.value.data;
+        }
+
+        // If we have assignments, calculate stats if not provided by API
+        if (fetchedAssignments.length > 0) {
+          setAssignments(fetchedAssignments);
+          
+          // Calculate stats if not provided by dashboard
+          if (dashboardResponse.status === 'rejected' || !dashboardResponse.value?.data?.stats) {
+            setStats({
+              total: fetchedAssignments.length,
+              pending: fetchedAssignments.filter(a => a.status === 'assigned' || a.status === 'pending').length,
+              inProgress: fetchedAssignments.filter(a => a.status === 'in-progress').length,
+              completed: fetchedAssignments.filter(a => a.status === 'completed' || a.status === 'surveyed').length
+            });
+          }
+        } else {
+          // No assignments found
+          setAssignments([]);
+          setStats({
+            total: 0,
+            pending: 0,
+            inProgress: 0,
+            completed: 0
+          });
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch surveyor data:", error);
+        
+        // Set empty state on error
+        setAssignments([]);
+        setStats({
+          total: 0,
+          pending: 0,
+          inProgress: 0,
+          completed: 0
+        });
+      }
+    };
+
+    fetchSurveyorData();
   }, []);
 
   const surveyorName = localStorage.getItem("surveyorName") || "Surveyor";

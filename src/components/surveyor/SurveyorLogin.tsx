@@ -18,21 +18,44 @@ const SurveyorLogin = () => {
     setError("");
 
     try {
-      // TODO: Implement surveyor login API call
-      // const response = await loginSurveyor(email, password);
+      // Use the real login API for surveyors
+      const { loginEmployee } = await import("@/services/api");
+      const response = await loginEmployee(email, password);
       
-      // Mock login for now
-      if (email && password) {
-        localStorage.setItem("surveyorToken", "mock_token");
-        localStorage.setItem("surveyorName", "John Surveyor");
-        localStorage.setItem("surveyorRole", "surveyor");
+      if (response.data?.token && response.data?.user) {
+        const { token, user } = response.data;
+        
+        // Check if user is a surveyor
+        if (user.role !== 'surveyor') {
+          setError("Access denied. This portal is for surveyors only.");
+          return;
+        }
+        
+        // Store authentication data
+        localStorage.setItem("surveyorToken", token);
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("token", token);
+        localStorage.setItem("surveyorName", user.fullname || user.name || "Surveyor");
+        localStorage.setItem("surveyorRole", user.role);
+        localStorage.setItem("surveyorId", user._id);
+        
         router.push("/surveyor/dashboard");
       } else {
-        setError("Please enter both email and password");
+        setError("Invalid response from server. Please try again.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
-      setError("Invalid credentials. Please try again.");
+      
+      // Handle different error types
+      if (error.response?.status === 401) {
+        setError("Invalid email or password.");
+      } else if (error.response?.status === 403) {
+        setError("Account access denied. Please contact administrator.");
+      } else if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else {
+        setError("Login failed. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }

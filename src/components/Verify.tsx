@@ -43,7 +43,7 @@ export default function Verify() {
 
     try {
       // Verify OTP
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend-1.onrender.com/api/v1";
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
       const verifyResponse = await fetch(
         `${apiBaseUrl}/auth/verify-otp`,
         {

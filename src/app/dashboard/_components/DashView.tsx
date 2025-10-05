@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty";
 import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import { CreatePolicyRequestData } from "@/types/api.types";
@@ -8,11 +8,62 @@ import Image from "next/image";
 const Dashview = () => {
   const [showAddNewProperty, setShowAddNewProperty] = useState(false);
   const [showPolicyRequest, setShowPolicyRequest] = useState(false);
+  const [stats, setStats] = useState({
+    active: 0,
+    expired: 0,
+    pending: 0,
+    collaborators: 0
+  });
+  const [recentInsurances, setRecentInsurances] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Get user name from local storage
   const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
   const nameParts = userName?.split(" ") ?? [];
   const lastName = nameParts[nameParts.length - 1] || "User";
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const { getUserPolicyRequests } = await import("@/services/api");
+        
+        // Fetch all policy requests to calculate stats
+        const [allPolicies, activePolicies, expiredPolicies, pendingPolicies] = await Promise.all([
+          getUserPolicyRequests('all', 1, 100),
+          getUserPolicyRequests('active', 1, 100),
+          getUserPolicyRequests('expired', 1, 100), 
+          getUserPolicyRequests('pending', 1, 100)
+        ]);
+
+        // Update stats
+        setStats({
+          active: activePolicies?.data?.length || 0,
+          expired: expiredPolicies?.data?.length || 0,
+          pending: pendingPolicies?.data?.length || 0,
+          collaborators: 5 // TODO: Replace with actual collaborator count when API is available
+        });
+
+        // Set recent insurances (first 5 items from all policies)
+        setRecentInsurances(allPolicies?.data?.slice(0, 5) || []);
+        
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+        // Set fallback values if API fails
+        setStats({
+          active: 0,
+          expired: 0,
+          pending: 0,
+          collaborators: 0
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const toggleAddNewProperty = () => {
     setShowAddNewProperty(!showAddNewProperty);
@@ -93,7 +144,7 @@ const Dashview = () => {
                 {[
                   {
                     title: "Active Insurance",
-                    count: 20,
+                    count: loading ? "..." : stats.active,
                     color: "bg-[#fda5fc]",
                     icon: (
                       <svg
@@ -113,7 +164,7 @@ const Dashview = () => {
                   },
                   {
                     title: "Expired Insurance",
-                    count: 23,
+                    count: loading ? "..." : stats.expired,
                     color: "bg-[#7be0d4]",
                     icon: (
                       <svg
@@ -131,7 +182,7 @@ const Dashview = () => {
                   },
                   {
                     title: "Pending Insurance",
-                    count: 10,
+                    count: loading ? "..." : stats.pending,
                     color: "bg-[#fad572]",
                     icon: (
                       <svg
@@ -153,7 +204,7 @@ const Dashview = () => {
                   },
                   {
                     title: "Collaborators",
-                    count: 5,
+                    count: loading ? "..." : stats.collaborators,
                     color: "bg-[#8b9fef]",
                     icon: (
                       <svg
@@ -240,84 +291,102 @@ const Dashview = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        {
-                          date: "April 02, 2024",
-                          id: "A012D30",
-                          status: "Active",
-                        },
-                        {
-                          date: "May 05, 2024",
-                          id: "E712D30",
-                          status: "Active",
-                        },
-                        {
-                          date: "July 20, 2024",
-                          id: "C712V43",
-                          status: "Inactive",
-                        },
-                        {
-                          date: "Aug 23, 2024",
-                          id: "Y657JB9",
-                          status: "Pending",
-                        },
-                        {
-                          date: "Nov 24, 2024",
-                          id: "B657B90",
-                          status: "Cancelled",
-                        },
-                      ].map((item, index) => (
-                        <tr key={index} className="border-b">
-                          <td className="py-4 px-4">
-                            <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
-                              <input
-                                type="checkbox"
-                                className="w-full h-full cursor-pointer opacity-0"
-                              />
+                      {loading ? (
+                        // Loading state
+                        Array.from({ length: 3 }).map((_, index) => (
+                          <tr key={index} className="border-b animate-pulse">
+                            <td className="py-4 px-4">
+                              <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                            </td>
+                            <td className="py-4">
+                              <div className="h-4 bg-gray-200 rounded w-32"></div>
+                            </td>
+                            <td className="py-4">
+                              <div className="h-4 bg-gray-200 rounded w-24"></div>
+                            </td>
+                            <td className="py-4">
+                              <div className="h-4 bg-gray-200 rounded w-20"></div>
+                            </td>
+                            <td className="py-4">
+                              <div className="h-6 bg-gray-200 rounded w-16"></div>
+                            </td>
+                            <td className="py-4">
+                              <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : recentInsurances.length > 0 ? (
+                        recentInsurances.map((item, index) => (
+                          <tr key={item._id || index} className="border-b">
+                            <td className="py-4 px-4">
+                              <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
+                                <input
+                                  type="checkbox"
+                                  className="w-full h-full cursor-pointer opacity-0"
+                                />
+                              </div>
+                            </td>
+                            <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
+                              {item.requestDetails?.coverageType || "Insurance Policy"}
+                            </td>
+                            <td className="py-4 text-[#2a2828] text-base font-medium">
+                              {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit'
+                              }) : "N/A"}
+                            </td>
+                            <td className="py-4 text-[#2a2828] text-base font-medium">
+                              {item._id?.substring(0, 7).toUpperCase() || "N/A"}
+                            </td>
+                            <td className="py-4">
+                              <span
+                                className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium capitalize ${
+                                  item.status === "active"
+                                    ? "bg-[#028835]"
+                                    : item.status === "inactive" || item.status === "expired"
+                                      ? "bg-[#2a2a29]"
+                                      : item.status === "pending" || item.status === "assigned"
+                                        ? "bg-[#ffc52b]"
+                                        : "bg-[#bd2721]"
+                                }`}
+                              >
+                                {item.status || "Unknown"}
+                              </span>
+                            </td>
+                            <td className="py-4">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <circle cx="12" cy="12" r="1" />
+                                <circle cx="12" cy="5" r="1" />
+                                <circle cx="12" cy="19" r="1" />
+                              </svg>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        // Empty state
+                        <tr className="border-b">
+                          <td colSpan={6} className="py-8 text-center text-gray-500">
+                            <div className="flex flex-col items-center">
+                              <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <p className="font-medium">No recent insurance policies</p>
+                              <p className="text-sm">Your insurance policies will appear here once you have some.</p>
                             </div>
                           </td>
-                          <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
-                            Insurance Renewal
-                          </td>
-                          <td className="py-4 text-[#2a2828] text-base font-medium">
-                            {item.date}
-                          </td>
-                          <td className="py-4 text-[#2a2828] text-base font-medium">
-                            {item.id}
-                          </td>
-                          <td className="py-4">
-                            <span
-                              className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium ${item.status === "Active"
-                                ? "bg-[#028835]"
-                                : item.status === "Inactive"
-                                  ? "bg-[#2a2a29]"
-                                  : item.status === "Pending"
-                                    ? "bg-[#ffc52b]"
-                                    : "bg-[#bd2721]"
-                                }`}
-                            >
-                              {item.status}
-                            </span>
-                          </td>
-                          <td className="py-4">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <circle cx="12" cy="12" r="1" />
-                              <circle cx="12" cy="5" r="1" />
-                              <circle cx="12" cy="19" r="1" />
-                            </svg>
-                          </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
