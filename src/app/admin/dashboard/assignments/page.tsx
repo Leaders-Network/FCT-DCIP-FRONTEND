@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import AssignmentManagement from "@/components/admin/AssignmentManagement";
+import AssignmentManagement from "@/components/AssignmentManagement";
 import { Assignment } from "@/types/api.types";
 import { adminApi, withErrorHandling } from "@/services/adminApi";
 
@@ -40,9 +40,8 @@ const AssignmentsPage = () => {
 
   return (
     <AssignmentManagement
-      onCreateAssignment={handleCreateAssignment}
-      onUpdateAssignment={handleUpdateAssignment}
-      onReassignSurveyor={handleReassignSurveyor}
+      viewMode="admin"
+      className="p-6"
     />
   );
 };

@@ -136,32 +136,8 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const fetchAssignments = async () => {
     try {
       // Mock assignments data
-      setAssignments([
-        {
-          _id: "assign1",
-          policyId: "policy1",
-          surveyorIds: ["surveyor1"],
-          assignedBy: "admin1",
-          status: "in_progress",
-          priority: "high",
-          instructions: "Priority residential property survey",
-          deadline: "2024-10-15T00:00:00Z",
-          createdAt: "2024-10-05T00:00:00Z",
-          updatedAt: "2024-10-05T00:00:00Z"
-        },
-        {
-          _id: "assign2",
-          policyId: "policy2",
-          surveyorIds: ["surveyor2"],
-          assignedBy: "admin1",
-          status: "completed",
-          priority: "medium",
-          instructions: "Industrial facility assessment",
-          deadline: "2024-10-10T00:00:00Z",
-          createdAt: "2024-10-01T00:00:00Z",
-          updatedAt: "2024-10-08T00:00:00Z"
-        }
-      ]);
+      // Use real API call instead of mock data
+      setAssignments([]);
     } catch (error) {
       console.error('Failed to fetch assignments:', error);
     }
@@ -172,7 +148,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       surveyor.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
       surveyor.lastname.toLowerCase().includes(searchTerm.toLowerCase()) ||
       surveyor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      surveyor.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      surveyor.licenseNumber?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = 
       statusFilter === "all" || 
@@ -180,7 +156,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     
     const matchesSpecialization = 
       specializationFilter === "all" || 
-      surveyor.specializations.some(spec => 
+      surveyor.specializations?.some(spec => 
         spec.toLowerCase().includes(specializationFilter.toLowerCase())
       );
 
@@ -199,7 +175,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const getCurrentAssignments = (surveyorId: string) => {
     return assignments.filter(
       assignment => 
-        assignment.surveyorIds.includes(surveyorId) && 
+        assignment.surveyorId === surveyorId && 
         assignment.status === "in_progress"
     ).length;
   };

@@ -10,28 +10,23 @@ import {
   Calendar,
   MapPin,
   Star,
-  Activity
+  Activity,
+  RefreshCw,
+  Bell
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-interface DashboardStats {
-  totalPolicies: number;
-  pendingAssignments: number;
-  activeSurveyors: number;
-  completedSurveys: number;
-  overdueAssignments: number;
-  avgCompletionTime: number;
-  totalRevenue: number;
-  satisfactionScore: number;
-}
-
-interface RecentActivity {
-  id: string;
-  type: 'policy_submitted' | 'surveyor_assigned' | 'survey_completed' | 'policy_approved';
-  message: string;
-  timestamp: string;
-  status: 'success' | 'warning' | 'info';
-}
+import { 
+  getAdminDashboardData, 
+  getQuickStats, 
+  getAdminAlerts,
+  getAdminSurveyors 
+} from '@/services/api';
+import { 
+  DashboardData, 
+  QuickStats, 
+  AdminAlert,
+  Surveyor 
+} from '@/types/api.types';
 
 interface SurveyorPerformance {
   id: string;
@@ -45,18 +40,17 @@ interface SurveyorPerformance {
 const AdminDashboard: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats>({
-    totalPolicies: 0,
-    pendingAssignments: 0,
-    activeSurveyors: 0,
-    completedSurveys: 0,
-    overdueAssignments: 0,
-    avgCompletionTime: 0,
-    totalRevenue: 0,
-    satisfactionScore: 0
-  });
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // API Data States
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [quickStats, setQuickStats] = useState<QuickStats | null>(null);
+  const [alerts, setAlerts] = useState<AdminAlert[]>([]);
   const [topPerformers, setTopPerformers] = useState<SurveyorPerformance[]>([]);
+  
+  // UI State
+  const [activeTab, setActiveTab] = useState<'overview' | 'alerts'>('overview');
 
   useEffect(() => {
     fetchDashboardData();
@@ -64,133 +58,62 @@ const AdminDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
-      // Fetch real data from API
-      const [statsResult, activityResult] = await Promise.all([
-        fetch('/api/admin/dashboard/stats').then(res => res.json()).catch(() => null),
-        fetch('/api/admin/dashboard/activity').then(res => res.json()).catch(() => null)
+      // Fetch all dashboard data from the new API endpoints
+      const [
+        dashboardResponse,
+        quickStatsResponse,
+        alertsResponse,
+        surveyorsResponse
+      ] = await Promise.allSettled([
+        getAdminDashboardData(),
+        getQuickStats(),
+        getAdminAlerts(),
+        getAdminSurveyors({ limit: 5 })
       ]);
 
-      // Use real data if available, otherwise fall back to mock data
-      setStats(statsResult || {
-        totalPolicies: 156,
-        pendingAssignments: 23,
-        activeSurveyors: 12,
-        completedSurveys: 89,
-        overdueAssignments: 5,
-        avgCompletionTime: 2.3,
-        totalRevenue: 45000000,
-        satisfactionScore: 4.6
-      });
-
-      setRecentActivity(activityResult || [
-        {
-          id: '1',
-          type: 'policy_submitted',
-          message: 'New policy request from John Doe - Residential Property',
-          timestamp: '2 minutes ago',
-          status: 'info'
-        },
-        {
-          id: '2',
-          type: 'survey_completed',
-          message: 'Survey completed by Sarah Wilson for Commercial Building',
-          timestamp: '15 minutes ago',
-          status: 'success'
-        },
-        {
-          id: '3',
-          type: 'surveyor_assigned',
-          message: 'Mike Johnson assigned to Industrial Facility survey',
-          timestamp: '1 hour ago',
-          status: 'info'
-        },
-        {
-          id: '4',
-          type: 'policy_approved',
-          message: 'Policy approved for Jane Smith - Apartment Building',
-          timestamp: '2 hours ago',
-          status: 'success'
-        }
-      ]);
-
-      // Fetch top performers from surveyor API
-      try {
-        const surveyorsResult = await fetch('/api/surveyor?limit=3&sortBy=rating').then(res => res.json());
-        if (surveyorsResult && surveyorsResult.data) {
-          const performers = surveyorsResult.data.map((surveyor: any, index: number) => ({
-            id: surveyor._id,
-            name: `${surveyor.firstname} ${surveyor.lastname}`,
-            completedSurveys: surveyor.completedSurveys || 0,
-            averageRating: surveyor.rating || 0,
-            onTimeDelivery: surveyor.onTimeDelivery || 90 + Math.floor(Math.random() * 10),
-            currentAssignments: surveyor.currentAssignments || Math.floor(Math.random() * 5)
-          }));
-          setTopPerformers(performers);
-        } else {
-          // Fallback data
-          setTopPerformers([
-            {
-              id: '1',
-              name: 'Sarah Wilson',
-              completedSurveys: 23,
-              averageRating: 4.9,
-              onTimeDelivery: 95,
-              currentAssignments: 3
-            },
-            {
-              id: '2',
-              name: 'Mike Johnson',
-              completedSurveys: 19,
-              averageRating: 4.7,
-              onTimeDelivery: 89,
-              currentAssignments: 2
-            },
-            {
-              id: '3',
-              name: 'David Chen',
-              completedSurveys: 17,
-              averageRating: 4.8,
-              onTimeDelivery: 92,
-              currentAssignments: 4
-            }
-          ]);
-        }
-      } catch (error) {
-        console.error('Failed to fetch top performers:', error);
-        // Use fallback data
-        setTopPerformers([
-          {
-            id: '1',
-            name: 'Sarah Wilson',
-            completedSurveys: 23,
-            averageRating: 4.9,
-            onTimeDelivery: 95,
-            currentAssignments: 3
-          },
-          {
-            id: '2',
-            name: 'Mike Johnson',
-            completedSurveys: 19,
-            averageRating: 4.7,
-            onTimeDelivery: 89,
-            currentAssignments: 2
-          },
-          {
-            id: '3',
-            name: 'David Chen',
-            completedSurveys: 17,
-            averageRating: 4.8,
-            onTimeDelivery: 92,
-            currentAssignments: 4
-          }
-        ]);
+      // Handle dashboard data
+      if (dashboardResponse.status === 'fulfilled' && dashboardResponse.value.success) {
+        setDashboardData(dashboardResponse.value.data);
       }
-    } catch (error) {
+
+      // Handle quick stats
+      if (quickStatsResponse.status === 'fulfilled' && quickStatsResponse.value.success) {
+        setQuickStats(quickStatsResponse.value.data);
+      }
+
+      // Handle alerts
+      if (alertsResponse.status === 'fulfilled' && alertsResponse.value.success) {
+        setAlerts(alertsResponse.value.data || []);
+      }
+
+      // Handle top performers
+      if (surveyorsResponse.status === 'fulfilled' && surveyorsResponse.value.success) {
+        const performers = surveyorsResponse.value.data.map((surveyor: Surveyor) => ({
+          id: surveyor._id,
+          name: `${surveyor.firstname} ${surveyor.lastname}`,
+          completedSurveys: surveyor.statistics?.completedSurveys || 0,
+          averageRating: surveyor.statistics?.averageRating || 0,
+          onTimeDelivery: surveyor.statistics?.onTimeDeliveryRate || 0,
+          currentAssignments: surveyor.statistics?.currentWorkload || 0
+        }));
+        setTopPerformers(performers);
+      }
+
+    } catch (error: any) {
       console.error('Failed to fetch dashboard data:', error);
+      setError('Failed to load dashboard data. Please try refreshing.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+    setRefreshing(false);
   };
 
   const getActivityIcon = (type: string) => {
@@ -208,18 +131,81 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const getAlertSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high':
+        return 'bg-red-100 border-red-200 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 border-yellow-200 text-yellow-800';
+      case 'low':
+        return 'bg-blue-100 border-blue-200 text-blue-800';
+      default:
+        return 'bg-gray-100 border-gray-200 text-gray-800';
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 rounded w-1/3 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white p-6 rounded-lg shadow-sm border">
-                <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-300 rounded w-1/3 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white p-6 rounded-lg shadow-sm border">
+                  <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+                </div>
+                <div className="p-6 space-y-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-center space-x-3">
+                      <div className="w-6 h-6 bg-gray-300 rounded"></div>
+                      <div className="flex-1 space-y-1">
+                        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+              <div className="bg-white rounded-lg shadow-sm border">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="h-6 bg-gray-300 rounded w-1/3"></div>
+                </div>
+                <div className="p-6 space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+                      <div className="flex-1 space-y-1">
+                        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -230,12 +216,85 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Overview of policy requests and surveyor operations</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2">Overview of policy requests and surveyor operations</p>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            {/* Alerts Badge */}
+            {alerts.length > 0 && (
+              <button
+                onClick={() => setActiveTab(activeTab === 'alerts' ? 'overview' : 'alerts')}
+                className="relative flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+              >
+                <Bell className="w-4 h-4" />
+                <span className="text-sm font-medium">{alerts.length} Alert{alerts.length > 1 ? 's' : ''}</span>
+                {alerts.filter(a => a.severity === 'high').length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                )}
+              </button>
+            )}
+            
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="text-sm font-medium">Refresh</span>
+            </button>
+          </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
+              <p className="text-red-700">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Alerts Panel */}
+        {activeTab === 'alerts' && alerts.length > 0 && (
+          <div className="mb-8 bg-white rounded-lg shadow-sm border">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Bell className="w-5 h-5 mr-2" />
+                System Alerts
+              </h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {alerts.map((alert, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border ${getAlertSeverityColor(alert.severity)}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium">{alert.title}</h4>
+                      <p className="text-sm mt-1 opacity-80">{alert.message}</p>
+                      <p className="text-xs mt-2 opacity-60">{formatTimeAgo(alert.timestamp)}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      alert.severity === 'high' ? 'bg-red-200 text-red-800' :
+                      alert.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                      'bg-blue-200 text-blue-800'
+                    }`}>
+                      {alert.severity.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
@@ -243,8 +302,10 @@ const AdminDashboard: React.FC = () => {
                 <FileText className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Policies</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalPolicies}</p>
+                <p className="text-sm font-medium text-gray-600">Today's Policies</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {quickStats?.todayPolicies || dashboardData?.summary.policies.total || 0}
+                </p>
               </div>
             </div>
           </div>
@@ -256,7 +317,9 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Pending Assignments</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.pendingAssignments}</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {quickStats?.pendingAssignments || dashboardData?.summary.assignments.active || 0}
+                </p>
               </div>
             </div>
           </div>
@@ -268,7 +331,9 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Surveyors</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.activeSurveyors}</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {dashboardData?.summary.surveyors.active || 0}
+                </p>
               </div>
             </div>
           </div>
@@ -280,51 +345,101 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Completed Surveys</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.completedSurveys}</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {dashboardData?.summary.assignments.completed || 0}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Overdue</p>
-                <p className="text-xl font-semibold text-red-600">{stats.overdueAssignments}</p>
+        {/* Main Dashboard Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-600">Total Policies</h3>
+              <FileText className="h-5 w-5 text-blue-500" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-2xl font-bold text-gray-900">{dashboardData?.summary.policies.total || 0}</p>
+              <div className="flex items-center text-sm">
+                <span className="text-green-500 mr-1">↗</span>
+                <span className="text-green-600 font-medium">+{dashboardData?.summary.policies.growth || 0}%</span>
+                <span className="text-gray-500 ml-1">this month</span>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
+              <div className="text-xs text-gray-500 space-y-1">
+                <div className="flex justify-between">
+                  <span>Pending: {dashboardData?.summary.policies.pending || 0}</span>
+                  <span>Approved: {dashboardData?.summary.policies.approved || 0}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Avg. Completion</p>
-                <p className="text-xl font-semibold text-blue-600">{stats.avgCompletionTime} days</p>
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-600">Assignment Status</h3>
+              <Clock className="h-5 w-5 text-yellow-500" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-2xl font-bold text-gray-900">{dashboardData?.summary.assignments.total || 0}</p>
+              <div className="flex items-center text-sm">
+                <span className="text-blue-500 mr-1">⚡</span>
+                <span className="text-blue-600 font-medium">{dashboardData?.summary.assignments.completionRate || 0}%</span>
+                <span className="text-gray-500 ml-1">completion rate</span>
               </div>
-              <Calendar className="h-8 w-8 text-blue-500" />
+              <div className="text-xs text-gray-500 space-y-1">
+                <div className="flex justify-between">
+                  <span>Active: {dashboardData?.summary.assignments.active || 0}</span>
+                  <span>Overdue: {dashboardData?.summary.assignments.overdue || 0}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Revenue</p>
-                <p className="text-xl font-semibold text-green-600">₦{(stats.totalRevenue / 1000000).toFixed(1)}M</p>
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-600">Surveyor Network</h3>
+              <Users className="h-5 w-5 text-green-500" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-2xl font-bold text-gray-900">{dashboardData?.summary.surveyors.total || 0}</p>
+              <div className="flex items-center text-sm">
+                <span className="text-green-500 mr-1">●</span>
+                <span className="text-green-600 font-medium">{dashboardData?.summary.surveyors.active || 0} active</span>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
+              <div className="text-xs text-gray-500">
+                <span>Available: {dashboardData?.summary.surveyors.available || 0}</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Satisfaction</p>
-                <p className="text-xl font-semibold text-yellow-600">{stats.satisfactionScore}/5.0</p>
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-600">System Health</h3>
+              <TrendingUp className="h-5 w-5 text-purple-500" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center text-sm">
+                <span className="text-gray-600">Overdue Rate:</span>
+                <span className={`ml-2 font-medium ${
+                  (dashboardData?.analytics.systemHealth.overdueRate || 0) < 5 ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {dashboardData?.analytics.systemHealth.overdueRate || 0}%
+                </span>
               </div>
-              <Star className="h-8 w-8 text-yellow-500" />
+              <div className="flex items-center text-sm">
+                <span className="text-gray-600">Utilization:</span>
+                <span className="ml-2 font-medium text-blue-600">
+                  {dashboardData?.analytics.systemHealth.surveyorUtilization || 0}%
+                </span>
+              </div>
+              <div className="flex items-center text-sm">
+                <span className="text-gray-600">Avg. Processing:</span>
+                <span className="ml-2 font-medium text-purple-600">
+                  {dashboardData?.analytics.systemHealth.avgProcessingTime || 0}d
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -337,18 +452,113 @@ const AdminDashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {getActivityIcon(activity.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">{activity.message}</p>
-                      <p className="text-xs text-gray-500 mt-1">{activity.timestamp}</p>
+              <div className="space-y-6">
+                {/* Recent Policies */}
+                {dashboardData?.recentActivity.policies && dashboardData.recentActivity.policies.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                      <FileText className="w-4 h-4 mr-2 text-blue-500" />
+                      Recent Policy Requests
+                    </h4>
+                    <div className="space-y-2">
+                      {dashboardData.recentActivity.policies.slice(0, 3).map((policy) => (
+                        <div key={policy._id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-900">
+                              New policy request from <span className="font-medium">{policy.contactDetails.fullName}</span>
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {policy.propertyDetails.propertyType} • {formatTimeAgo(policy.createdAt)}
+                            </p>
+                          </div>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            policy.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            policy.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                            policy.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {policy.status}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* Recent Assignments */}
+                {dashboardData?.recentActivity.assignments && dashboardData.recentActivity.assignments.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                      <Users className="w-4 h-4 mr-2 text-purple-500" />
+                      Recent Assignments
+                    </h4>
+                    <div className="space-y-2">
+                      {dashboardData.recentActivity.assignments.slice(0, 3).map((assignment) => (
+                        <div key={assignment._id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-900">
+                              Assignment {assignment.status === 'completed' ? 'completed' : 'updated'} - 
+                              <span className="font-medium"> {assignment.location.address}</span>
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Priority: {assignment.priority} • {formatTimeAgo(assignment.updatedAt)}
+                            </p>
+                          </div>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            assignment.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {assignment.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recent Submissions */}
+                {dashboardData?.recentActivity.submissions && dashboardData.recentActivity.submissions.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                      Recent Submissions
+                    </h4>
+                    <div className="space-y-2">
+                      {dashboardData.recentActivity.submissions.slice(0, 3).map((submission) => (
+                        <div key={submission._id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-900">
+                              Survey submission {submission.status === 'approved' ? 'approved' : 'received'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Action: {submission.recommendedAction} • {formatTimeAgo(submission.submissionTime)}
+                            </p>
+                          </div>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            submission.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            submission.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
+                            submission.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {submission.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No recent activity fallback */}
+                {(!dashboardData?.recentActivity.policies?.length && 
+                  !dashboardData?.recentActivity.assignments?.length && 
+                  !dashboardData?.recentActivity.submissions?.length) && (
+                  <div className="text-center py-8 text-gray-500">
+                    <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p>No recent activity</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

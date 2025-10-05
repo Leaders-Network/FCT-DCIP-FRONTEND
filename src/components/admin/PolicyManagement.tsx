@@ -405,7 +405,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                         {surveyor.firstname} {surveyor.lastname}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {surveyor.specializations.join(", ")} • Rating: {surveyor.rating}/5
+                        {surveyor.specializations?.join(", ") || 'No specializations'} • Rating: {surveyor.rating}/5
                       </p>
                     </div>
                   </label>
@@ -485,7 +485,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    View Document ({selectedPolicy.surveyDocument})
+                    View Document ({typeof selectedPolicy.surveyDocument === 'string' ? selectedPolicy.surveyDocument : 'Document'})
                   </a>
                 </div>
               )}

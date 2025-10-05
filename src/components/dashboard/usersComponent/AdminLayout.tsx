@@ -284,7 +284,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
           <ul className="space-y-2 px-2">
             {navItems.map((item) => (
               <li key={item.name}>
-                {item.subItems ? (
+                {'subItems' in item && item.subItems ? (
                   <div>
                     <div className="flex items-center">
                       <Link
@@ -310,7 +310,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
                     </div>
                     {sidebarOpen && propertiesOpen && (
                       <ul className="pl-10 mt-1 space-y-1">
-                        {item.subItems.map((subItem) => (
+                        {('subItems' in item && Array.isArray(item.subItems) ? item.subItems : []).map((subItem: any) => (
                           <li key={subItem.name}>
                             <Link
                               href={subItem.path}
