@@ -63,6 +63,7 @@ export interface GetAllEmployeesResponse {
 export interface PolicyRequest {
   _id: string;
   userId: string;
+  policyNumber?: string;
   propertyDetails: {
     address: string;
     propertyType: string;
@@ -83,7 +84,8 @@ export interface PolicyRequest {
     additionalCoverage?: string[];
     specialRequests?: string;
   };
-  status: 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed';
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   assignedSurveyors?: string[];
   surveyDocument?: string | {
     name: string;
@@ -92,6 +94,13 @@ export interface PolicyRequest {
   };
   surveyNotes?: string;
   adminNotes?: string;
+  documents?: DocumentFile[];
+  statusHistory?: Array<{
+    status: string;
+    changedBy: string;
+    changedAt: string;
+    reason: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -121,11 +130,45 @@ export interface CreatePolicyRequestData {
 
 // Surveyor types
 export interface Surveyor extends User {
-  specializations: string[];
-  licenseNumber: string;
-  totalSurveys: number;
-  completedSurveys: number;
-  rating: number;
+  userId?: string;
+  specializations?: string[];
+  licenseNumber?: string;
+  totalSurveys?: number;
+  completedSurveys?: number;
+  rating?: number;
+  address?: string;
+  emergencyContact?: string;
+  notes?: string;
+  status?: 'active' | 'inactive' | 'on_leave';
+  profile?: {
+    availability: 'available' | 'busy' | 'unavailable';
+    specialization: string[];
+    location: {
+      state: string;
+      city: string;
+      coordinates?: {
+        latitude: number;
+        longitude: number;
+      };
+    };
+    workSchedule: {
+      monday: { start: string; end: string; available: boolean };
+      tuesday: { start: string; end: string; available: boolean };
+      wednesday: { start: string; end: string; available: boolean };
+      thursday: { start: string; end: string; available: boolean };
+      friday: { start: string; end: string; available: boolean };
+      saturday: { start: string; end: string; available: boolean };
+      sunday: { start: string; end: string; available: boolean };
+    };
+  };
+  statistics?: {
+    totalAssignments: number;
+    completedSurveys: number;
+    averageRating: number;
+    onTimeDeliveryRate: number;
+    averageCompletionTime: number;
+    currentWorkload: number;
+  };
 }
 
 export interface SurveySubmission {
@@ -164,6 +207,255 @@ export interface PolicyReview {
   decision: 'approved' | 'rejected';
   reviewNotes: string;
   recommendedChanges?: string;
+}
+
+// Assignment Management Types
+export interface Assignment {
+  _id: string;
+  policyId: string;
+  surveyorId: string;
+  assignedBy: string;
+  assignedAt: string;
+  deadline: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'assigned' | 'accepted' | 'in_progress' | 'completed' | 'rejected' | 'cancelled';
+  instructions: string;
+  specialRequirements: string[];
+  location: {
+    address: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+    accessInstructions?: string;
+    contactPerson: {
+      name: string;
+      phone: string;
+      email: string;
+      availableHours?: string;
+    };
+  };
+  estimatedDuration?: number;
+  actualDuration?: number;
+  progressTracking: {
+    startedAt?: string;
+    completedAt?: string;
+    lastUpdate: string;
+    milestones: Array<{
+      name: string;
+      completedAt: string;
+      notes: string;
+    }>;
+    checkpoints: Array<{
+      timestamp: string;
+      location?: {
+        latitude: number;
+        longitude: number;
+      };
+      notes: string;
+      photos: string[];
+    }>;
+  };
+  communication: {
+    messages: Array<{
+      _id: string;
+      from: string;
+      message: string;
+      timestamp: string;
+      type: 'message' | 'status_update' | 'question' | 'clarification';
+    }>;
+    lastContact?: string;
+  };
+  documents: DocumentFile[];
+  timeline: Array<{
+    action: string;
+    timestamp: string;
+    performedBy: string;
+    details: string;
+    notes?: string;
+  }>;
+  rating?: {
+    score: number;
+    feedback: string;
+    ratedBy: string;
+    ratedAt: string;
+  };
+  expenses?: {
+    transportation: number;
+    accommodation: number;
+    meals: number;
+    equipment: number;
+    other: number;
+    receipts: Array<{
+      description: string;
+      amount: number;
+      receiptUrl: string;
+      category: string;
+    }>;
+    totalExpenses: number;
+    approved: boolean;
+    approvedBy?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Document File Interface
+export interface DocumentFile {
+  _id?: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  cloudinaryUrl: string;
+  cloudinaryPublicId: string;
+  category: 'survey_report' | 'photos' | 'receipts' | 'legal_documents' | 'inspection_forms' | 'general' | 'application_documents' | 'identification' | 'property_documents' | 'supporting_documents' | 'survey_reports';
+  description?: string;
+  documentType: 'survey_document' | 'photo' | 'receipt' | 'report' | 'form' | 'other' | 'application_form' | 'id_document' | 'property_deed' | 'main_report' | 'supporting_doc';
+  uploadedBy: string;
+  uploadedAt: string;
+  isPublic?: boolean;
+  isRequired?: boolean;
+  isVerified?: boolean;
+  isMainReport?: boolean;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  metadata?: {
+    location?: {
+      latitude: number;
+      longitude: number;
+    };
+    timestamp?: string;
+    deviceInfo?: string;
+  };
+}
+
+// Enhanced Survey Submission Interface
+export interface EnhancedSurveySubmission {
+  _id: string;
+  policyId: string;
+  surveyorId: string;
+  assignmentId?: string;
+  surveyDetails: {
+    propertyCondition: string;
+    structuralAssessment: string;
+    riskFactors: string;
+    recommendations: string;
+    estimatedValue?: number;
+    photos: Array<{
+      url: string;
+      publicId: string;
+      description: string;
+      timestamp: string;
+    }>;
+  };
+  documents: DocumentFile[];
+  surveyDocument?: any; // Legacy field
+  surveyNotes: string;
+  contactLog: Array<{
+    date: string;
+    method: 'phone' | 'email' | 'sms' | 'visit';
+    notes: string;
+    successful: boolean;
+    duration?: number;
+  }>;
+  recommendedAction: 'approve' | 'reject' | 'request_more_info';
+  qualityCheck?: {
+    completeness: number;
+    accuracy: number;
+    timeliness: number;
+    overallScore: number;
+    reviewedBy?: string;
+    reviewedAt?: string;
+    comments?: string;
+  };
+  status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'revision_required';
+  submissionTime: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  revisionHistory: Array<{
+    version: number;
+    changes: string;
+    revisedBy: string;
+    revisedAt: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Dashboard Analytics Interfaces
+export interface DashboardData {
+  summary: {
+    policies: {
+      total: number;
+      pending: number;
+      approved: number;
+      rejected: number;
+      growth: number;
+    };
+    assignments: {
+      total: number;
+      active: number;
+      completed: number;
+      overdue: number;
+      completionRate: number;
+    };
+    surveyors: {
+      total: number;
+      active: number;
+      available: number;
+    };
+  };
+  recentActivity: {
+    policies: PolicyRequest[];
+    assignments: Assignment[];
+    submissions: EnhancedSurveySubmission[];
+  };
+  analytics: {
+    dailyTrends: Array<{
+      _id: { date: string };
+      newPolicies: number;
+      approvedPolicies: number;
+    }>;
+    topSurveyors: Array<{
+      _id: string;
+      completedAssignments: number;
+      avgCompletionTime: number;
+      surveyor: any;
+      employee: any;
+    }>;
+    statusDistribution: Array<{
+      _id: string;
+      count: number;
+      percentage: number;
+    }>;
+    priorityDistribution: Array<{
+      _id: string;
+      count: number;
+    }>;
+    systemHealth: {
+      overdueRate: number;
+      surveyorUtilization: number;
+      avgProcessingTime: number;
+    };
+  };
+}
+
+export interface QuickStats {
+  todayPolicies: number;
+  weekPolicies: number;
+  pendingAssignments: number;
+  overdueAssignments: number;
+  activeSubmissions: number;
+}
+
+export interface AdminAlert {
+  type: 'overdue_assignment' | 'pending_review' | 'unassigned_policy';
+  severity: 'high' | 'medium' | 'low';
+  title: string;
+  message: string;
+  data: any;
+  timestamp: string;
 }
 
 // API Response types for new endpoints
