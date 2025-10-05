@@ -7,15 +7,22 @@ import {
 } from '@/types/api.types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://fct-dcip-backend.vercel.app/api/v1';
+const API_KEY = "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+
+// Helper function for consistent token retrieval
+const getAuthToken = () => {
+  return localStorage.getItem("token") || localStorage.getItem("authToken");
+};
 
 // Helper function for API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const token = localStorage.getItem('token');
+  const token = getAuthToken();
   
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      'apiKey': API_KEY,
       ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     },
@@ -41,11 +48,11 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 export const adminApi = {
   // Dashboard Stats
   getDashboardStats: async () => {
-    return apiCall('/api/admin/dashboard/stats');
+    return apiCall('/admin/dashboard/stats');
   },
 
   getRecentActivity: async () => {
-    return apiCall('/api/admin/dashboard/activity');
+    return apiCall('/admin/dashboard/activity');
   },
 
   // Policy Management
@@ -63,19 +70,19 @@ export const adminApi = {
         }
       });
     }
-    const endpoint = `/api/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiCall(endpoint);
   },
 
   assignSurveyorToPolicy: async (assignment: PolicyAssignment) => {
-    return apiCall('/api/surveyor/assign', {
+    return apiCall('/surveyor/assign', {
       method: 'POST',
       body: JSON.stringify(assignment),
     });
   },
 
   reviewPolicySubmission: async (policyId: string, decision: 'approved' | 'rejected', notes: string) => {
-    return apiCall(`/api/policy/${policyId}/review`, {
+    return apiCall(`/policy/${policyId}/review`, {
       method: 'POST',
       body: JSON.stringify({ decision, notes }),
     });
@@ -97,36 +104,36 @@ export const adminApi = {
         }
       });
     }
-    const endpoint = `/api/surveyor${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/admin/surveyor${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiCall(endpoint);
   },
 
   createSurveyor: async (surveyorData: Partial<Surveyor>) => {
-    return apiCall('/api/surveyor', {
+    return apiCall('/admin/surveyor', {
       method: 'POST',
       body: JSON.stringify(surveyorData),
     });
   },
 
   updateSurveyor: async (surveyorId: string, surveyorData: Partial<Surveyor>) => {
-    return apiCall(`/api/surveyor/${surveyorId}`, {
-      method: 'PUT',
+    return apiCall(`/admin/surveyor/${surveyorId}`, {
+      method: 'PATCH',
       body: JSON.stringify(surveyorData),
     });
   },
 
   deleteSurveyor: async (surveyorId: string) => {
-    return apiCall(`/api/surveyor/${surveyorId}`, {
+    return apiCall(`/admin/surveyor/${surveyorId}`, {
       method: 'DELETE',
     });
   },
 
   getSurveyorById: async (surveyorId: string) => {
-    return apiCall(`/api/surveyor/${surveyorId}`);
+    return apiCall(`/admin/surveyor/${surveyorId}`);
   },
 
   getSurveyorPerformance: async (surveyorId: string) => {
-    return apiCall(`/api/surveyor/${surveyorId}/performance`);
+    return apiCall(`/admin/surveyor/${surveyorId}/performance`);
   },
 
   // Assignment Management
@@ -146,33 +153,33 @@ export const adminApi = {
         }
       });
     }
-    const endpoint = `/api/surveyor/assignments${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/admin/assignment${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiCall(endpoint);
   },
 
   createAssignment: async (assignmentData: Partial<Assignment>) => {
-    return apiCall('/api/surveyor/assign', {
+    return apiCall('/admin/assignment', {
       method: 'POST',
       body: JSON.stringify(assignmentData),
     });
   },
 
   updateAssignment: async (assignmentId: string, assignmentData: Partial<Assignment>) => {
-    return apiCall(`/api/surveyor/assignments/${assignmentId}`, {
+    return apiCall(`/admin/assignment/${assignmentId}`, {
       method: 'PUT',
       body: JSON.stringify(assignmentData),
     });
   },
 
   reassignSurveyor: async (assignmentId: string, newSurveyorId: string, reason?: string) => {
-    return apiCall(`/api/surveyor/assignments/${assignmentId}/reassign`, {
+    return apiCall(`/admin/assignment/${assignmentId}/reassign`, {
       method: 'POST',
       body: JSON.stringify({ surveyorId: newSurveyorId, reason }),
     });
   },
 
   getAssignmentById: async (assignmentId: string) => {
-    return apiCall(`/api/surveyor/assignments/${assignmentId}`);
+    return apiCall(`/admin/assignment/${assignmentId}`);
   },
 
   // Survey Submissions
@@ -191,19 +198,19 @@ export const adminApi = {
         }
       });
     }
-    const endpoint = `/api/surveyor/submissions${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/submission${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiCall(endpoint);
   },
 
   approveSurveySubmission: async (submissionId: string, notes?: string) => {
-    return apiCall(`/api/surveyor/submissions/${submissionId}/approve`, {
+    return apiCall(`/submission/${submissionId}/approve`, {
       method: 'POST',
       body: JSON.stringify({ notes }),
     });
   },
 
   rejectSurveySubmission: async (submissionId: string, reason: string) => {
-    return apiCall(`/api/surveyor/submissions/${submissionId}/reject`, {
+    return apiCall(`/submission/${submissionId}/reject`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
     });
@@ -216,7 +223,7 @@ export const adminApi = {
     formData.append('type', type);
     formData.append('relatedId', relatedId);
 
-    return apiCall('/api/files/upload', {
+    return apiCall('/files/upload', {
       method: 'POST',
       headers: {}, // Remove Content-Type to let browser set it for FormData
       body: formData,
@@ -224,9 +231,10 @@ export const adminApi = {
   },
 
   downloadFile: async (fileId: string) => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/api/files/download/${fileId}`, {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/files/download/${fileId}`, {
       headers: {
+        'apiKey': API_KEY,
         ...(token && { 'Authorization': `Bearer ${token}` }),
       },
     });
@@ -240,11 +248,11 @@ export const adminApi = {
 
   // Analytics and Reports
   getAnalytics: async (period: 'week' | 'month' | 'quarter' | 'year') => {
-    return apiCall(`/api/admin/analytics?period=${period}`);
+    return apiCall(`/admin/analytics?period=${period}`);
   },
 
   generateReport: async (reportType: string, filters?: any) => {
-    return apiCall('/api/admin/reports', {
+    return apiCall('/admin/reports', {
       method: 'POST',
       body: JSON.stringify({ type: reportType, filters }),
     });
@@ -252,23 +260,23 @@ export const adminApi = {
 
   // Notifications
   getNotifications: async (unreadOnly?: boolean) => {
-    const endpoint = `/api/notifications${unreadOnly ? '?unread=true' : ''}`;
+    const endpoint = `/notifications${unreadOnly ? '?unread=true' : ''}`;
     return apiCall(endpoint);
   },
 
   markNotificationAsRead: async (notificationId: string) => {
-    return apiCall(`/api/notifications/${notificationId}/read`, {
+    return apiCall(`/notifications/${notificationId}/read`, {
       method: 'POST',
     });
   },
 
   // Utility functions
   searchAll: async (query: string) => {
-    return apiCall(`/api/search?q=${encodeURIComponent(query)}`);
+    return apiCall(`/search?q=${encodeURIComponent(query)}`);
   },
 
   getSystemHealth: async () => {
-    return apiCall('/api/system/health');
+    return apiCall('/system/health');
   },
 };
 

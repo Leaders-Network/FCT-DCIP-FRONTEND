@@ -110,10 +110,10 @@ const AssignmentsList = () => {
     fetchAssignments();
   }, []);
 
-  const filteredAssignments = assignments.filter(assignment => {
+  const filteredAssignments = (assignments || []).filter(assignment => {
     if (filter === 'all') return true;
-    if (filter === 'pending') return assignment.status === 'assigned';
-    if (filter === 'completed') return assignment.status === 'surveyed';
+    if (filter === 'pending') return assignment?.status === 'assigned';
+    if (filter === 'completed') return assignment?.status === 'surveyed';
     return true;
   });
 

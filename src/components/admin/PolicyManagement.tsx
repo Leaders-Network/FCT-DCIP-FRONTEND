@@ -62,7 +62,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
   // Mock data removed - now using real API calls above
   // Mock surveyors data removed - now using real API call above
 
-  const filteredPolicies = policies.filter(policy => {
+  const filteredPolicies = policies?.filter(policy => {
     if (activeTab === 'all') return true;
     return policy.status === activeTab;
   });
@@ -148,10 +148,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           {[
-            { key: 'all', label: 'All Policies', count: policies.length },
-            { key: 'submitted', label: 'Submitted', count: policies.filter(p => p.status === 'submitted').length },
-            { key: 'assigned', label: 'Assigned', count: policies.filter(p => p.status === 'assigned').length },
-            { key: 'surveyed', label: 'Surveyed', count: policies.filter(p => p.status === 'surveyed').length }
+            { key: 'all', label: 'All Policies', count: (policies || []).length },
+            { key: 'submitted', label: 'Submitted', count: (policies || []).filter(p => p?.status === 'submitted').length },
+            { key: 'assigned', label: 'Assigned', count: (policies || []).filter(p => p?.status === 'assigned').length },
+            { key: 'surveyed', label: 'Surveyed', count: (policies || []).filter(p => p?.status === 'surveyed').length }
           ].map(tab => (
             <button
               key={tab.key}
@@ -198,7 +198,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPolicies.map((policy) => (
+              {filteredPolicies?.map((policy) => (
                 <tr key={policy._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div>
@@ -297,7 +297,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Surveyors
                 </label>
-                {surveyors.map((surveyor) => (
+                {surveyors?.map((surveyor) => (
                   <label key={surveyor._id} className="flex items-center mb-2">
                     <input
                       type="checkbox"

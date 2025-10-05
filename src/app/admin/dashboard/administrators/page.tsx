@@ -101,7 +101,7 @@ export default function AdministratorsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-  {administrators.map((admin, index) => (
+  {(administrators || []).map((admin, index) => (
     <tr key={index} className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
         <Checkbox />
@@ -110,31 +110,31 @@ export default function AdministratorsPage() {
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-10">
             <div className="h-10 w-10 rounded-full bg-[#028835] flex items-center justify-center text-white font-bold">
-              {admin.name
+              {(admin?.name || '')
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
             </div>
           </div>
           <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">{admin.name}</div>
-            <div className="text-sm text-gray-500">{admin.id}</div>
+            <div className="text-sm font-medium text-gray-900">{admin?.name}</div>
+            <div className="text-sm text-gray-500">{admin?.id}</div>
           </div>
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin.email}</td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin.phone}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin?.email}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin?.phone}</td>
 
       {/* Dynamic Status Cell */}
       <td className="px-6 py-4 whitespace-nowrap">
   <span
     className={`inline-flex items-center justify-center text-sm font-semibold rounded-md
       ${
-        admin.status === "Active"
+        admin?.status === "Active"
           ? "bg-green-500 text-white"
-          : admin.status === "Pending"
+          : admin?.status === "Pending"
           ? "bg-yellow-500 text-white"
-          : admin.status === "Inactive"
+          : admin?.status === "Inactive"
           ? "bg-red-500 text-white"
           : "bg-gray-300 text-gray-800"
       }
@@ -144,12 +144,12 @@ export default function AdministratorsPage() {
       height: "40px", // Same fixed height
     }}
   >
-    {admin.status}
+    {admin?.status}
   </span>
 </td>
 
 
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin.date}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin?.date}</td>
 
       {/* View Profile Button */}
       <td className="px-6 py-4 whitespace-nowrap">

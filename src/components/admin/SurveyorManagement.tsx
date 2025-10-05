@@ -42,15 +42,18 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSurveyor, setSelectedSurveyor] = useState<Surveyor | null>(null);
   const [formData, setFormData] = useState({
-    firstname: "",
-    lastname: "",
-    email: "",
-    phonenumber: "",
-    specializations: [] as string[],
-    licenseNumber: "",
-    address: "",
-    emergencyContact: "",
-    notes: ""
+  firstname: "",
+  lastname: "",
+  email: "",
+  phonenumber: "",
+  specializations: [] as string[],
+  licenseNumber: "",
+  address: "",
+  emergencyContact: "",
+  notes: "",
+  role: "Surveyor",
+  status: "active",
+  rating: 0
   });
 
   useEffect(() => {
@@ -61,16 +64,18 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const fetchSurveyors = async () => {
     setLoading(true);
     try {
-      const { getAdminSurveyors } = await import("@/services/api");
+      const { adminApi } = await import("@/services/adminApi");
       
       // Fetch surveyors from the API
-      const response = await getAdminSurveyors({
+      const response = await adminApi.getSurveyors({
         status: statusFilter !== "all" ? statusFilter : undefined,
         specialization: specializationFilter !== "all" ? specializationFilter : undefined,
         search: searchTerm || undefined
       });
       
-      if (response?.data) {
+      console.log("Surveyor API response:", response);
+      
+      if (response?.success && response?.data) {
         setSurveyors(response.data);
       } else {
         setSurveyors([]);
@@ -90,16 +95,16 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       // Fetch all policy requests with assignments
       const response = await getPolicyRequests('all', 1, 100);
       
-      if (response?.data) {
+      if (response?.data && Array.isArray(response.data)) {
         // Transform policy requests to assignment format if needed
-        const assignmentData = response.data.map((policy: any) => ({
+        const assignmentData = response.data?.map((policy: any) => ({
           _id: policy._id,
           surveyorId: policy.assignedSurveyors?.[0] || null,
           policyId: policy._id,
           status: policy.status,
           createdAt: policy.createdAt,
           updatedAt: policy.updatedAt
-        }));
+        })) || [];
         
         setAssignments(assignmentData);
       } else {
@@ -111,21 +116,21 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }
   };
 
-  const filteredSurveyors = surveyors.filter(surveyor => {
+  const filteredSurveyors = (surveyors || []).filter(surveyor => {
     const matchesSearch = 
-      surveyor.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      surveyor.lastname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      surveyor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      surveyor.licenseNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+      (surveyor?.firstname || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+      (surveyor?.lastname || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+      (surveyor?.email || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+      (surveyor?.licenseNumber || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     
     const matchesStatus = 
       statusFilter === "all" || 
-      surveyor.employeeStatus.status.toLowerCase() === statusFilter.toLowerCase();
+      (surveyor?.employeeStatus?.status || '').toLowerCase() === (statusFilter || '').toLowerCase();
     
     const matchesSpecialization = 
       specializationFilter === "all" || 
-      surveyor.specializations?.some(spec => 
-        spec.toLowerCase().includes(specializationFilter.toLowerCase())
+      (surveyor?.specializations || []).some(spec => 
+        (spec || '').toLowerCase().includes((specializationFilter || '').toLowerCase())
       );
 
     return matchesSearch && matchesStatus && matchesSpecialization;
@@ -141,10 +146,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   };
 
   const getCurrentAssignments = (surveyorId: string) => {
-    return assignments.filter(
+    return (assignments || []).filter(
       assignment => 
-        assignment.surveyorId === surveyorId && 
-        assignment.status === "in_progress"
+        assignment?.surveyorId === surveyorId && 
+        assignment?.status === "in_progress"
     ).length;
   };
 
@@ -161,7 +166,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         licenseNumber: "",
         address: "",
         emergencyContact: "",
-        notes: ""
+        notes: "",
+        role: "Surveyor",
+        status: "active",
+        rating: 0
       });
       fetchSurveyors();
     } catch (error) {
@@ -171,7 +179,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
   const handleUpdateSurveyor = async () => {
     if (!selectedSurveyor) return;
-    
     try {
       await onUpdateSurveyor(selectedSurveyor._id, formData);
       setShowEditModal(false);
@@ -194,16 +201,21 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
   const openEditModal = (surveyor: Surveyor) => {
     setSelectedSurveyor(surveyor);
+    console.log('Opening edit modal for surveyor:', surveyor);
+    
     setFormData({
-      firstname: surveyor.firstname,
-      lastname: surveyor.lastname,
-      email: surveyor.email,
-      phonenumber: surveyor.phonenumber,
-      specializations: surveyor.specializations || [],
+      firstname: surveyor.userId?.firstname || surveyor.firstname || "",
+      lastname: surveyor.userId?.lastname || surveyor.lastname || "",
+      email: surveyor.userId?.email || surveyor.email || "",
+      phonenumber: surveyor.userId?.phonenumber || surveyor.phonenumber || "",
+      specializations: surveyor.profile?.specialization || surveyor.specializations || [],
       licenseNumber: surveyor.licenseNumber || "",
-      address: surveyor.address || "",
+      address: surveyor.profile?.location?.state || surveyor.address || "",
       emergencyContact: surveyor.emergencyContact || "",
-      notes: surveyor.notes || ""
+      notes: surveyor.notes || "",
+      role: surveyor.role || "Surveyor",
+      status: surveyor.status || "active",
+      rating: surveyor.rating || 0
     });
     setShowEditModal(true);
   };
@@ -299,9 +311,9 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {surveyor.firstname} {surveyor.lastname}
+                    {surveyor.userId?.firstname || 'N/A'} {surveyor.userId?.lastname || 'N/A'}
                   </h3>
-                  <p className="text-sm text-gray-600">{surveyor.employeeRole.role}</p>
+                  <p className="text-sm text-gray-600">{surveyor?.employeeRole?.role || 'N/A'}</p>
                 </div>
                 <div className="relative">
                   <button className="text-gray-400 hover:text-gray-600">
@@ -313,36 +325,56 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               <div className="space-y-3 mb-4">
                 <div className="flex items-center text-sm text-gray-600">
                   <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                  {surveyor.email}
+                  {surveyor.userId?.email || 'N/A'}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                  {surveyor.phonenumber}
+                  {surveyor.userId?.phonenumber || 'N/A'}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <span className="font-semibold">Emergency Contact:</span> {surveyor?.emergencyContact || 'N/A'}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <span className="font-semibold">Address:</span> {surveyor?.address || 'N/A'}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                  License: {surveyor.licenseNumber}
+                  License: {surveyor?.licenseNumber || 'N/A'}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <span className="font-semibold">Role:</span> {surveyor?.role || 'N/A'}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <span className="font-semibold">Status:</span> {surveyor?.status || 'N/A'}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                  {surveyor?.rating || 0}/5.0
                 </div>
               </div>
 
               <div className="flex items-center justify-between mb-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(surveyor.employeeStatus.status)}`}>
-                  {surveyor.employeeStatus.status}
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(surveyor?.employeeStatus?.status || 'Unknown')}`}>
+                  {surveyor?.employeeStatus?.status || 'Unknown'}
                 </span>
                 <div className="flex items-center text-sm text-gray-600">
                   <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                  {surveyor.rating}/5.0
+                  {surveyor?.rating || 0}/5.0
                 </div>
               </div>
 
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Completed Surveys:</span>
-                  <span className="font-medium">{surveyor.completedSurveys}/{surveyor.totalSurveys}</span>
+                  <span className="font-medium">{surveyor?.completedSurveys || 0}/{surveyor?.totalSurveys || 0}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Current Assignments:</span>
-                  <span className="font-medium">{getCurrentAssignments(surveyor._id)}</span>
+                  <span className="font-medium">{getCurrentAssignments(surveyor?._id)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Joined:</span>
+                  <span className="font-medium">{surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
 
@@ -408,6 +440,48 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Role
+                  </label>
+                  <select
+                    value={formData.role || ''}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  >
+                    <option value="">Select Role</option>
+                    <option value="Surveyor">Surveyor</option>
+                    <option value="Senior Surveyor">Senior Surveyor</option>
+                    <option value="Manager">Manager</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status || ''}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  >
+                    <option value="">Select Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Rating
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={5}
+                  step={0.1}
+                  value={formData.rating || 0}
+                  onChange={(e) => setFormData({...formData, rating: Number(e.target.value)})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     First Name
@@ -577,21 +651,21 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Personal Information</h4>
                   <div className="space-y-2 text-sm">
-                    <p><span className="text-gray-600">Name:</span> {selectedSurveyor.firstname} {selectedSurveyor.lastname}</p>
-                    <p><span className="text-gray-600">Email:</span> {selectedSurveyor.email}</p>
-                    <p><span className="text-gray-600">Phone:</span> {selectedSurveyor.phonenumber}</p>
-                    <p><span className="text-gray-600">Emergency Contact:</span> {selectedSurveyor.emergencyContact}</p>
-                    <p><span className="text-gray-600">Address:</span> {selectedSurveyor.address}</p>
+                    <p><span className="text-gray-600">Name:</span> {selectedSurveyor.userId?.firstname || 'N/A'} {selectedSurveyor.userId?.lastname || 'N/A'}</p>
+                    <p><span className="text-gray-600">Email:</span> {selectedSurveyor.userId?.email || 'N/A'}</p>
+                    <p><span className="text-gray-600">Phone:</span> {selectedSurveyor.userId?.phonenumber || 'N/A'}</p>
+                    <p><span className="text-gray-600">Emergency Contact:</span> {selectedSurveyor?.emergencyContact || 'N/A'}</p>
+                    <p><span className="text-gray-600">Address:</span> {selectedSurveyor?.address || 'N/A'}</p>
                   </div>
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Professional Information</h4>
                   <div className="space-y-2 text-sm">
-                    <p><span className="text-gray-600">License:</span> {selectedSurveyor.licenseNumber}</p>
-                    <p><span className="text-gray-600">Role:</span> {selectedSurveyor.employeeRole.role}</p>
-                    <p><span className="text-gray-600">Status:</span> {selectedSurveyor.employeeStatus.status}</p>
-                    <p><span className="text-gray-600">Rating:</span> {selectedSurveyor.rating}/5.0</p>
-                    <p><span className="text-gray-600">Joined:</span> {new Date(selectedSurveyor.createdAt).toLocaleDateString()}</p>
+                    <p><span className="text-gray-600">License:</span> {selectedSurveyor?.licenseNumber || 'N/A'}</p>
+                    <p><span className="text-gray-600">Role:</span> {selectedSurveyor?.role || 'N/A'}</p>
+                    <p><span className="text-gray-600">Status:</span> {selectedSurveyor?.status || 'N/A'}</p>
+                    <p><span className="text-gray-600">Rating:</span> {selectedSurveyor?.rating || 0}/5.0</p>
+                    <p><span className="text-gray-600">Joined:</span> {selectedSurveyor?.createdAt ? new Date(selectedSurveyor.createdAt).toLocaleDateString() : 'N/A'}</p>
                   </div>
                 </div>
               </div>
@@ -600,15 +674,15 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <h4 className="font-medium text-gray-900 mb-2">Performance Metrics</h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-600">{selectedSurveyor.totalSurveys}</p>
+                    <p className="text-2xl font-bold text-blue-600">{selectedSurveyor?.totalSurveys || 0}</p>
                     <p className="text-sm text-blue-800">Total Surveys</p>
                   </div>
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-2xl font-bold text-green-600">{selectedSurveyor.completedSurveys}</p>
+                    <p className="text-2xl font-bold text-green-600">{selectedSurveyor?.completedSurveys || 0}</p>
                     <p className="text-sm text-green-800">Completed</p>
                   </div>
                   <div className="bg-yellow-50 p-4 rounded-lg">
-                    <p className="text-2xl font-bold text-yellow-600">{getCurrentAssignments(selectedSurveyor._id)}</p>
+                    <p className="text-2xl font-bold text-yellow-600">{getCurrentAssignments(selectedSurveyor?._id)}</p>
                     <p className="text-sm text-yellow-800">Current Assignments</p>
                   </div>
                 </div>
@@ -625,11 +699,11 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 </div>
               </div>
 
-              {selectedSurveyor.notes && (
+              {selectedSurveyor?.notes && (
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Notes</h4>
                   <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                    {selectedSurveyor.notes}
+                    {selectedSurveyor?.notes}
                   </p>
                 </div>
               )}
@@ -653,7 +727,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <button
                   onClick={() => {
                     setShowDetailsModal(false);
-                    handleDeleteSurveyor(selectedSurveyor._id);
+                    handleDeleteSurveyor(selectedSurveyor?._id);
                   }}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                 >

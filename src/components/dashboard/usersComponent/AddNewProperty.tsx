@@ -327,9 +327,9 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                     disabled={categories.length === 0}
                   >
                     <option value="">--Select Category--</option>
-                    {categories.map((category) => (
-                      <option key={category._id} value={category._id}>
-                        {category.category}
+                    {(categories || []).map((category) => (
+                      <option key={category?._id} value={category?._id}>
+                        {category?.category}
                       </option>
                     ))}
                   </select>
@@ -368,7 +368,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                 <p className="font-semibold mb-2">UPLOAD PROPERTY PICTURES:</p>
                 <div className="border-2 border-dashed border-gray-300 p-4 rounded-md">
                   <div className="grid grid-cols-3 gap-4">
-                    {images.map((image, index) => (
+                    {(images || []).map((image, index) => (
                       <div
                         key={index}
                         className="w-24 h-24 bg-gray-100 flex items-center justify-center overflow-hidden relative"

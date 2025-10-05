@@ -27,9 +27,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
   const userRole = user?.role || "Super Admin"
 
   // Get user initials
-  const initials = userName
+  const initials = (userName || '')
     .split(" ")
-    .map((word) => word[0])
+    .map((word) => word?.[0] || '')
     .join("")
     .toUpperCase()
 
@@ -282,8 +282,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
         {/* Navigation */}
         <nav className="mt-6">
           <ul className="space-y-2 px-2">
-            {navItems.map((item) => (
-              <li key={item.name}>
+            {(navItems || []).map((item) => (
+              <li key={item?.name}>
                 {'subItems' in item && item.subItems ? (
                   <div>
                     <div className="flex items-center">

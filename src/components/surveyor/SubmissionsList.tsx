@@ -123,11 +123,11 @@ const SubmissionsList = () => {
     fetchSubmissions();
   }, []);
 
-  const filteredSubmissions = submissions.filter(submission => {
-    if (filter === 'all') return submission.status !== 'assigned';
-    if (filter === 'pending') return submission.status === 'surveyed';
-    if (filter === 'approved') return submission.status === 'approved';
-    if (filter === 'rejected') return submission.status === 'rejected';
+  const filteredSubmissions = (submissions || []).filter(submission => {
+    if (filter === 'all') return submission?.status !== 'assigned';
+    if (filter === 'pending') return submission?.status === 'surveyed';
+    if (filter === 'approved') return submission?.status === 'approved';
+    if (filter === 'rejected') return submission?.status === 'rejected';
     return true;
   });
 
