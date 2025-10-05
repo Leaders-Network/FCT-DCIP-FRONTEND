@@ -60,10 +60,10 @@ const SurveyorDashboard = () => {
           // Calculate stats if not provided by dashboard
           if (dashboardResponse.status === 'rejected' || !dashboardResponse.value?.data?.stats) {
             setStats({
-              total: fetchedAssignments.length,
-              pending: fetchedAssignments.filter(a => a.status === 'assigned' || a.status === 'pending').length,
-              inProgress: fetchedAssignments.filter(a => a.status === 'in-progress').length,
-              completed: fetchedAssignments.filter(a => a.status === 'completed' || a.status === 'surveyed').length
+              total: (fetchedAssignments || []).length,
+              pending: (fetchedAssignments || []).filter(a => a?.status === 'assigned' || a?.status === 'pending').length,
+              inProgress: (fetchedAssignments || []).filter(a => a?.status === 'in-progress').length,
+              completed: (fetchedAssignments || []).filter(a => a?.status === 'completed' || a?.status === 'surveyed').length
             });
           }
         } else {
@@ -97,7 +97,7 @@ const SurveyorDashboard = () => {
   const surveyorName = localStorage.getItem("surveyorName") || "Surveyor";
   const firstName = surveyorName.split(" ")[0];
 
-  const recentAssignments = assignments.slice(0, 3);
+  const recentAssignments = (assignments || []).slice(0, 3);
 
   return (
     <div className="space-y-6">

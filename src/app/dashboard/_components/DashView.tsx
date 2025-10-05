@@ -315,8 +315,8 @@ const Dashview = () => {
                             </td>
                           </tr>
                         ))
-                      ) : recentInsurances.length > 0 ? (
-                        recentInsurances.map((item, index) => (
+                      ) : (recentInsurances || []).length > 0 ? (
+                        (recentInsurances || []).map((item, index) => (
                           <tr key={item._id || index} className="border-b">
                             <td className="py-4 px-4">
                               <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">

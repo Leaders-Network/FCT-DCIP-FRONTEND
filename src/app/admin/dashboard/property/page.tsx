@@ -37,10 +37,10 @@ export default function PropertiesPage() {
   }, [activeFilters])
 
   const applyFilters = () => {
-    let result = [...properties]
+    let result = [...(properties || [])]
 
     if (activeFilters.length > 0) {
-      result = result.filter((property) => activeFilters.includes(property.status))
+      result = result.filter((property) => activeFilters.includes(property?.status))
     }
 
     setFilteredProperties(result)
@@ -61,10 +61,10 @@ export default function PropertiesPage() {
   const handleKeywordSearch = () => {
     if (!searchKeyword.trim()) return
 
-    const result = properties.filter(
+    const result = (properties || []).filter(
       (property) =>
-        property.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        property.id.toLowerCase().includes(searchKeyword.toLowerCase()),
+        (property?.name || '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
+        (property?.id || '').toLowerCase().includes(searchKeyword.toLowerCase()),
     )
 
     setFilteredProperties(result)
@@ -78,9 +78,9 @@ export default function PropertiesPage() {
     const fromDate = dateFrom ? new Date(dateFrom) : new Date(0)
     const toDate = dateTo ? new Date(dateTo) : new Date(8640000000000000)
 
-    const result = properties.filter((property) => {
-      if (property.date === "----------") return false
-      const propertyDate = new Date(property.date)
+    const result = (properties || []).filter((property) => {
+      if (property?.date === "----------") return false
+      const propertyDate = new Date(property?.date || '')
       return propertyDate >= fromDate && propertyDate <= toDate
     })
 
@@ -274,14 +274,14 @@ export default function PropertiesPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Checkbox />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{property.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{property?.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusBadgeClass(property.status)}`}
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusBadgeClass(property?.status)}`}
                       >
-                        {property.status}
+                        {property?.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

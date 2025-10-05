@@ -299,9 +299,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Surveyors</option>
-              {surveyors.map((surveyor) => (
-                <option key={surveyor._id} value={surveyor._id}>
-                  {surveyor.firstname} {surveyor.lastname}
+              {(surveyors || []).map((surveyor) => (
+                <option key={surveyor?._id} value={surveyor?._id}>
+                  {surveyor?.firstname} {surveyor?.lastname}
                 </option>
               ))}
             </select>
@@ -324,7 +324,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 
       {/* Assignments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {assignments.map((assignment) => (
+        {assignments?.map((assignment) => (
           <AssignmentCard
             key={assignment._id}
             assignment={assignment}
@@ -790,7 +790,7 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
       <div>
         <h4 className="font-medium text-gray-900 mb-2">Special Requirements</h4>
         <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-          {assignment.specialRequirements.map((req, index) => (
+          {(assignment?.specialRequirements || []).map((req, index) => (
             <li key={index}>{req}</li>
           ))}
         </ul>
@@ -875,7 +875,7 @@ const AssignmentProgressTab: React.FC<ProgressTabProps> = ({
       {assignment.progressTracking.milestones.length > 0 && (
         <div className="space-y-3">
           <h5 className="text-sm font-medium text-gray-700">Completed Milestones</h5>
-          {assignment.progressTracking.milestones.map((milestone, index) => (
+          {(assignment?.progressTracking?.milestones || []).map((milestone, index) => (
             <div key={index} className="flex items-start space-x-3 bg-green-50 p-3 rounded-lg">
               <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
               <div className="flex-1">
@@ -894,7 +894,7 @@ const AssignmentProgressTab: React.FC<ProgressTabProps> = ({
       {assignment.progressTracking.checkpoints.length > 0 && (
         <div className="space-y-3 mt-4">
           <h5 className="text-sm font-medium text-gray-700">Progress Checkpoints</h5>
-          {assignment.progressTracking.checkpoints.map((checkpoint, index) => (
+          {(assignment?.progressTracking?.checkpoints || []).map((checkpoint, index) => (
             <div key={index} className="flex items-start space-x-3 bg-blue-50 p-3 rounded-lg">
               <Clock className="w-4 h-4 text-blue-600 mt-1" />
               <div className="flex-1">
@@ -993,7 +993,7 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
     {/* Existing Documents */}
     {assignment.documents.length > 0 ? (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {assignment.documents.map((doc) => (
+        {(assignment?.documents || []).map((doc) => (
           <div key={doc._id} className="border border-gray-200 rounded-lg p-3">
             <div className="flex items-start space-x-3">
               <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -1049,7 +1049,7 @@ const AssignmentCommunicationTab: React.FC<{
     
     {assignment.communication.messages.length > 0 ? (
       <div className="space-y-4 max-h-96 overflow-y-auto">
-        {assignment.communication.messages.map((message) => (
+        {(assignment?.communication?.messages || []).map((message) => (
           <div key={message._id} className="bg-gray-50 p-4 rounded-lg">
             <div className="flex items-start justify-between mb-2">
               <span className="font-medium text-gray-900">Message</span>

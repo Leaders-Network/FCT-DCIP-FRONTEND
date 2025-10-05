@@ -141,7 +141,8 @@ export interface Surveyor extends User {
   address?: string;
   emergencyContact?: string;
   notes?: string;
-  status?: 'active' | 'inactive' | 'on_leave';
+  status?: 'active' | 'inactive' | 'suspended';
+  role?: string;
   profile?: {
     availability: 'available' | 'busy' | 'unavailable';
     specialization: string[];
