@@ -42,8 +42,9 @@ export default function ResetVerify() {
 
     try {
       // Step 2: Verify reset password OTP
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend-1.onrender.com/api/v1";
       const response = await fetch(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/verify-otp-user",
+        `${apiBaseUrl}/auth/verify-otp-user`,
         {
           method: "POST",
           headers: {

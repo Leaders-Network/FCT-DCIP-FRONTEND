@@ -55,8 +55,9 @@ export default function ChangePassword() {
 
     try {
       // Step 3: Set new password
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend-1.onrender.com/api/v1";
       const response = await fetch(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/reset-password",
+        `${apiBaseUrl}/auth/reset-password`,
         {
           method: "PATCH",
           headers: {

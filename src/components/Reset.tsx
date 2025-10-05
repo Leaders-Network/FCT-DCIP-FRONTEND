@@ -36,8 +36,9 @@ export default function Reset() {
 
     try {
       // Step 1: Request OTP for password reset
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend-1.onrender.com/api/v1";
       const response = await fetch(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/send-reset-password-otp",
+        `${apiBaseUrl}/auth/send-reset-password-otp`,
         {
           method: "POST",
           headers: {
