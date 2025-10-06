@@ -2,6 +2,8 @@
 import { useState } from "react"
 import type React from "react"
 
+import { adminApi } from "@/services/adminApi";
+
 interface AdminSidebarProps {
   isOpen: boolean
   onClose: () => void
@@ -10,10 +12,10 @@ interface AdminSidebarProps {
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
-    phone: "",
+    phonenumber: "",
     role: "",
     status: "Active",
   })
@@ -23,24 +25,27 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false)
-      onClose()
+    try {
+      await adminApi.createAdministrator(formData);
+      onClose();
       // Reset form
       setFormData({
-        firstName: "",
-        lastName: "",
+        firstname: "",
+        lastname: "",
         email: "",
-        phone: "",
+        phonenumber: "",
         role: "",
         status: "Active",
-      })
-    }, 1000)
+      });
+    } catch (error) {
+      console.error("Failed to create administrator:", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -76,8 +81,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                   <label className="block text-sm font-medium mb-1">First Name:</label>
                   <input
                     type="text"
-                    name="firstName"
-                    value={formData.firstName}
+                    name="firstname"
+                    value={formData.firstname}
                     onChange={handleChange}
                     className="w-full p-2 border border-gray-300 rounded"
                     required
@@ -88,8 +93,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                   <label className="block text-sm font-medium mb-1">Last Name:</label>
                   <input
                     type="text"
-                    name="lastName"
-                    value={formData.lastName}
+                    name="lastname"
+                    value={formData.lastname}
                     onChange={handleChange}
                     className="w-full p-2 border border-gray-300 rounded"
                     required
@@ -112,8 +117,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                   <label className="block text-sm font-medium mb-1">Phone Number:</label>
                   <input
                     type="tel"
-                    name="phone"
-                    value={formData.phone}
+                    name="phonenumber"
+                    value={formData.phonenumber}
                     onChange={handleChange}
                     className="w-full p-2 border border-gray-300 rounded"
                     required

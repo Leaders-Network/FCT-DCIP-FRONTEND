@@ -94,6 +94,17 @@ export const adminApi = {
     });
   },
 
+  getAdministrators: async () => {
+    return apiCall('/admin/administrators');
+  },
+
+  createAdministrator: async (adminData: any) => {
+    return apiCall('/admin/administrators', {
+      method: 'POST',
+      body: JSON.stringify(adminData),
+    });
+  },
+
   // Surveyor Management
   getSurveyors: async (filters?: {
     status?: string;
