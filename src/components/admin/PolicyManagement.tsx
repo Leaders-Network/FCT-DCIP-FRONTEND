@@ -3,15 +3,14 @@ import React, { useState, useEffect } from "react";
 import { Eye, Users, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
 import { PolicyRequest, Surveyor, PolicyAssignment } from "@/types/api.types";
 
-interface PolicyManagementProps {
-  onAssignSurveyor: (assignment: PolicyAssignment) => Promise<void>;
-  onReviewSubmission: (policyId: string, decision: 'approved' | 'rejected', notes: string) => Promise<void>;
-}
+interface PolicyManagementProps {}
 
-const PolicyManagement: React.FC<PolicyManagementProps> = ({
-  onAssignSurveyor,
-  onReviewSubmission,
-}) => {
+
+import { adminApi, withErrorHandling } from "@/services/adminApi";
+import { useAuth } from "@/context/useAuth";
+
+const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
+  const { user } = useAuth();
   const [policies, setPolicies] = useState<PolicyRequest[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyRequest | null>(null);
@@ -22,38 +21,31 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
   const [reviewNotes, setReviewNotes] = useState("");
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [activeTab, setActiveTab] = useState<'all' | 'submitted' | 'assigned' | 'surveyed'>('all');
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+
+  const handleFetchDocumentUrl = async (document: any) => {
+    if (typeof document === 'string') {
+      const response = await adminApi.getSurveyDocumentDownloadUrl(document);
+      setDocumentUrl(response.data.url);
+    } else if (document && document.cloudinaryUrl) {
+      setDocumentUrl(document.cloudinaryUrl);
+    }
+  };
+
+  // import moved to top
 
   // Fetch real data from API
   useEffect(() => {
     const fetchPoliciesAndSurveyors = async () => {
-      try {
-        const { getPolicyRequests, getAdminSurveyors } = await import("@/services/api");
-        
-        // Fetch policies and surveyors in parallel
-        const [policiesResponse, surveyorsResponse] = await Promise.allSettled([
-          getPolicyRequests('all', 1, 100),
-          getAdminSurveyors()
+      const fetcher = withErrorHandling(async () => {
+        const [policiesResponse, surveyorsResponse] = await Promise.all([
+          adminApi.getPolicies({ status: 'all', page: 1, limit: 100 }),
+          adminApi.getSurveyors(),
         ]);
-        
-        // Handle policies response
-        if (policiesResponse.status === 'fulfilled' && policiesResponse.value?.data) {
-          setPolicies(policiesResponse.value.data);
-        } else {
-          setPolicies([]);
-        }
-        
-        // Handle surveyors response
-        if (surveyorsResponse.status === 'fulfilled' && surveyorsResponse.value?.data) {
-          setSurveyors(surveyorsResponse.value.data);
-        } else {
-          setSurveyors([]);
-        }
-        
-      } catch (error) {
-        console.error("Failed to fetch policies and surveyors:", error);
-        setPolicies([]);
-        setSurveyors([]);
-      }
+        setPolicies(policiesResponse.data.policyRequests);
+        setSurveyors(surveyorsResponse.data);
+      });
+      fetcher();
     };
 
     fetchPoliciesAndSurveyors();
@@ -62,60 +54,69 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
   // Mock data removed - now using real API calls above
   // Mock surveyors data removed - now using real API call above
 
-  const filteredPolicies = policies?.filter(policy => {
-    if (activeTab === 'all') return true;
-    return policy.status === activeTab;
-  });
+  const filteredPolicies = Array.isArray(policies)
+    ? policies.filter(policy => activeTab === 'all' ? true : policy.status === activeTab)
+    : [];
 
-  const handleAssignSurveyors = async () => {
+  const handleAssignSurveyors = withErrorHandling(async () => {
+    if (!user) {
+      alert("You must be logged in to assign a surveyor.");
+      return;
+    }
     if (!selectedPolicy || selectedSurveyors.length === 0) return;
 
     const assignment: PolicyAssignment = {
       policyId: selectedPolicy._id,
       surveyorIds: selectedSurveyors,
-      assignedBy: "current_admin_id", // Get from auth context
+      assignedBy: user._id, // Get from auth context
       priority,
       instructions: assignmentNotes,
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
     };
 
-    try {
-      await onAssignSurveyor(assignment);
-      // Update local state
-      setPolicies(prev => 
-        prev.map(p => 
-          p._id === selectedPolicy._id 
-            ? { ...p, status: 'assigned', assignedSurveyors: selectedSurveyors }
-            : p
-        )
-      );
-      setShowAssignModal(false);
-      setSelectedSurveyors([]);
-      setAssignmentNotes("");
-    } catch (error) {
-      console.error("Failed to assign surveyors:", error);
-    }
-  };
+    await adminApi.assignSurveyorToPolicy(assignment);
+    // Update local state
+    setPolicies(prev => 
+      prev.map(p => 
+        p._id === selectedPolicy._id 
+          ? { ...p, status: 'assigned', assignedSurveyors: selectedSurveyors }
+          : p
+      )
+    );
+    setShowAssignModal(false);
+    setSelectedSurveyors([]);
+    setAssignmentNotes("");
+    alert("Surveyor assigned successfully!");
+  });
 
-  const handleReviewSubmission = async (decision: 'approved' | 'rejected') => {
+  const handleReviewSubmission = withErrorHandling(async (decision: 'approved' | 'rejected') => {
     if (!selectedPolicy) return;
 
-    try {
-      await onReviewSubmission(selectedPolicy._id, decision, reviewNotes);
-      // Update local state
-      setPolicies(prev => 
-        prev.map(p => 
-          p._id === selectedPolicy._id 
-            ? { ...p, status: decision === 'approved' ? 'approved' : 'rejected' }
-            : p
-        )
-      );
-      setShowReviewModal(false);
-      setReviewNotes("");
-    } catch (error) {
-      console.error("Failed to review submission:", error);
-    }
-  };
+    await adminApi.reviewPolicySubmission(selectedPolicy._id, decision, reviewNotes);
+    // Update local state
+    setPolicies(prev => 
+      prev.map(p => 
+        p._id === selectedPolicy._id 
+          ? { ...p, status: decision === 'approved' ? 'approved' : 'rejected' }
+          : p
+      )
+    );
+    setShowReviewModal(false);
+    setReviewNotes("");
+    alert(`Submission ${decision} successfully!`);
+  });
+
+  const handleSendToUser = withErrorHandling(async (policyId: string) => {
+    await adminApi.sendPolicyToUser(policyId);
+    setPolicies(prev =>
+      prev.map(p =>
+        p._id === policyId
+          ? { ...p, status: 'sent_to_user' }
+          : p
+      )
+    );
+    alert('Policy sent to user successfully!');
+  });
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -124,7 +125,8 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
       surveyed: { color: "bg-purple-100 text-purple-800", icon: Eye, text: "Surveyed" },
       approved: { color: "bg-green-100 text-green-800", icon: CheckCircle, text: "Approved" },
       rejected: { color: "bg-red-100 text-red-800", icon: XCircle, text: "Rejected" },
-      completed: { color: "bg-gray-100 text-gray-800", icon: CheckCircle, text: "Completed" }
+      completed: { color: "bg-gray-100 text-gray-800", icon: CheckCircle, text: "Completed" },
+      sent_to_user: { color: "bg-cyan-100 text-cyan-800", icon: CheckCircle, text: "Sent to User" }
     };
 
     const badge = badges[status as keyof typeof badges] || badges.submitted;
@@ -148,10 +150,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           {[
-            { key: 'all', label: 'All Policies', count: (policies || []).length },
-            { key: 'submitted', label: 'Submitted', count: (policies || []).filter(p => p?.status === 'submitted').length },
-            { key: 'assigned', label: 'Assigned', count: (policies || []).filter(p => p?.status === 'assigned').length },
-            { key: 'surveyed', label: 'Surveyed', count: (policies || []).filter(p => p?.status === 'surveyed').length }
+            { key: 'all', label: 'All Policies', count: Array.isArray(policies) ? policies.length : 0 },
+            { key: 'submitted', label: 'Submitted', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'submitted').length : 0 },
+            { key: 'assigned', label: 'Assigned', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'assigned').length : 0 },
+            { key: 'surveyed', label: 'Surveyed', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'surveyed').length : 0 }
           ].map(tab => (
             <button
               key={tab.key}
@@ -271,6 +273,14 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                         Review
                       </button>
                     )}
+                    {policy.status === 'approved' && (
+                      <button
+                        onClick={() => handleSendToUser(policy._id)}
+                        className="text-green-600 hover:text-green-900"
+                      >
+                        Send to User
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -378,7 +388,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
             <div className="flex justify-between items-center p-6 border-b">
               <h3 className="text-lg font-semibold">Review Survey Submission</h3>
               <button
-                onClick={() => setShowReviewModal(false)}
+                onClick={() => {
+                  setShowReviewModal(false);
+                  setDocumentUrl(null);
+                }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 ×
@@ -390,14 +403,24 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Survey Document
                   </label>
-                  <a
-                    href={`/documents/${selectedPolicy.surveyDocument}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    View Document ({typeof selectedPolicy.surveyDocument === 'string' ? selectedPolicy.surveyDocument : 'Document'})
-                  </a>
+                  {!documentUrl && (
+                    <button
+                      onClick={() => handleFetchDocumentUrl(selectedPolicy.surveyDocument)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      Show Document
+                    </button>
+                  )}
+                  {documentUrl && (
+                    <a
+                      href={documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      View Document
+                    </a>
+                  )}
                 </div>
               )}
 
@@ -433,7 +456,13 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleReviewSubmission('rejected')}
+                  onClick={() => {
+                    if (!reviewNotes) {
+                      alert('Please provide feedback in the review notes when rejecting a submission.');
+                      return;
+                    }
+                    handleReviewSubmission('rejected');
+                  }}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                 >
                   Reject

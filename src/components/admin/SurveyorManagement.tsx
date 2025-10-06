@@ -18,7 +18,18 @@ import {
   Edit,
   Trash2
 } from "lucide-react";
-import { Surveyor, Assignment } from "@/types/api.types";
+import { Surveyor as BaseSurveyor, Assignment } from "@/types/api.types";
+
+type UserIdType = {
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  phonenumber?: string;
+};
+
+type Surveyor = BaseSurveyor & {
+  userId?: UserIdType;
+};
 
 interface SurveyorManagementProps {
   onCreateSurveyor: (surveyor: Partial<Surveyor>) => Promise<void>;
@@ -52,7 +63,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   emergencyContact: "",
   notes: "",
   role: "Surveyor",
-  status: "active",
+  status: "active" as "active" | "inactive" | "suspended",
   rating: 0
   });
 
@@ -155,7 +166,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
   const handleCreateSurveyor = async () => {
     try {
-      await onCreateSurveyor(formData);
+      await onCreateSurveyor({
+        ...formData,
+        status: formData.status as "active" | "inactive" | "suspended"
+      });
       setShowCreateModal(false);
       setFormData({
         firstname: "",
@@ -180,7 +194,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const handleUpdateSurveyor = async () => {
     if (!selectedSurveyor) return;
     try {
-      await onUpdateSurveyor(selectedSurveyor._id, formData);
+      await onUpdateSurveyor(selectedSurveyor._id, {
+        ...formData,
+        status: formData.status as "active" | "inactive" | "suspended"
+      });
       setShowEditModal(false);
       fetchSurveyors();
     } catch (error) {
@@ -319,6 +336,9 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <button className="text-gray-400 hover:text-gray-600">
                     <MoreVertical className="h-4 w-4" />
                   </button>
+                  {typeof surveyor.userId === "object" && (surveyor.userId as any)?.phonenumber
+                    ? (surveyor.userId as any).phonenumber
+                    : surveyor.phonenumber || 'N/A'}
                 </div>
               </div>
 
@@ -440,28 +460,17 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Role
-                  </label>
-                  <select
-                    value={formData.role || ''}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="">Select Role</option>
-                    <option value="Surveyor">Surveyor</option>
-                    <option value="Senior Surveyor">Senior Surveyor</option>
-                    <option value="Manager">Manager</option>
-                  </select>
-                </div>
+                {/* Role selection removed for create surveyor. Only 'Surveyor' will be created. */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Status
                   </label>
                   <select
                     value={formData.status || ''}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      status: e.target.value as "active" | "inactive" | "suspended"
+                    })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                   >
                     <option value="">Select Status</option>

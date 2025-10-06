@@ -70,7 +70,7 @@ export const adminApi = {
         }
       });
     }
-    const endpoint = `/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/admin/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiCall(endpoint);
   },
 
@@ -85,6 +85,12 @@ export const adminApi = {
     return apiCall(`/policy/${policyId}/review`, {
       method: 'POST',
       body: JSON.stringify({ decision, notes }),
+    });
+  },
+
+  sendPolicyToUser: async (policyId: string) => {
+    return apiCall(`/admin/policy/${policyId}/send-to-user`, {
+      method: 'POST',
     });
   },
 
@@ -214,6 +220,10 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ reason }),
     });
+  },
+
+  getSurveyDocumentDownloadUrl: async (publicId: string) => {
+    return apiCall(`/survey-documents/download/${publicId}`);
   },
 
   // File Management

@@ -1,22 +1,4 @@
-// Assignment creation API
-export const createAssignment = async (assignmentData: {
-  policyId: string;
-  surveyorId: string;
-  assignedBy?: string;
-  status?: string;
-  priority?: string;
-  deadline?: string;
-}) => {
-  try {
-    const response = await api.post('/assignment', assignmentData, {
-      headers: getAuthHeaders(),
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Failed to create assignment:', error);
-    throw error;
-  }
-};
+
 import axios from "axios";
 import {
   EmployeeRegistrationData,
@@ -107,6 +89,26 @@ export const addProperty = async (
     return response.data;
   } catch (error) {
     console.error("Failed to add property:", error);
+    throw error;
+  }
+};
+
+// Assignment creation API
+export const createAssignment = async (assignmentData: {
+  policyId: string;
+  surveyorId: string;
+  assignedBy?: string;
+  status?: string;
+  priority?: string;
+  deadline?: string;
+}) => {
+  try {
+    const response = await api.post('/assignment', assignmentData, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to create assignment:', error);
     throw error;
   }
 };
@@ -262,7 +264,7 @@ export const getAvailableSurveyors = async (specialization?: string, location?: 
     if (specialization) params.append('specialization', specialization);
     if (location) params.append('location', location);
     
-    const url = `/policy/surveyors/available?${params.toString()}`;
+  const url = `/policy/surveyors/available?${params.toString()}`;
     const response = await api.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,
