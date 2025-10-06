@@ -52,10 +52,29 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 }) => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  // Available surveyors for assignment
+  const [availableSurveyors, setAvailableSurveyors] = useState<Surveyor[]>([]);
+  useEffect(() => {
+    // Fetch available surveyors from the database when modal opens
+    const fetchSurveyors = async () => {
+      try {
+        const { getAvailableSurveyors } = await import("@/services/api");
+        const response = await getAvailableSurveyors();
+        if (response?.data) {
+          setAvailableSurveyors(response.data);
+        } else {
+          setAvailableSurveyors([]);
+        }
+      } catch (error) {
+        setAvailableSurveyors([]);
+      }
+    };
+    if (showCreateModal) fetchSurveyors();
+  }, [showCreateModal]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [newAssignmentData, setNewAssignmentData] = useState({
     policyId: '',
     surveyorId: '',
@@ -64,6 +83,27 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     priority: 'normal',
     deadline: ''
   });
+
+  // Available policies for assignment
+  const [availablePolicies, setAvailablePolicies] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch available policies for assignment (status: submitted or approved)
+    const fetchPolicies = async () => {
+      try {
+        const { getPolicyRequests } = await import("@/services/api");
+        const response = await getPolicyRequests('submitted', 1, 100);
+        if (response?.data) {
+          setAvailablePolicies(response.data);
+        } else {
+          setAvailablePolicies([]);
+        }
+      } catch (error) {
+        setAvailablePolicies([]);
+      }
+    };
+    fetchPolicies();
+  }, [showCreateModal]);
   // Handle assignment creation
   const handleCreateAssignment = async () => {
     try {
@@ -359,20 +399,25 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           <div className="bg-white rounded-lg w-full max-w-md p-6">
             <h3 className="text-lg font-semibold mb-4">Create New Assignment</h3>
             <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Policy ID"
+              <select
                 value={newAssignmentData.policyId}
                 onChange={e => setNewAssignmentData({ ...newAssignmentData, policyId: e.target.value })}
                 className="w-full border border-gray-300 rounded px-3 py-2"
-              />
+              >
+                <option value="">Select Policy</option>
+                {Array.isArray(availablePolicies) && availablePolicies.map(policy => (
+                  <option key={policy._id} value={policy._id}>
+                    {policy.policyNumber ? `${policy.policyNumber} - ${policy.propertyDetails.address}` : policy.propertyDetails.address}
+                  </option>
+                ))}
+              </select>
               <select
                 value={newAssignmentData.surveyorId}
                 onChange={e => setNewAssignmentData({ ...newAssignmentData, surveyorId: e.target.value })}
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="">Select Surveyor</option>
-                {surveyors.map(s => (
+                {Array.isArray(availableSurveyors) && availableSurveyors.map(s => (
                   <option key={s._id} value={s._id}>{s.firstname} {s.lastname}</option>
                 ))}
               </select>

@@ -71,7 +71,7 @@ const AdminDashboard: React.FC = () => {
         getAdminDashboardData(),
         getQuickStats(),
         getAdminAlerts(),
-        getAdminSurveyors({ limit: 5 })
+  getAdminSurveyors({ status: 'active', limit: 5 })
       ]);
 
       // Handle dashboard data
@@ -91,7 +91,9 @@ const AdminDashboard: React.FC = () => {
 
       // Handle top performers
       if (surveyorsResponse.status === 'fulfilled' && surveyorsResponse.value.success) {
-        const performers = surveyorsResponse.value.data.map((surveyor: Surveyor) => ({
+        // Only use surveyors with status 'active' and availability 'available'
+        const activeAvailableSurveyors = surveyorsResponse.value.data.filter((s: Surveyor) => s.status === 'active' && s.profile?.availability === 'available');
+        const performers = activeAvailableSurveyors.map((surveyor: Surveyor) => ({
           id: surveyor._id,
           name: `${surveyor.firstname} ${surveyor.lastname}`,
           completedSurveys: surveyor.statistics?.completedSurveys || 0,
