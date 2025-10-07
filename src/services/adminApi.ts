@@ -74,6 +74,10 @@ export const adminApi = {
     return apiCall(endpoint);
   },
 
+  getAdminProperties: async () => {
+    return apiCall('/admin/property');
+  },
+
   assignSurveyorToPolicy: async (assignment: PolicyAssignment) => {
     return apiCall('/surveyor/assign', {
       method: 'POST',

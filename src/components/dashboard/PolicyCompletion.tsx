@@ -3,62 +3,29 @@ import React, { useState, useEffect } from "react";
 import { Download, ExternalLink, CheckCircle, Clock, FileText } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
 import { downloadFile } from "@/services/fileService";
+import { getUserPolicyRequests } from "@/services/api";
 
-interface PolicyCompletionProps {
-  userId: string;
-}
+interface PolicyCompletionProps {}
 
-const PolicyCompletion: React.FC<PolicyCompletionProps> = ({ userId }) => {
+const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCompletedPolicies = async () => {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockPolicies: PolicyRequest[] = [
-        {
-          _id: "1",
-          userId: userId,
-          propertyDetails: {
-            address: "123 Main St, Abuja, FCT",
-            propertyType: "Residential House",
-            buildingValue: 50000000,
-            yearBuilt: 2020,
-            squareFootage: 2500,
-            constructionMaterial: "Concrete Block"
-          },
-          contactDetails: {
-            fullName: "John Doe",
-            email: "john.doe@email.com",
-            phoneNumber: "+234 801 234 5678"
-          },
-          requestDetails: {
-            coverageType: "Comprehensive Coverage",
-            policyDuration: "2 Years",
-            additionalCoverage: ["Flood Coverage", "Theft Protection"]
-          },
-          status: "approved",
-          surveyDocument: {
-            name: "survey_report_1.pdf",
-            url: "https://res.cloudinary.com/demo/raw/upload/v1234567890/survey-documents/survey_report_1.pdf",
-            publicId: "survey-documents/survey_report_1"
-          },
-          surveyNotes: "Property approved for comprehensive coverage. Excellent condition.",
-          adminNotes: "Survey approved. Policy ready for payment.",
-          createdAt: "2024-09-15T10:00:00Z",
-          updatedAt: "2024-10-01T15:30:00Z"
-        }
-      ];
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setCompletedPolicies(mockPolicies);
-      setLoading(false);
+      try {
+        const response = await getUserPolicyRequests("approved", 1, 100);
+        setCompletedPolicies(response.data.policyRequests);
+      } catch (error) {
+        console.error("Failed to fetch completed policies:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchCompletedPolicies();
-  }, [userId]);
+  }, []);
 
   const handleDownloadSurvey = async (policyId: string, documentInfo: any) => {
     try {
@@ -83,6 +50,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = ({ userId }) => {
 
   const handleProceedToPayment = (policy: PolicyRequest) => {
     // Redirect to the external payment verification URL
+    const userId = localStorage.getItem("userId");
     const paymentUrl = `https://askniid.org/VerifyBuildersPolicy.aspx?policyId=${policy._id}&userId=${userId}`;
     window.open(paymentUrl, '_blank', 'noopener,noreferrer');
   };

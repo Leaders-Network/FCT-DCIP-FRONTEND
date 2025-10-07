@@ -6,9 +6,12 @@ import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkout"
+import { adminApi } from "@/services/adminApi";
 
 export default function PropertiesPage() {
   const [showPropertySidebar, setShowPropertySidebar] = useState(false)
+  const [properties, setProperties] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false)
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string | null>(null)
@@ -17,19 +20,23 @@ export default function PropertiesPage() {
   const [searchKeyword, setSearchKeyword] = useState("")
   const [filteredProperties, setFilteredProperties] = useState<any[]>([])
 
-  const properties = [
-    { name: "Insurance Renewal", date: "May 02, 2024", id: "A012D30", status: "Active" },
-    { name: "Insurance Renewal", date: "----------", id: "E712D30", status: "Processing" },
-    { name: "Insurance Renewal", date: "Jan 20, 2024", id: "C712V43", status: "Expired" },
-    { name: "Insurance Renewal", date: "Jan 01, 2024", id: "Y657JB9", status: "Inactive" },
-    { name: "Insurance Renewal", date: "May 24, 2024", id: "B657B90", status: "Cancelled" },
-    { name: "Insurance Renewal", date: "----------", id: "A012D30", status: "Pending" },
-  ]
-
   const statusOptions = ["Active", "Expired", "Blacklisted", "Processing", "Inactive", "Pending", "Cancelled"]
 
   useEffect(() => {
-    setFilteredProperties(properties)
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const response = await adminApi.getAdminProperties();
+        setProperties(response.allProperties.properties);
+        setFilteredProperties(response.allProperties.properties);
+      } catch (error) {
+        console.error("Failed to fetch properties:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
   }, [])
 
   useEffect(() => {
@@ -63,8 +70,8 @@ export default function PropertiesPage() {
 
     const result = (properties || []).filter(
       (property) =>
-        (property?.name || '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        (property?.id || '').toLowerCase().includes(searchKeyword.toLowerCase()),
+        (property?.address || '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
+        (property?._id || '').toLowerCase().includes(searchKeyword.toLowerCase()),
     )
 
     setFilteredProperties(result)
@@ -79,8 +86,8 @@ export default function PropertiesPage() {
     const toDate = dateTo ? new Date(dateTo) : new Date(8640000000000000)
 
     const result = (properties || []).filter((property) => {
-      if (property?.date === "----------") return false
-      const propertyDate = new Date(property?.date || '')
+      if (property?.createdAt === "----------") return false
+      const propertyDate = new Date(property?.createdAt || '')
       return propertyDate >= fromDate && propertyDate <= toDate
     })
 
@@ -91,7 +98,7 @@ export default function PropertiesPage() {
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case "Active":
+      case "Verified":
         return "bg-[#028835] text-white w-20 h-8 flex items-center justify-center"
       case "Processing":
         return "bg-[#4FB8CB] text-white w-20 h-8 flex items-center justify-center"
@@ -252,13 +259,13 @@ export default function PropertiesPage() {
                     <Checkbox />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
+                    Address
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Expiring Date
+                    Owned By
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Building ID
+                    Property ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -269,14 +276,37 @@ export default function PropertiesPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProperties.map((property, index) => (
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={index} className="border-b animate-pulse">
+                        <td className="py-4 px-4">
+                          <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="h-4 bg-gray-200 rounded w-32"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="h-4 bg-gray-200 rounded w-24"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="h-4 bg-gray-200 rounded w-20"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="h-6 bg-gray-200 rounded w-16"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                        </td>
+                      </tr>
+                  ))
+                ) : filteredProperties.map((property, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Checkbox />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{property?.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{property?.address}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.ownedBy?.firstname} {property?.ownedBy?.lastname}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?._id}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusBadgeClass(property?.status)}`}

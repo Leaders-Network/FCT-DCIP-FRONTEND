@@ -1,18 +1,65 @@
 "use client";
-import React, { useState } from "react";
-import PropertySidebar from "@/components/dashboard/usersComponent/PropertySidebar";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { getUserProperties } from "@/services/api";
+import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
+import { CreatePolicyRequestData } from "@/types/api.types";
+import PropertyDetailsModal from "@/components/dashboard/usersComponent/PropertyDetailsModal";
 
 const PropertyPage = () => {
-  const [showPropertySidebar, setShowPropertySidebar] = useState(false);
-  
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [showPolicyRequest, setShowPolicyRequest] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedPropertyForView, setSelectedPropertyForView] = useState<any>(null);
+
   // Get user name from localStorage with SSR safety
   const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
   const nameParts = userName?.split(" ") ?? [];
   const lastName = nameParts[nameParts.length - 1] || "User";
 
-  const togglePropertySidebar = () => {
-    setShowPropertySidebar(!showPropertySidebar);
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const response = await getUserProperties();
+        setProperties(response.allProperties.properties);
+      } catch (error) {
+        console.error("Failed to fetch properties:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, []);
+
+  const togglePolicyRequestForm = () => {
+    setSelectedProperty(null);
+    setShowPolicyRequest(!showPolicyRequest);
+  };
+
+  const handleInsureClick = (property: any) => {
+    setSelectedProperty(property);
+    setShowPolicyRequest(true);
+  };
+
+  const handleViewClick = (property: any) => {
+    setSelectedPropertyForView(property);
+    setShowViewModal(true);
+  };
+
+  const handlePolicyRequest = async (data: CreatePolicyRequestData) => {
+    try {
+      const { submitPolicyRequest } = await import("@/services/api");
+      await submitPolicyRequest(data);
+      alert("Policy request submitted successfully!");
+      setShowPolicyRequest(false);
+    } catch (error) {
+      console.error("Failed to submit policy request:", error);
+      alert("Failed to submit policy request. Please try again.");
+    }
   };
   
   return (
@@ -48,7 +95,7 @@ const PropertyPage = () => {
           </div>
           <div className="absolute lg:mb-12 right-2 sm:right-4 bottom-2 sm:bottom-4">
             <button
-              onClick={togglePropertySidebar}
+              onClick={togglePolicyRequestForm}
               className="px-2 sm:px-4 py-1 sm:py-2 bg-white rounded-[40px] text-[#028835] text-sm sm:text-base lg:text-lg font-semibold flex items-center"
             >
               <div className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 bg-[#028835] rounded-full mr-1 sm:mr-2 flex items-center justify-center">
@@ -88,9 +135,9 @@ const PropertyPage = () => {
                     </th>
                     <th className="pb-2 font-bold">Name</th>
                     <th className="pb-2 font-bold">Expiring Date</th>
-                    <th className="pb-2 font-bold">Building ID</th>
+                    <th className="pb-2 font-bold">Property ID</th>
                     <th className="pb-2 font-bold">Status</th>
-                    <th className="pb-2 font-bold">Insure</th>
+                    <th className="pb-2 font-bold">Actions</th>
                     <th className="pb-2 font-bold w-5">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -111,39 +158,36 @@ const PropertyPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    {
-                      name: "Insurance Renewal",
-                      date: "May 02, 2024",
-                      id: "A012D30",
-                      status: "Active",
-                    },
-                    {
-                      name: "Insurance Renewal",
-                      date: "Oct 09, 2024",
-                      id: "E712D30",
-                      status: "Active",
-                    },
-                    {
-                      name: "Insurance Renewal",
-                      date: "Jan 20, 2024",
-                      id: "C712V43",
-                      status: "Expired",
-                    },
-                    {
-                      name: "Insurance Renewal",
-                      date: "Jan 01, 2024",
-                      id: "Y657JB9",
-                      status: "Inactive",
-                    },
-                    {
-                      name: "Insurance Renewal",
-                      date: "May 24, 2024",
-                      id: "B657B90",
-                      status: "Cancelled",
-                    },
-                  ].map((item, index) => (
-                    <tr key={index} className="border-b">
+                  {loading ? (
+                    // Loading state
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <tr key={index} className="border-b animate-pulse">
+                        <td className="py-4 px-4">
+                          <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="h-4 bg-gray-200 rounded w-32"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="h-4 bg-gray-200 rounded w-24"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="h-4 bg-gray-200 rounded w-20"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="h-6 bg-gray-200 rounded w-16"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="w-16 h-8 bg-gray-200 rounded"></div>
+                        </td>
+                        <td className="py-4">
+                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (properties || []).length > 0 ? (
+                    (properties || []).map((item, index) => (
+                    <tr key={item._id || index} className="border-b">
                       <td className="py-4 px-4">
                         <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
                           <input
@@ -153,31 +197,34 @@ const PropertyPage = () => {
                         </div>
                       </td>
                       <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
-                        {item.name}
+                        {item.address}
                       </td>
                       <td className="py-4 text-[#2a2828] text-base font-medium">
-                        {item.date}
+                        {"N/A"}
                       </td>
                       <td className="py-4 text-[#2a2828] text-base font-medium">
-                        {item.id}
+                        {item._id?.substring(0, 7).toUpperCase() || "N/A"}
                       </td>
                       <td className="py-4">
                         <span
-                          className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium ${
-                            item.status === "Active"
+                          className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium capitalize ${
+                            item.status === "Verified"
                               ? "bg-[#028835]"
-                              : item.status === "Inactive"
-                                ? "bg-[#2a2a29]"
-                                : item.status === "Expired"
-                                  ? "bg-[#ffc52b]"
-                                  : "bg-[#bd2721]"
+                              : item.status === "Unverified"
+                                ? "bg-[#ffc52b]"
+                                : item.status === "Blacklist"
+                                  ? "bg-[#bd2721]"
+                                  : "bg-[#2a2a29]"
                           }`}
                         >
-                          {item.status}
+                          {item.status || "Unknown"}
                         </span>
                       </td>
                       <td className="py-4">
-                        <button className="px-2 py-1 bg-[#028835] text-white rounded-md text-sm">
+                        <button onClick={() => handleViewClick(item)} className="px-2 py-1 bg-blue-500 text-white rounded-md text-sm">
+                          View
+                        </button>
+                        <button onClick={() => handleInsureClick(item)} className="px-2 py-1 bg-[#028835] text-white rounded-md text-sm ml-2">
                           Insure
                         </button>
                       </td>
@@ -199,15 +246,37 @@ const PropertyPage = () => {
                         </svg>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  ) : (
+                        // Empty state
+                        <tr className="border-b">
+                          <td colSpan={7} className="py-8 text-center text-gray-500">
+                            <div className="flex flex-col items-center">
+                              <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <p className="font-medium">No properties found</p>
+                              <p className="text-sm">Your properties will appear here once you have added some.</p>
+                            </div>
+                          </td>
+                        </tr>
+                  )}
                 </tbody>
               </table>
           </div>
         </main>
         
-      <PropertySidebar
-        isOpen={showPropertySidebar}
-        onClose={() => setShowPropertySidebar(false)}
+      <PolicyRequestForm
+        isOpen={showPolicyRequest}
+        onClose={() => setShowPolicyRequest(false)}
+        onSubmit={handlePolicyRequest}
+        property={selectedProperty}
+      />
+
+      <PropertyDetailsModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        property={selectedPropertyForView}
       />
     </>
   );

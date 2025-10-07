@@ -358,7 +358,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                   name="contactOnProperty"
                   value={formData.contactOnProperty}
                   onChange={handleChange}
-                  placeholder="Contact on property:"
+                  placeholder="Phone number on property:"
                   className="w-full p-4 bg-[#F5F5F5] rounded"
                   required
                   disabled={categories.length === 0}
@@ -376,8 +376,8 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                         <Image
                           src={image}
                           alt={`Uploaded ${index + 1}`}
-                          layout="fill"
-                          objectFit="cover"
+                          fill
+                          className="object-cover"
                         />
                         <button
                           type="button" // Important to prevent form submission
@@ -446,6 +446,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
                       alt="check"
                       width={15}
                       height={15}
+                      style={{ height: "auto" }}
                     />
                     SUBMIT
                   </>
