@@ -2,11 +2,7 @@ import MainView from '@/components/dashboard/MainView'
 import React from 'react'
 
 const MainViewPage = () => {
-  return (
-    <div>
-      <MainView />
-    </div>
-  )
+  return <MainView />
 }
 
 export default MainViewPage

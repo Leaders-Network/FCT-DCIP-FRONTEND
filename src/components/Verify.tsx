@@ -43,8 +43,9 @@ export default function Verify() {
 
     try {
       // Verify OTP
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
       const verifyResponse = await fetch(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/verify-otp",
+        `${apiBaseUrl}/auth/verify-otp`,
         {
           method: "POST",
           headers: {
@@ -65,7 +66,7 @@ export default function Verify() {
 
       // Complete registration
       const registerResponse = await fetch(
-        "https://fct-dcip-backend-1.onrender.com/api/v1/auth/register",
+        `${apiBaseUrl}/auth/register`,
         {
           method: "POST",
           headers: {

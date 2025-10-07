@@ -23,135 +23,46 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [activeTab, setActiveTab] = useState<'all' | 'submitted' | 'assigned' | 'surveyed'>('all');
 
-  // Mock data - replace with actual API calls
+  // Fetch real data from API
   useEffect(() => {
-    // Mock policies data
-    setPolicies([
-      {
-        _id: "1",
-        userId: "user1",
-        propertyDetails: {
-          address: "123 Main St, Abuja, FCT",
-          propertyType: "Residential House",
-          buildingValue: 50000000,
-          yearBuilt: 2020,
-          squareFootage: 2500,
-          constructionMaterial: "Concrete Block"
-        },
-        contactDetails: {
-          fullName: "John Doe",
-          email: "john.doe@email.com",
-          phoneNumber: "+234 801 234 5678",
-          alternatePhone: "+234 802 345 6789"
-        },
-        requestDetails: {
-          coverageType: "Comprehensive Coverage",
-          policyDuration: "2 Years",
-          additionalCoverage: ["Flood Coverage", "Theft Protection"],
-          specialRequests: "Property has a swimming pool"
-        },
-        status: "submitted",
-        createdAt: "2024-10-01T10:00:00Z",
-        updatedAt: "2024-10-01T10:00:00Z"
-      },
-      {
-        _id: "2",
-        userId: "user2",
-        propertyDetails: {
-          address: "456 Commercial Ave, Abuja, FCT",
-          propertyType: "Commercial Building",
-          buildingValue: 150000000,
-          yearBuilt: 2018,
-          squareFootage: 5000,
-          constructionMaterial: "Steel Frame"
-        },
-        contactDetails: {
-          fullName: "Jane Smith",
-          email: "jane.smith@business.com",
-          phoneNumber: "+234 803 456 7890"
-        },
-        requestDetails: {
-          coverageType: "All Risk Coverage",
-          policyDuration: "3 Years",
-          additionalCoverage: ["Business Interruption", "Equipment Coverage"],
-          specialRequests: "24/7 security system installed"
-        },
-        status: "assigned",
-        assignedSurveyors: ["surveyor1"],
-        createdAt: "2024-09-28T14:30:00Z",
-        updatedAt: "2024-09-30T09:15:00Z"
-      },
-      {
-        _id: "3",
-        userId: "user3",
-        propertyDetails: {
-          address: "789 Industrial Rd, Abuja, FCT",
-          propertyType: "Industrial Facility",
-          buildingValue: 300000000,
-          yearBuilt: 2015,
-          squareFootage: 10000,
-          constructionMaterial: "Mixed Materials"
-        },
-        contactDetails: {
-          fullName: "Mike Johnson",
-          email: "mike.j@factory.com",
-          phoneNumber: "+234 804 567 8901"
-        },
-        requestDetails: {
-          coverageType: "Fire and Allied Perils",
-          policyDuration: "5 Years",
-          additionalCoverage: ["Equipment Coverage", "Liability Coverage"],
-          specialRequests: "Heavy machinery present"
-        },
-        status: "surveyed",
-        assignedSurveyors: ["surveyor2"],
-        surveyDocument: "survey_report_3.pdf",
-        surveyNotes: "Property in excellent condition. No major risks identified.",
-        createdAt: "2024-09-20T08:00:00Z",
-        updatedAt: "2024-10-02T16:45:00Z"
+    const fetchPoliciesAndSurveyors = async () => {
+      try {
+        const { getPolicyRequests, getAdminSurveyors } = await import("@/services/api");
+        
+        // Fetch policies and surveyors in parallel
+        const [policiesResponse, surveyorsResponse] = await Promise.allSettled([
+          getPolicyRequests('all', 1, 100),
+          getAdminSurveyors()
+        ]);
+        
+        // Handle policies response
+        if (policiesResponse.status === 'fulfilled' && policiesResponse.value?.data) {
+          setPolicies(policiesResponse.value.data);
+        } else {
+          setPolicies([]);
+        }
+        
+        // Handle surveyors response
+        if (surveyorsResponse.status === 'fulfilled' && surveyorsResponse.value?.data) {
+          setSurveyors(surveyorsResponse.value.data);
+        } else {
+          setSurveyors([]);
+        }
+        
+      } catch (error) {
+        console.error("Failed to fetch policies and surveyors:", error);
+        setPolicies([]);
+        setSurveyors([]);
       }
-    ]);
+    };
 
-    // Mock surveyors data
-    setSurveyors([
-      {
-        _id: "surveyor1",
-        firstname: "Alice",
-        lastname: "Brown",
-        email: "alice.brown@surveyors.com",
-        phonenumber: "+234 805 678 9012",
-        employeeStatus: { _id: "status1", status: "Active" },
-        employeeRole: { _id: "role1", role: "Surveyor" },
-        deleted: false,
-        createdAt: "2024-01-15T00:00:00Z",
-        updatedAt: "2024-01-15T00:00:00Z",
-        specializations: ["Residential", "Commercial"],
-        licenseNumber: "SRV001",
-        totalSurveys: 45,
-        completedSurveys: 42,
-        rating: 4.8
-      },
-      {
-        _id: "surveyor2",
-        firstname: "Bob",
-        lastname: "Wilson",
-        email: "bob.wilson@surveyors.com",
-        phonenumber: "+234 806 789 0123",
-        employeeStatus: { _id: "status1", status: "Active" },
-        employeeRole: { _id: "role1", role: "Surveyor" },
-        deleted: false,
-        createdAt: "2024-02-01T00:00:00Z",
-        updatedAt: "2024-02-01T00:00:00Z",
-        specializations: ["Industrial", "Commercial"],
-        licenseNumber: "SRV002",
-        totalSurveys: 38,
-        completedSurveys: 35,
-        rating: 4.6
-      }
-    ]);
+    fetchPoliciesAndSurveyors();
   }, []);
 
-  const filteredPolicies = policies.filter(policy => {
+  // Mock data removed - now using real API calls above
+  // Mock surveyors data removed - now using real API call above
+
+  const filteredPolicies = policies?.filter(policy => {
     if (activeTab === 'all') return true;
     return policy.status === activeTab;
   });
@@ -237,10 +148,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           {[
-            { key: 'all', label: 'All Policies', count: policies.length },
-            { key: 'submitted', label: 'Submitted', count: policies.filter(p => p.status === 'submitted').length },
-            { key: 'assigned', label: 'Assigned', count: policies.filter(p => p.status === 'assigned').length },
-            { key: 'surveyed', label: 'Surveyed', count: policies.filter(p => p.status === 'surveyed').length }
+            { key: 'all', label: 'All Policies', count: (policies || []).length },
+            { key: 'submitted', label: 'Submitted', count: (policies || []).filter(p => p?.status === 'submitted').length },
+            { key: 'assigned', label: 'Assigned', count: (policies || []).filter(p => p?.status === 'assigned').length },
+            { key: 'surveyed', label: 'Surveyed', count: (policies || []).filter(p => p?.status === 'surveyed').length }
           ].map(tab => (
             <button
               key={tab.key}
@@ -287,7 +198,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPolicies.map((policy) => (
+              {filteredPolicies?.map((policy) => (
                 <tr key={policy._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div>
@@ -386,7 +297,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Surveyors
                 </label>
-                {surveyors.map((surveyor) => (
+                {surveyors?.map((surveyor) => (
                   <label key={surveyor._id} className="flex items-center mb-2">
                     <input
                       type="checkbox"
@@ -405,7 +316,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                         {surveyor.firstname} {surveyor.lastname}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {surveyor.specializations.join(", ")} • Rating: {surveyor.rating}/5
+                        {surveyor.specializations?.join(", ") || 'No specializations'} • Rating: {surveyor.rating}/5
                       </p>
                     </div>
                   </label>
@@ -485,7 +396,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    View Document ({selectedPolicy.surveyDocument})
+                    View Document ({typeof selectedPolicy.surveyDocument === 'string' ? selectedPolicy.surveyDocument : 'Document'})
                   </a>
                 </div>
               )}

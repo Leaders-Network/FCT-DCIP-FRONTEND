@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { PlusCircle, X, ChevronRight, MoreVertical, CheckCircle, List, Calendar } from "lucide-react"
-import AdminLayout from "@/components/dashboard/usersComponent/AdminLayout"
 import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,13 +16,6 @@ export default function PropertiesPage() {
   const [dateTo, setDateTo] = useState("")
   const [searchKeyword, setSearchKeyword] = useState("")
   const [filteredProperties, setFilteredProperties] = useState<any[]>([])
-
-  const user = {
-    firstname: "Paul",
-    lastname: "Blessing",
-    email: "paul.blessing@example.com",
-    role: "Super Admin",
-  }
 
   const properties = [
     { name: "Insurance Renewal", date: "May 02, 2024", id: "A012D30", status: "Active" },
@@ -45,10 +37,10 @@ export default function PropertiesPage() {
   }, [activeFilters])
 
   const applyFilters = () => {
-    let result = [...properties]
+    let result = [...(properties || [])]
 
     if (activeFilters.length > 0) {
-      result = result.filter((property) => activeFilters.includes(property.status))
+      result = result.filter((property) => activeFilters.includes(property?.status))
     }
 
     setFilteredProperties(result)
@@ -69,10 +61,10 @@ export default function PropertiesPage() {
   const handleKeywordSearch = () => {
     if (!searchKeyword.trim()) return
 
-    const result = properties.filter(
+    const result = (properties || []).filter(
       (property) =>
-        property.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        property.id.toLowerCase().includes(searchKeyword.toLowerCase()),
+        (property?.name || '').toLowerCase().includes(searchKeyword.toLowerCase()) ||
+        (property?.id || '').toLowerCase().includes(searchKeyword.toLowerCase()),
     )
 
     setFilteredProperties(result)
@@ -86,9 +78,9 @@ export default function PropertiesPage() {
     const fromDate = dateFrom ? new Date(dateFrom) : new Date(0)
     const toDate = dateTo ? new Date(dateTo) : new Date(8640000000000000)
 
-    const result = properties.filter((property) => {
-      if (property.date === "----------") return false
-      const propertyDate = new Date(property.date)
+    const result = (properties || []).filter((property) => {
+      if (property?.date === "----------") return false
+      const propertyDate = new Date(property?.date || '')
       return propertyDate >= fromDate && propertyDate <= toDate
     })
 
@@ -120,9 +112,8 @@ export default function PropertiesPage() {
 
   return (
     <>
-      <AdminLayout user={user}>
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Properties</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Properties</h1>
           <div className="flex gap-4">
             <Button
               onClick={() => setShowPropertySidebar(true)}
@@ -283,14 +274,14 @@ export default function PropertiesPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Checkbox />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{property.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{property?.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusBadgeClass(property.status)}`}
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusBadgeClass(property?.status)}`}
                       >
-                        {property.status}
+                        {property?.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -302,8 +293,7 @@ export default function PropertiesPage() {
             </table>
           </div>
         </div>
-      </AdminLayout>
-
+      
       <AddNewProperty isOpen={showPropertySidebar} onClose={() => setShowPropertySidebar(false)} />
     </>
   )

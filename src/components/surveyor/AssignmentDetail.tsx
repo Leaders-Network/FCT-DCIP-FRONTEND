@@ -58,7 +58,19 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
   const handleSurveySubmission = async (submission: SurveySubmission) => {
     try {
       const { submitSurvey } = await import("@/services/api");
-      await submitSurvey(submission);
+      
+      // Transform SurveySubmission to match API signature
+      const apiSubmission = {
+        policyId: submission.policyId,
+        assignmentId: assignmentId || '',
+        surveyDetails: {}, // Add any additional survey details if needed
+        surveyDocument: submission.surveyDocument,
+        surveyNotes: submission.surveyNotes,
+        contactLog: submission.contactLog,
+        recommendedAction: submission.recommendedAction,
+      };
+      
+      await submitSurvey(apiSubmission);
       alert("Survey submitted successfully!");
       setShowSurveyForm(false);
       router.push("/surveyor/dashboard/assignments");

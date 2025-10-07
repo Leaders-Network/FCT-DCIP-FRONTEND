@@ -78,62 +78,15 @@
 
 "use client"
 import { useState } from "react"
-import profile from "../../../public/dashboard/profile.png"
-import property from "../../../public/dashboard/sho.png"
-import lga from "../../../public/dashboard/loca.png"
-import insurance from "../../../public/dashboard/eye.png"
-import AdminLayout from "./usersComponent/AdminLayout"
-import PropertyStatusChart from "./mainviewComponents/PropertyStatusChart"
-import InsurancePaymentChart from "./mainviewComponents/InsurancePaymentChart"
-import PropertyRegistrationChart from "./mainviewComponents/PropertyRegistrationChart"
-import NotificationPanel from "./mainviewComponents/NotificationPanel"
+import AdminDashboard from "../admin/AdminDashboard"
 import PropertySidebar from "./usersComponent/PropertySidebar"
-import StatCard from "./mainviewComponents/StatCard"
 
-export default function DashboardPage() {
+export default function MainView() {
   const [showPropertySidebar, setShowPropertySidebar] = useState(false)
-
-  // Mock user data - in a real app, this would come from your auth context
-  const user = {
-    firstname: "Paul",
-    lastname: "Blessing",
-    email: "paul.blessing@example.com",
-    role: "Super Admin",
-  }
 
   return (
     <>
-      <AdminLayout user={user}>
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">Hi {user.firstname} {user.lastname}</h1>
-          <button
-            onClick={() => setShowPropertySidebar(true)}
-            className="bg-[#028835] text-white px-4 py-2 rounded-full flex items-center"
-          >
-            <span className="bg-black rounded-full w-6 h-6 flex items-center justify-center mr-2 leading-none">
-              +
-            </span>
-            New Insurance
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <StatCard icon={profile} value="12,481" label="Total Users" color="bg-pink-100" />
-              <StatCard icon={property} value="42,432" label="Total Properties" color="bg-cyan-100" />
-              <StatCard icon={lga} value="2,567" label="L.G.A Covered" color="bg-yellow-100" />
-              <StatCard icon={insurance} value="57,480" label="Insurance Company" color="bg-blue-100" />
-            </div>
-            <PropertyRegistrationChart />
-            <InsurancePaymentChart />
-          </div>
-          <div className="space-y-6">
-            <PropertyStatusChart />
-            <NotificationPanel />
-          </div>
-        </div>
-      </AdminLayout>
+      <AdminDashboard />
       <PropertySidebar isOpen={showPropertySidebar} onClose={() => setShowPropertySidebar(false)} />
     </>
   )
