@@ -26,7 +26,8 @@ import {
   startAssignment, 
   updateAssignmentProgress, 
   completeAssignment,
-  getAdminSurveyors
+  getAdminSurveyors,
+  createAssignment
 } from '@/services/api';
 import { Assignment, Surveyor } from '@/types/api.types';
 import { DocumentManager } from '@/components/FileUpload';
@@ -51,10 +52,80 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 }) => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  // Available surveyors for assignment
+  const [availableSurveyors, setAvailableSurveyors] = useState<Surveyor[]>([]);
+  useEffect(() => {
+    // Fetch available surveyors from the database when modal opens
+    const fetchSurveyors = async () => {
+      try {
+        const { getAdminSurveyors } = await import("@/services/api");
+        const response = await getAdminSurveyors({}); // Fetch all admin surveyors
+        if (response?.data) {
+          setAvailableSurveyors(response.data);
+        } else {
+          setAvailableSurveyors([]);
+        }
+      } catch (error) {
+        setAvailableSurveyors([]);
+      }
+    };
+    if (showCreateModal) fetchSurveyors();
+  }, [showCreateModal]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newAssignmentData, setNewAssignmentData] = useState({
+    policyId: '',
+    surveyorId: '',
+    assignedBy: '',
+    status: 'assigned',
+    priority: 'normal',
+    deadline: ''
+  });
+
+  // Available policies for assignment
+  const [availablePolicies, setAvailablePolicies] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch available policies for assignment (status: submitted or approved)
+    const fetchPolicies = async () => {
+      try {
+        const { getPolicyRequests } = await import("@/services/api");
+        const response = await getPolicyRequests('submitted', 1, 100);
+        if (response?.data) {
+          setAvailablePolicies(response.data);
+        } else {
+          setAvailablePolicies([]);
+        }
+      } catch (error) {
+        setAvailablePolicies([]);
+      }
+    };
+    fetchPolicies();
+  }, [showCreateModal]);
+  // Handle assignment creation
+  const handleCreateAssignment = async () => {
+    try {
+      const response = await createAssignment(newAssignmentData);
+      if (response.success) {
+        setShowCreateModal(false);
+        setNewAssignmentData({
+          policyId: '',
+          surveyorId: '',
+          assignedBy: '',
+          status: 'assigned',
+          priority: 'normal',
+          deadline: ''
+        });
+        fetchData();
+      } else {
+        setError(response.message || 'Failed to create assignment');
+      }
+    } catch (error) {
+      setError('Failed to create assignment. Please try again.');
+    }
+  };
   
   // Filters and Search
   const [filters, setFilters] = useState<AssignmentFilters>({
@@ -322,9 +393,85 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         </div>
       </div>
 
-      {/* Assignments Grid */}
+      {/* Create Assignment Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold mb-4">Create New Assignment</h3>
+            <div className="space-y-3">
+              <select
+                value={newAssignmentData.policyId}
+                onChange={e => setNewAssignmentData({ ...newAssignmentData, policyId: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="">Select Policy</option>
+                {Array.isArray(availablePolicies) && availablePolicies.map(policy => (
+                  <option key={policy._id} value={policy._id}>
+                    {policy.policyNumber ? `${policy.policyNumber} - ${policy.propertyDetails.address}` : policy.propertyDetails.address}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={newAssignmentData.surveyorId}
+                onChange={e => setNewAssignmentData({ ...newAssignmentData, surveyorId: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="">Select Surveyor</option>
+                {Array.isArray(availableSurveyors) && availableSurveyors.map(s => (
+                  <option key={s._id} value={s._id}>{s.firstname} {s.lastname}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Assigned By (optional)"
+                value={newAssignmentData.assignedBy}
+                onChange={e => setNewAssignmentData({ ...newAssignmentData, assignedBy: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              />
+              <select
+                value={newAssignmentData.status}
+                onChange={e => setNewAssignmentData({ ...newAssignmentData, status: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="assigned">Assigned</option>
+                <option value="accepted">Accepted</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+              <select
+                value={newAssignmentData.priority}
+                onChange={e => setNewAssignmentData({ ...newAssignmentData, priority: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="normal">Normal</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <input
+                type="date"
+                value={newAssignmentData.deadline}
+                onChange={e => setNewAssignmentData({ ...newAssignmentData, deadline: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 mt-6">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+              >Cancel</button>
+              <button
+                onClick={handleCreateAssignment}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                disabled={!newAssignmentData.policyId || !newAssignmentData.surveyorId}
+              >Create</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {assignments?.map((assignment) => (
+        {(Array.isArray(assignments) ? assignments : []).map((assignment) => (
           <AssignmentCard
             key={assignment._id}
             assignment={assignment}

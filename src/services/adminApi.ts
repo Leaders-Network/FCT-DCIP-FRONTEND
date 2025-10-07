@@ -70,8 +70,12 @@ export const adminApi = {
         }
       });
     }
-    const endpoint = `/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/admin/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiCall(endpoint);
+  },
+
+  getAdminProperties: async () => {
+    return apiCall('/admin/property');
   },
 
   assignSurveyorToPolicy: async (assignment: PolicyAssignment) => {
@@ -85,6 +89,23 @@ export const adminApi = {
     return apiCall(`/policy/${policyId}/review`, {
       method: 'POST',
       body: JSON.stringify({ decision, notes }),
+    });
+  },
+
+  sendPolicyToUser: async (policyId: string) => {
+    return apiCall(`/admin/policy/${policyId}/send-to-user`, {
+      method: 'POST',
+    });
+  },
+
+  getAdministrators: async () => {
+    return apiCall('/admin/administrators');
+  },
+
+  createAdministrator: async (adminData: any) => {
+    return apiCall('/admin/administrators', {
+      method: 'POST',
+      body: JSON.stringify(adminData),
     });
   },
 
@@ -214,6 +235,10 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ reason }),
     });
+  },
+
+  getSurveyDocumentDownloadUrl: async (publicId: string) => {
+    return apiCall(`/survey-documents/download/${publicId}`);
   },
 
   // File Management

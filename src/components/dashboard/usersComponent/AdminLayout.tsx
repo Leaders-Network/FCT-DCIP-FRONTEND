@@ -17,7 +17,10 @@ interface AdminLayoutProps {
   }
 }
 
+import { useAuth } from "@/context/useAuth";
+
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
+  const { logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [propertiesOpen, setPropertiesOpen] = useState(false)
   const pathname = usePathname()
@@ -38,9 +41,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
   }
 
   const onLogout = () => {
-    // Handle logout
-    console.log("Logging out...")
-  }
+    logout();
+  };
 
   // Check if the current path is in the properties section
   useEffect(() => {
