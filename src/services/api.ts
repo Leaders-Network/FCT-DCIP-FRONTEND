@@ -236,6 +236,21 @@ export const getUserPolicyRequests = async (status?: string, page = 1, limit = 1
   }
 };
 
+export const getUserProperties = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await api.get("/auth/user/get-all-properties", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch user properties", error);
+    throw error;
+  }
+};
+
 export const assignSurveyor = async (policyId: string, assignment: {
   surveyorIds: string[];
   deadline?: string;

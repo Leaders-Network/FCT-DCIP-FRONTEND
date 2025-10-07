@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { CreatePolicyRequestData } from "@/types/api.types";
 
@@ -7,14 +7,17 @@ interface PolicyRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePolicyRequestData) => Promise<void>;
+  property?: any;
 }
 
 const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  property,
 }) => {
   const [formData, setFormData] = useState<CreatePolicyRequestData>({
+    propertyId: undefined,
     propertyDetails: {
       address: "",
       propertyType: "",
@@ -36,6 +39,55 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
       specialRequests: "",
     },
   });
+
+  useEffect(() => {
+    if (property) {
+      setFormData(prev => ({
+        ...prev,
+        propertyId: property._id,
+        propertyDetails: {
+          ...prev.propertyDetails,
+          address: property.address,
+          propertyType: property.category?.category,
+        },
+        contactDetails: {
+          ...prev.contactDetails,
+          phoneNumber: property.phonenumber,
+          fullName: localStorage.getItem("fullname") || "",
+          email: localStorage.getItem("email") || "",
+        }
+      }));
+    }
+  }, [property]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        propertyId: undefined,
+        propertyDetails: {
+          address: "",
+          propertyType: "",
+          buildingValue: 0,
+          yearBuilt: new Date().getFullYear(),
+          squareFootage: 0,
+          constructionMaterial: "",
+        },
+        contactDetails: {
+          fullName: "",
+          email: "",
+          phoneNumber: "",
+          alternatePhone: "",
+        },
+        requestDetails: {
+          coverageType: "",
+          policyDuration: "",
+          additionalCoverage: [],
+          specialRequests: "",
+        },
+      });
+      setCurrentStep(1);
+    }
+  }, [isOpen]);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -132,7 +184,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   ];
 
   const coverageTypes = [
-    "Basic Building Insurance",
+    "Basic Coverage",
     "Comprehensive Coverage",
     "Fire and Allied Perils",
     "All Risk Coverage",
@@ -142,7 +194,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
 
   const additionalCoverageOptions = [
     "Flood Coverage",
-    "Earthquake Coverage", 
     "Theft Protection",
     "Business Interruption",
     "Equipment Coverage",
@@ -155,7 +206,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold">Request Policy Survey</h2>
+          <h2 className="text-xl font-bold">{property ? "Insure Property" : "Request Policy Survey"}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X size={24} />
           </button>
@@ -202,6 +253,20 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
             <div className="space-y-4">
               <h3 className="text-lg font-semibold mb-4">Property Details</h3>
               
+              {property && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Property ID
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
+                    value={property._id}
+                    disabled
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Property Address *

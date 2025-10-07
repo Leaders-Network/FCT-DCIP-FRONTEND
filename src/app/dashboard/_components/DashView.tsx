@@ -27,6 +27,15 @@ const Dashview = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+        if (!token) {
+          // Not logged in, set empty state
+          setStats({ active: 0, expired: 0, pending: 0, collaborators: 0 });
+          setRecentInsurances([]);
+          setLoading(false);
+          return;
+        }
+
         const { getUserPolicyRequests } = await import("@/services/api");
         
         // Fetch all policy requests to calculate stats
@@ -37,16 +46,21 @@ const Dashview = () => {
           getUserPolicyRequests('pending', 1, 100)
         ]);
 
+        // Calculate collaborators
+        const allSurveyors = allPolicies?.data?.policyRequests?.flatMap((p: any) => p.assignedSurveyors) || [];
+        const uniqueSurveyors = new Set(allSurveyors.map((s: any) => s._id));
+        const collaborators = uniqueSurveyors.size;
+
         // Update stats
         setStats({
-          active: activePolicies?.data?.length || 0,
-          expired: expiredPolicies?.data?.length || 0,
-          pending: pendingPolicies?.data?.length || 0,
-          collaborators: 5 // TODO: Replace with actual collaborator count when API is available
+          active: activePolicies?.data?.policyRequests?.length || 0,
+          expired: expiredPolicies?.data?.policyRequests?.length || 0,
+          pending: pendingPolicies?.data?.policyRequests?.length || 0,
+          collaborators: collaborators
         });
 
         // Set recent insurances (first 5 items from all policies)
-        setRecentInsurances(allPolicies?.data?.slice(0, 5) || []);
+        setRecentInsurances(allPolicies?.data?.policyRequests?.slice(0, 5) || []);
         
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -216,9 +230,9 @@ const Dashview = () => {
                         <path
                           fill="none"
                           stroke="white"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.75"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.75"
                           d="m3.282 21.782l4.278-4.278M21.782 3.282L17.673 7.39m-3.363 3.363a2.64 2.64 0 0 0-1.063-1.063a2.625 2.625 0 1 0-2.494 4.62m3.557-3.557l-3.557 3.557m3.557-3.557l3.363-3.363m-6.92 6.92L7.56 17.504M17.673 7.39c-.38-.319-.791-.621-1.232-.894C15.2 5.726 13.717 5.19 12 5.19c-4.956 0-7.948 4.459-8.91 6.16c-.11.196-.165.293-.197.446a1.2 1.2 0 0 0 0 .408c.032.152.088.25.198.445c.51.903 1.593 2.582 3.237 3.96c.38.319.791.621 1.232.895m12.18-7.925c.528.694.919 1.328 1.17 1.773c.11.194.165.292.197.444c.023.112.023.296 0 .408c-.032.152-.087.25-.197.444c-.96 1.702-3.95 6.162-8.91 6.162q-.714-.002-1.374-.117"
                         />
                       </svg>
@@ -269,7 +283,7 @@ const Dashview = () => {
                         </th>
                         <th className="pb-2 font-bold">Name</th>
                         <th className="pb-2 font-bold">Expiring Date</th>
-                        <th className="pb-2 font-bold">Building ID</th>
+                        <th className="pb-2 font-bold">Policy ID</th>
                         <th className="pb-2 font-bold">Status</th>
                         <th className="pb-2 font-bold w-5">
                           <svg

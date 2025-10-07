@@ -108,6 +108,7 @@ export interface PolicyRequest {
 }
 
 export interface CreatePolicyRequestData {
+  propertyId?: string;
   propertyDetails: {
     address: string;
     propertyType: string;
