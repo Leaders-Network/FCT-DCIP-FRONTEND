@@ -59,8 +59,8 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     // Fetch available surveyors from the database when modal opens
     const fetchSurveyors = async () => {
       try {
-        const { getAvailableSurveyors } = await import("@/services/api");
-        const response = await getAvailableSurveyors();
+        const { getAdminSurveyors } = await import("@/services/api");
+        const response = await getAdminSurveyors({}); // Fetch all admin surveyors
         if (response?.data) {
           setAvailableSurveyors(response.data);
         } else {

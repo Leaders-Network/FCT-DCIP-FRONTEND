@@ -1,56 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { PlusCircle, MoreVertical } from "lucide-react"
 import AdminSidebar from "@/components/dashboard/usersComponent/AdminSideBar"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkout"
+import { adminApi } from "@/services/adminApi"
 
 export default function UsersPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
+  const [administrators, setAdministrators] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const administrators = [
-    {
-      id: "ID 001",
-      name: "Mike Afolabi",
-      email: "mikeafo@gmail.com",
-      phone: "08123456789",
-      status: "Active",
-      date: "April 02, 2024",
-    },
-    {
-      id: "ID 002",
-      name: "Paul Blessing",
-      email: "pblessing73@gmail.com",
-      phone: "08037820378",
-      status: "Active",
-      date: "May 05, 2024",
-    },
-    {
-      id: "ID 003",
-      name: "Emmanuel Sam",
-      email: "samuelemmanuek@gmail.com",
-      phone: "08066723108",
-      status: "Suspended",
-      date: "July 20, 2024",
-    },
-    {
-      id: "ID 004",
-      name: "Charles Clement",
-      email: "charlescle@gmail.com",
-      phone: "09097278910",
-      status: "Active",
-      date: "Aug 23, 2024",
-    },
-    {
-      id: "ID 005",
-      name: "Benjamin Joseph",
-      email: "benjoseph@gmail.com",
-      phone: "09011456789",
-      status: "Inactive",
-      date: "Nov 24, 2024",
-    },
-  ]
+  useEffect(() => {
+    const fetchAdministrators = async () => {
+      try {
+        setLoading(true)
+        const response = await adminApi.getAdministrators()
+        if (response?.success && response?.data) {
+          setAdministrators(response.data)
+        } else {
+          setAdministrators([])
+        }
+      } catch (error) {
+        console.error("Failed to fetch administrators:", error)
+        setAdministrators([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAdministrators()
+  }, []) // Empty dependency array means this runs once on mount
 
 
   return (
@@ -70,6 +50,10 @@ export default function UsersPage() {
             </Button>
           </div>
         </div>
+
+      {loading ? (
+        <div className="text-center py-12">Loading administrators...</div>
+      ) : (
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {/* Filter Section */}
@@ -110,31 +94,31 @@ export default function UsersPage() {
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-10">
             <div className="h-10 w-10 rounded-full bg-[#028835] flex items-center justify-center text-white font-bold">
-              {(admin?.name || '')
+              {((admin?.firstname || '') + ' ' + (admin?.lastname || ''))
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
             </div>
           </div>
           <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">{admin?.name}</div>
-            <div className="text-sm text-gray-500">{admin?.id}</div>
+            <div className="text-sm font-medium text-gray-900">{admin?.firstname} {admin?.lastname}</div>
+            <div className="text-sm text-gray-500">{admin?._id}</div>
           </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin?.email}</td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin?.phone}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin?.phonenumber}</td>
 
       {/* Dynamic Status Cell */}
       <td className="px-6 py-4 whitespace-nowrap">
   <span
     className={`inline-flex items-center justify-center text-sm font-semibold rounded-md
       ${
-        admin?.status === "Active"
+        admin?.employeeStatus?.status === "Active"
           ? "bg-green-500 text-white"
-          : admin?.status === "Pending"
+          : admin?.employeeStatus?.status === "Pending"
           ? "bg-yellow-500 text-white"
-          : admin?.status === "Inactive"
+          : admin?.employeeStatus?.status === "Inactive"
           ? "bg-red-500 text-white"
           : "bg-gray-300 text-gray-800"
       }
@@ -144,12 +128,12 @@ export default function UsersPage() {
       height: "40px", // Same fixed height
     }}
   >
-    {admin?.status}
+    {admin?.employeeStatus?.status}
   </span>
 </td>
 
 
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin?.date}</td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin?.createdAt ? new Date(admin.createdAt).toLocaleDateString() : 'N/A'}</td>
 
       {/* View Profile Button */}
       <td className="px-6 py-4 whitespace-nowrap">
@@ -164,6 +148,7 @@ export default function UsersPage() {
             </table>
           </div>
         </div>
+      )} {/* Close the conditional rendering block */}
       
       <AdminSidebar isOpen={showAdminSidebar} onClose={() => setShowAdminSidebar(false)} />
     </>
