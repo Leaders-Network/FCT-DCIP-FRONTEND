@@ -3,10 +3,18 @@ import { AuthContext } from "./AuthProvider";
 
 export interface User {
   _id: string;
-  fullName: string;
-  phonenumber: string;
+  firstname: string;
+  lastname: string;
   email: string;
-  isEmailVerified: boolean;
+  phonenumber: string;
+  employeeRole: {
+    _id: string;
+    role: string;
+  };
+  employeeStatus: {
+    _id: string;
+    status: string;
+  };
   deleted: boolean;
 }
 

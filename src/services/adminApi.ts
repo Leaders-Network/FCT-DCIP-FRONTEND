@@ -1,24 +1,20 @@
-import { 
-  PolicyRequest, 
-  Surveyor, 
-  Assignment, 
-  PolicyAssignment, 
-  SurveySubmission 
+import {
+  PolicyRequest,
+  Surveyor,
+  Assignment,
+  PolicyAssignment,
+  SurveySubmission
 } from '@/types/api.types';
+import { getAuthToken } from "@/utils/auth"; // Import the centralized getAuthToken
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://fct-dcip-backend.vercel.app/api/v1';
-const API_KEY = "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
-
-// Helper function for consistent token retrieval
-const getAuthToken = () => {
-  return localStorage.getItem("token") || localStorage.getItem("authToken");
-};
+const API_KEY = "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b97134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
 // Helper function for API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const token = getAuthToken();
-  
+  const token = getAuthToken(); // Use the imported getAuthToken
+
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -31,12 +27,12 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
   try {
     const response = await fetch(url, config);
-    
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'API request failed' }));
       throw new Error(error.message || `HTTP ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error(`API call failed for ${endpoint}:`, error);
@@ -72,10 +68,6 @@ export const adminApi = {
     }
     const endpoint = `/admin/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return apiCall(endpoint);
-  },
-
-  getAdminProperties: async () => {
-    return apiCall('/admin/property');
   },
 
   assignSurveyorToPolicy: async (assignment: PolicyAssignment) => {
