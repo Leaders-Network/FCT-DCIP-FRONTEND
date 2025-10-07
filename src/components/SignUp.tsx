@@ -256,43 +256,32 @@ function SignUpButton({
     }
 
     setIsLoading(true);
-    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "hubvhejdbnvhebvhebdhjijvskdbvkhjba";
 
     try {
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
       const response = await fetch(
-        `${apiBaseUrl}/auth/request-otp`,
+        "https://fct-dcip-backend.vercel.app/api/v1/auth/register",
         {
           method: "POST",
           headers: {
             apiKey: ApiKey,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ accountType:'Builder', email, fullname: fullName, phonenumber: phone, password, confirmPassword: password }),
         }
       );
 
       if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorMessage;
-          } else {
-            const textError = await response.text();
-            errorMessage = textError || errorMessage;
-          }
-        } catch (parseError) {
-          console.error("Error parsing response:", parseError);
-          // Use default error message if parsing fails
-        }
-        throw new Error(errorMessage);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       await response.json();
       localStorage.setItem("pendingUser", JSON.stringify({ fullName, phone, email, password }));
       localStorage.setItem("pendingEmail", email);
+      // localStorage.setItem("token", result.token);
+      localStorage.setItem("fullname", fullName);
+      // localStorage.setItem("user", JSON.stringify(result.user));
       router.push("/verify");
     } catch (error) {
       console.error("Sign-up error:", error);
