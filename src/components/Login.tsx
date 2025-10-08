@@ -229,10 +229,15 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
       
       // Store token and user data in localStorage
       localStorage.setItem("token", result.token);
-      localStorage.setItem("fullname", result.user.fullname);
-      localStorage.setItem("user", JSON.stringify(result.user));
+      const fullName = `${result.employee.firstname} ${result.employee.lastname}`;
+      localStorage.setItem("fullname", fullName);
+      localStorage.setItem("user", JSON.stringify(result.employee));
       
-      router.push("/dashboard");
+      if (result.employee.employeeRole.role === 'Surveyor') {
+        router.push('/surveyor/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error) {
       console.error("Login error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
