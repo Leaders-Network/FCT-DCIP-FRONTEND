@@ -102,10 +102,36 @@ export const adminApi = {
     return apiCall('/admin/employees');
   },
 
+  deleteEmployee: async (employeeId: string) => {
+    return apiCall(`/admin/employees/${employeeId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  updateEmployeeStatus: async (employeeId: string, status: string) => {
+    return apiCall(`/admin/employees/${employeeId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
+
   createAdministrator: async (adminData: any) => {
     return apiCall('/admin/administrators', {
       method: 'POST',
       body: JSON.stringify(adminData),
+    });
+  },
+
+  deleteAdministrator: async (adminId: string) => {
+    return apiCall(`/admin/administrators/${adminId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  updateAdministratorStatus: async (adminId: string, status: string) => {
+    return apiCall(`/admin/administrators/${adminId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
     });
   },
 
