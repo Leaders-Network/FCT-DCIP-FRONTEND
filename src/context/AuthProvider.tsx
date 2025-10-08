@@ -149,7 +149,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log("Stored User Data:", userData);
       
       // Optionally redirect to dashboard
-      router.push("/admin/dashboard");
+      setTimeout(() => {
+        router.push("/admin/dashboard");
+      }, 100); // Add a small delay
       
     } catch (error) {
       console.error("Login failed", error);

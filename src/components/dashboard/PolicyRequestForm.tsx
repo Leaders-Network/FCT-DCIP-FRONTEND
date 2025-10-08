@@ -44,11 +44,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     if (property) {
       setFormData(prev => ({
         ...prev,
-        propertyId: property._id,
         propertyDetails: {
           ...prev.propertyDetails,
           address: property.address,
-          propertyType: property.category?.category,
         },
         contactDetails: {
           ...prev.contactDetails,
