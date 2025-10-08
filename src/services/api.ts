@@ -183,12 +183,7 @@ export const getPolicyRequests = async (status?: string, page = 1, limit = 10) =
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
-    const url = `/policy?${params.toString()}`;
-    const response = await api.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch policy requests", error);
@@ -204,12 +199,7 @@ export const getUserPolicyRequests = async (status?: string, page = 1, limit = 1
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
-    const url = `/policy/user?${params.toString()}`;
-    const response = await api.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch user policy requests", error);
@@ -220,11 +210,7 @@ export const getUserPolicyRequests = async (status?: string, page = 1, limit = 1
 export const getUserProperties = async () => {
   try {
     const token = getAuthToken();
-    const response = await api.get("/auth/user/get-all-properties", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get("/auth/user/get-all-properties");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch user properties", error);
