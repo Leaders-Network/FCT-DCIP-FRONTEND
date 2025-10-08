@@ -98,6 +98,10 @@ export const adminApi = {
     return apiCall('/admin/administrators');
   },
 
+  getEmployees: async () => {
+    return apiCall('/admin/employees');
+  },
+
   createAdministrator: async (adminData: any) => {
     return apiCall('/admin/administrators', {
       method: 'POST',
