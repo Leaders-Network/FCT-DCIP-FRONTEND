@@ -155,11 +155,7 @@ export const getAllEmployees = async () => {
 export const getAvailableRoles = async () => {
   try {
     const token = localStorage.getItem("authToken");
-    const response = await api.get<AvailableRolesResponse>("/auth/available-roles", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get<AvailableRolesResponse>("/auth/available-roles");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch available roles", error);
@@ -171,11 +167,7 @@ export const getAvailableRoles = async () => {
 export const submitPolicyRequest = async (policyData: import("../types/api.types").CreatePolicyRequestData) => {
   try {
     const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-    const response = await api.post("/policy", policyData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.post("/policy", policyData);
     return response.data;
   } catch (error) {
     console.error("Failed to submit policy request", error);
