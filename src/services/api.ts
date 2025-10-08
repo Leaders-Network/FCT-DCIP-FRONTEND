@@ -13,18 +13,10 @@ const API_KEY = "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b1926951
 
 // Helper function for consistent token retrieval
 const getAuthToken = () => {
-  return localStorage.getItem("token") || localStorage.getItem("authToken");
+  return localStorage.getItem("authToken");
 };
 
-// Helper function for authenticated requests
-const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return {
-    "Content-Type": "application/json",
-    apiKey: API_KEY,
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+
 
 // API Instance Configuration
 const api = axios.create({
@@ -34,6 +26,19 @@ const api = axios.create({
     apiKey: API_KEY,
   },
 });
+
+api.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Property Types
 export interface Category {
@@ -60,16 +65,12 @@ export const loginEmployee = async (email: string, password: string) => {
 };
 
 export const getUserRole = (token: string) =>
-  api.get("/auth/user-role", {
-    headers: { Authorization: `Bearer ${token}` },
-  }); 
+  api.get("/auth/user-role"); 
 
 // Property Management APIs
 export const getCategories = async ({token}: {token: string}): Promise<Category[]> => {
   try {
-    const response = await api.get("/auth/available-categories", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await api.get("/auth/available-categories");
     console.log(response)
     return response.data.categories;
   } catch (error) {
@@ -83,9 +84,7 @@ export const addProperty = async (
   token: string
 ): Promise<Record<string, unknown>> => {
   try {
-    const response = await api.post("/auth/user/add-property", payload, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await api.post("/auth/user/add-property", payload);
     return response.data;
   } catch (error) {
     console.error("Failed to add property:", error);
@@ -103,9 +102,7 @@ export const createAssignment = async (assignmentData: {
   deadline?: string;
 }) => {
   try {
-    const response = await api.post('/assignment', assignmentData, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.post('/assignment', assignmentData);
     return response.data;
   } catch (error) {
     console.error('Failed to create assignment:', error);
@@ -136,11 +133,7 @@ export const resendOTP = (email: string) =>
 export const registerEmployee = async (employeeData: EmployeeRegistrationData) => {
   try {
     const token = localStorage.getItem("authToken");
-    const response = await api.post("/auth/registerEmployee", employeeData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.post("/auth/registerEmployee", employeeData);
     return response.data;
   } catch (error) {
     console.error("Failed to register employee", error);
@@ -151,11 +144,7 @@ export const registerEmployee = async (employeeData: EmployeeRegistrationData) =
 export const getAllEmployees = async () => {
   try {
     const token = localStorage.getItem("authToken");
-    const response = await api.get<GetAllEmployeesResponse>("/auth/get-all-employees", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get<GetAllEmployeesResponse>("/auth/get-all-employees");
     return response.data.allStaff.sanitizedEmployees;
   } catch (error) {
     console.error("Failed to fetch users", error);
@@ -453,9 +442,7 @@ export const updateSurveyorProfile = async (profileData: any) => {
 // Admin Dashboard APIs
 export const getAdminDashboardData = async (period = '30d') => {
   try {
-    const response = await api.get(`/admin/dashboard?period=${period}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/admin/dashboard?period=${period}`);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch admin dashboard data:", error);
@@ -465,9 +452,7 @@ export const getAdminDashboardData = async (period = '30d') => {
 
 export const getQuickStats = async () => {
   try {
-    const response = await api.get("/admin/dashboard/stats", {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get("/admin/dashboard/stats");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch quick stats:", error);
@@ -477,9 +462,7 @@ export const getQuickStats = async () => {
 
 export const getAdminAlerts = async () => {
   try {
-    const response = await api.get("/admin/dashboard/alerts", {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get("/admin/dashboard/alerts");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch admin alerts:", error);
@@ -506,9 +489,7 @@ export const getAdminSurveyors = async (filters?: {
     }
     
     const url = `/admin/surveyor${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await api.get(url, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyors:", error);
