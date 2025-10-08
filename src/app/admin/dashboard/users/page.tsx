@@ -9,27 +9,27 @@ import { adminApi } from "@/services/adminApi"
 
 export default function UsersPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
-  const [administrators, setAdministrators] = useState([])
+  const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchAdministrators = async () => {
+    const fetchEmployees = async () => {
       try {
         setLoading(true)
-        const response = await adminApi.getAdministrators()
+        const response = await adminApi.getEmployees()
         if (response?.success && response?.data) {
-          setAdministrators(response.data)
+          setEmployees(response.data)
         } else {
-          setAdministrators([])
+          setEmployees([])
         }
       } catch (error) {
-        console.error("Failed to fetch administrators:", error)
-        setAdministrators([])
+        console.error("Failed to fetch employees:", error)
+        setEmployees([])
       } finally {
         setLoading(false)
       }
     }
-    fetchAdministrators()
+    fetchEmployees()
   }, []) // Empty dependency array means this runs once on mount
 
 
@@ -85,7 +85,7 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-  {(administrators || []).map((admin, index) => (
+  {(employees || []).map((admin, index) => (
     <tr key={index} className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
         <Checkbox />
