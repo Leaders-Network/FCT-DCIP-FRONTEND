@@ -70,6 +70,10 @@ export const adminApi = {
     return apiCall(endpoint);
   },
 
+  getPolicyById: async (policyId: string) => {
+    return apiCall(`/admin/policy/${policyId}`);
+  },
+
   assignSurveyorToPolicy: async (assignment: PolicyAssignment) => {
     return apiCall('/surveyor/assign', {
       method: 'POST',
@@ -186,7 +190,7 @@ export const adminApi = {
 
   reassignSurveyor: async (assignmentId: string, newSurveyorId: string, reason?: string) => {
     return apiCall(`/admin/assignment/${assignmentId}/reassign`, {
-      method: 'POST',
+      method: 'PATCH',
       body: JSON.stringify({ surveyorId: newSurveyorId, reason }),
     });
   },

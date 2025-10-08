@@ -9,7 +9,10 @@ interface PolicyManagementProps {}
 import { adminApi, withErrorHandling } from "@/services/adminApi";
 import { useAuth } from "@/context/useAuth";
 
+import { useRouter } from "next/navigation";
+
 const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
+  const router = useRouter();
   const { user } = useAuth();
   const [policies, setPolicies] = useState<PolicyRequest[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
@@ -73,6 +76,8 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
       instructions: assignmentNotes,
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
     };
+
+    console.log("Assigning surveyor with data:", assignment);
 
     await adminApi.assignSurveyorToPolicy(assignment);
     // Update local state
@@ -254,8 +259,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
                     {policy.status === 'submitted' && (
                       <button
                         onClick={() => {
-                          setSelectedPolicy(policy);
-                          setShowAssignModal(true);
+                          router.push(`/admin/dashboard/assignments?policyId=${policy._id}`);
                         }}
                         className="text-blue-600 hover:text-blue-900"
                       >
