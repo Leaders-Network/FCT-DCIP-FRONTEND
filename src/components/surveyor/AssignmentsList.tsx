@@ -3,119 +3,137 @@ import React, { useState, useEffect } from "react";
 import { Phone, Mail, MapPin, Calendar, Eye, Clock, CheckCircle } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
 import Link from "next/link";
+import { getSurveyorAssignments } from "@/services/api";
 
 const AssignmentsList = () => {
   const [assignments, setAssignments] = useState<PolicyRequest[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [loading, setLoading] = useState(true);
 
+
+  const filteredAssignments = assignments.filter(assignment => {
+      if (filter === 'all') return true;
+      if (filter === 'pending') return assignment?.status === 'assigned';
+      if (filter === 'completed') return assignment?.status === 'surveyed';
+      return true;
+    })
+
   // Mock data - replace with actual API calls
   useEffect(() => {
     const fetchAssignments = async () => {
       setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockAssignments: PolicyRequest[] = [
-        {
-          _id: "1",
-          userId: "user1",
-          propertyDetails: {
-            address: "123 Main St, Wuse 2, Abuja, FCT",
-            propertyType: "Residential House",
-            buildingValue: 50000000,
-            yearBuilt: 2020,
-            squareFootage: 2500,
-            constructionMaterial: "Concrete Block"
-          },
-          contactDetails: {
-            fullName: "John Doe",
-            email: "john.doe@email.com",
-            phoneNumber: "+234 801 234 5678",
-            alternatePhone: "+234 802 345 6789"
-          },
-          requestDetails: {
-            coverageType: "Comprehensive Coverage",
-            policyDuration: "2 Years",
-            additionalCoverage: ["Flood Coverage", "Theft Protection"],
-            specialRequests: "Property has a swimming pool"
-          },
-          status: "assigned",
-          assignedSurveyors: ["current_surveyor_id"],
-          createdAt: "2024-10-01T10:00:00Z",
-          updatedAt: "2024-10-01T10:00:00Z"
-        },
-        {
-          _id: "2",
-          userId: "user2",
-          propertyDetails: {
-            address: "456 Commercial Ave, Garki, Abuja, FCT",
-            propertyType: "Commercial Building",
-            buildingValue: 150000000,
-            yearBuilt: 2018,
-            squareFootage: 5000,
-            constructionMaterial: "Steel Frame"
-          },
-          contactDetails: {
-            fullName: "Jane Smith",
-            email: "jane.smith@business.com",
-            phoneNumber: "+234 803 456 7890"
-          },
-          requestDetails: {
-            coverageType: "All Risk Coverage",
-            policyDuration: "3 Years",
-            additionalCoverage: ["Business Interruption", "Equipment Coverage"],
-            specialRequests: "24/7 security system installed"
-          },
-          status: "assigned",
-          assignedSurveyors: ["current_surveyor_id"],
-          createdAt: "2024-09-28T14:30:00Z",
-          updatedAt: "2024-09-30T09:15:00Z"
-        },
-        {
-          _id: "3",
-          userId: "user3",
-          propertyDetails: {
-            address: "789 Industrial Rd, Jikwoyi, Abuja, FCT",
-            propertyType: "Industrial Facility",
-            buildingValue: 300000000,
-            yearBuilt: 2015,
-            squareFootage: 10000,
-            constructionMaterial: "Mixed Materials"
-          },
-          contactDetails: {
-            fullName: "Mike Johnson",
-            email: "mike.j@factory.com",
-            phoneNumber: "+234 804 567 8901"
-          },
-          requestDetails: {
-            coverageType: "Fire and Allied Perils",
-            policyDuration: "5 Years",
-            additionalCoverage: ["Equipment Coverage", "Liability Coverage"],
-            specialRequests: "Heavy machinery present"
-          },
-          status: "surveyed",
-          assignedSurveyors: ["current_surveyor_id"],
-          surveyDocument: "survey_report_3.pdf",
-          surveyNotes: "Property in excellent condition. No major risks identified.",
-          createdAt: "2024-09-20T08:00:00Z",
-          updatedAt: "2024-10-02T16:45:00Z"
-        }
-      ];
 
-      setAssignments(mockAssignments);
-      setLoading(false);
+      try {
+        const response = await getSurveyorAssignments(filter);
+        // if(response.){
+        const data = response.data 
+          setAssignments(Array.isArray(data) ? data : []);
+        // }
+      } catch (error) {
+        setLoading(false)
+        console.log(error)
+      }finally{
+        setLoading(false)
+      }
+
+      // Simulate API call
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // const mockAssignments: PolicyRequest[] = [
+      //   {
+      //     _id: "1",
+      //     userId: "user1",
+      //     propertyDetails: {
+      //       address: "123 Main St, Wuse 2, Abuja, FCT",
+      //       propertyType: "Residential House",
+      //       buildingValue: 50000000,
+      //       yearBuilt: 2020,
+      //       squareFootage: 2500,
+      //       constructionMaterial: "Concrete Block"
+      //     },
+      //     contactDetails: {
+      //       fullName: "John Doe",
+      //       email: "john.doe@email.com",
+      //       phoneNumber: "+234 801 234 5678",
+      //       alternatePhone: "+234 802 345 6789"
+      //     },
+      //     requestDetails: {
+      //       coverageType: "Comprehensive Coverage",
+      //       policyDuration: "2 Years",
+      //       additionalCoverage: ["Flood Coverage", "Theft Protection"],
+      //       specialRequests: "Property has a swimming pool"
+      //     },
+      //     status: "assigned",
+      //     assignedSurveyors: ["current_surveyor_id"],
+      //     createdAt: "2024-10-01T10:00:00Z",
+      //     updatedAt: "2024-10-01T10:00:00Z"
+      //   },
+      //   {
+      //     _id: "2",
+      //     userId: "user2",
+      //     propertyDetails: {
+      //       address: "456 Commercial Ave, Garki, Abuja, FCT",
+      //       propertyType: "Commercial Building",
+      //       buildingValue: 150000000,
+      //       yearBuilt: 2018,
+      //       squareFootage: 5000,
+      //       constructionMaterial: "Steel Frame"
+      //     },
+      //     contactDetails: {
+      //       fullName: "Jane Smith",
+      //       email: "jane.smith@business.com",
+      //       phoneNumber: "+234 803 456 7890"
+      //     },
+      //     requestDetails: {
+      //       coverageType: "All Risk Coverage",
+      //       policyDuration: "3 Years",
+      //       additionalCoverage: ["Business Interruption", "Equipment Coverage"],
+      //       specialRequests: "24/7 security system installed"
+      //     },
+      //     status: "assigned",
+      //     assignedSurveyors: ["current_surveyor_id"],
+      //     createdAt: "2024-09-28T14:30:00Z",
+      //     updatedAt: "2024-09-30T09:15:00Z"
+      //   },
+      //   {
+      //     _id: "3",
+      //     userId: "user3",
+      //     propertyDetails: {
+      //       address: "789 Industrial Rd, Jikwoyi, Abuja, FCT",
+      //       propertyType: "Industrial Facility",
+      //       buildingValue: 300000000,
+      //       yearBuilt: 2015,
+      //       squareFootage: 10000,
+      //       constructionMaterial: "Mixed Materials"
+      //     },
+      //     contactDetails: {
+      //       fullName: "Mike Johnson",
+      //       email: "mike.j@factory.com",
+      //       phoneNumber: "+234 804 567 8901"
+      //     },
+      //     requestDetails: {
+      //       coverageType: "Fire and Allied Perils",
+      //       policyDuration: "5 Years",
+      //       additionalCoverage: ["Equipment Coverage", "Liability Coverage"],
+      //       specialRequests: "Heavy machinery present"
+      //     },
+      //     status: "surveyed",
+      //     assignedSurveyors: ["current_surveyor_id"],
+      //     surveyDocument: "survey_report_3.pdf",
+      //     surveyNotes: "Property in excellent condition. No major risks identified.",
+      //     createdAt: "2024-09-20T08:00:00Z",
+      //     updatedAt: "2024-10-02T16:45:00Z"
+      //   }
+      // ];
+
+      // setAssignments(mockAssignments);
+      // setLoading(false);
     };
 
     fetchAssignments();
   }, []);
 
-  const filteredAssignments = (assignments || []).filter(assignment => {
-    if (filter === 'all') return true;
-    if (filter === 'pending') return assignment?.status === 'assigned';
-    if (filter === 'completed') return assignment?.status === 'surveyed';
-    return true;
-  });
+  
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -174,7 +192,7 @@ const AssignmentsList = () => {
         <nav className="-mb-px flex space-x-8">
           {[
             { key: 'all', label: 'All Assignments', count: assignments.length },
-            { key: 'pending', label: 'Pending', count: assignments.filter(a => a.status === 'assigned').length },
+            { key: 'pending', label: 'Pending', count: assignments?.filter(a => a.status === 'assigned').length },
             { key: 'completed', label: 'Completed', count: assignments.filter(a => a.status === 'surveyed').length }
           ].map(tab => (
             <button
