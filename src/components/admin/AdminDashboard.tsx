@@ -53,10 +53,7 @@ const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'alerts'>('overview');
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchDashboardData();
-    }, 500); // 500ms delay
-    return () => clearTimeout(timer);
+    fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
