@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Upload, FileText, Phone, Mail, Calendar, X, Loader2 } from "lucide-react";
+import { Upload, FileText, Phone, Mail, Calendar, X, Loader2, AlertCircle } from "lucide-react";
 import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
 import { uploadFile } from "@/services/fileService";
 
@@ -10,13 +10,19 @@ interface SurveySubmissionFormProps {
   onCancel: () => void;
 }
 
+const ErrorMessage = ({ message }) => (
+  <div className="bg-red-50 text-red-700 p-3 rounded-md flex items-center">
+    <AlertCircle className="h-5 w-5 mr-2" />
+    <span>{message}</span>
+  </div>
+);
+
 const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   policy,
   onSubmit,
   onCancel
 }) => {
   const [surveyNotes, setSurveyNotes] = useState("");
-  const [surveyDocument, setSurveyDocument] = useState<File | null>(null);
   const [uploadedDocument, setUploadedDocument] = useState<{
     name: string;
     url: string;
@@ -32,36 +38,38 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.type === 'application/pdf') {
-        setSurveyDocument(file);
-        
-        // Upload to backend (which handles Cloudinary upload)
-        setUploading(true);
-        try {
-          const result = await uploadFile(file, 'survey-documents');
-          
-          if (result.success) {
-            setUploadedDocument({
-              name: result.data.originalName,
-              url: result.data.url,
-              publicId: result.data.publicId
-            });
-          } else {
-            throw new Error('Upload failed');
-          }
-        } catch (error) {
-          console.error('Upload error:', error);
-          alert('Failed to upload document. Please try again.');
-          setSurveyDocument(null);
-        } finally {
-          setUploading(false);
+      if (file.type !== 'application/pdf') {
+        setError('Please upload a PDF file only.');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) { // 10MB
+        setError('File size cannot exceed 10MB.');
+        return;
+      }
+
+      setError(null);
+      setUploading(true);
+      try {
+        const result = await uploadFile(file, 'survey-documents');
+        if (result.success) {
+          setUploadedDocument({
+            name: result.data.originalName,
+            url: result.data.url,
+            publicId: result.data.publicId
+          });
+        } else {
+          throw new Error(result.message || 'Upload failed');
         }
-      } else {
-        alert('Please upload a PDF file only.');
+      } catch (error) {
+        console.error('Upload error:', error);
+        setError('Failed to upload document. Please try again.');
+      } finally {
+        setUploading(false);
       }
     }
   };
@@ -86,15 +94,16 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
     e.preventDefault();
     
     if (!uploadedDocument) {
-      alert('Please upload a survey document.');
+      setError('Please upload a survey document.');
       return;
     }
 
     if (!surveyNotes.trim()) {
-      alert('Please provide survey notes.');
+      setError('Please provide survey notes.');
       return;
     }
 
+    setError(null);
     setLoading(true);
     try {
       const submission: SurveySubmission = {
@@ -109,7 +118,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
       await onSubmit(submission);
     } catch (error) {
       console.error('Failed to submit survey:', error);
-      alert('Failed to submit survey. Please try again.');
+      setError('Failed to submit survey. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -119,79 +128,79 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
     <div className="space-y-6">
       <div className="bg-white shadow-sm border border-gray-200 rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Submit Survey Report</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Submit Survey Report</h2>
           <p className="text-sm text-gray-600 mt-1">
             {policy.propertyDetails.propertyType} - {policy.propertyDetails.address}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Contact Log Section */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          {error && <ErrorMessage message={error} />}
+
           <div>
-            <h3 className="text-base font-medium text-gray-900 mb-4">Contact Log</h3>
-            <div className="bg-gray-50 p-4 rounded-lg mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Add Contact Entry</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Log</h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3 items-end">
                 <input
                   type="date"
                   value={newContact.date}
                   onChange={(e) => setNewContact({ ...newContact, date: e.target.value })}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm col-span-2 md:col-span-1"
                 />
                 <select
                   value={newContact.method}
                   onChange={(e) => setNewContact({ ...newContact, method: e.target.value as any })}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm col-span-2 md:col-span-1"
                 >
                   <option value="phone">Phone</option>
                   <option value="email">Email</option>
                   <option value="sms">SMS</option>
                   <option value="visit">Site Visit</option>
                 </select>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={newContact.successful}
-                    onChange={(e) => setNewContact({ ...newContact, successful: e.target.checked })}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">Successful</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={addContactEntry}
-                  className="bg-[#028835] text-white px-3 py-2 rounded-md text-sm hover:bg-green-700"
-                >
-                  Add Entry
-                </button>
+                <textarea
+                  value={newContact.notes}
+                  onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
+                  placeholder="Contact notes..."
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm col-span-5 md:col-span-2"
+                  rows={1}
+                />
+                <div className="flex items-center col-span-5 md:col-span-1 justify-between">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={newContact.successful}
+                      onChange={(e) => setNewContact({ ...newContact, successful: e.target.checked })}
+                      className="mr-2 h-4 w-4"
+                    />
+                    <span className="text-sm">Successful</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addContactEntry}
+                    className="bg-[#028835] text-white px-4 py-2 rounded-md text-sm hover:bg-green-700"
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
-              <textarea
-                value={newContact.notes}
-                onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
-                placeholder="Contact notes..."
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                rows={2}
-              />
             </div>
 
-            {/* Contact Log Entries */}
             {contactLog.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">Contact History</h4>
+              <div className="space-y-2 mt-4">
                 {contactLog.map((entry, index) => (
                   <div key={index} className="flex items-start justify-between bg-white p-3 border rounded-md">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
                         <Calendar className="h-4 w-4" />
                         <span>{entry.date}</span>
-                        <span className="capitalize">{entry.method}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
+                        <span className="capitalize font-medium">{entry.method}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                           entry.successful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
-                          {entry.successful ? 'Successful' : 'Unsuccessful'}
+                          {entry.successful ? 'Success' : 'Failed'}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-900">{entry.notes}</p>
+                      <p className="text-sm text-gray-800">{entry.notes}</p>
                     </div>
                     <button
                       type="button"
@@ -206,7 +215,6 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
             )}
           </div>
 
-          {/* Survey Document Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Survey Document (PDF) *
@@ -240,17 +248,16 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               </div>
             </div>
             {uploadedDocument && (
-              <div className="mt-2 flex items-center justify-between text-sm">
-                <div className="flex items-center text-gray-600">
-                  <FileText className="h-4 w-4 mr-1" />
-                  {uploadedDocument.name}
+              <div className="mt-2 flex items-center justify-between text-sm bg-green-50 p-2 rounded-md">
+                <div className="flex items-center text-green-800">
+                  <FileText className="h-4 w-4 mr-2" />
+                  <span className="font-medium">{uploadedDocument.name}</span>
                 </div>
-                <span className="text-green-600 text-xs">✓ Uploaded</span>
+                <span className="text-green-800 font-semibold">✓ Uploaded</span>
               </div>
             )}
           </div>
 
-          {/* Survey Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Survey Notes *
@@ -265,27 +272,28 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
             />
           </div>
 
-          {/* Recommendation */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-base font-medium text-gray-900 mb-3">
               Recommendation *
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {[
-                { value: 'approve', label: 'Approve Policy', color: 'green' },
-                { value: 'reject', label: 'Reject Policy', color: 'red' },
-                { value: 'request_more_info', label: 'Request More Info', color: 'yellow' }
+                { value: 'approve', label: 'Approve Policy' },
+                { value: 'reject', label: 'Reject Policy' },
+                { value: 'request_more_info', label: 'Request More Info' }
               ].map(option => (
-                <label key={option.value} className="flex items-center">
+                <label key={option.value} className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                  recommendedAction === option.value ? 'bg-[#028835] border-[#028835] text-white' : 'bg-white border-gray-300 hover:bg-gray-50'
+                }`}>
                   <input
                     type="radio"
                     name="recommendation"
                     value={option.value}
                     checked={recommendedAction === option.value}
                     onChange={(e) => setRecommendedAction(e.target.value as any)}
-                    className="mr-2"
+                    className="sr-only"
                   />
-                  <span className={`text-sm font-medium text-${option.color}-700`}>
+                  <span className="text-sm font-semibold">
                     {option.label}
                   </span>
                 </label>
@@ -293,21 +301,21 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-4 border-t">
+          <div className="flex justify-end space-x-4 pt-6 border-t">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+              className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || uploading || !uploadedDocument || !surveyNotes.trim()}
-              className="px-6 py-2 bg-[#028835] text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-[#028835] text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
-              {loading ? 'Submitting...' : uploading ? 'Uploading...' : 'Submit Survey'}
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} 
+              {loading ? 'Submitting...' : 'Submit Survey'}
             </button>
           </div>
         </form>

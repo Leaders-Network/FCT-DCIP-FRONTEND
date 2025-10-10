@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { Phone, Mail, MapPin, Calendar, Eye, Clock, CheckCircle } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Phone, Mail, MapPin, Calendar, Eye, Clock, CheckCircle, Search } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
 import Link from "next/link";
 import { getSurveyorAssignments } from "@/services/api";
@@ -9,131 +9,35 @@ const AssignmentsList = () => {
   const [assignments, setAssignments] = useState<PolicyRequest[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
-
-  const filteredAssignments = assignments.filter(assignment => {
-      if (filter === 'all') return true;
-      if (filter === 'pending') return assignment?.status === 'assigned';
-      if (filter === 'completed') return assignment?.status === 'surveyed';
-      return true;
-    })
-
-  // Mock data - replace with actual API calls
   useEffect(() => {
     const fetchAssignments = async () => {
       setLoading(true);
-
       try {
-        const response = await getSurveyorAssignments(filter);
-        // if(response.){
-        const data = response.data 
-          setAssignments(Array.isArray(data) ? data : []);
-        // }
+        const response = await getSurveyorAssignments(filter, 1, 10);
+        console.log("Assignments List Response:", response);
+        const data = response.data;
+        setAssignments(Array.isArray(data) ? data : []);
       } catch (error) {
-        setLoading(false)
-        console.log(error)
-      }finally{
-        setLoading(false)
+        console.log(error);
+      } finally {
+        setLoading(false);
       }
-
-      // Simulate API call
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // const mockAssignments: PolicyRequest[] = [
-      //   {
-      //     _id: "1",
-      //     userId: "user1",
-      //     propertyDetails: {
-      //       address: "123 Main St, Wuse 2, Abuja, FCT",
-      //       propertyType: "Residential House",
-      //       buildingValue: 50000000,
-      //       yearBuilt: 2020,
-      //       squareFootage: 2500,
-      //       constructionMaterial: "Concrete Block"
-      //     },
-      //     contactDetails: {
-      //       fullName: "John Doe",
-      //       email: "john.doe@email.com",
-      //       phoneNumber: "+234 801 234 5678",
-      //       alternatePhone: "+234 802 345 6789"
-      //     },
-      //     requestDetails: {
-      //       coverageType: "Comprehensive Coverage",
-      //       policyDuration: "2 Years",
-      //       additionalCoverage: ["Flood Coverage", "Theft Protection"],
-      //       specialRequests: "Property has a swimming pool"
-      //     },
-      //     status: "assigned",
-      //     assignedSurveyors: ["current_surveyor_id"],
-      //     createdAt: "2024-10-01T10:00:00Z",
-      //     updatedAt: "2024-10-01T10:00:00Z"
-      //   },
-      //   {
-      //     _id: "2",
-      //     userId: "user2",
-      //     propertyDetails: {
-      //       address: "456 Commercial Ave, Garki, Abuja, FCT",
-      //       propertyType: "Commercial Building",
-      //       buildingValue: 150000000,
-      //       yearBuilt: 2018,
-      //       squareFootage: 5000,
-      //       constructionMaterial: "Steel Frame"
-      //     },
-      //     contactDetails: {
-      //       fullName: "Jane Smith",
-      //       email: "jane.smith@business.com",
-      //       phoneNumber: "+234 803 456 7890"
-      //     },
-      //     requestDetails: {
-      //       coverageType: "All Risk Coverage",
-      //       policyDuration: "3 Years",
-      //       additionalCoverage: ["Business Interruption", "Equipment Coverage"],
-      //       specialRequests: "24/7 security system installed"
-      //     },
-      //     status: "assigned",
-      //     assignedSurveyors: ["current_surveyor_id"],
-      //     createdAt: "2024-09-28T14:30:00Z",
-      //     updatedAt: "2024-09-30T09:15:00Z"
-      //   },
-      //   {
-      //     _id: "3",
-      //     userId: "user3",
-      //     propertyDetails: {
-      //       address: "789 Industrial Rd, Jikwoyi, Abuja, FCT",
-      //       propertyType: "Industrial Facility",
-      //       buildingValue: 300000000,
-      //       yearBuilt: 2015,
-      //       squareFootage: 10000,
-      //       constructionMaterial: "Mixed Materials"
-      //     },
-      //     contactDetails: {
-      //       fullName: "Mike Johnson",
-      //       email: "mike.j@factory.com",
-      //       phoneNumber: "+234 804 567 8901"
-      //     },
-      //     requestDetails: {
-      //       coverageType: "Fire and Allied Perils",
-      //       policyDuration: "5 Years",
-      //       additionalCoverage: ["Equipment Coverage", "Liability Coverage"],
-      //       specialRequests: "Heavy machinery present"
-      //     },
-      //     status: "surveyed",
-      //     assignedSurveyors: ["current_surveyor_id"],
-      //     surveyDocument: "survey_report_3.pdf",
-      //     surveyNotes: "Property in excellent condition. No major risks identified.",
-      //     createdAt: "2024-09-20T08:00:00Z",
-      //     updatedAt: "2024-10-02T16:45:00Z"
-      //   }
-      // ];
-
-      // setAssignments(mockAssignments);
-      // setLoading(false);
     };
 
     fetchAssignments();
-  }, []);
+  }, [filter]);
 
-  
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter(assignment => {
+      const query = searchQuery.toLowerCase();
+      return (
+        assignment.propertyDetails.propertyType.toLowerCase().includes(query) ||
+        assignment.propertyDetails.address.toLowerCase().includes(query)
+      );
+    });
+  }, [assignments, searchQuery]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -162,17 +66,15 @@ const AssignmentsList = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 rounded w-1/4 mb-4"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white p-6 rounded-lg border border-gray-200">
-                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 bg-gray-300 rounded w-1/4 mb-4"></div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white p-6 rounded-lg border border-gray-200">
+              <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -182,38 +84,45 @@ const AssignmentsList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Assignments</h1>
-          <p className="text-gray-600">Manage your property survey assignments</p>
+          <h1 className="text-3xl font-bold text-gray-900">My Assignments</h1>
+          <p className="text-gray-600 mt-1">Manage your property survey assignments</p>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {[
-            { key: 'all', label: 'All Assignments', count: assignments.length },
-            { key: 'pending', label: 'Pending', count: assignments?.filter(a => a.status === 'assigned').length },
-            { key: 'completed', label: 'Completed', count: assignments.filter(a => a.status === 'surveyed').length }
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key as any)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                filter === tab.key
-                  ? 'border-[#028835] text-[#028835]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.label}
-              <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </nav>
+      <div className="flex justify-between items-center">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {[
+              { key: 'all', label: 'All' },
+              { key: 'pending', label: 'Pending' },
+              { key: 'completed', label: 'Completed' }
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setFilter(tab.key as any)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  filter === tab.key
+                    ? 'border-[#028835] text-[#028835]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search assignments..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-64"
+          />
+        </div>
       </div>
 
-      {/* Assignments Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredAssignments.map((assignment) => (
           <div key={assignment._id} className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">

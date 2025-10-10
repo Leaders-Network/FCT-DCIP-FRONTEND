@@ -76,8 +76,8 @@ export const adminApi = {
     return apiCall(`/admin/policy/${policyId}`);
   },
 
-  assignSurveyorToPolicy: async (assignment: PolicyAssignment) => {
-    return apiCall('/surveyor/assign', {
+  assignSurveyor: async (policyId: string, assignment: { surveyorIds: string[] }) => {
+    return apiCall(`/policy/${policyId}/assign`, {
       method: 'POST',
       body: JSON.stringify(assignment),
     });

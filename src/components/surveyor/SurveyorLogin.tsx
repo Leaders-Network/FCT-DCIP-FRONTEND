@@ -37,7 +37,7 @@ const SurveyorLogin = () => {
         localStorage.setItem("token", token);
         const fullName = `${employee.firstname} ${employee.lastname}`;
         localStorage.setItem("surveyorName", fullName);
-        localStorage.setItem("surveyorRole", employee.employeeRole.role);
+        localStorage.setItem("userRole", employee.employeeRole.role);
         localStorage.setItem("surveyorId", employee._id);
         
         router.push("/surveyor/dashboard");

@@ -33,6 +33,7 @@ import {
   adminApi
 } from '@/services/adminApi';
 import { Assignment, Surveyor } from '@/types/api.types';
+import { useAuth } from '../context/useAuth';
 import DocumentManager from './DocumentManager';
 
 interface AssignmentManagementProps {
@@ -53,6 +54,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   viewMode = 'admin',
   surveyorId
 }) => {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const policyId = searchParams.get('policyId');
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -73,11 +75,12 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 
   const [newAssignmentData, setNewAssignmentData] = useState({
     policyId: '',
-    surveyorId: [] as string[],
+    surveyorIds: [] as string[],
     assignedBy: '',
     status: 'assigned',
     priority: 'normal',
-    deadline: ''
+    deadline: '',
+    instructions: '',
   });
 
 
@@ -87,8 +90,32 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       const assignmentData = {
         ...newAssignmentData,
         policyId: selectedPolicy._id,
-        surveyorIds: newAssignmentData.surveyorId, // Rename to surveyorIds
+        surveyorIds: newAssignmentData.surveyorIds,
+        assignedBy: user?._id,
+        assignedAt: new Date().toISOString(),
+        deadline: new Date(newAssignmentData.deadline),
+        priority: newAssignmentData.priority,
+        status: newAssignmentData.status,
+        instructions: newAssignmentData.instructions || "N/A",
+        specialRequirements: [],
+        location: selectedPolicy.propertyDetails.address,
+        contactPerson: {
+          name: selectedPolicy.contactDetails.fullName,
+          phone: selectedPolicy.contactDetails.phoneNumber,
+          email: selectedPolicy.contactDetails.email
+        },
+        progressTracking: {
+          lastUpdate: new Date().toISOString(),
+          milestones: [],
+          checkpoints: []
+        },
+        communication: {
+          messages: []
+        },
+        documents: [],
+        timeline: []
       };
+      console.log("Creating assignment with data:", assignmentData);
       const response = await adminApi.createAssignment(assignmentData); // Use adminApi.createAssignment
       if (response.success) {
         setShowCreateModal(false);
@@ -107,14 +134,20 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       } else {
         setError(response.message || 'Failed to create assignment');
       }
-    } catch (error) {
-      setError('Failed to create assignment. Please try again.');
+    } catch (error: any) {
+      console.error("Failed to create assignment:", error);
+      setError(`Failed to create assignment: ${error.message}`);
     }
   };
   const handleReassignSurveyor = async () => {
     try {
+      const assignment = assignments.find(a => a.policyId === selectedPolicy._id);
+      if (!assignment) {
+        setError("Could not find assignment for the selected policy.");
+        return;
+      }
       const response = await adminApi.reassignSurveyor(
-        selectedPolicy._id, 
+        assignment._id, 
         newAssignmentData.surveyorId[0]
       ); 
       if (response.success) {
@@ -135,6 +168,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         setError(response.message || 'Failed to re-assign surveyor');
       }
     } catch (error) {
+      console.error("Failed to re-assign surveyor:", error);
       setError('Failed to re-assign surveyor. Please try again.');
     }
   };
@@ -171,10 +205,10 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       try {
         const response = await adminApi.getSurveyors({}); // Fetch all admin surveyors
         console.log("Response from getSurveyors:", response);
-        if (response?.data) {
-          setAvailableSurveyors(response.data);
-        } else {
-          setAvailableSurveyors([]);
+              if (response?.data) {
+                setAvailableSurveyors(response.data);
+                console.log("Available Surveyors:", response.data);
+              } else {          setAvailableSurveyors([]);
         }
       } catch (error) {
         setAvailableSurveyors([]);
@@ -218,21 +252,33 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     setError(null);
 
     try {
-      const [assignmentsResponse, surveyorsResponse] = await Promise.allSettled([
-        getSurveyorAssignmentsNew({
+      let assignmentsResponse;
+      if (viewMode === 'admin') {
+        assignmentsResponse = await adminApi.getAssignments({
+          status: filters.status !== 'all' ? filters.status : undefined,
+          priority: filters.priority !== 'all' ? filters.priority : undefined,
+          surveyorId: filters.surveyorId !== 'all' ? filters.surveyorId : undefined,
+          search: filters.search || undefined,
+          page: 1,
+          limit: 50
+        });
+      } else {
+        assignmentsResponse = await getSurveyorAssignmentsNew({
           status: filters.status !== 'all' ? filters.status : undefined,
           page: 1,
           limit: 50
-        }),
-        viewMode === 'admin' ? adminApi.getSurveyors({ limit: 100 }) : Promise.resolve({ success: true, data: { surveyors: [] } })
-      ]);
-
-      if (assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value.success) {
-        setAssignments(assignmentsResponse.value.data || []);
+        });
       }
 
-      if (surveyorsResponse.status === 'fulfilled' && surveyorsResponse.value.success) {
-        setSurveyors(surveyorsResponse.value.data.surveyors || []);
+      if (assignmentsResponse.success) {
+        setAssignments(assignmentsResponse.data || []);
+      }
+
+      if (viewMode === 'admin') {
+        const surveyorsResponse = await adminApi.getSurveyors({ limit: 100 });
+        if (surveyorsResponse.success) {
+          setSurveyors(surveyorsResponse.data.surveyors || []);
+        }
       }
 
     } catch (error: any) {
@@ -636,7 +682,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       {/* Assign Surveyor Modal */}
       {showAssignModal && selectedPolicy && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-lg p-6">
+          <div className="bg-white rounded-lg w-full max-w-lg p-6 overflow-y-auto max-h-[90vh]">
             <div className="flex items-start justify-between">
               <h3 className="text-lg font-semibold mb-4">{isReassign ? 'Re-assign Surveyor' : 'Assign Surveyor'}</h3>
               <button onClick={() => {
@@ -668,15 +714,16 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                           name="surveyors"
                           type="checkbox"
                           value={s._id}
-                          checked={newAssignmentData.surveyorId.includes(s._id)}
+                          checked={newAssignmentData.surveyorIds.includes(s._id)}
                           onChange={e => {
                             const surveyorId = e.target.value;
                             const isChecked = e.target.checked;
                             setNewAssignmentData(prev => {
                               const surveyorIds = isChecked
-                                ? [...prev.surveyorId, surveyorId]
-                                : prev.surveyorId.filter(id => id !== surveyorId);
-                              return { ...prev, surveyorId: surveyorIds };
+                                ? [...prev.surveyorIds, surveyorId]
+                                : prev.surveyorIds.filter(id => id !== surveyorId);
+                              console.log("Selected Surveyor IDs:", surveyorIds);
+                              return { ...prev, surveyorIds: surveyorIds };
                             });
                           }}
                           className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
@@ -688,6 +735,15 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                     );
                   })}
                 </div>
+              </div>
+              <div>
+                <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions</label>
+                <textarea
+                  id="instructions"
+                  value={newAssignmentData.instructions}
+                  onChange={e => setNewAssignmentData({ ...newAssignmentData, instructions: e.target.value })}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -728,7 +784,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               <button
                 onClick={isReassign ? handleReassignSurveyor : handleCreateAssignment}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                disabled={!newAssignmentData.surveyorId.length}
               >{isReassign ? 'Re-assign' : 'Assign'}</button>
             </div>
           </div>
