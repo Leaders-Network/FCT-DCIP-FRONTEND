@@ -14,7 +14,7 @@ import {
 import AdminSidebar from '@/components/dashboard/usersComponent/AdminSideBar'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkout'
-import { adminApi } from '@/services/adminApi'
+import { adminApi } from '@/services/api'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Switch } from '@/components/ui/switch'

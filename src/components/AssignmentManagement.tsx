@@ -29,9 +29,7 @@ import {
   updateAssignmentProgress,
   completeAssignment,
 } from '@/services/api';
-import {
-  adminApi
-} from '@/services/adminApi';
+import { adminApi } from '@/services/api';
 import { Assignment, Surveyor } from '@/types/api.types';
 import { useAuth } from '../context/useAuth';
 import DocumentManager from './DocumentManager';
@@ -98,11 +96,13 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         status: newAssignmentData.status,
         instructions: newAssignmentData.instructions || "N/A",
         specialRequirements: [],
-        location: selectedPolicy.propertyDetails.address,
-        contactPerson: {
-          name: selectedPolicy.contactDetails.fullName,
-          phone: selectedPolicy.contactDetails.phoneNumber,
-          email: selectedPolicy.contactDetails.email
+        location: {
+          address: selectedPolicy.propertyDetails.address,
+          contactPerson: {
+            name: selectedPolicy.contactDetails.fullName,
+            phone: selectedPolicy.contactDetails.phoneNumber,
+            email: selectedPolicy.contactDetails.email
+          }
         },
         progressTracking: {
           lastUpdate: new Date().toISOString(),
@@ -123,11 +123,12 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         setSelectedPolicy(null);
         setNewAssignmentData({
           policyId: '',
-          surveyorId: [], // Reset to an empty array
+          surveyorIds: [], // Reset to an empty array
           assignedBy: '',
           status: 'assigned',
           priority: 'normal',
-          deadline: ''
+          deadline: '',
+          instructions: ''
         });
         fetchData();
         fetchPolicies();
@@ -148,18 +149,19 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       }
       const response = await adminApi.reassignSurveyor(
         assignment._id, 
-        newAssignmentData.surveyorId[0]
+        newAssignmentData.surveyorIds[0]
       ); 
       if (response.success) {
         setShowAssignModal(false);
         setSelectedPolicy(null);
         setNewAssignmentData({
           policyId: '',
-          surveyorId: [],
+          surveyorIds: [],
           assignedBy: '',
           status: 'assigned',
           priority: 'normal',
-          deadline: ''
+          deadline: '',
+          instructions: ''
         });
         fetchData();
         fetchPolicies();
@@ -270,8 +272,11 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         });
       }
 
-      if (assignmentsResponse.success) {
-        setAssignments(assignmentsResponse.data || []);
+      console.log('assignmentsResponse', assignmentsResponse);
+      if (assignmentsResponse.success && assignmentsResponse.data && Array.isArray(assignmentsResponse.data.assignments)) {
+        setAssignments(assignmentsResponse.data.assignments);
+      } else {
+        setAssignments([]);
       }
 
       if (viewMode === 'admin') {
@@ -883,7 +888,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 
         <div className="flex items-center text-gray-600 text-sm">
           <MapPin className="w-4 h-4 mr-1" />
-          <span className="truncate">{assignment.location.address}</span>
+          <span className="truncate">{assignment.location?.address}</span>
         </div>
       </div>
 

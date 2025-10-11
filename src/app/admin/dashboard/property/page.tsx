@@ -6,7 +6,7 @@ import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkout"
-import { adminApi } from "@/services/adminApi";
+import { getAdminProperties } from "@/services/api";
 
 export default function PropertiesPage() {
   const [showPropertySidebar, setShowPropertySidebar] = useState(false)
@@ -26,7 +26,7 @@ export default function PropertiesPage() {
     const fetchProperties = async () => {
       try {
         setLoading(true);
-        const response = await adminApi.getAdminProperties();
+        const response = await getAdminProperties();
         setProperties(response.allProperties.properties);
         setFilteredProperties(response.allProperties.properties);
       } catch (error) {

@@ -6,7 +6,7 @@ import { PolicyRequest, Surveyor, PolicyAssignment } from "@/types/api.types";
 interface PolicyManagementProps {}
 
 
-import { adminApi, withErrorHandling } from "@/services/adminApi";
+import { adminApi, withErrorHandling } from "@/services/api";
 import { useAuth } from "@/context/useAuth";
 
 import { useRouter } from "next/navigation";

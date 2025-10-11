@@ -1,10 +1,12 @@
-
 import axios from "axios";
 import {
   EmployeeRegistrationData,
   LoginResponse,
   AvailableRolesResponse,
-  GetAllEmployeesResponse
+  GetAllEmployeesResponse,
+  PolicyRequest,
+  Surveyor,
+  Assignment,
 } from "../types/api.types";
 
 
@@ -13,14 +15,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-b
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
-// Helper function for consistent token retrieval
-const getAuthToken = () => {
-  const userRole = localStorage.getItem("userRole");
-  if (userRole === "Surveyor") {
-    return localStorage.getItem("surveyorToken");
-  }
-  return localStorage.getItem("authToken");
-};
+import { getAuthToken } from "@/utils/auth";
 
 
 
@@ -95,24 +90,6 @@ export const addProperty = async (
     return response.data;
   } catch (error) {
     console.error("Failed to add property:", error);
-    throw error;
-  }
-};
-
-// Assignment creation API
-export const createAssignment = async (assignmentData: {
-  policyId: string;
-  surveyorId: string;
-  assignedBy?: string;
-  status?: string;
-  priority?: string;
-  deadline?: string;
-}) => {
-  try {
-    const response = await api.post('/assignment', assignmentData);
-    return response.data;
-  } catch (error) {
-    console.error('Failed to create assignment:', error);
     throw error;
   }
 };
@@ -216,22 +193,6 @@ export const getUserProperties = async () => {
     return response.data;
   } catch (error) {
     console.error("Failed to fetch user properties", error);
-    throw error;
-  }
-};
-
-export const assignSurveyor = async (policyId: string, assignment: {
-  surveyorIds: string[];
-  deadline?: string;
-  priority?: string;
-  instructions?: string;
-  specialRequirements?: string[];
-}) => {
-  try {
-    const response = await api.post(`/policy/${policyId}/assign`, assignment);
-    return response.data;
-  } catch (error) {
-    console.error("Failed to assign surveyor", error);
     throw error;
   }
 };
@@ -682,6 +643,7 @@ export const getSurveySubmissions = async (filters?: {
       });
     }
     
+    const url = `/submission?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
   } catch (error) {
@@ -835,6 +797,299 @@ export const getDocumentDownloadUrl = async (publicId: string) => {
     console.error("Failed to get document download URL:", error);
     throw error;
   }
+};
+
+export const getAdminProperties = async () => {
+  try {
+    const response = await api.get("/admin/property");
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch admin properties:", error);
+    throw error;
+  }
+};
+
+// Admin API Service
+export const adminApi = {
+  getDashboardStats: async () => {
+    const response = await api.get('/admin/dashboard/stats');
+    return response.data;
+  },
+
+  getRecentActivity: async () => {
+    const response = await api.get('/admin/dashboard/activity');
+    return response.data;
+  },
+
+  getPolicies: async (filters?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/admin/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  getPolicyById: async (policyId: string) => {
+    const response = await api.get(`/admin/policy/${policyId}`);
+    return response.data;
+  },
+
+  assignSurveyor: async (policyId: string, assignment: { surveyorIds: string[] }) => {
+    const response = await api.post(`/policy/${policyId}/assign`, assignment);
+    return response.data;
+  },
+
+  reviewPolicySubmission: async (policyId: string, decision: 'approved' | 'rejected', notes: string) => {
+    const response = await api.post(`/policy/${policyId}/review`, { decision, notes });
+    return response.data;
+  },
+
+  sendPolicyToUser: async (policyId: string) => {
+    const response = await api.post(`/admin/policy/${policyId}/send-to-user`);
+    return response.data;
+  },
+
+  getAdministrators: async () => {
+    const response = await api.get('/admin/administrators');
+    return response.data;
+  },
+
+  getEmployees: async () => {
+    const response = await api.get('/admin/employees');
+    return response.data;
+  },
+
+  deleteEmployee: async (employeeId: string) => {
+    const response = await api.delete(`/admin/employees/${employeeId}`);
+    return response.data;
+  },
+
+  updateEmployeeStatus: async (employeeId: string, status: string) => {
+    const response = await api.patch(`/admin/employees/${employeeId}/status`, { status });
+    return response.data;
+  },
+
+  createAdministrator: async (adminData: any) => {
+    const response = await api.post('/admin/administrators', adminData);
+    return response.data;
+  },
+
+  deleteAdministrator: async (adminId: string) => {
+    const response = await api.delete(`/admin/administrators/${adminId}`);
+    return response.data;
+  },
+
+  updateAdministratorStatus: async (adminId: string, status: string) => {
+    const response = await api.patch(`/admin/administrators/${adminId}/status`, { status });
+    return response.data;
+  },
+
+  getSurveyors: async (filters?: {
+    status?: string;
+    specialization?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/admin/surveyor${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  createSurveyor: async (surveyorData: Partial<Surveyor>) => {
+    const response = await api.post('/admin/surveyor', surveyorData);
+    return response.data;
+  },
+
+  updateSurveyor: async (surveyorId: string, surveyorData: Partial<Surveyor>) => {
+    const response = await api.patch(`/admin/surveyor/${surveyorId}`, surveyorData);
+    return response.data;
+  },
+
+  deleteSurveyor: async (surveyorId: string) => {
+    const response = await api.delete(`/admin/surveyor/${surveyorId}`);
+    return response.data;
+  },
+
+  getSurveyorById: async (surveyorId: string) => {
+    const response = await api.get(`/admin/surveyor/${surveyorId}`);
+    return response.data;
+  },
+
+  getSurveyorPerformance: async (surveyorId: string) => {
+    const response = await api.get(`/admin/surveyor/${surveyorId}/performance`);
+    return response.data;
+  },
+
+  getAssignments: async (filters?: {
+    status?: string;
+    priority?: string;
+    surveyorId?: string;
+    overdue?: boolean;
+    page?: number;
+    limit?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/admin/assignment${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  createAssignment: async (assignmentData: Partial<Assignment>) => {
+    const response = await api.post('/admin/assignment', assignmentData);
+    return response.data;
+  },
+
+  updateAssignment: async (assignmentId: string, assignmentData: Partial<Assignment>) => {
+    const response = await api.put(`/admin/assignment/${assignmentId}`, assignmentData);
+    return response.data;
+  },
+
+  reassignSurveyor: async (assignmentId: string, newSurveyorId: string, reason?: string) => {
+    const response = await api.patch(`/admin/assignment/${assignmentId}/reassign`, { surveyorId: newSurveyorId, reason });
+    return response.data;
+  },
+
+  getAssignmentById: async (assignmentId: string) => {
+    const response = await api.get(`/admin/assignment/${assignmentId}`);
+    return response.data;
+  },
+
+  getSurveySubmissions: async (filters?: {
+    status?: string;
+    surveyorId?: string;
+    policyId?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/submission${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  approveSurveySubmission: async (submissionId: string, notes?: string) => {
+    const response = await api.post(`/submission/${submissionId}/approve`, { notes });
+    return response.data;
+  },
+
+  rejectSurveySubmission: async (submissionId: string, reason: string) => {
+    const response = await api.post(`/submission/${submissionId}/reject`, { reason });
+    return response.data;
+  },
+
+  getSurveyDocumentDownloadUrl: async (publicId: string) => {
+    const response = await api.get(`/survey-documents/download/${publicId}`);
+    return response.data;
+  },
+
+  uploadFile: async (file: File, type: string, relatedId: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    formData.append('relatedId', relatedId);
+
+    const response = await api.post('/files/upload', formData, {
+      headers: {
+        // Let browser set Content-Type for FormData
+      },
+    });
+    return response.data;
+  },
+
+  downloadFile: async (fileId: string) => {
+    const response = await api.get(`/files/download/${fileId}`, { responseType: 'blob' });
+    return response;
+  },
+
+  getAnalytics: async (period: 'week' | 'month' | 'quarter' | 'year') => {
+    const response = await api.get(`/admin/analytics?period=${period}`);
+    return response.data;
+  },
+
+  generateReport: async (reportType: string, filters?: any) => {
+    const response = await api.post('/admin/reports', { type: reportType, filters });
+    return response.data;
+  },
+
+  getNotifications: async (unreadOnly?: boolean) => {
+    const endpoint = `/notifications${unreadOnly ? '?unread=true' : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  markNotificationAsRead: async (notificationId: string) => {
+    const response = await api.post(`/notifications/${notificationId}/read`);
+    return response.data;
+  },
+
+  searchAll: async (query: string) => {
+    const response = await api.get(`/search?q=${encodeURIComponent(query)}`);
+    return response.data;
+  },
+
+  getSystemHealth: async () => {
+    const response = await api.get('/system/health');
+    return response.data;
+  },
+
+  getAdminProperties: async () => {
+    const response = await api.get("/admin/property");
+    return response.data;
+  },
+};
+
+export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
+  fn: T,
+  onError?: (error: Error) => void
+): T => {
+  return (async (...args: Parameters<T>) => {
+    try {
+      return await fn(...args);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error occurred');
+      console.error('API Error:', err);
+      
+      if (onError) {
+        onError(err);
+      }
+      
+      throw err;
+    }
+  }) as T;
 };
 
 export default api;
