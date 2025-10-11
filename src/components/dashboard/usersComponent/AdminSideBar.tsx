@@ -2,7 +2,7 @@
 import { useState } from "react"
 import type React from "react"
 
-import { adminApi } from "@/services/adminApi";
+import { adminApi } from "@/services/api";
 
 interface AdminSidebarProps {
   isOpen: boolean

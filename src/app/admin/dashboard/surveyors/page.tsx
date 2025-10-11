@@ -2,7 +2,7 @@
 import React from "react";
 import SurveyorManagement from "@/components/admin/SurveyorManagement";
 import { Surveyor } from "@/types/api.types";
-import { adminApi, withErrorHandling } from "@/services/adminApi";
+import { adminApi, withErrorHandling } from "@/services/api";
 
 const SurveyorsPage = () => {
   const handleCreateSurveyor = withErrorHandling(

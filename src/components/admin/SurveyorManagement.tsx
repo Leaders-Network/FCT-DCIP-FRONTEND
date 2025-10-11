@@ -76,7 +76,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const fetchSurveyors = async () => {
     setLoading(true);
     try {
-      const { adminApi } = await import("@/services/adminApi");
+      const { adminApi } = await import("@/services/api");
       
       // Fetch surveyors from the API
       const response = await adminApi.getSurveyors({

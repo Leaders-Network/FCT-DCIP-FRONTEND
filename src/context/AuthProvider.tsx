@@ -69,47 +69,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     router.push("/");
   }, [router]);
 
-  // Check authentication status on mount and token change
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     try {
-  //       const token = getAuthToken();
-  //       const storedUser = localStorage.getItem('user');
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = getAuthToken();
+        const storedUser = localStorage.getItem('user');
 
-  //       if (token && storedUser) {
-  //         const userData = JSON.parse(storedUser);
-  //         setUser(userData);
-  //         setState({
-  //           isAuthenticated: true,
-  //           isLoading: false,
-  //           token,
-  //           name: userData.firstname,
-  //         });
-          
-  //         // Optionally verify token with backend
-  //         // try {
-  //         //   await getUserRole(token); // Verify token is still valid
-  //         // } catch (error) {
-  //         //   console.error("Token validation failed:", error);
-  //         //   logout();
-  //         //   return;
-  //         // }
-  //       } else {
-  //         // Only redirect to login if we're not already there
-  //         const isLoginPage = window.location.pathname.includes('/login');
-  //         if (!isLoginPage) {
-  //           router.push("/");
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Auth initialization error:", error);
-  //     } finally {
-  //       setState(prevState => ({ ...prevState, isLoading: false }));
-  //     }
-  //   };
+        if (token && storedUser) {
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          setState({
+            isAuthenticated: true,
+            isLoading: false,
+            token,
+            name: userData.firstname,
+          });
+        } else {
+          // Only redirect to login if we're not already there
+          const isLoginPage = window.location.pathname.includes('/login');
+          if (!isLoginPage) {
+            router.push("/");
+          }
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        setState(prevState => ({ ...prevState, isLoading: false }));
+      }
+    };
 
-  //   checkAuth();
-  // }, [logout, router]);
+    checkAuth();
+  }, [logout, router]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -159,35 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Add this effect to load user data on mount
-  useEffect(() => {
-    const loadUserData = () => {
-      const token = getAuthToken();
-      const storedUser = localStorage.getItem('user');
 
-      console.log("Loading stored data - Token:", token);
-      console.log("Loading stored data - User:", storedUser);
-
-      if (token && storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-          setState({
-            isAuthenticated: true,
-            isLoading: false,
-            token,
-            name: userData.firstname,
-          });
-        } catch (error) {
-          console.error("Failed to parse stored user data:", error);
-          logout();
-        }
-      }
-      setState(prevState => ({ ...prevState, isLoading: false }));
-    };
-
-    loadUserData();
-  }, [logout]);
 
   const contextValue: AuthContextType = {
     user,
