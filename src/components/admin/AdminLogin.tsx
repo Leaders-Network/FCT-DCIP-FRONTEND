@@ -21,7 +21,7 @@ const AdminLogin: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, 'employee');
       router.push("/admin/dashboard");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {

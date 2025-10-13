@@ -2,6 +2,8 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import Image from "next/image";
 
+import { getCategories, addProperty } from "@/services/api";
+
 interface AddNewPropertyProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,10 +20,6 @@ interface FormData {
   contactOnProperty: string;
 }
 
-const API_KEY =
-  "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth` : "https://fct-dcip-backend.vercel.app/api/v1/auth";
-
 const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,42 +35,24 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setError("Authentication required. Please login again.");
+        const data = await getCategories();
+        if (!data || data.length === 0) {
+          setError(
+            "No categories available. Please contact an administrator."
+          );
           return;
         }
-
-        const response = await fetch(`${BASE_URL}/available-categories`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            apiKey: API_KEY,
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.status === 304 || response.ok) {
-          const data = await response.json();
-          if (!data.mappedCategories || data.mappedCategories.length === 0) {
-            setError(
-              "No categories available. Please contact an administrator."
-            );
-            return;
-          }
-
-          setCategories(data.mappedCategories);
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        setCategories(data);
       } catch (err) {
         setError("Failed to load categories");
         console.error(err);
       }
     };
 
-    fetchCategories();
-  }, []);
+    if (isOpen) {
+        fetchCategories();
+    }
+  }, [isOpen]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -174,13 +154,6 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     setError(null);
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setError("Authentication required. Please login again.");
-      setLoading(false);
-      return;
-    }
-
     try {
       const fileInput = document.querySelector(
         'input[type="file"]'
@@ -198,27 +171,12 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
         compressedFiles.map((file) => convertToBase64(file))
       );
 
-      const response = await fetch(`${BASE_URL}/user/add-property`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apiKey: API_KEY,
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          categoryId: formData.category,
-          address: formData.address,
-          phonenumber: formData.contactOnProperty,
-          images: base64Images, // Now includes complete base64 strings with prefixes
-        }),
+      await addProperty({
+        categoryId: formData.category,
+        address: formData.address,
+        phonenumber: formData.contactOnProperty,
+        images: base64Images,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
 
       // Clean up object URLs
       images.forEach((url) => URL.revokeObjectURL(url));
