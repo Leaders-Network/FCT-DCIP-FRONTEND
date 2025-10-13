@@ -1,7 +1,8 @@
 import axios from "axios";
 import {
   EmployeeRegistrationData,
-  LoginResponse,
+  EmployeeLoginResponse,
+  UserLoginResponse,
   AvailableRolesResponse,
   GetAllEmployeesResponse,
   PolicyRequest,
@@ -56,9 +57,19 @@ export interface AddPropertyPayload {
 }
 
 // Authentication APIs
+export const loginUser = async (email: string, password: string) => {
+  try {
+    const response = await api.post<UserLoginResponse>("/auth/login", { email, password });
+    return response;
+  } catch (error) {
+    console.error("User Login API Error:", error);
+    throw error;
+  }
+};
+
 export const loginEmployee = async (email: string, password: string) => {
   try {
-    const response = await api.post<LoginResponse>("/auth/loginEmployee", { email, password });
+    const response = await api.post<EmployeeLoginResponse>("/auth/loginEmployee", { email, password });
     return response;
   } catch (error) {
     console.error("Login API Error:", error);
@@ -82,8 +93,7 @@ export const getCategories = async (): Promise<Category[]> => {
 };
 
 export const addProperty = async (
-  payload: AddPropertyPayload, 
-  token: string
+  payload: AddPropertyPayload
 ): Promise<Record<string, unknown>> => {
   try {
     const response = await api.post("/auth/user/add-property", payload);

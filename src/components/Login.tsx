@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useCallback } from "react";
 import { z } from "zod";
+import { useAuth } from "@/context/useAuth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -193,7 +194,7 @@ function LoginForm() {
 function LoginButton({ email, password, validateForm }: { email: string; password: string; validateForm: () => boolean }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,61 +205,18 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
     }
 
     setIsLoading(true);
-    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044eca626c";
-    console.log("ApiKey:", ApiKey);
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
 
     try {
       // First, try to log in as a regular user
-      let response = await fetch(`${apiBaseUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-          "apikey": ApiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        localStorage.setItem("token", result.token);
-        const fullName = `${result.user.firstname} ${result.user.lastname}`;
-        localStorage.setItem("fullname", fullName);
-        localStorage.setItem("user", JSON.stringify(result.user));
-        router.push('/dashboard');
-        return;
+      await login(email, password, 'user');
+    } catch (userError) {
+      try {
+        // If user login fails, try to log in as an employee
+        await login(email, password, 'employee');
+      } catch (employeeError) {
+        console.error("Login error:", employeeError);
+        setError(employeeError instanceof Error ? employeeError.message : "An unexpected error occurred");
       }
-
-      // If user login fails, try to log in as an employee
-      response = await fetch(`${apiBaseUrl}/auth/loginEmployee`, {
-        method: "POST",
-        headers: {
-          "apikey": ApiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        localStorage.setItem("token", result.token);
-        const fullName = `${result.employee.firstname} ${result.employee.lastname}`;
-        localStorage.setItem("fullname", fullName);
-        localStorage.setItem("user", JSON.stringify(result.employee));
-        if (result.employee.employeeRole.role === 'Surveyor') {
-          router.push('/surveyor/dashboard');
-        } else {
-          router.push('/admin/dashboard');
-        }
-        return;
-      }
-
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-
-    } catch (error) {
-      console.error("Login error:", error);
-      setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }

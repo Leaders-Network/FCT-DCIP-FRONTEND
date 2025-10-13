@@ -1,5 +1,15 @@
 // User related types
 export interface User {
+    _id: string;
+    fullname: string;
+    phonenumber: string;
+    email: string;
+    role: 'user';
+    isEmailVerified: boolean;
+    deleted: boolean;
+}
+
+export interface Employee {
   _id: string;
   firstname: string;
   lastname: string;
@@ -42,9 +52,15 @@ export interface EmployeeRegistrationData {
 }
 
 // API Response types
-export interface LoginResponse {
+export interface UserLoginResponse {
+    success: boolean;
+    user: User;
+    token: string;
+}
+
+export interface EmployeeLoginResponse {
   success: boolean;
-  employee: User;
+  employee: Employee;
   token: string;
 }
 
@@ -57,7 +73,7 @@ export interface GetAllEmployeesResponse {
   success: boolean;
   allStaff: {
     count: number;
-    sanitizedEmployees: User[];
+    sanitizedEmployees: Employee[];
   };
 }
 
@@ -132,7 +148,7 @@ export interface CreatePolicyRequestData {
 }
 
 // Surveyor types
-export interface Surveyor extends User {
+export interface Surveyor extends Employee {
   userId?: string;
   specializations?: string[];
   licenseNumber?: string;
