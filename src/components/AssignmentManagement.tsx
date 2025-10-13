@@ -142,14 +142,18 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   };
   const handleReassignSurveyor = async () => {
     try {
-      const assignment = assignments.find(a => a.policyId === selectedPolicy._id);
-      if (!assignment) {
+      const assignmentResponse = await adminApi.getAssignmentByPolicyId(selectedPolicy._id);
+      if (!assignmentResponse.success || !assignmentResponse.data) {
         setError("Could not find assignment for the selected policy.");
         return;
       }
+      const assignment = assignmentResponse.data;
       const response = await adminApi.reassignSurveyor(
         assignment._id, 
-        newAssignmentData.surveyorIds[0]
+        newAssignmentData.surveyorIds[0],
+        newAssignmentData.instructions, // reason
+        newAssignmentData.deadline,
+        newAssignmentData.priority
       ); 
       if (response.success) {
         setShowAssignModal(false);
@@ -205,7 +209,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 
     const fetchSurveyors = async () => {
       try {
-        const response = await adminApi.getSurveyors({}); // Fetch all admin surveyors
+        const response = await adminApi.getSurveyors({ status: 'active' }); // Fetch only active surveyors
         console.log("Response from getSurveyors:", response);
               if (response?.data) {
                 setAvailableSurveyors(response.data);

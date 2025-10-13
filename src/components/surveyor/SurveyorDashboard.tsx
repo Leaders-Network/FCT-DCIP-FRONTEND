@@ -45,17 +45,17 @@ const SurveyorDashboard = () => {
         if (dashboardResponse.status === 'fulfilled' && dashboardResponse.value?.data) {
           console.log("Dashboard Response:", dashboardResponse.value.data);
           const dashboardData = dashboardResponse.value.data;
-          if (dashboardData.assignments) {
-            fetchedAssignments = dashboardData.assignments;
+          if (dashboardData.recentAssignments) {
+            fetchedAssignments = dashboardData.recentAssignments;
           }
-          if (dashboardData.stats) {
-            setStats(dashboardData.stats);
+          if (dashboardData.statistics) {
+            setStats(dashboardData.statistics);
           }
         }
 
-        if (fetchedAssignments.length === 0 && assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value?.data) {
+        if (fetchedAssignments.length === 0 && assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value?.data?.assignments) {
           console.log("Assignments Response:", assignmentsResponse.value.data);
-          fetchedAssignments = assignmentsResponse.value.data;
+          fetchedAssignments = assignmentsResponse.value.data.assignments;
         }
 
         if (fetchedAssignments.length > 0) {
@@ -177,10 +177,10 @@ const SurveyorDashboard = () => {
                       </div>
                       <div>
                         <h3 className="text-md font-semibold text-gray-900">
-                          {assignment.propertyDetails.propertyType}
+                          {assignment.policyId.propertyDetails.propertyType}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          {assignment.propertyDetails.address}
+                          {assignment.policyId.propertyDetails.address}
                         </p>
                       </div>
                     </div>
@@ -188,7 +188,7 @@ const SurveyorDashboard = () => {
                     <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 mr-1.5" />
-                        {assignment.contactDetails.fullName}
+                        {assignment.policyId.contactDetails.fullName}
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1.5" />
