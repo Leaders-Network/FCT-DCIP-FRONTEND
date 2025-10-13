@@ -17,7 +17,7 @@ const AssignmentsList = () => {
       try {
         const response = await getSurveyorAssignments(filter, 1, 10);
         console.log("Assignments List Response:", response);
-        const data = response.data;
+        const data = response.data.assignments;
         setAssignments(Array.isArray(data) ? data : []);
       } catch (error) {
         console.log(error);
@@ -33,8 +33,8 @@ const AssignmentsList = () => {
     return assignments.filter(assignment => {
       const query = searchQuery.toLowerCase();
       return (
-        assignment.propertyDetails.propertyType.toLowerCase().includes(query) ||
-        assignment.propertyDetails.address.toLowerCase().includes(query)
+        (assignment.policyId.propertyDetails.propertyType.toLowerCase().includes(query) ||
+        assignment.policyId.propertyDetails.address.toLowerCase().includes(query))
       );
     });
   }, [assignments, searchQuery]);
@@ -130,11 +130,11 @@ const AssignmentsList = () => {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {assignment.propertyDetails.propertyType}
+                    {assignment.policyId.propertyDetails.propertyType}
                   </h3>
                   <div className="flex items-center text-gray-500 text-sm mt-1">
                     <MapPin className="h-4 w-4 mr-1" />
-                    {assignment.propertyDetails.address}
+                    {assignment.policyId.propertyDetails.address}
                   </div>
                 </div>
                 {getStatusBadge(assignment.status)}
@@ -143,12 +143,12 @@ const AssignmentsList = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">Building Value:</span>
-                  <span className="font-medium">₦{assignment.propertyDetails.buildingValue.toLocaleString()}</span>
+                  <span className="font-medium">₦{assignment.policyId.propertyDetails.buildingValue.toLocaleString()}</span>
                 </div>
                 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">Coverage:</span>
-                  <span className="font-medium">{assignment.requestDetails.coverageType}</span>
+                  <span className="font-medium">{assignment.policyId.requestDetails.coverageType}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
@@ -164,18 +164,18 @@ const AssignmentsList = () => {
                 <h4 className="text-sm font-medium text-gray-900 mb-2">Contact Information</h4>
                 <div className="space-y-1">
                   <div className="flex items-center text-sm text-gray-600">
-                    <span className="font-medium mr-2">{assignment.contactDetails.fullName}</span>
+                    <span className="font-medium mr-2">{assignment.policyId.contactDetails.fullName}</span>
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Phone className="h-3 w-3 mr-2" />
-                    <a href={`tel:${assignment.contactDetails.phoneNumber}`} className="hover:text-[#028835]">
-                      {assignment.contactDetails.phoneNumber}
+                    <a href={`tel:${assignment.policyId.contactDetails.phoneNumber}`} className="hover:text-[#028835]">
+                      {assignment.policyId.contactDetails.phoneNumber}
                     </a>
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Mail className="h-3 w-3 mr-2" />
-                    <a href={`mailto:${assignment.contactDetails.email}`} className="hover:text-[#028835]">
-                      {assignment.contactDetails.email}
+                    <a href={`mailto:${assignment.policyId.contactDetails.email}`} className="hover:text-[#028835]">
+                      {assignment.policyId.contactDetails.email}
                     </a>
                   </div>
                 </div>

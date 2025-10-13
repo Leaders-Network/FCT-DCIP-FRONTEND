@@ -981,13 +981,18 @@ export const adminApi = {
     return response.data;
   },
 
-  reassignSurveyor: async (assignmentId: string, newSurveyorId: string, reason?: string) => {
-    const response = await api.patch(`/admin/assignment/${assignmentId}/reassign`, { surveyorId: newSurveyorId, reason });
+  reassignSurveyor: async (assignmentId: string, newSurveyorId: string, reason?: string, deadline?: string, priority?: string) => {
+    const response = await api.patch(`/admin/assignment/${assignmentId}/reassign`, { newSurveyorId, reason, deadline, priority });
     return response.data;
   },
 
   getAssignmentById: async (assignmentId: string) => {
     const response = await api.get(`/admin/assignment/${assignmentId}`);
+    return response.data;
+  },
+
+  getAssignmentByPolicyId: async (policyId: string) => {
+    const response = await api.get(`/admin/assignment/policy/${policyId}`);
     return response.data;
   },
 

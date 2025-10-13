@@ -2,7 +2,7 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import Image from "next/image";
 
-import { getCategories, addProperty } from "@/services/api";
+import { addProperty } from "@/services/api";
 
 interface AddNewPropertyProps {
   isOpen: boolean;
@@ -14,6 +14,13 @@ interface Category {
   category: string;
 }
 
+const staticCategories: Category[] = [
+    { _id: "60d5f1b3e6b3a0b3e8b3e8b3", category: "Building" },
+    { _id: "60d5f1b3e6b3a0b3e8b3e8b4", category: "Infrastructure" },
+    { _id: "60d5f1b3e6b3a0b3e8b3e8b5", category: "Commercial" },
+    { _id: "60d5f1b3e6b3a0b3e8b3e8b6", category: "Residential" },
+];
+
 interface FormData {
   category: string;
   address: string;
@@ -21,7 +28,7 @@ interface FormData {
 }
 
 const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>(staticCategories);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -31,28 +38,6 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
   });
 
   const [images, setImages] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await getCategories();
-        if (!data || data.length === 0) {
-          setError(
-            "No categories available. Please contact an administrator."
-          );
-          return;
-        }
-        setCategories(data);
-      } catch (err) {
-        setError("Failed to load categories");
-        console.error(err);
-      }
-    };
-
-    if (isOpen) {
-        fetchCategories();
-    }
-  }, [isOpen]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
