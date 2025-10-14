@@ -84,57 +84,38 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 
   // Handle assignment creation
   const handleCreateAssignment = async () => {
+    if (!newAssignmentData.deadline) {
+      setError('Please select a deadline.');
+      return;
+    }
     try {
-      const assignmentData = {
-        ...newAssignmentData,
-        policyId: selectedPolicy._id,
-        surveyorIds: newAssignmentData.surveyorIds,
-        assignedBy: user?._id,
-        assignedAt: new Date().toISOString(),
-        deadline: new Date(newAssignmentData.deadline),
-        priority: newAssignmentData.priority,
-        status: newAssignmentData.status,
-        instructions: newAssignmentData.instructions || "N/A",
-        specialRequirements: [],
-        location: {
-          address: selectedPolicy.propertyDetails.address,
-          contactPerson: {
-            name: selectedPolicy.contactDetails.fullName,
-            phone: selectedPolicy.contactDetails.phoneNumber,
-            email: selectedPolicy.contactDetails.email
-          }
-        },
-        progressTracking: {
-          lastUpdate: new Date().toISOString(),
-          milestones: [],
-          checkpoints: []
-        },
-        communication: {
-          messages: []
-        },
-        documents: [],
-        timeline: []
-      };
-      console.log("Creating assignment with data:", assignmentData);
-      const response = await adminApi.createAssignment(assignmentData); // Use adminApi.createAssignment
-      if (response.success) {
-        setShowCreateModal(false);
-        setShowAssignModal(false);
-        setSelectedPolicy(null);
-        setNewAssignmentData({
-          policyId: '',
-          surveyorIds: [], // Reset to an empty array
-          assignedBy: '',
-          status: 'assigned',
-          priority: 'normal',
-          deadline: '',
-          instructions: ''
-        });
-        fetchData();
-        fetchPolicies();
-      } else {
-        setError(response.message || 'Failed to create assignment');
+      for (const surveyorId of newAssignmentData.surveyorIds) {
+        const assignmentData = {
+          policyId: selectedPolicy._id,
+          surveyorId: surveyorId,
+          assignedBy: user?._id,
+          deadline: new Date(newAssignmentData.deadline),
+          priority: newAssignmentData.priority,
+          instructions: newAssignmentData.instructions || "N/A",
+        };
+        console.log("Creating assignment with data:", assignmentData);
+        await adminApi.createAssignment(assignmentData);
       }
+
+      setShowCreateModal(false);
+      setShowAssignModal(false);
+      setSelectedPolicy(null);
+      setNewAssignmentData({
+        policyId: '',
+        surveyorIds: [], // Reset to an empty array
+        assignedBy: '',
+        status: 'assigned',
+        priority: 'normal',
+        deadline: '',
+        instructions: ''
+      });
+      fetchData();
+      fetchPolicies();
     } catch (error: any) {
       console.error("Failed to create assignment:", error);
       setError(`Failed to create assignment: ${error.message}`);
