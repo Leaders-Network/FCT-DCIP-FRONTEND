@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect} from 'react' 
 import { useSearchParams } from 'next/navigation';
 import { 
@@ -983,12 +984,18 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
             </div>
           )}
 
-          <button
-            onClick={onView}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-          >
-            View Details
-          </button>
+          {viewMode === 'surveyor' ? (
+            <Link href={`/surveyor/dashboard/assignments/${assignment._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
+                View Details
+            </Link>
+          ) : (
+            <button
+              onClick={onView}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+            >
+              View Details
+            </button>
+          )}
         </div>
       </div>
     </div>
