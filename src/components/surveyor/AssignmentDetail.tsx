@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload } from "lucide-react";
-import { PolicyRequest, SurveySubmission } from "@/types/api.types";
+import { Assignment, SurveySubmission } from "@/types/api.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionForm from "./SurveySubmissionForm";
 
@@ -10,7 +10,7 @@ interface AssignmentDetailProps {
 }
 
 const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => {
-  const [assignment, setAssignment] = useState<PolicyRequest | null>(null);
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSurveyForm, setShowSurveyForm] = useState(false);
   const router = useRouter();
@@ -18,37 +18,17 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
   useEffect(() => {
     const fetchAssignment = async () => {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockAssignment: PolicyRequest = {
-        _id: assignmentId,
-        userId: "user1",
-        propertyDetails: {
-          address: "123 Main St, Wuse 2, Abuja, FCT",
-          propertyType: "Residential House",
-          buildingValue: 50000000,
-          yearBuilt: 2020,
-          squareFootage: 2500,
-          constructionMaterial: "Concrete Block"
-        },
-        contactDetails: {
-          fullName: "John Doe",
-          email: "john.doe@email.com",
-          phoneNumber: "+234 801 234 5678",
-          alternatePhone: "+234 802 345 6789"
-        },
-        requestDetails: {
-          coverageType: "Comprehensive Coverage",
-          policyDuration: "2 Years",
-          additionalCoverage: ["Flood Coverage", "Theft Protection"],
-          specialRequests: "Property has a swimming pool and garage. Please inspect both areas thoroughly."
-        },
-        status: "assigned",
-        assignedSurveyors: ["current_surveyor_id"],
-        createdAt: "2024-10-01T10:00:00Z",
-        updatedAt: "2024-10-01T10:00:00Z"
-      };
-
-      setAssignment(mockAssignment);
+      try {
+        const { getSurveyorAssignmentById } = await import("@/services/api");
+        const response = await getSurveyorAssignmentById(assignmentId);
+        if (response.success) {
+          setAssignment(response.data);
+        } else {
+          // Handle error
+        }
+      } catch (error) {
+        // Handle error
+      }
       setLoading(false);
     };
 
@@ -84,9 +64,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     if (!assignment) return;
 
     if (method === 'phone') {
-      window.open(`tel:${assignment.contactDetails.phoneNumber}`);
+      window.open(`tel:${assignment.policyId.contactDetails.phoneNumber}`);
     } else if (method === 'email') {
-      window.open(`mailto:${assignment.contactDetails.email}`);
+      window.open(`mailto:${assignment.policyId.contactDetails.email}`);
     }
   };
 
@@ -117,7 +97,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
   if (showSurveyForm) {
     return (
       <SurveySubmissionForm
-        policy={assignment}
+        policy={assignment.policyId}
         onSubmit={handleSurveySubmission}
         onCancel={() => setShowSurveyForm(false)}
       />
@@ -159,29 +139,29 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Property Type</h3>
-              <p className="text-base text-gray-900">{assignment.propertyDetails.propertyType}</p>
+              <p className="text-base text-gray-900">{assignment.policyId.propertyDetails.propertyType}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Construction Material</h3>
-              <p className="text-base text-gray-900">{assignment.propertyDetails.constructionMaterial}</p>
+              <p className="text-base text-gray-900">{assignment.policyId.propertyDetails.constructionMaterial}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Building Value</h3>
-              <p className="text-base text-gray-900">₦{assignment.propertyDetails.buildingValue.toLocaleString()}</p>
+              <p className="text-base text-gray-900">₦{assignment.policyId.propertyDetails.buildingValue.toLocaleString()}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Year Built</h3>
-              <p className="text-base text-gray-900">{assignment.propertyDetails.yearBuilt}</p>
+              <p className="text-base text-gray-900">{assignment.policyId.propertyDetails.yearBuilt}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Square Footage</h3>
-              <p className="text-base text-gray-900">{assignment.propertyDetails.squareFootage.toLocaleString()} sq ft</p>
+              <p className="text-base text-gray-900">{assignment.policyId.propertyDetails.squareFootage.toLocaleString()} sq ft</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Assignment Date</h3>
               <p className="text-base text-gray-900 flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
-                {new Date(assignment.createdAt).toLocaleDateString()}
+                {new Date(assignment.policyId.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -190,7 +170,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <h3 className="text-sm font-medium text-gray-500 mb-2">Address</h3>
             <p className="text-base text-gray-900 flex items-start">
               <MapPin className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
-              {assignment.propertyDetails.address}
+              {assignment.policyId.propertyDetails.address}
             </p>
           </div>
         </div>
@@ -208,7 +188,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <User className="h-5 w-5 text-gray-400 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-gray-500">Property Owner</p>
-                  <p className="text-base text-gray-900">{assignment.contactDetails.fullName}</p>
+                  <p className="text-base text-gray-900">{assignment.policyId.contactDetails.fullName}</p>
                 </div>
               </div>
               
@@ -216,9 +196,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <Phone className="h-5 w-5 text-gray-400 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-gray-500">Phone Number</p>
-                  <p className="text-base text-gray-900">{assignment.contactDetails.phoneNumber}</p>
-                  {assignment.contactDetails.alternatePhone && (
-                    <p className="text-sm text-gray-600">Alt: {assignment.contactDetails.alternatePhone}</p>
+                  <p className="text-base text-gray-900">{assignment.policyId.contactDetails.phoneNumber}</p>
+                  {assignment.policyId.contactDetails.alternatePhone && (
+                    <p className="text-sm text-gray-600">Alt: {assignment.policyId.contactDetails.alternatePhone}</p>
                   )}
                 </div>
               </div>
@@ -227,7 +207,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <Mail className="h-5 w-5 text-gray-400 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-gray-500">Email Address</p>
-                  <p className="text-base text-gray-900">{assignment.contactDetails.email}</p>
+                  <p className="text-base text-gray-900">{assignment.policyId.contactDetails.email}</p>
                 </div>
               </div>
             </div>
@@ -261,19 +241,19 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Coverage Type</h3>
-              <p className="text-base text-gray-900">{assignment.requestDetails.coverageType}</p>
+              <p className="text-base text-gray-900">{assignment.policyId.requestDetails.coverageType}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Policy Duration</h3>
-              <p className="text-base text-gray-900">{assignment.requestDetails.policyDuration}</p>
+              <p className="text-base text-gray-900">{assignment.policyId.requestDetails.policyDuration}</p>
             </div>
           </div>
           
-          {assignment.requestDetails.additionalCoverage && assignment.requestDetails.additionalCoverage.length > 0 && (
+          {assignment.policyId.requestDetails.additionalCoverage && assignment.policyId.requestDetails.additionalCoverage.length > 0 && (
             <div className="mt-4">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Additional Coverage</h3>
               <div className="flex flex-wrap gap-2">
-                {assignment.requestDetails.additionalCoverage.map((coverage, index) => (
+                {assignment.policyId.requestDetails.additionalCoverage.map((coverage, index) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -285,11 +265,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             </div>
           )}
           
-          {assignment.requestDetails.specialRequests && (
+          {assignment.policyId.requestDetails.specialRequests && (
             <div className="mt-4">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Special Requests</h3>
               <p className="text-base text-gray-700 bg-gray-50 p-3 rounded">
-                {assignment.requestDetails.specialRequests}
+                {assignment.policyId.requestDetails.specialRequests}
               </p>
             </div>
           )}
