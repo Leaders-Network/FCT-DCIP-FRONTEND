@@ -340,6 +340,16 @@ export const updateSurveyorProfile = async (profileData: any) => {
   }
 };
 
+export const getSurveyorAssignmentById = async (assignmentId: string) => {
+  try {
+    const response = await api.get(`/surveyor/assignments/${assignmentId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch assignment:", error);
+    throw error;
+  }
+};
+
 // Admin Dashboard APIs
 export const getAdminDashboardData = async (period = '30d') => {
   try {
