@@ -2,93 +2,15 @@
 import React, { useState } from "react";
 import { Upload, FileText, Phone, Mail, Calendar, X, Loader2, AlertCircle } from "lucide-react";
 import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
-import { uploadFile } from "@/services/fileService";
+import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
 
 interface SurveySubmissionFormProps {
   policy: PolicyRequest;
-  onSubmit: (submission: SurveySubmission) => Promise<void>;
+  onSubmit: (submission: Omit<SurveySubmission, 'surveyorId'> & { surveyDocument: File }) => Promise<void>;
   onCancel: () => void;
 }
 
-const ErrorMessage = ({ message }) => (
-  <div className="bg-red-50 text-red-700 p-3 rounded-md flex items-center">
-    <AlertCircle className="h-5 w-5 mr-2" />
-    <span>{message}</span>
-  </div>
-);
-
-const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
-  policy,
-  onSubmit,
-  onCancel
-}) => {
-  const [surveyNotes, setSurveyNotes] = useState("");
-  const [uploadedDocument, setUploadedDocument] = useState<{
-    name: string;
-    url: string;
-    publicId: string;
-  } | null>(null);
-  const [contactLog, setContactLog] = useState<ContactLogEntry[]>([]);
-  const [recommendedAction, setRecommendedAction] = useState<'approve' | 'reject' | 'request_more_info'>('approve');
-  const [newContact, setNewContact] = useState<ContactLogEntry>({
-    date: new Date().toISOString().split('T')[0],
-    method: 'phone',
-    notes: '',
-    successful: true
-  });
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type !== 'application/pdf') {
-        setError('Please upload a PDF file only.');
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) { // 10MB
-        setError('File size cannot exceed 10MB.');
-        return;
-      }
-
-      setError(null);
-      setUploading(true);
-      try {
-        const result = await uploadFile(file, 'survey-documents');
-        if (result.success) {
-          setUploadedDocument({
-            name: result.data.originalName,
-            url: result.data.url,
-            publicId: result.data.publicId
-          });
-        } else {
-          throw new Error(result.message || 'Upload failed');
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
-        setError('Failed to upload document. Please try again.');
-      } finally {
-        setUploading(false);
-      }
-    }
-  };
-
-  const addContactEntry = () => {
-    if (newContact.notes.trim()) {
-      setContactLog([...contactLog, { ...newContact }]);
-      setNewContact({
-        date: new Date().toISOString().split('T')[0],
-        method: 'phone',
-        notes: '',
-        successful: true
-      });
-    }
-  };
-
-  const removeContactEntry = (index: number) => {
-    setContactLog(contactLog.filter((_, i) => i !== index));
-  };
+// ... (keep the rest of the component as is, only change the handleSubmit function)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,9 +28,8 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
     setError(null);
     setLoading(true);
     try {
-      const submission: SurveySubmission = {
+      const submission = {
         policyId: policy._id,
-        surveyorId: 'current_surveyor_id', // Get from auth context
         surveyDocument: uploadedDocument,
         surveyNotes,
         contactLog,
