@@ -2,7 +2,7 @@
 import React from "react";
 import AssignmentManagement from "@/components/AssignmentManagement";
 import { Assignment } from "@/types/api.types";
-import { adminApi, withErrorHandling } from "@/services/adminApi";
+import { adminApi, withErrorHandling } from "@/services/api";
 
 const AssignmentsPage = () => {
   const handleCreateAssignment = withErrorHandling(

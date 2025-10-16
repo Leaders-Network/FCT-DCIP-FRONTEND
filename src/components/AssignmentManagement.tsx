@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useEffect} from 'react' 
+import { useSearchParams } from 'next/navigation';
 import { 
   MapPin, 
   Clock, 
@@ -18,19 +20,20 @@ import {
   RefreshCw,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react';
-import { 
-  getSurveyorAssignmentsNew, 
-  acceptAssignment, 
-  startAssignment, 
-  updateAssignmentProgress, 
+import {
+  getSurveyorAssignmentsNew,
+  acceptAssignment,
+  startAssignment,
+  updateAssignmentProgress,
   completeAssignment,
-  getAdminSurveyors,
-  createAssignment
 } from '@/services/api';
+import { adminApi } from '@/services/api';
 import { Assignment, Surveyor } from '@/types/api.types';
-import { DocumentManager } from '@/components/FileUpload';
+import { useAuth } from '../context/useAuth';
+import DocumentManager from './DocumentManager';
 
 interface AssignmentManagementProps {
   className?: string;
@@ -50,83 +53,114 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   viewMode = 'admin',
   surveyorId
 }) => {
+  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const policyId = searchParams.get('policyId');
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [policies, setPolicies] = useState<any[]>([]);
   // Available surveyors for assignment
   const [availableSurveyors, setAvailableSurveyors] = useState<Surveyor[]>([]);
-  useEffect(() => {
-    // Fetch available surveyors from the database when modal opens
-    const fetchSurveyors = async () => {
-      try {
-        const { getAdminSurveyors } = await import("@/services/api");
-        const response = await getAdminSurveyors({}); // Fetch all admin surveyors
-        if (response?.data) {
-          setAvailableSurveyors(response.data);
-        } else {
-          setAvailableSurveyors([]);
-        }
-      } catch (error) {
-        setAvailableSurveyors([]);
-      }
-    };
-    if (showCreateModal) fetchSurveyors();
-  }, [showCreateModal]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<any | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+
+  const [isReassign, setIsReassign] = useState(false);
+
+
+
   const [newAssignmentData, setNewAssignmentData] = useState({
     policyId: '',
-    surveyorId: '',
+    surveyorIds: [] as string[],
     assignedBy: '',
     status: 'assigned',
     priority: 'normal',
-    deadline: ''
+    deadline: '',
+    instructions: '',
   });
 
-  // Available policies for assignment
-  const [availablePolicies, setAvailablePolicies] = useState<any[]>([]);
 
-  useEffect(() => {
-    // Fetch available policies for assignment (status: submitted or approved)
-    const fetchPolicies = async () => {
-      try {
-        const { getPolicyRequests } = await import("@/services/api");
-        const response = await getPolicyRequests('submitted', 1, 100);
-        if (response?.data) {
-          setAvailablePolicies(response.data);
-        } else {
-          setAvailablePolicies([]);
-        }
-      } catch (error) {
-        setAvailablePolicies([]);
-      }
-    };
-    fetchPolicies();
-  }, [showCreateModal]);
   // Handle assignment creation
   const handleCreateAssignment = async () => {
+    if (!newAssignmentData.deadline) {
+      setError('Please select a deadline.');
+      return;
+    }
     try {
-      const response = await createAssignment(newAssignmentData);
+      for (const surveyorId of newAssignmentData.surveyorIds) {
+        const assignmentData = {
+          policyId: selectedPolicy._id,
+          surveyorId: surveyorId,
+          assignedBy: user?._id,
+          deadline: new Date(newAssignmentData.deadline),
+          priority: newAssignmentData.priority,
+          instructions: newAssignmentData.instructions || "N/A",
+        };
+        console.log("Creating assignment with data:", assignmentData);
+        await adminApi.createAssignment(assignmentData);
+      }
+
+      setShowCreateModal(false);
+      setShowAssignModal(false);
+      setSelectedPolicy(null);
+      setNewAssignmentData({
+        policyId: '',
+        surveyorIds: [], // Reset to an empty array
+        assignedBy: '',
+        status: 'assigned',
+        priority: 'normal',
+        deadline: '',
+        instructions: ''
+      });
+      fetchData();
+      fetchPolicies();
+    } catch (error: any) {
+      console.error("Failed to create assignment:", error);
+      setError(`Failed to create assignment: ${error.message}`);
+    }
+  };
+  const handleReassignSurveyor = async () => {
+    try {
+      const assignmentResponse = await adminApi.getAssignmentByPolicyId(selectedPolicy._id);
+      if (!assignmentResponse.success || !assignmentResponse.data) {
+        setError("Could not find assignment for the selected policy.");
+        return;
+      }
+      const assignment = assignmentResponse.data;
+      const response = await adminApi.reassignSurveyor(
+        assignment._id, 
+        newAssignmentData.surveyorIds[0],
+        newAssignmentData.instructions, // reason
+        newAssignmentData.deadline,
+        newAssignmentData.priority
+      ); 
       if (response.success) {
-        setShowCreateModal(false);
+        setShowAssignModal(false);
+        setSelectedPolicy(null);
         setNewAssignmentData({
           policyId: '',
-          surveyorId: '',
+          surveyorIds: [],
           assignedBy: '',
           status: 'assigned',
           priority: 'normal',
-          deadline: ''
+          deadline: '',
+          instructions: ''
         });
         fetchData();
+        fetchPolicies();
+        fetchAssignedPolicies();
       } else {
-        setError(response.message || 'Failed to create assignment');
+        setError(response.message || 'Failed to re-assign surveyor');
       }
     } catch (error) {
-      setError('Failed to create assignment. Please try again.');
+      console.error("Failed to re-assign surveyor:", error);
+      setError('Failed to re-assign surveyor. Please try again.');
     }
   };
-  
+
   // Filters and Search
   const [filters, setFilters] = useState<AssignmentFilters>({
     status: 'all',
@@ -135,30 +169,107 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     search: ''
   });
 
+  const [assignedPolicies, setAssignedPolicies] = useState<any[]>([]);
+
+  const fetchAssignedPolicies = async () => {
+    try {
+      const response = await adminApi.getPolicies({ status: 'assigned', page: 1, limit: 100 });
+      if (response?.data) {
+        setAssignedPolicies(response.data.policyRequests);
+      } else {
+        setAssignedPolicies([]);
+      }
+    } catch (error) {
+      setAssignedPolicies([]);
+    }
+  };
+
   useEffect(() => {
     fetchData();
-  }, [filters, surveyorId]);
+    fetchPolicies();
+    fetchAssignedPolicies();
+
+    const fetchSurveyors = async () => {
+      try {
+        const response = await adminApi.getSurveyors({ status: 'active' }); // Fetch only active surveyors
+        console.log("Response from getSurveyors:", response);
+              if (response?.data) {
+                setAvailableSurveyors(response.data);
+                console.log("Available Surveyors:", response.data);
+              } else {          setAvailableSurveyors([]);
+        }
+      } catch (error) {
+        setAvailableSurveyors([]);
+      }
+    };
+
+    if (policyId) {
+      const fetchPolicyAndSurveyors = async () => {
+        try {
+          await fetchSurveyors();
+          const response = await adminApi.getPolicyById(policyId);
+          if (response?.data) {
+            setSelectedPolicy(response.data);
+            setShowAssignModal(true);
+          }
+        } catch (error) {
+          console.error("Failed to fetch policy:", error);
+        }
+      };
+      fetchPolicyAndSurveyors();
+    } else {
+      fetchSurveyors();
+    }
+  }, [filters, surveyorId, policyId]);
+
+  const fetchPolicies = async () => {
+    try {
+      const response = await adminApi.getPolicies({ status: 'submitted', page: 1, limit: 100 }); // Use adminApi.getPolicies
+      if (response?.data) {
+        setPolicies(response.data.policyRequests);
+      } else {
+        setPolicies([]);
+      }
+    } catch (error) {
+      setPolicies([]);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const [assignmentsResponse, surveyorsResponse] = await Promise.allSettled([
-        getSurveyorAssignmentsNew({
+      let assignmentsResponse;
+      if (viewMode === 'admin') {
+        assignmentsResponse = await adminApi.getAssignments({
+          status: filters.status !== 'all' ? filters.status : undefined,
+          priority: filters.priority !== 'all' ? filters.priority : undefined,
+          surveyorId: filters.surveyorId !== 'all' ? filters.surveyorId : undefined,
+          search: filters.search || undefined,
+          page: 1,
+          limit: 50
+        });
+      } else {
+        assignmentsResponse = await getSurveyorAssignmentsNew({
           status: filters.status !== 'all' ? filters.status : undefined,
           page: 1,
           limit: 50
-        }),
-        viewMode === 'admin' ? getAdminSurveyors({ limit: 100 }) : Promise.resolve({ success: true, data: [] })
-      ]);
-
-      if (assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value.success) {
-        setAssignments(assignmentsResponse.value.data || []);
+        });
       }
 
-      if (surveyorsResponse.status === 'fulfilled' && surveyorsResponse.value.success) {
-        setSurveyors(surveyorsResponse.value.data || []);
+      console.log('assignmentsResponse', assignmentsResponse);
+      if (assignmentsResponse.success && assignmentsResponse.data && Array.isArray(assignmentsResponse.data.assignments)) {
+        setAssignments(assignmentsResponse.data.assignments);
+      } else {
+        setAssignments([]);
+      }
+
+      if (viewMode === 'admin') {
+        const surveyorsResponse = await adminApi.getSurveyors({ limit: 100 });
+        if (surveyorsResponse.success) {
+          setSurveyors(surveyorsResponse.data.surveyors || []);
+        }
       }
 
     } catch (error: any) {
@@ -279,36 +390,24 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            {viewMode === 'admin' ? 'Assignment Management' : 'My Assignments'}
-          </h2>
-          <p className="text-gray-600 mt-1">
-            Manage surveyor assignments and track progress
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={fetchData}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>Refresh</span>
-          </button>
-          
-          {viewMode === 'admin' && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Assignment</span>
-            </button>
-          )}
-        </div>
-      </div>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {viewMode === 'admin' ? 'Assignment Management' : 'My Assignments'}
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  Manage surveyor assignments and track progress
+                </p>
+              </div>
+      
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={fetchData}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Refresh</span>
+                </button>
+              </div>
 
       {/* Error Message */}
       {error && (
@@ -322,9 +421,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 
       {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
-          <div className="relative">
+          <div className="relative md:col-span-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
@@ -333,6 +432,14 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            {filters.search && (
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Status Filter */}
@@ -361,9 +468,10 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
             <option value="medium">Medium</option>
             <option value="low">Low</option>
           </select>
-
-          {/* Surveyor Filter (Admin only) */}
-          {viewMode === 'admin' && (
+        </div>
+        {viewMode === 'admin' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {/* Surveyor Filter (Admin only) */}
             <select
               value={filters.surveyorId}
               onChange={(e) => setFilters(prev => ({ ...prev, surveyorId: e.target.value }))}
@@ -376,20 +484,111 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                 </option>
               ))}
             </select>
-          )}
 
-          {/* Clear Filters */}
-          <button
-            onClick={() => setFilters({
-              status: 'all',
-              priority: 'all',
-              surveyorId: surveyorId || 'all',
-              search: ''
-            })}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            Clear Filters
-          </button>
+            {/* Clear Filters */}
+            <button
+              onClick={() => setFilters({
+                status: 'all',
+                priority: 'all',
+                surveyorId: surveyorId || 'all',
+                search: ''
+              })}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Submitted Policies */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-4">Submitted Policies</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {policies.map((policy) => (
+            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-yellow-100 text-yellow-800 border-yellow-200`}>
+                      {policy.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedPolicy(policy);
+                      setShowAssignModal(true);
+                    }}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    Assign Surveyor
+                  </button>
+                </div>
+                <div className="flex items-center text-gray-600 text-sm">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  <span className="truncate">{policy.propertyDetails.address}</span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="space-y-2 text-xs text-gray-600">
+                  <div className="flex items-center">
+                    <User className="w-3 h-3 mr-2" />
+                    <span>{policy.contactDetails.fullName}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="w-3 h-3 mr-2" />
+                    <span>Submitted: {formatDate(policy.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Assigned Policies */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-4">Assigned Policies</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {assignedPolicies.map((policy) => (
+            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-blue-100 text-blue-800 border-blue-200`}>
+                      {policy.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedPolicy(policy);
+                      setShowAssignModal(true);
+                      setIsReassign(true);
+                    }}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    Re-assign Surveyor
+                  </button>
+                </div>
+                <div className="flex items-center text-gray-600 text-sm">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  <span className="truncate">{policy.propertyDetails.address}</span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="space-y-2 text-xs text-gray-600">
+                  <div className="flex items-center">
+                    <User className="w-3 h-3 mr-2" />
+                    <span>{policy.contactDetails.fullName}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="w-3 h-3 mr-2" />
+                    <span>Submitted: {formatDate(policy.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -418,7 +617,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               >
                 <option value="">Select Surveyor</option>
                 {Array.isArray(availableSurveyors) && availableSurveyors.map(s => (
-                  <option key={s._id} value={s._id}>{s.firstname} {s.lastname}</option>
+                  <option key={s._id} value={s._id}>{s.firstname} {s.lastname} ({s.email}) - {s.profile?.specialization?.join(', ') || 'N/A'}</option>
                 ))}
               </select>
               <input
@@ -470,6 +669,118 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           </div>
         </div>
       )}
+
+      {/* Assign Surveyor Modal */}
+      {showAssignModal && selectedPolicy && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-lg p-6 overflow-y-auto max-h-[90vh]">
+            <div className="flex items-start justify-between">
+              <h3 className="text-lg font-semibold mb-4">{isReassign ? 'Re-assign Surveyor' : 'Assign Surveyor'}</h3>
+              <button onClick={() => {
+                setShowAssignModal(false);
+                setIsReassign(false);
+              }} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Policy Holder</label>
+                <p className="mt-1 text-sm text-gray-900">{selectedPolicy.contactDetails.fullName}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Property Address</label>
+                <p className="mt-1 text-sm text-gray-900">{selectedPolicy.propertyDetails.address}</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="surveyor" className="block text-sm font-medium text-gray-700">Select Surveyor(s)</label>
+                <div className="mt-2 h-60 overflow-y-auto border border-gray-300 rounded-md">
+                  {Array.isArray(availableSurveyors) && availableSurveyors.map(s => {
+                    return (
+                      <div key={s._id} className="flex items-center p-2">
+                        <input
+                          id={`surveyor-${s._id}`}
+                          name="surveyors"
+                          type="checkbox"
+                          value={s._id}
+                          checked={newAssignmentData.surveyorIds.includes(s._id)}
+                          onChange={e => {
+                            const surveyorId = e.target.value;
+                            const isChecked = e.target.checked;
+                            setNewAssignmentData(prev => {
+                              const surveyorIds = isChecked
+                                ? [...prev.surveyorIds, surveyorId]
+                                : prev.surveyorIds.filter(id => id !== surveyorId);
+                              console.log("Selected Surveyor IDs:", surveyorIds);
+                              return { ...prev, surveyorIds: surveyorIds };
+                            });
+                          }}
+                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                        <label htmlFor={`surveyor-${s._id}`} className="ml-3 text-sm text-gray-700">
+                          {(s.userId?.firstname || 'N/A')} {(s.userId?.lastname || 'N/A')} ({(s.userId?.email || 'N/A')}) - {s.profile?.specialization?.join(', ') || 'N/A'}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions</label>
+                <textarea
+                  id="instructions"
+                  value={newAssignmentData.instructions}
+                  onChange={e => setNewAssignmentData({ ...newAssignmentData, instructions: e.target.value })}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="priority" className="block text-sm font-medium text-gray-700">Priority</label>
+                  <select
+                    id="priority"
+                    value={newAssignmentData.priority}
+                    onChange={e => setNewAssignmentData({ ...newAssignmentData, priority: e.target.value })}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="deadline" className="block text-sm font-medium text-gray-700">Deadline</label>
+                  <input
+                    type="date"
+                    id="deadline"
+                    value={newAssignmentData.deadline}
+                    onChange={e => setNewAssignmentData({ ...newAssignmentData, deadline: e.target.value })}
+                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 mt-6">
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setSelectedPolicy(null);
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+              >Cancel</button>
+              <button
+                onClick={isReassign ? handleReassignSurveyor : handleCreateAssignment}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >{isReassign ? 'Re-assign' : 'Assign'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {(Array.isArray(assignments) ? assignments : []).map((assignment) => (
           <AssignmentCard
@@ -563,7 +874,7 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 
         <div className="flex items-center text-gray-600 text-sm">
           <MapPin className="w-4 h-4 mr-1" />
-          <span className="truncate">{assignment.location.address}</span>
+          <span className="truncate">{assignment.location?.address}</span>
         </div>
       </div>
 
@@ -673,12 +984,18 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
             </div>
           )}
 
-          <button
-            onClick={onView}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
-          >
-            View Details
-          </button>
+          {viewMode === 'surveyor' ? (
+            <Link href={`/surveyor/dashboard/assignments/${assignment._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
+                View Details
+            </Link>
+          ) : (
+            <button
+              onClick={onView}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+            >
+              View Details
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -756,49 +1073,45 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
+        <div className="p-6 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Assignment Details</h3>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className={`text-xs px-2 py-1 rounded-full font-medium border ${
-                  assignment.status === 'completed' ? 'bg-green-100 text-green-800 border-green-200' :
-                  assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                  'bg-yellow-100 text-yellow-800 border-yellow-200'
-                }`}>
-                  {assignment.status.replace('_', ' ').toUpperCase()}
-                </span>
-                <span className={`text-xs px-2 py-1 rounded-full font-medium text-white ${
-                  assignment.priority === 'urgent' ? 'bg-red-500' :
-                  assignment.priority === 'high' ? 'bg-orange-500' :
-                  assignment.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                }`}>
-                  {assignment.priority.toUpperCase()}
-                </span>
-              </div>
+              <h3 className="text-xl font-semibold text-gray-900">Assignment Details</h3>
+              <p className="text-sm text-gray-500 mt-1">Policy #{assignment.policyId}</p>
             </div>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-6 h-6" />
             </button>
+          </div>
+          <div className="flex items-center space-x-4 mt-4">
+            <div className="flex items-center space-x-2">
+              <span className={`text-xs px-2 py-1 rounded-full font-medium border ${getStatusColor(assignment.status)}`}>
+                {assignment.status.replace('_', ' ').toUpperCase()}
+              </span>
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(assignment.priority)}`}>
+                {assignment.priority.toUpperCase()}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Deadline:</span> {formatDate(assignment.deadline)}
+            </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
         <div className="border-b border-gray-200">
-          <div className="flex space-x-8 px-6">
+          <div className="flex space-x-1 px-6">
             {(['details', 'progress', 'documents', 'communication'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 px-4 rounded-t-lg font-medium text-sm transition-colors ${
                   activeTab === tab
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-white text-blue-600'
+                    : 'bg-gray-50 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -818,7 +1131,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+        <div className="p-6 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
           {activeTab === 'details' && (
             <AssignmentDetailsTab assignment={assignment} />
           )}
@@ -1133,7 +1446,14 @@ const AssignmentProgressTab: React.FC<ProgressTabProps> = ({
 const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admin' | 'surveyor' }> = ({
   assignment,
   viewMode
-}) => (
+}) => {
+
+  const handleDocumentsChange = (documents: any) => {
+    console.log('Documents updated:', documents);
+    // Handle document updates
+  }
+
+  return (
   <div className="space-y-4">
     <h4 className="font-medium text-gray-900">Assignment Documents</h4>
     
@@ -1175,17 +1495,14 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
       <div className="border-t pt-4">
         <h5 className="text-sm font-medium text-gray-700 mb-3">Upload Documents</h5>
         <DocumentManager
-          onDocumentsChange={(documents) => {
-            console.log('Documents updated:', documents);
-            // Handle document updates
-          }}
+          onDocumentsChange={handleDocumentsChange}
           title="Survey Documents"
           showCategories={true}
         />
       </div>
     )}
   </div>
-);
+)};
 
 const AssignmentCommunicationTab: React.FC<{ 
   assignment: Assignment; 

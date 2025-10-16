@@ -470,7 +470,7 @@ const AdminDashboard: React.FC = () => {
                               New policy request from <span className="font-medium">{policy.contactDetails.fullName}</span>
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
-                              {policy.propertyDetails.propertyType} • {formatTimeAgo(policy.createdAt)}
+                              {policy.propertyDetails?.propertyType} • {formatTimeAgo(policy.createdAt)}
                             </p>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -500,7 +500,7 @@ const AdminDashboard: React.FC = () => {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-gray-900">
                               Assignment {assignment.status === 'completed' ? 'completed' : 'updated'} - 
-                              <span className="font-medium"> {assignment.location.address}</span>
+                              <span className="font-medium"> {assignment.location?.address}</span>
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                               Priority: {assignment.priority} • {formatTimeAgo(assignment.updatedAt)}

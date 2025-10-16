@@ -23,11 +23,11 @@ const SurveyorLogin: React.FC = () => {
       const { loginEmployee } = await import("@/services/api");
       const response = await loginEmployee(email, password);
       
-      if (response.data?.token && response.data?.user) {
-        const { token, user } = response.data;
+      if (response.data?.token && response.data?.employee) {
+        const { token, employee } = response.data;
         
         // Check if user is a surveyor
-        if (user.role !== 'surveyor') {
+        if (employee.employeeRole.role !== 'Surveyor') {
           setError("Access denied. This portal is for surveyors only.");
           return;
         }
@@ -36,9 +36,10 @@ const SurveyorLogin: React.FC = () => {
         localStorage.setItem("surveyorToken", token);
         localStorage.setItem("authToken", token);
         localStorage.setItem("token", token);
-        localStorage.setItem("surveyorName", user.fullname || user.name || "Surveyor");
-        localStorage.setItem("surveyorRole", user.role);
-        localStorage.setItem("surveyorId", user._id);
+        const fullName = `${employee.firstname} ${employee.lastname}`;
+        localStorage.setItem("surveyorName", fullName);
+        localStorage.setItem("userRole", employee.employeeRole.role);
+        localStorage.setItem("surveyorId", employee._id);
         
         router.push("/surveyor/dashboard");
       } else {

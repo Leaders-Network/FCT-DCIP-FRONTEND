@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useCallback } from "react";
 import { z } from "zod";
+import { useAuth } from "@/context/useAuth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -193,7 +194,7 @@ function LoginForm() {
 function LoginButton({ email, password, validateForm }: { email: string; password: string; validateForm: () => boolean }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,37 +205,18 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
     }
 
     setIsLoading(true);
-    const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "hubvhejdbnvhebvhebdhjijvskdbvkhjba";
 
     try {
-      const response = await fetch(
-        "https://fct-dcip-backend.vercel.app/api/v1/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "apiKey": ApiKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      // First, try to log in as a regular user
+      await login(email, password, 'user');
+    } catch (userError) {
+      try {
+        // If user login fails, try to log in as an employee
+        await login(email, password, 'employee');
+      } catch (employeeError) {
+        console.error("Login error:", employeeError);
+        setError(employeeError instanceof Error ? employeeError.message : "An unexpected error occurred");
       }
-
-      const result = await response.json();
-      
-      // Store token and user data in localStorage
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("fullname", result.user.fullname);
-      localStorage.setItem("user", JSON.stringify(result.user));
-      
-      router.push("/dashboard");
-    } catch (error) {
-      console.error("Login error:", error);
-      setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }

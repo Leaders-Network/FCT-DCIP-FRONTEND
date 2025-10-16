@@ -103,20 +103,20 @@ const Hero: React.FC = () => {
                   Choose Login
                 </h2>
                 <p className="text-sm text-gray-100 mb-6 text-center">
-                  Pick an account type to continue.
+                  Pick an action to continue.
                 </p>
                 <div className="space-y-3">
                   <Link
                     href="/login"
                     className="block w-full text-center bg-blue-600 text-white py-3 rounded-lg shadow hover:bg-blue-700 transition"
                   >
-                    Builders Login
+                    Builder Login
                   </Link>
-                  <Link
-                    href="/surveyor/login"
-                    className="block w-full text-center bg-green-600 text-white py-3 rounded-lg shadow hover:bg-green-700 transition"
+                    <Link
+                    href="/signup"
+                    className="block w-full text-center bg-blue-600 text-white py-3 rounded-lg shadow hover:bg-blue-700 transition"
                   >
-                    Surveyors' Login
+                    Builder Registration
                   </Link>
                 </div>
               </>

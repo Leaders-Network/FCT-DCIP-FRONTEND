@@ -52,6 +52,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSurveyor, setSelectedSurveyor] = useState<Surveyor | null>(null);
+  const [performanceData, setPerformanceData] = useState(null);
   const [formData, setFormData] = useState({
   firstname: "",
   lastname: "",
@@ -75,7 +76,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const fetchSurveyors = async () => {
     setLoading(true);
     try {
-      const { adminApi } = await import("@/services/adminApi");
+      const { adminApi } = await import("@/services/api");
       
       // Fetch surveyors from the API
       const response = await adminApi.getSurveyors({
@@ -410,12 +411,16 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               </div>
 
               <div className="flex space-x-2">
-                <button
-                  onClick={() => {
-                    setSelectedSurveyor(surveyor);
-                    setShowDetailsModal(true);
-                  }}
-                  className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 flex items-center justify-center"
+                                                    <button
+                                                      onClick={() => {
+                                                        setSelectedSurveyor(surveyor);
+                                                        const performance = {
+                                                          totalSurveys: assignments.filter(a => a.surveyorId === surveyor._id).length,
+                                                          completedSurveys: assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'completed').length,
+                                                        };
+                                                        setPerformanceData(performance);
+                                                        setShowDetailsModal(true);
+                                                      }}                  className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 flex items-center justify-center"
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   View
@@ -683,11 +688,11 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <h4 className="font-medium text-gray-900 mb-2">Performance Metrics</h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-600">{selectedSurveyor?.totalSurveys || 0}</p>
+                    <p className="text-2xl font-bold text-blue-600">{performanceData?.totalSurveys || 0}</p>
                     <p className="text-sm text-blue-800">Total Surveys</p>
                   </div>
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-2xl font-bold text-green-600">{selectedSurveyor?.completedSurveys || 0}</p>
+                    <p className="text-2xl font-bold text-green-600">{performanceData?.completedSurveys || 0}</p>
                     <p className="text-sm text-green-800">Completed</p>
                   </div>
                   <div className="bg-yellow-50 p-4 rounded-lg">

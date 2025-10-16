@@ -43,7 +43,7 @@ export default function Verify() {
 
     try {
       // Verify OTP
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
       const verifyResponse = await fetch(
         `${apiBaseUrl}/auth/verify-otp`,
         {
@@ -239,7 +239,7 @@ function VerifyForm({
           value={otp}
           onChange={(e) => setOtp(e.target.value)}
           placeholder=" "
-          maxLength={6}
+          maxLength={5}
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         <label

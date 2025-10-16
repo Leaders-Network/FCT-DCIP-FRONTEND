@@ -1,36 +1,20 @@
 "use client";
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { loginEmployee } from "@/services/api";
+import { loginEmployee, loginUser } from "@/services/api";
 import {
   getAuthToken,
   setAuthToken,
   removeAuthToken,
 } from "@/utils/auth";
 import SkeletonLoader from "@/components/SkeletonLoader";
+import { User, Employee } from "@/types/api.types";
 
-interface User {
-  _id: string;
-  email: string;
-  firstname: string;
-  lastname: string;
-  phonenumber: string;
-  employeeRole: {
-    _id: string;
-    role: string;
-  };
-  employeeStatus: {
-    _id: string;
-    status: string;
-  };
-  deleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+type AuthenticatedUser = User | Employee;
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  user: AuthenticatedUser | null;
+  login: (email: string, password: string, userType: 'user' | 'employee') => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -48,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [state, setState] = useState<AuthState>({
     isAuthenticated: false,
     isLoading: true,
@@ -69,123 +53,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     router.push("/");
   }, [router]);
 
-  // Check authentication status on mount and token change
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     try {
-  //       const token = getAuthToken();
-  //       const storedUser = localStorage.getItem('user');
-
-  //       if (token && storedUser) {
-  //         const userData = JSON.parse(storedUser);
-  //         setUser(userData);
-  //         setState({
-  //           isAuthenticated: true,
-  //           isLoading: false,
-  //           token,
-  //           name: userData.firstname,
-  //         });
-          
-  //         // Optionally verify token with backend
-  //         // try {
-  //         //   await getUserRole(token); // Verify token is still valid
-  //         // } catch (error) {
-  //         //   console.error("Token validation failed:", error);
-  //         //   logout();
-  //         //   return;
-  //         // }
-  //       } else {
-  //         // Only redirect to login if we're not already there
-  //         const isLoginPage = window.location.pathname.includes('/login');
-  //         if (!isLoginPage) {
-  //           router.push("/");
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Auth initialization error:", error);
-  //     } finally {
-  //       setState(prevState => ({ ...prevState, isLoading: false }));
-  //     }
-  //   };
-
-  //   checkAuth();
-  // }, [logout, router]);
-
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await loginEmployee(email, password);
-      console.log("Login Response:", response.data);
-      
-      // Destructure the correct response structure
-      const { token, employee } = response.data;
-      
-      // Store token
-      setAuthToken(token);
-      
-      // Store user data - using the employee object directly
-      const userData = {
-        _id: employee._id,
-        email: employee.email,
-        firstname: employee.firstname,
-        lastname: employee.lastname,
-        phonenumber: employee.phonenumber,
-        employeeRole: employee.employeeRole,
-        employeeStatus: employee.employeeStatus,
-        deleted: employee.deleted,
-        createdAt: employee.createdAt,
-        updatedAt: employee.updatedAt
-      };
-
-      // Save to localStorage and state
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-      setState({
-        isAuthenticated: true,
-        isLoading: false,
-        token,
-        name: userData.firstname,
-      });
-
-      console.log("Stored User Data:", userData);
-      
-      // Optionally redirect to dashboard
-      router.push("/admin/dashboard");
-      
-    } catch (error) {
-      console.error("Login failed", error);
-      throw error;
-    }
-  };
-
-  // Add this effect to load user data on mount
   useEffect(() => {
-    const loadUserData = () => {
-      const token = getAuthToken();
-      const storedUser = localStorage.getItem('user');
+    const checkAuth = async () => {
+      try {
+        const token = getAuthToken();
+        const storedUser = localStorage.getItem('user');
 
-      console.log("Loading stored data - Token:", token);
-      console.log("Loading stored data - User:", storedUser);
-
-      if (token && storedUser) {
-        try {
+        if (token && storedUser) {
           const userData = JSON.parse(storedUser);
           setUser(userData);
           setState({
             isAuthenticated: true,
             isLoading: false,
             token,
-            name: userData.firstname,
+            name: userData.firstname || userData.fullname,
           });
-        } catch (error) {
-          console.error("Failed to parse stored user data:", error);
-          logout();
         }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        setState(prevState => ({ ...prevState, isLoading: false }));
       }
-      setState(prevState => ({ ...prevState, isLoading: false }));
     };
 
-    loadUserData();
-  }, [logout]);
+    checkAuth();
+  }, [logout, router]);
+
+  const login = async (email: string, password: string, userType: 'user' | 'employee') => {
+    try {
+      if (userType === 'employee') {
+        const response = await loginEmployee(email, password);
+        const { token, employee } = response.data;
+        setAuthToken(token);
+        localStorage.setItem('user', JSON.stringify(employee));
+        setUser(employee);
+        setState({
+          isAuthenticated: true,
+          isLoading: false,
+          token,
+          name: employee.firstname,
+        });
+        router.push("/admin/dashboard");
+      } else {
+        const response = await loginUser(email, password);
+        const { token, user } = response.data;
+        setAuthToken(token);
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
+        setState({
+          isAuthenticated: true,
+          isLoading: false,
+          token,
+          name: user.fullname,
+        });
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Login failed", error);
+      throw error;
+    }
+  };
 
   const contextValue: AuthContextType = {
     user,

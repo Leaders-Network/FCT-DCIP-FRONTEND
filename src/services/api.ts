@@ -1,30 +1,24 @@
-
 import axios from "axios";
 import {
   EmployeeRegistrationData,
-  LoginResponse,
+  EmployeeLoginResponse,
+  UserLoginResponse,
   AvailableRolesResponse,
-  GetAllEmployeesResponse
+  GetAllEmployeesResponse,
+  PolicyRequest,
+  Surveyor,
+  Assignment,
 } from "../types/api.types";
+
 
 // Constants
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
-const API_KEY = "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
-// Helper function for consistent token retrieval
-const getAuthToken = () => {
-  return localStorage.getItem("token") || localStorage.getItem("authToken");
-};
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
-// Helper function for authenticated requests
-const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return {
-    "Content-Type": "application/json",
-    apiKey: API_KEY,
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+import { getAuthToken } from "@/utils/auth";
+
+
 
 // API Instance Configuration
 const api = axios.create({
@@ -34,6 +28,20 @@ const api = axios.create({
     apiKey: API_KEY,
   },
 });
+
+api.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    console.log("Request Headers:", config.headers);
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Property Types
 export interface Category {
@@ -49,9 +57,19 @@ export interface AddPropertyPayload {
 }
 
 // Authentication APIs
+export const loginUser = async (email: string, password: string) => {
+  try {
+    const response = await api.post<UserLoginResponse>("/auth/login", { email, password });
+    return response;
+  } catch (error) {
+    console.error("User Login API Error:", error);
+    throw error;
+  }
+};
+
 export const loginEmployee = async (email: string, password: string) => {
   try {
-    const response = await api.post<LoginResponse>("/auth/loginEmployee", { email, password });
+    const response = await api.post<EmployeeLoginResponse>("/auth/loginEmployee", { email, password });
     return response;
   } catch (error) {
     console.error("Login API Error:", error);
@@ -59,17 +77,13 @@ export const loginEmployee = async (email: string, password: string) => {
   }
 };
 
-export const getUserRole = (token: string) =>
-  api.get("/auth/user-role", {
-    headers: { Authorization: `Bearer ${token}` },
-  }); 
+export const getUserRole = () =>
+  api.get("/auth/user-role"); 
 
 // Property Management APIs
-export const getCategories = async ({token}: {token: string}): Promise<Category[]> => {
+export const getCategories = async (): Promise<Category[]> => {
   try {
-    const response = await api.get("/auth/available-categories", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await api.get("/auth/available-categories");
     console.log(response)
     return response.data.categories;
   } catch (error) {
@@ -79,36 +93,13 @@ export const getCategories = async ({token}: {token: string}): Promise<Category[
 };
 
 export const addProperty = async (
-  payload: AddPropertyPayload, 
-  token: string
+  payload: AddPropertyPayload
 ): Promise<Record<string, unknown>> => {
   try {
-    const response = await api.post("/auth/user/add-property", payload, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await api.post("/auth/user/add-property", payload);
     return response.data;
   } catch (error) {
     console.error("Failed to add property:", error);
-    throw error;
-  }
-};
-
-// Assignment creation API
-export const createAssignment = async (assignmentData: {
-  policyId: string;
-  surveyorId: string;
-  assignedBy?: string;
-  status?: string;
-  priority?: string;
-  deadline?: string;
-}) => {
-  try {
-    const response = await api.post('/assignment', assignmentData, {
-      headers: getAuthHeaders(),
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Failed to create assignment:', error);
     throw error;
   }
 };
@@ -135,12 +126,7 @@ export const resendOTP = (email: string) =>
 // Employee Management APIs
 export const registerEmployee = async (employeeData: EmployeeRegistrationData) => {
   try {
-    const token = localStorage.getItem("authToken");
-    const response = await api.post("/auth/registerEmployee", employeeData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.post("/auth/registerEmployee", employeeData);
     return response.data;
   } catch (error) {
     console.error("Failed to register employee", error);
@@ -150,12 +136,7 @@ export const registerEmployee = async (employeeData: EmployeeRegistrationData) =
 
 export const getAllEmployees = async () => {
   try {
-    const token = localStorage.getItem("authToken");
-    const response = await api.get<GetAllEmployeesResponse>("/auth/get-all-employees", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get<GetAllEmployeesResponse>("/auth/get-all-employees");
     return response.data.allStaff.sanitizedEmployees;
   } catch (error) {
     console.error("Failed to fetch users", error);
@@ -165,12 +146,7 @@ export const getAllEmployees = async () => {
 
 export const getAvailableRoles = async () => {
   try {
-    const token = localStorage.getItem("authToken");
-    const response = await api.get<AvailableRolesResponse>("/auth/available-roles", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get<AvailableRolesResponse>("/auth/available-roles");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch available roles", error);
@@ -181,12 +157,7 @@ export const getAvailableRoles = async () => {
 // Policy Request APIs
 export const submitPolicyRequest = async (policyData: import("../types/api.types").CreatePolicyRequestData) => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-    const response = await api.post("/policy", policyData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.post("/policy", policyData);
     return response.data;
   } catch (error) {
     console.error("Failed to submit policy request", error);
@@ -196,18 +167,13 @@ export const submitPolicyRequest = async (policyData: import("../types/api.types
 
 export const getPolicyRequests = async (status?: string, page = 1, limit = 10) => {
   try {
-    const token = localStorage.getItem("authToken");
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
     const url = `/policy?${params.toString()}`;
-    const response = await api.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch policy requests", error);
@@ -217,18 +183,13 @@ export const getPolicyRequests = async (status?: string, page = 1, limit = 10) =
 
 export const getUserPolicyRequests = async (status?: string, page = 1, limit = 10) => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
     const url = `/policy/user?${params.toString()}`;
-    const response = await api.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch user policy requests", error);
@@ -238,12 +199,7 @@ export const getUserPolicyRequests = async (status?: string, page = 1, limit = 1
 
 export const getUserProperties = async () => {
   try {
-    const token = getAuthToken();
-    const response = await api.get("/auth/user/get-all-properties", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get("/auth/user/get-all-properties");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch user properties", error);
@@ -251,40 +207,14 @@ export const getUserProperties = async () => {
   }
 };
 
-export const assignSurveyor = async (policyId: string, assignment: {
-  surveyorIds: string[];
-  deadline?: string;
-  priority?: string;
-  instructions?: string;
-  specialRequirements?: string[];
-}) => {
-  try {
-    const token = localStorage.getItem("authToken");
-    const response = await api.post(`/policy/${policyId}/assign`, assignment, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Failed to assign surveyor", error);
-    throw error;
-  }
-};
-
 export const getAvailableSurveyors = async (specialization?: string, location?: string) => {
   try {
-    const token = localStorage.getItem("authToken");
     const params = new URLSearchParams();
     if (specialization) params.append('specialization', specialization);
     if (location) params.append('location', location);
     
   const url = `/policy/surveyors/available?${params.toString()}`;
-    const response = await api.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to get available surveyors", error);
@@ -294,15 +224,10 @@ export const getAvailableSurveyors = async (specialization?: string, location?: 
 
 export const reviewSubmission = async (submissionId: string, decision: 'approved' | 'rejected', reviewNotes: string, qualityCheck?: any) => {
   try {
-    const token = localStorage.getItem("authToken");
     const response = await api.post(`/policy/submissions/${submissionId}/review`, { 
       decision, 
       reviewNotes, 
       qualityCheck 
-    }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
     return response.data;
   } catch (error) {
@@ -314,7 +239,7 @@ export const reviewSubmission = async (submissionId: string, decision: 'approved
 // Surveyor APIs
 export const loginSurveyor = async (email: string, password: string) => {
   try {
-    const response = await api.post("/auth/loginEmployee", { email, password });
+    const response = await api.post("/auth/loginSurveyor", { email, password });
     return response.data;
   } catch (error) {
     console.error("Surveyor login failed", error);
@@ -324,12 +249,7 @@ export const loginSurveyor = async (email: string, password: string) => {
 
 export const getSurveyorDashboard = async () => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-    const response = await api.get("/surveyor/dashboard", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get("/surveyor/dashboard");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyor dashboard", error);
@@ -339,18 +259,13 @@ export const getSurveyorDashboard = async () => {
 
 export const getSurveyorAssignments = async (status?: string, page = 1, limit = 10) => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
     const url = `/surveyor/assignments?${params.toString()}`;
-    const response = await api.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyor assignments", error);
@@ -360,14 +275,9 @@ export const getSurveyorAssignments = async (status?: string, page = 1, limit = 
 
 export const updateAssignmentStatus = async (assignmentId: string, status: string, notes?: string) => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
     const response = await api.patch(`/surveyor/assignments/${assignmentId}/status`, {
       status,
       notes
-    }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
     return response.data;
   } catch (error) {
@@ -386,12 +296,7 @@ export const submitSurvey = async (submission: {
   recommendedAction: string;
 }) => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-    const response = await api.post("/surveyor/surveys", submission, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.post("/surveyor/surveys", submission);
     return response.data;
   } catch (error) {
     console.error("Failed to submit survey", error);
@@ -401,18 +306,13 @@ export const submitSurvey = async (submission: {
 
 export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 10) => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
     const url = `/surveyor/submissions?${params.toString()}`;
-    const response = await api.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyor submissions", error);
@@ -422,12 +322,7 @@ export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 
 
 export const getSurveyorProfile = async () => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-    const response = await api.get("/surveyor/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get("/surveyor/profile");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyor profile", error);
@@ -437,12 +332,7 @@ export const getSurveyorProfile = async () => {
 
 export const updateSurveyorProfile = async (profileData: any) => {
   try {
-    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-    const response = await api.patch("/surveyor/profile", profileData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.patch("/surveyor/profile", profileData);
     return response.data;
   } catch (error) {
     console.error("Failed to update surveyor profile", error);
@@ -450,12 +340,20 @@ export const updateSurveyorProfile = async (profileData: any) => {
   }
 };
 
+export const getSurveyorAssignmentById = async (assignmentId: string) => {
+  try {
+    const response = await api.get(`/surveyor/assignments/${assignmentId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch assignment:", error);
+    throw error;
+  }
+};
+
 // Admin Dashboard APIs
 export const getAdminDashboardData = async (period = '30d') => {
   try {
-    const response = await api.get(`/admin/dashboard?period=${period}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/admin/dashboard?period=${period}`);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch admin dashboard data:", error);
@@ -465,9 +363,7 @@ export const getAdminDashboardData = async (period = '30d') => {
 
 export const getQuickStats = async () => {
   try {
-    const response = await api.get("/admin/dashboard/stats", {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get("/admin/dashboard/stats");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch quick stats:", error);
@@ -477,9 +373,7 @@ export const getQuickStats = async () => {
 
 export const getAdminAlerts = async () => {
   try {
-    const response = await api.get("/admin/dashboard/alerts", {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get("/admin/dashboard/alerts");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch admin alerts:", error);
@@ -506,9 +400,7 @@ export const getAdminSurveyors = async (filters?: {
     }
     
     const url = `/admin/surveyor${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await api.get(url, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyors:", error);
@@ -528,9 +420,7 @@ export const createSurveyorByAdmin = async (surveyorData: {
   notes?: string;
 }) => {
   try {
-    const response = await api.post("/admin/surveyor", surveyorData, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.post("/admin/surveyor", surveyorData);
     return response.data;
   } catch (error) {
     console.error("Failed to create surveyor:", error);
@@ -540,9 +430,7 @@ export const createSurveyorByAdmin = async (surveyorData: {
 
 export const updateSurveyorByAdmin = async (surveyorId: string, surveyorData: any) => {
   try {
-    const response = await api.patch(`/admin/surveyor/${surveyorId}`, surveyorData, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/admin/surveyor/${surveyorId}`, surveyorData);
     return response.data;
   } catch (error) {
     console.error("Failed to update surveyor:", error);
@@ -552,9 +440,7 @@ export const updateSurveyorByAdmin = async (surveyorId: string, surveyorData: an
 
 export const deleteSurveyorByAdmin = async (surveyorId: string) => {
   try {
-    const response = await api.delete(`/admin/surveyor/${surveyorId}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.delete(`/admin/surveyor/${surveyorId}`);
     return response.data;
   } catch (error) {
     console.error("Failed to delete surveyor:", error);
@@ -584,9 +470,7 @@ export const getAdminAssignments = async (filters?: {
     }
     
     const url = `/admin/assignment${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await api.get(url, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch admin assignments:", error);
@@ -596,9 +480,7 @@ export const getAdminAssignments = async (filters?: {
 
 export const getAssignmentAnalytics = async (period = '30d') => {
   try {
-    const response = await api.get(`/admin/assignment/analytics?period=${period}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/admin/assignment/analytics?period=${period}`);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch assignment analytics:", error);
@@ -608,9 +490,7 @@ export const getAssignmentAnalytics = async (period = '30d') => {
 
 export const updateAssignmentByAdmin = async (assignmentId: string, updates: any) => {
   try {
-    const response = await api.patch(`/admin/assignment/${assignmentId}`, updates, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/admin/assignment/${assignmentId}`, updates);
     return response.data;
   } catch (error) {
     console.error("Failed to update assignment:", error);
@@ -625,9 +505,7 @@ export const reassignAssignment = async (assignmentId: string, data: {
   priority?: string;
 }) => {
   try {
-    const response = await api.patch(`/admin/assignment/${assignmentId}/reassign`, data, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/admin/assignment/${assignmentId}/reassign`, data);
     return response.data;
   } catch (error) {
     console.error("Failed to reassign assignment:", error);
@@ -637,9 +515,7 @@ export const reassignAssignment = async (assignmentId: string, data: {
 
 export const cancelAssignment = async (assignmentId: string, reason: string) => {
   try {
-    const response = await api.patch(`/admin/assignment/${assignmentId}/cancel`, { reason }, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/admin/assignment/${assignmentId}/cancel`, { reason });
     return response.data;
   } catch (error) {
     console.error("Failed to cancel assignment:", error);
@@ -665,10 +541,8 @@ export const getSurveyorAssignmentsNew = async (filters?: {
       });
     }
     
-    const url = `/assignment${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await api.get(url, {
-      headers: getAuthHeaders(),
-    });
+    const url = `/surveyor/assignments?${params.toString()}`;
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyor assignments:", error);
@@ -678,9 +552,7 @@ export const getSurveyorAssignmentsNew = async (filters?: {
 
 export const acceptAssignment = async (assignmentId: string, notes?: string) => {
   try {
-    const response = await api.patch(`/assignment/${assignmentId}/accept`, { notes }, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/assignment/${assignmentId}/accept`, { notes });
     return response.data;
   } catch (error) {
     console.error("Failed to accept assignment:", error);
@@ -693,9 +565,7 @@ export const startAssignment = async (assignmentId: string, data?: {
   notes?: string;
 }) => {
   try {
-    const response = await api.patch(`/assignment/${assignmentId}/start`, data, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/assignment/${assignmentId}/start`, data);
     return response.data;
   } catch (error) {
     console.error("Failed to start assignment:", error);
@@ -710,9 +580,7 @@ export const updateAssignmentProgress = async (assignmentId: string, data: {
   photos?: string[];
 }) => {
   try {
-    const response = await api.patch(`/assignment/${assignmentId}/progress`, data, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/assignment/${assignmentId}/progress`, data);
     return response.data;
   } catch (error) {
     console.error("Failed to update assignment progress:", error);
@@ -725,9 +593,7 @@ export const completeAssignment = async (assignmentId: string, data?: {
   finalLocation?: { latitude: number; longitude: number };
 }) => {
   try {
-    const response = await api.patch(`/assignment/${assignmentId}/complete`, data, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/assignment/${assignmentId}/complete`, data);
     return response.data;
   } catch (error) {
     console.error("Failed to complete assignment:", error);
@@ -740,9 +606,7 @@ export const addAssignmentMessage = async (assignmentId: string, data: {
   type?: 'message' | 'status_update' | 'question' | 'clarification';
 }) => {
   try {
-    const response = await api.post(`/assignment/${assignmentId}/messages`, data, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.post(`/assignment/${assignmentId}/messages`, data);
     return response.data;
   } catch (error) {
     console.error("Failed to add assignment message:", error);
@@ -752,9 +616,7 @@ export const addAssignmentMessage = async (assignmentId: string, data: {
 
 export const getAssignmentMessages = async (assignmentId: string) => {
   try {
-    const response = await api.get(`/assignment/${assignmentId}/messages`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/assignment/${assignmentId}/messages`);
     return response.data;
   } catch (error) {
     console.error("Failed to get assignment messages:", error);
@@ -777,9 +639,7 @@ export const createSurveySubmission = async (submissionData: {
   recommendedAction: 'approve' | 'reject' | 'request_more_info';
 }) => {
   try {
-    const response = await api.post("/submission", submissionData, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.post("/submission", submissionData);
     return response.data;
   } catch (error) {
     console.error("Failed to create survey submission:", error);
@@ -803,10 +663,8 @@ export const getSurveySubmissions = async (filters?: {
       });
     }
     
-    const url = `/submission${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await api.get(url, {
-      headers: getAuthHeaders(),
-    });
+    const url = `/submission?${params.toString()}`;
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch survey submissions:", error);
@@ -816,9 +674,7 @@ export const getSurveySubmissions = async (filters?: {
 
 export const updateSurveySubmission = async (submissionId: string, updates: any) => {
   try {
-    const response = await api.patch(`/submission/${submissionId}`, updates, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/submission/${submissionId}`, updates);
     return response.data;
   } catch (error) {
     console.error("Failed to update survey submission:", error);
@@ -828,9 +684,7 @@ export const updateSurveySubmission = async (submissionId: string, updates: any)
 
 export const submitSurveyFinal = async (submissionId: string, finalNotes?: string) => {
   try {
-    const response = await api.patch(`/submission/${submissionId}/submit`, { finalNotes }, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.patch(`/submission/${submissionId}/submit`, { finalNotes });
     return response.data;
   } catch (error) {
     console.error("Failed to submit survey:", error);
@@ -846,9 +700,7 @@ export const addContactLogEntry = async (submissionId: string, contactData: {
   duration?: number;
 }) => {
   try {
-    const response = await api.post(`/submission/${submissionId}/contact`, contactData, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.post(`/submission/${submissionId}/contact`, contactData);
     return response.data;
   } catch (error) {
     console.error("Failed to add contact log entry:", error);
@@ -858,9 +710,7 @@ export const addContactLogEntry = async (submissionId: string, contactData: {
 
 export const getSubmissionByAssignment = async (assignmentId: string) => {
   try {
-    const response = await api.get(`/submission/assignment/${assignmentId}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/submission/assignment/${assignmentId}`);
     return response.data;
   } catch (error) {
     console.error("Failed to get submission by assignment:", error);
@@ -886,7 +736,6 @@ export const uploadSurveyDocument = async (file: File, data: {
     const response = await api.post("/survey-documents/upload/single", formData, {
       headers: {
         apiKey: API_KEY,
-        Authorization: `Bearer ${getAuthToken()}`,
         // Don't set Content-Type for FormData
       },
     });
@@ -916,7 +765,6 @@ export const uploadMultipleSurveyDocuments = async (files: File[], data: {
     const response = await api.post("/survey-documents/upload/multiple", formData, {
       headers: {
         apiKey: API_KEY,
-        Authorization: `Bearer ${getAuthToken()}`,
       },
     });
     return response.data;
@@ -939,9 +787,7 @@ export const getSurveyDocuments = async (filters: {
     });
     
     const url = `/survey-documents?${params.toString()}`;
-    const response = await api.get(url, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error("Failed to get survey documents:", error);
@@ -955,9 +801,7 @@ export const deleteSurveyDocument = async (documentId: string, assignmentId?: st
       ? `/survey-documents/assignment/${assignmentId}/document/${documentId}`
       : `/survey-documents/policy/${policyId}/document/${documentId}`;
     
-    const response = await api.delete(endpoint, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.delete(endpoint);
     return response.data;
   } catch (error) {
     console.error("Failed to delete survey document:", error);
@@ -967,14 +811,310 @@ export const deleteSurveyDocument = async (documentId: string, assignmentId?: st
 
 export const getDocumentDownloadUrl = async (publicId: string) => {
   try {
-    const response = await api.get(`/survey-documents/download/${publicId}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/survey-documents/download/${publicId}`);
     return response.data;
   } catch (error) {
     console.error("Failed to get document download URL:", error);
     throw error;
   }
+};
+
+export const getAdminProperties = async () => {
+  try {
+    const response = await api.get("/admin/property");
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch admin properties:", error);
+    throw error;
+  }
+};
+
+// Admin API Service
+export const adminApi = {
+  getDashboardStats: async () => {
+    const response = await api.get('/admin/dashboard/stats');
+    return response.data;
+  },
+
+  getRecentActivity: async () => {
+    const response = await api.get('/admin/dashboard/activity');
+    return response.data;
+  },
+
+  getPolicies: async (filters?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/admin/policy${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  getPolicyById: async (policyId: string) => {
+    const response = await api.get(`/admin/policy/${policyId}`);
+    return response.data;
+  },
+
+  assignSurveyor: async (policyId: string, assignment: { surveyorIds: string[] }) => {
+    const response = await api.post(`/policy/${policyId}/assign`, assignment);
+    return response.data;
+  },
+
+  reviewPolicySubmission: async (policyId: string, decision: 'approved' | 'rejected', notes: string) => {
+    const response = await api.post(`/policy/${policyId}/review`, { decision, notes });
+    return response.data;
+  },
+
+  sendPolicyToUser: async (policyId: string) => {
+    const response = await api.post(`/admin/policy/${policyId}/send-to-user`);
+    return response.data;
+  },
+
+  getAdministrators: async () => {
+    const response = await api.get('/admin/administrators');
+    return response.data;
+  },
+
+  getEmployees: async () => {
+    const response = await api.get('/admin/employees');
+    return response.data;
+  },
+
+  deleteEmployee: async (employeeId: string) => {
+    const response = await api.delete(`/admin/employees/${employeeId}`);
+    return response.data;
+  },
+
+  updateEmployeeStatus: async (employeeId: string, status: string) => {
+    const response = await api.patch(`/admin/employees/${employeeId}/status`, { status });
+    return response.data;
+  },
+
+  createAdministrator: async (adminData: any) => {
+    const response = await api.post('/admin/administrators', adminData);
+    return response.data;
+  },
+
+  deleteAdministrator: async (adminId: string) => {
+    const response = await api.delete(`/admin/administrators/${adminId}`);
+    return response.data;
+  },
+
+  updateAdministratorStatus: async (adminId: string, status: string) => {
+    const response = await api.patch(`/admin/administrators/${adminId}/status`, { status });
+    return response.data;
+  },
+
+  getSurveyors: async (filters?: {
+    status?: string;
+    specialization?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/admin/surveyor${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  createSurveyor: async (surveyorData: Partial<Surveyor>) => {
+    const response = await api.post('/admin/surveyor', surveyorData);
+    return response.data;
+  },
+
+  updateSurveyor: async (surveyorId: string, surveyorData: Partial<Surveyor>) => {
+    const response = await api.patch(`/admin/surveyor/${surveyorId}`, surveyorData);
+    return response.data;
+  },
+
+  deleteSurveyor: async (surveyorId: string) => {
+    const response = await api.delete(`/admin/surveyor/${surveyorId}`);
+    return response.data;
+  },
+
+  getSurveyorById: async (surveyorId: string) => {
+    const response = await api.get(`/admin/surveyor/${surveyorId}`);
+    return response.data;
+  },
+
+  getSurveyorPerformance: async (surveyorId: string) => {
+    const response = await api.get(`/admin/surveyor/${surveyorId}/performance`);
+    return response.data;
+  },
+
+  getAssignments: async (filters?: {
+    status?: string;
+    priority?: string;
+    surveyorId?: string;
+    overdue?: boolean;
+    page?: number;
+    limit?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/admin/assignment${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  createAssignment: async (assignmentData: Partial<Assignment>) => {
+    const response = await api.post('/admin/assignment', assignmentData);
+    return response.data;
+  },
+
+  updateAssignment: async (assignmentId: string, assignmentData: Partial<Assignment>) => {
+    const response = await api.put(`/admin/assignment/${assignmentId}`, assignmentData);
+    return response.data;
+  },
+
+  reassignSurveyor: async (assignmentId: string, newSurveyorId: string, reason?: string, deadline?: string, priority?: string) => {
+    const response = await api.patch(`/admin/assignment/${assignmentId}/reassign`, { newSurveyorId, reason, deadline, priority });
+    return response.data;
+  },
+
+  getAssignmentById: async (assignmentId: string) => {
+    const response = await api.get(`/admin/assignment/${assignmentId}`);
+    return response.data;
+  },
+
+  getAssignmentByPolicyId: async (policyId: string) => {
+    const response = await api.get(`/admin/assignment/policy/${policyId}`);
+    return response.data;
+  },
+
+  getSurveySubmissions: async (filters?: {
+    status?: string;
+    surveyorId?: string;
+    policyId?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/submission${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  approveSurveySubmission: async (submissionId: string, notes?: string) => {
+    const response = await api.post(`/submission/${submissionId}/approve`, { notes });
+    return response.data;
+  },
+
+  rejectSurveySubmission: async (submissionId: string, reason: string) => {
+    const response = await api.post(`/submission/${submissionId}/reject`, { reason });
+    return response.data;
+  },
+
+  getSurveyDocumentDownloadUrl: async (publicId: string) => {
+    const response = await api.get(`/survey-documents/download/${publicId}`);
+    return response.data;
+  },
+
+  uploadFile: async (file: File, type: string, relatedId: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    formData.append('relatedId', relatedId);
+
+    const response = await api.post('/files/upload', formData, {
+      headers: {
+        // Let browser set Content-Type for FormData
+      },
+    });
+    return response.data;
+  },
+
+  downloadFile: async (fileId: string) => {
+    const response = await api.get(`/files/download/${fileId}`, { responseType: 'blob' });
+    return response;
+  },
+
+  getAnalytics: async (period: 'week' | 'month' | 'quarter' | 'year') => {
+    const response = await api.get(`/admin/analytics?period=${period}`);
+    return response.data;
+  },
+
+  generateReport: async (reportType: string, filters?: any) => {
+    const response = await api.post('/admin/reports', { type: reportType, filters });
+    return response.data;
+  },
+
+  getNotifications: async (unreadOnly?: boolean) => {
+    const endpoint = `/notifications${unreadOnly ? '?unread=true' : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  markNotificationAsRead: async (notificationId: string) => {
+    const response = await api.post(`/notifications/${notificationId}/read`);
+    return response.data;
+  },
+
+  searchAll: async (query: string) => {
+    const response = await api.get(`/search?q=${encodeURIComponent(query)}`);
+    return response.data;
+  },
+
+  getSystemHealth: async () => {
+    const response = await api.get('/system/health');
+    return response.data;
+  },
+
+  getAdminProperties: async () => {
+    const response = await api.get("/admin/property");
+    return response.data;
+  },
+};
+
+export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
+  fn: T,
+  onError?: (error: Error) => void
+): T => {
+  return (async (...args: Parameters<T>) => {
+    try {
+      return await fn(...args);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error occurred');
+      console.error('API Error:', err);
+      
+      if (onError) {
+        onError(err);
+      }
+      
+      throw err;
+    }
+  }) as T;
 };
 
 export default api;
