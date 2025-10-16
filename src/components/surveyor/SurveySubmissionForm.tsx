@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Upload, FileText, Phone, Mail, Calendar, X, Loader2, AlertCircle } from "lucide-react";
 import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
-import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
 
 interface SurveySubmissionFormProps {
   policy: PolicyRequest;
@@ -10,7 +9,68 @@ interface SurveySubmissionFormProps {
   onCancel: () => void;
 }
 
-// ... (keep the rest of the component as is, only change the handleSubmit function)
+const ErrorMessage = ({ message }) => (
+  <div className="bg-red-50 text-red-700 p-3 rounded-md flex items-center">
+    <AlertCircle className="h-5 w-5 mr-2" />
+    <span>{message}</span>
+  </div>
+);
+
+const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
+  policy,
+  onSubmit,
+  onCancel
+}) => {
+  const [surveyNotes, setSurveyNotes] = useState("");
+  const [propertyCondition, setPropertyCondition] = useState("");
+  const [structuralAssessment, setStructuralAssessment] = useState("");
+  const [riskFactors, setRiskFactors] = useState("");
+  const [recommendations, setRecommendations] = useState("");
+  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [contactLog, setContactLog] = useState<ContactLogEntry[]>([]);
+  const [recommendedAction, setRecommendedAction] = useState<'approve' | 'reject' | 'request_more_info'>('approve');
+  const [newContact, setNewContact] = useState<ContactLogEntry>({
+    date: new Date().toISOString().split('T')[0],
+    method: 'phone',
+    notes: '',
+    successful: true
+  });
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.type !== 'application/pdf') {
+        setError('Please upload a PDF file only.');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) { // 10MB
+        setError('File size cannot exceed 10MB.');
+        return;
+      }
+
+      setError(null);
+      setUploadedDocument(file);
+    }
+  };
+
+  const addContactEntry = () => {
+    if (newContact.notes.trim()) {
+      setContactLog([...contactLog, { ...newContact }]);
+      setNewContact({
+        date: new Date().toISOString().split('T')[0],
+        method: 'phone',
+        notes: '',
+        successful: true
+      });
+    }
+  };
+
+  const removeContactEntry = (index: number) => {
+    setContactLog(contactLog.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +93,13 @@ interface SurveySubmissionFormProps {
         surveyDocument: uploadedDocument,
         surveyNotes,
         contactLog,
-        recommendedAction
+        recommendedAction,
+        surveyDetails: {
+          propertyCondition,
+          structuralAssessment,
+          riskFactors,
+          recommendations
+        }
       };
 
       await onSubmit(submission);
@@ -177,6 +243,62 @@ interface SurveySubmissionFormProps {
                 <span className="text-green-800 font-semibold">✓ Uploaded</span>
               </div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Property Condition *
+            </label>
+            <textarea
+              required
+              value={propertyCondition}
+              onChange={(e) => setPropertyCondition(e.target.value)}
+              rows={6}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+              placeholder="Provide a detailed description of the property's condition..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Structural Assessment *
+            </label>
+            <textarea
+              required
+              value={structuralAssessment}
+              onChange={(e) => setStructuralAssessment(e.target.value)}
+              rows={6}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+              placeholder="Provide a detailed structural assessment of the property..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Risk Factors *
+            </label>
+            <textarea
+              required
+              value={riskFactors}
+              onChange={(e) => setRiskFactors(e.target.value)}
+              rows={6}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+              placeholder="Identify and describe any risk factors associated with the property..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Recommendations *
+            </label>
+            <textarea
+              required
+              value={recommendations}
+              onChange={(e) => setRecommendations(e.target.value)}
+              rows={6}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+              placeholder="Provide your recommendations based on the survey findings..."
+            />
           </div>
 
           <div>
