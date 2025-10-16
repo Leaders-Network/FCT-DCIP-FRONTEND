@@ -23,6 +23,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         const response = await getSurveyorAssignmentById(assignmentId);
         if (response.success) {
           setAssignment(response.data);
+          console.log('Assignment data:', response.data);
         } else {
           // Handle error
         }
@@ -45,6 +46,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       formData.append('surveyNotes', submission.surveyNotes);
       formData.append('recommendedAction', submission.recommendedAction);
       formData.append('surveyDocument', submission.surveyDocument);
+      formData.append('surveyDetails', JSON.stringify(submission.surveyDetails));
       submission.contactLog.forEach((log, index) => {
         formData.append(`contactLog[${index}][date]`, log.date);
         formData.append(`contactLog[${index}][method]`, log.method);
