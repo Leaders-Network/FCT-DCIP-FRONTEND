@@ -286,17 +286,13 @@ export const updateAssignmentStatus = async (assignmentId: string, status: strin
   }
 };
 
-export const submitSurvey = async (submission: {
-  policyId: string;
-  assignmentId: string;
-  surveyDetails: any;
-  surveyDocument: any;
-  surveyNotes: string;
-  contactLog: any[];
-  recommendedAction: string;
-}) => {
+export const submitSurvey = async (submission: FormData) => {
   try {
-    const response = await api.post("/surveyor/surveys", submission);
+    const response = await api.post("/surveyor/surveys", submission, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Failed to submit survey", error);
