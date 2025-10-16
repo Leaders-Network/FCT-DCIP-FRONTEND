@@ -15,6 +15,7 @@ const Dashview = () => {
     collaborators: 0
   });
   const [recentInsurances, setRecentInsurances] = useState<any[]>([]);
+  const [surveyedPolicies, setSurveyedPolicies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Get user name from local storage
@@ -32,6 +33,7 @@ const Dashview = () => {
           // Not logged in, set empty state
           setStats({ active: 0, expired: 0, pending: 0, collaborators: 0 });
           setRecentInsurances([]);
+          setSurveyedPolicies([]);
           setLoading(false);
           return;
         }
@@ -39,11 +41,12 @@ const Dashview = () => {
         const { getUserPolicyRequests } = await import("@/services/api");
         
         // Fetch all policy requests to calculate stats
-        const [allPolicies, activePolicies, expiredPolicies, pendingPolicies] = await Promise.all([
+        const [allPolicies, activePolicies, expiredPolicies, pendingPolicies, surveyedPolicies] = await Promise.all([
           getUserPolicyRequests('all', 1, 100),
           getUserPolicyRequests('active', 1, 100),
           getUserPolicyRequests('expired', 1, 100), 
-          getUserPolicyRequests('pending', 1, 100)
+          getUserPolicyRequests('pending', 1, 100),
+          getUserPolicyRequests('surveyed', 1, 100)
         ]);
 
         // Calculate collaborators
@@ -61,6 +64,7 @@ const Dashview = () => {
 
         // Set recent insurances (first 5 items from all policies)
         setRecentInsurances(allPolicies?.data?.policyRequests?.slice(0, 5) || []);
+        setSurveyedPolicies(surveyedPolicies?.data?.policyRequests || []);
         
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -258,50 +262,20 @@ const Dashview = () => {
                 ))}
               </div>
 
-              {/* Recent Table */}
-              <div className="w-full bg-white rounded-xl p-4 overflow-x-auto">
+              {/* Surveyed Policies Table */}
+              <div className="w-full bg-white rounded-xl p-4 overflow-x-auto mt-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold">Recent</h3>
-                  <a
-                    href="/dashboard/property"
-                    className="text-[#f2a3f0] text-[17px] font-medium"
-                  >
-                    View All
-                  </a>
+                  <h3 className="text-lg font-bold">Surveyed Policies</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[720px]">
                     <thead>
                       <tr className="text-left border-b">
-                        <th className="pb-2 font-bold w-5 px-4">
-                          <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
-                            <input
-                              type="checkbox"
-                              className="w-full h-full cursor-pointer opacity-0"
-                            />
-                          </div>
-                        </th>
                         <th className="pb-2 font-bold">Name</th>
-                        <th className="pb-2 font-bold">Expiring Date</th>
+                        <th className="pb-2 font-bold">Survey Date</th>
                         <th className="pb-2 font-bold">Policy ID</th>
                         <th className="pb-2 font-bold">Status</th>
-                        <th className="pb-2 font-bold w-5">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <circle cx="12" cy="12" r="1" />
-                            <circle cx="12" cy="5" r="1" />
-                            <circle cx="12" cy="19" r="1" />
-                          </svg>
-                        </th>
+                        <th className="pb-2 font-bold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -309,9 +283,6 @@ const Dashview = () => {
                         // Loading state
                         Array.from({ length: 3 }).map((_, index) => (
                           <tr key={index} className="border-b animate-pulse">
-                            <td className="py-4 px-4">
-                              <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                            </td>
                             <td className="py-4">
                               <div className="h-4 bg-gray-200 rounded w-32"></div>
                             </td>
@@ -325,21 +296,13 @@ const Dashview = () => {
                               <div className="h-6 bg-gray-200 rounded w-16"></div>
                             </td>
                             <td className="py-4">
-                              <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                              <div className="w-32 h-8 bg-gray-200 rounded"></div>
                             </td>
                           </tr>
                         ))
-                      ) : (recentInsurances || []).length > 0 ? (
-                        (recentInsurances || []).map((item, index) => (
+                      ) : (surveyedPolicies || []).length > 0 ? (
+                        (surveyedPolicies || []).map((item, index) => (
                           <tr key={item._id || index} className="border-b">
-                            <td className="py-4 px-4">
-                              <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
-                                <input
-                                  type="checkbox"
-                                  className="w-full h-full cursor-pointer opacity-0"
-                                />
-                              </div>
-                            </td>
                             <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
                               {item.requestDetails?.coverageType || "Insurance Policy"}
                             </td>
@@ -355,48 +318,27 @@ const Dashview = () => {
                             </td>
                             <td className="py-4">
                               <span
-                                className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium capitalize ${
-                                  item.status === "active"
-                                    ? "bg-[#028835]"
-                                    : item.status === "inactive" || item.status === "expired"
-                                      ? "bg-[#2a2a29]"
-                                      : item.status === "pending" || item.status === "assigned"
-                                        ? "bg-[#ffc52b]"
-                                        : "bg-[#bd2721]"
-                                }`}
+                                className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium capitalize bg-blue-500`}
                               >
                                 {item.status || "Unknown"}
                               </span>
                             </td>
-                            <td className="py-4">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <circle cx="12" cy="12" r="1" />
-                                <circle cx="12" cy="5" r="1" />
-                                <circle cx="12" cy="19" r="1" />
-                              </svg>
+                            <td className="py-4 space-x-2">
+                              <a href={item.surveyDocument} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-green-500 text-white rounded-md text-sm">Download</a>
+                              <a href="https://askniid.org/verifypolicy.aspx" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm">Verify</a>
                             </td>
                           </tr>
                         ))
                       ) : (
                         // Empty state
                         <tr className="border-b">
-                          <td colSpan={6} className="py-8 text-center text-gray-500">
+                          <td colSpan={5} className="py-8 text-center text-gray-500">
                             <div className="flex flex-col items-center">
                               <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                               </svg>
-                              <p className="font-medium">No recent insurance policies</p>
-                              <p className="text-sm">Your insurance policies will appear here once you have some.</p>
+                              <p className="font-medium">No surveyed policies</p>
+                              <p className="text-sm">Your surveyed policies will appear here.</p>
                             </div>
                           </td>
                         </tr>

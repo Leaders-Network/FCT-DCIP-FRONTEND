@@ -15,8 +15,13 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     const fetchCompletedPolicies = async () => {
       setLoading(true);
       try {
-        const response = await getUserPolicyRequests("approved", 1, 100);
-        setCompletedPolicies(response.data.policyRequests);
+        const [approvedResponse, surveyedResponse] = await Promise.all([
+          getUserPolicyRequests("approved", 1, 100),
+          getUserPolicyRequests("surveyed", 1, 100),
+        ]);
+        const approved = approvedResponse.data.policyRequests || [];
+        const surveyed = surveyedResponse.data.policyRequests || [];
+        setCompletedPolicies([...approved, ...surveyed]);
       } catch (error) {
         console.error("Failed to fetch completed policies:", error);
       } finally {
@@ -27,33 +32,16 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     fetchCompletedPolicies();
   }, []);
 
-  const handleDownloadSurvey = async (policyId: string, documentInfo: any) => {
-    try {
-      // If documentInfo contains publicId (from Cloudinary), use backend download service
-      if (typeof documentInfo === 'object' && documentInfo.publicId) {
-        await downloadFile(documentInfo.publicId, documentInfo.name);
-      } else {
-        // Fallback for old format (string filename)
-        const documentName = typeof documentInfo === 'string' ? documentInfo : 'survey-report.pdf';
-        const link = document.createElement('a');
-        link.href = `/api/documents/download/${documentName}?policyId=${policyId}`;
-        link.download = documentName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('Failed to download file. Please try again or contact support.');
-    }
+  const handleDownloadSurvey = (documentUrl: string) => {
+    window.open(documentUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handleProceedToPayment = (policy: PolicyRequest) => {
-    // Redirect to the external payment verification URL
-    const userId = localStorage.getItem("userId");
-    const paymentUrl = `https://askniid.org/VerifyBuildersPolicy.aspx?policyId=${policy._id}&userId=${userId}`;
-    window.open(paymentUrl, '_blank', 'noopener,noreferrer');
-  };
+  // const handleProceedToPayment = (policy: PolicyRequest) => {
+  //   // Redirect to the external payment verification URL
+  //   const userId = localStorage.getItem("userId");
+  //   const paymentUrl = `https://askniid.org/VerifyBuildersPolicy.aspx?policyId=${policy._id}&userId=${userId}`;
+  //   window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+  // };
 
   if (loading) {
     return (
@@ -88,9 +76,9 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                     </h3>
                     <p className="text-gray-600">{policy.propertyDetails.address}</p>
                   </div>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Approved
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                    {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> : <FileText className="w-4 h-4 mr-1" />}
+                    {policy.status === 'approved' ? 'Approved' : 'Surveyed'}
                   </span>
                 </div>
 
@@ -108,7 +96,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                     <h4 className="font-medium text-gray-900 mb-2">Survey Information</h4>
                     <div className="space-y-1 text-sm text-gray-600">
                       <p><span className="font-medium">Survey Date:</span> {new Date(policy.updatedAt).toLocaleDateString()}</p>
-                      <p><span className="font-medium">Status:</span> Approved by Admin</p>
+                      <p><span className="font-medium">Status:</span> {policy.status === 'approved' ? 'Approved by Admin' : 'Surveyed'}</p>
                     </div>
                   </div>
                 </div>
@@ -134,7 +122,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                   {policy.surveyDocument && (
                     <button
-                      onClick={() => handleDownloadSurvey(policy._id, policy.surveyDocument!)}
+                      onClick={() => handleDownloadSurvey(policy.surveyDocument!)}
                       className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
                     >
                       <Download className="h-4 w-4 mr-2" />
@@ -143,8 +131,10 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                   )}
                   
                   <button
-                    onClick={() => handleProceedToPayment(policy)}
-                    className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                    // onClick={() => handleProceedToPayment(policy)}
+                    // disabled={policy.status !== 'approved'}
+                    onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+                    className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Proceed to Payment
