@@ -196,8 +196,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               if (response?.data) {
                 setAvailableSurveyors(response.data);
                 console.log("Available Surveyors:", response.data);
-              } else {          setAvailableSurveyors([]);
-        }
+              } else {
+                setAvailableSurveyors([]);
+              }
       } catch (error) {
         setAvailableSurveyors([]);
       }
@@ -390,24 +391,26 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {viewMode === 'admin' ? 'Assignment Management' : 'My Assignments'}
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  Manage surveyor assignments and track progress
-                </p>
-              </div>
-      
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={fetchData}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>Refresh</span>
-                </button>
-              </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {viewMode === 'admin' ? 'Assignment Management' : 'My Assignments'}
+          </h2>
+          <p className="text-gray-600 mt-1">
+            Manage surveyor assignments and track progress
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-3">
+        <button
+          onClick={fetchData}
+          className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>Refresh</span>
+        </button>
+      </div>
 
       {/* Error Message */}
       {error && (
@@ -479,10 +482,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
             >
               <option value="all">All Surveyors</option>
               {(surveyors || []).map((surveyor) => (
-                <option key={surveyor?._id} value={surveyor?._id}>
-                  {surveyor?.firstname} {surveyor?.lastname}
-                </option>
-              ))}
+                                  <option key={surveyor?._id} value={surveyor?._id}>
+                                    {surveyor?.userId?.firstname} {surveyor?.userId?.lastname}
+                                  </option>              ))}
             </select>
 
             {/* Clear Filters */}
@@ -513,27 +515,15 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                     <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-yellow-100 text-yellow-800 border-yellow-200`}>
                       {policy.status.replace('_', ' ').toUpperCase()}
                     </span>
+                    <span className="truncate">{policy?.propertyDetails?.address}</span>
                   </div>
-                  <button
-                    onClick={() => {
-                      setSelectedPolicy(policy);
-                      setShowAssignModal(true);
-                    }}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Assign Surveyor
-                  </button>
-                </div>
-                <div className="flex items-center text-gray-600 text-sm">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  <span className="truncate">{policy.propertyDetails.address}</span>
                 </div>
               </div>
               <div className="p-4 space-y-3">
                 <div className="space-y-2 text-xs text-gray-600">
                   <div className="flex items-center">
                     <User className="w-3 h-3 mr-2" />
-                    <span>{policy.contactDetails.fullName}</span>
+                    <span>{policy?.contactDetails?.fullName}</span>
                   </div>
                   <div className="flex items-center">
                     <Calendar className="w-3 h-3 mr-2" />
@@ -572,14 +562,14 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                 </div>
                 <div className="flex items-center text-gray-600 text-sm">
                   <MapPin className="w-4 h-4 mr-1" />
-                  <span className="truncate">{policy.propertyDetails.address}</span>
+                  <span className="truncate">{policy?.propertyDetails?.address}</span>
                 </div>
               </div>
               <div className="p-4 space-y-3">
                 <div className="space-y-2 text-xs text-gray-600">
                   <div className="flex items-center">
                     <User className="w-3 h-3 mr-2" />
-                    <span>{policy.contactDetails.fullName}</span>
+                    <span>{policy?.contactDetails?.fullName}</span>
                   </div>
                   <div className="flex items-center">
                     <Calendar className="w-3 h-3 mr-2" />
@@ -604,15 +594,16 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="">Select Policy</option>
-                {Array.isArray(availablePolicies) && availablePolicies.map(policy => (
+                {Array.isArray(policies) && policies.map(policy => (
                   <option key={policy._id} value={policy._id}>
                     {policy.policyNumber ? `${policy.policyNumber} - ${policy.propertyDetails.address}` : policy.propertyDetails.address}
                   </option>
                 ))}
               </select>
               <select
-                value={newAssignmentData.surveyorId}
-                onChange={e => setNewAssignmentData({ ...newAssignmentData, surveyorId: e.target.value })}
+                multiple
+                value={newAssignmentData.surveyorIds}
+                onChange={e => setNewAssignmentData({ ...newAssignmentData, surveyorIds: Array.from(e.target.selectedOptions, option => option.value) })}
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="">Select Surveyor</option>
@@ -663,7 +654,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               <button
                 onClick={handleCreateAssignment}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                disabled={!newAssignmentData.policyId || !newAssignmentData.surveyorId}
+                disabled={!newAssignmentData.policyId || newAssignmentData.surveyorIds.length === 0}
               >Create</button>
             </div>
           </div>
@@ -686,11 +677,11 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Policy Holder</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedPolicy.contactDetails.fullName}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedPolicy?.contactDetails?.fullName}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Property Address</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedPolicy.propertyDetails.address}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedPolicy?.propertyDetails?.address}</p>
               </div>
             </div>
             <div className="space-y-4">
@@ -1214,11 +1205,11 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
         <div className="space-y-2 text-sm">
           <div className="flex items-start">
             <MapPin className="w-4 h-4 text-gray-400 mr-2 mt-0.5" />
-            <span className="text-gray-700">{assignment.location.address}</span>
+            <span className="text-gray-700">{assignment?.location?.address}</span>
           </div>
           {assignment.location.accessInstructions && (
             <div className="ml-6 text-gray-600">
-              <strong>Access:</strong> {assignment.location.accessInstructions}
+              <strong>Access:</strong> {assignment?.location?.accessInstructions}
             </div>
           )}
         </div>
@@ -1227,11 +1218,11 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
       <div>
         <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
         <div className="space-y-2 text-sm">
-          <div><strong>Name:</strong> {assignment.location.contactPerson.name}</div>
-          <div><strong>Phone:</strong> {assignment.location.contactPerson.phone}</div>
-          <div><strong>Email:</strong> {assignment.location.contactPerson.email}</div>
-          {assignment.location.contactPerson.availableHours && (
-            <div><strong>Available:</strong> {assignment.location.contactPerson.availableHours}</div>
+          <div><strong>Name:</strong> {assignment?.location?.contactPerson?.name}</div>
+          <div><strong>Phone:</strong> {assignment?.location?.contactPerson?.phone}</div>
+          <div><strong>Email:</strong> {assignment?.location?.contactPerson?.email}</div>
+          {assignment?.location?.contactPerson?.availableHours && (
+            <div><strong>Available:</strong> {assignment?.location?.contactPerson?.availableHours}</div>
           )}
         </div>
       </div>
@@ -1332,7 +1323,7 @@ const AssignmentProgressTab: React.FC<ProgressTabProps> = ({
       <h4 className="font-medium text-gray-900 mb-4">Progress Overview</h4>
       
       {/* Milestones */}
-      {assignment.progressTracking.milestones.length > 0 && (
+      {assignment?.progressTracking?.milestones?.length > 0 && (
         <div className="space-y-3">
           <h5 className="text-sm font-medium text-gray-700">Completed Milestones</h5>
           {(assignment?.progressTracking?.milestones || []).map((milestone, index) => (
@@ -1351,7 +1342,7 @@ const AssignmentProgressTab: React.FC<ProgressTabProps> = ({
       )}
 
       {/* Checkpoints */}
-      {assignment.progressTracking.checkpoints.length > 0 && (
+      {assignment?.progressTracking?.checkpoints?.length > 0 && (
         <div className="space-y-3 mt-4">
           <h5 className="text-sm font-medium text-gray-700">Progress Checkpoints</h5>
           {(assignment?.progressTracking?.checkpoints || []).map((checkpoint, index) => (
@@ -1458,7 +1449,7 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
     <h4 className="font-medium text-gray-900">Assignment Documents</h4>
     
     {/* Existing Documents */}
-    {assignment.documents.length > 0 ? (
+    {assignment?.documents?.length > 0 ? (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {(assignment?.documents || []).map((doc) => (
           <div key={doc._id} className="border border-gray-200 rounded-lg p-3">
@@ -1511,7 +1502,7 @@ const AssignmentCommunicationTab: React.FC<{
   <div className="space-y-4">
     <h4 className="font-medium text-gray-900">Messages & Communication</h4>
     
-    {assignment.communication.messages.length > 0 ? (
+    {assignment?.communication?.messages?.length > 0 ? (
       <div className="space-y-4 max-h-96 overflow-y-auto">
         {(assignment?.communication?.messages || []).map((message) => (
           <div key={message._id} className="bg-gray-50 p-4 rounded-lg">

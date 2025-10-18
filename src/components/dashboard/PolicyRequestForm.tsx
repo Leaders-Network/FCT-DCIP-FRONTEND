@@ -181,22 +181,33 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     "Mixed Materials",
   ];
 
-  const coverageTypes = [
-    "Basic Coverage",
-    "Comprehensive Coverage",
-    "Fire and Allied Perils",
-    "All Risk Coverage",
-  ];
+ const coverageTypes = [
+  "Contract Works Coverage",
+  "Public Liability Coverage",
+  "Employer’s Liability Coverage",
+  "Contractor’s Plant and Equipment Coverage",
+  "Professional Indemnity",
+];
 
-  const policyDurations = ["1 Year", "2 Years", "3 Years", "5 Years"];
+const policyDurations = [
+  "3 Months (Short-term Project)",
+  "6 Months",
+  "1 Year",
+  "Project-Based (Until Completion)",
+];
 
-  const additionalCoverageOptions = [
-    "Flood Coverage",
-    "Theft Protection",
-    "Business Interruption",
-    "Equipment Coverage",
-    "Liability Coverage",
-  ];
+const additionalCoverageOptions = [
+  "Flood and Storm Damage",
+  "Theft or Vandalism at Site",
+  "Collapse or Structural Failure",
+  "Third-Party Property Damage",
+  "Injury to Non-Employees (Public)",
+  "Machinery Breakdown",
+  "Temporary Structures (Scaffolding, Site Office)",
+  "Fire and Explosion",
+  "Debris Removal Costs",
+  "Cross Liability (Between Contractors/Subcontractors)",
+];
 
   if (!isOpen) return null;
 
