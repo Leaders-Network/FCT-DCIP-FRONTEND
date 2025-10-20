@@ -23,6 +23,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         const response = await getSurveyorAssignmentById(assignmentId);
         if (response.success) {
           setAssignment(response.data);
+          console.log('Assignment data:', response.data);
         } else {
           // Handle error
         }
@@ -35,22 +36,25 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     fetchAssignment();
   }, [assignmentId]);
 
-  const handleSurveySubmission = async (submission: SurveySubmission) => {
+  const handleSurveySubmission = async (submission: Omit<SurveySubmission, 'surveyorId'> & { surveyDocument: File }) => {
     try {
       const { submitSurvey } = await import("@/services/api");
       
-      // Transform SurveySubmission to match API signature
-      const apiSubmission = {
-        policyId: submission.policyId,
-        assignmentId: assignmentId || '',
-        surveyDetails: {}, // Add any additional survey details if needed
-        surveyDocument: submission.surveyDocument,
-        surveyNotes: submission.surveyNotes,
-        contactLog: submission.contactLog,
-        recommendedAction: submission.recommendedAction,
-      };
-      
-      await submitSurvey(apiSubmission);
+      const formData = new FormData();
+      formData.append('policyId', submission.policyId);
+      formData.append('assignmentId', assignmentId || '');
+      formData.append('surveyNotes', submission.surveyNotes);
+      formData.append('recommendedAction', submission.recommendedAction);
+      formData.append('surveyDocument', submission.surveyDocument);
+      formData.append('surveyDetails', JSON.stringify(submission.surveyDetails));
+      submission.contactLog.forEach((log, index) => {
+        formData.append(`contactLog[${index}][date]`, log.date);
+        formData.append(`contactLog[${index}][method]`, log.method);
+        formData.append(`contactLog[${index}][notes]`, log.notes);
+        formData.append(`contactLog[${index}][successful]`, log.successful.toString());
+      });
+
+      await submitSurvey(formData);
       alert("Survey submitted successfully!");
       setShowSurveyForm(false);
       router.push("/surveyor/dashboard/assignments");

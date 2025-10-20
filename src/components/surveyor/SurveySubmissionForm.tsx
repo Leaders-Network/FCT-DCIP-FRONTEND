@@ -2,11 +2,10 @@
 import React, { useState } from "react";
 import { Upload, FileText, Phone, Mail, Calendar, X, Loader2, AlertCircle } from "lucide-react";
 import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
-import { uploadFile } from "@/services/fileService";
 
 interface SurveySubmissionFormProps {
   policy: PolicyRequest;
-  onSubmit: (submission: SurveySubmission) => Promise<void>;
+  onSubmit: (submission: Omit<SurveySubmission, 'surveyorId'> & { surveyDocument: File }) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -23,11 +22,11 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   onCancel
 }) => {
   const [surveyNotes, setSurveyNotes] = useState("");
-  const [uploadedDocument, setUploadedDocument] = useState<{
-    name: string;
-    url: string;
-    publicId: string;
-  } | null>(null);
+  const [propertyCondition, setPropertyCondition] = useState("");
+  const [structuralAssessment, setStructuralAssessment] = useState("");
+  const [riskFactors, setRiskFactors] = useState("");
+  const [recommendations, setRecommendations] = useState("");
+  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
   const [contactLog, setContactLog] = useState<ContactLogEntry[]>([]);
   const [recommendedAction, setRecommendedAction] = useState<'approve' | 'reject' | 'request_more_info'>('approve');
   const [newContact, setNewContact] = useState<ContactLogEntry>({
@@ -40,7 +39,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.type !== 'application/pdf') {
@@ -53,24 +52,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
       }
 
       setError(null);
-      setUploading(true);
-      try {
-        const result = await uploadFile(file, 'survey-documents');
-        if (result.success) {
-          setUploadedDocument({
-            name: result.data.originalName,
-            url: result.data.url,
-            publicId: result.data.publicId
-          });
-        } else {
-          throw new Error(result.message || 'Upload failed');
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
-        setError('Failed to upload document. Please try again.');
-      } finally {
-        setUploading(false);
-      }
+      setUploadedDocument(file);
     }
   };
 
@@ -106,13 +88,18 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
     setError(null);
     setLoading(true);
     try {
-      const submission: SurveySubmission = {
+      const submission = {
         policyId: policy._id,
-        surveyorId: 'current_surveyor_id', // Get from auth context
         surveyDocument: uploadedDocument,
         surveyNotes,
         contactLog,
-        recommendedAction
+        recommendedAction,
+        surveyDetails: {
+          propertyCondition,
+          structuralAssessment,
+          riskFactors,
+          recommendations
+        }
       };
 
       await onSubmit(submission);
@@ -256,6 +243,62 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
                 <span className="text-green-800 font-semibold">✓ Uploaded</span>
               </div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Property Condition *
+            </label>
+            <textarea
+              required
+              value={propertyCondition}
+              onChange={(e) => setPropertyCondition(e.target.value)}
+              rows={6}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+              placeholder="Provide a detailed description of the property's condition..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Structural Assessment *
+            </label>
+            <textarea
+              required
+              value={structuralAssessment}
+              onChange={(e) => setStructuralAssessment(e.target.value)}
+              rows={6}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+              placeholder="Provide a detailed structural assessment of the property..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Risk Factors *
+            </label>
+            <textarea
+              required
+              value={riskFactors}
+              onChange={(e) => setRiskFactors(e.target.value)}
+              rows={6}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+              placeholder="Identify and describe any risk factors associated with the property..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Recommendations *
+            </label>
+            <textarea
+              required
+              value={recommendations}
+              onChange={(e) => setRecommendations(e.target.value)}
+              rows={6}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+              placeholder="Provide your recommendations based on the survey findings..."
+            />
           </div>
 
           <div>
