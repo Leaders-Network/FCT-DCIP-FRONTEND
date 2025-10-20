@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Eye, Users, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
-import { PolicyRequest, Surveyor, PolicyAssignment } from "@/types/api.types";
+import { PolicyRequest, Surveyor, Assignment } from "@/types/api.types";
 
 interface PolicyManagementProps {}
 
@@ -68,10 +68,9 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
     }
     if (!selectedPolicy || selectedSurveyors.length === 0) return;
 
-    const assignment: PolicyAssignment = {
+    const assignment: Partial<Assignment> = {
       policyId: selectedPolicy._id,
-      surveyorIds: selectedSurveyors,
-      assignedBy: user._id, // Get from auth context
+      surveyorId: selectedSurveyors[0],
       priority,
       instructions: assignmentNotes,
       deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
@@ -79,7 +78,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
 
     console.log("Assigning surveyor with data:", assignment);
 
-    await adminApi.assignSurveyorToPolicy(assignment);
+    await adminApi.createAssignment(assignment);
     // Update local state
     setPolicies(prev => 
       prev.map(p => 
@@ -212,7 +211,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
                       <p className="text-sm font-medium text-gray-900">
                         {policy.propertyDetails.propertyType}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 break-words">
                         {policy.propertyDetails.address}
                       </p>
                       <p className="text-xs text-gray-400">
@@ -222,7 +221,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 break-words">
                         {policy.contactDetails.fullName}
                       </p>
                       <p className="text-sm text-gray-500">
@@ -259,7 +258,8 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
                     {policy.status === 'submitted' && (
                       <button
                         onClick={() => {
-                          router.push(`/admin/dashboard/assignments?policyId=${policy._id}`);
+                          setSelectedPolicy(policy);
+                          setShowAssignModal(true);
                         }}
                         className="text-blue-600 hover:text-blue-900"
                       >
