@@ -566,7 +566,7 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Top Performing Surveyors */}
-          <div className="bg-white rounded-lg shadow-sm border">
+          {/* <div className="bg-white rounded-lg shadow-sm border">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Top Performers</h3>
             </div>
@@ -598,8 +598,8 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
+          </div> */}
+        </div> 
 
         {/* Quick Actions */}
         <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">

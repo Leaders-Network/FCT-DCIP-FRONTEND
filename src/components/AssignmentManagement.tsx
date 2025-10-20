@@ -74,7 +74,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 
   const [newAssignmentData, setNewAssignmentData] = useState({
     policyId: '',
-    surveyorIds: [] as string[],
+    surveyorId: '', // Changed from surveyorIds
     assignedBy: '',
     status: 'assigned',
     priority: 'normal',
@@ -89,11 +89,14 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       setError('Please select a deadline.');
       return;
     }
+    if (!newAssignmentData.surveyorId) {
+        setError('Please select a surveyor.');
+        return;
+    }
     try {
-      for (const surveyorId of newAssignmentData.surveyorIds) {
         const assignmentData = {
           policyId: selectedPolicy._id,
-          surveyorId: surveyorId,
+          surveyorId: newAssignmentData.surveyorId,
           assignedBy: user?._id,
           deadline: new Date(newAssignmentData.deadline),
           priority: newAssignmentData.priority,
@@ -101,14 +104,13 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         };
         console.log("Creating assignment with data:", assignmentData);
         await adminApi.createAssignment(assignmentData);
-      }
 
       setShowCreateModal(false);
       setShowAssignModal(false);
       setSelectedPolicy(null);
       setNewAssignmentData({
         policyId: '',
-        surveyorIds: [], // Reset to an empty array
+        surveyorId: '', // Reset to an empty string
         assignedBy: '',
         status: 'assigned',
         priority: 'normal',
@@ -132,7 +134,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       const assignment = assignmentResponse.data;
       const response = await adminApi.reassignSurveyor(
         assignment._id, 
-        newAssignmentData.surveyorIds[0],
+        newAssignmentData.surveyorId,
         newAssignmentData.instructions, // reason
         newAssignmentData.deadline,
         newAssignmentData.priority
@@ -142,7 +144,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         setSelectedPolicy(null);
         setNewAssignmentData({
           policyId: '',
-          surveyorIds: [],
+          surveyorId: '',
           assignedBy: '',
           status: 'assigned',
           priority: 'normal',
@@ -515,7 +517,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                     <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-yellow-100 text-yellow-800 border-yellow-200`}>
                       {policy.status.replace('_', ' ').toUpperCase()}
                     </span>
-                    <span className="truncate">{policy?.propertyDetails?.address}</span>
+                    <span className="truncate break-words">{policy?.propertyDetails?.address}</span>
                   </div>
                 </div>
               </div>
@@ -523,13 +525,22 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                 <div className="space-y-2 text-xs text-gray-600">
                   <div className="flex items-center">
                     <User className="w-3 h-3 mr-2" />
-                    <span>{policy?.contactDetails?.fullName}</span>
+                    <span className="break-words">{policy?.contactDetails?.fullName}</span>
                   </div>
                   <div className="flex items-center">
                     <Calendar className="w-3 h-3 mr-2" />
                     <span>Submitted: {formatDate(policy.createdAt)}</span>
                   </div>
                 </div>
+                  <button
+                    onClick={() => {
+                      setSelectedPolicy(policy);
+                      setShowAssignModal(true);
+                    }}
+                    className="text-blue-600 hover:text-blue-900"
+                  >
+                    Assign
+                  </button>
               </div>
             </div>
           ))}
@@ -562,7 +573,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                 </div>
                 <div className="flex items-center text-gray-600 text-sm">
                   <MapPin className="w-4 h-4 mr-1" />
-                  <span className="truncate">{policy?.propertyDetails?.address}</span>
+                  <span className="truncate break-words">{policy?.propertyDetails?.address}</span>
                 </div>
               </div>
               <div className="p-4 space-y-3">
@@ -654,7 +665,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               <button
                 onClick={handleCreateAssignment}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                disabled={!newAssignmentData.policyId || newAssignmentData.surveyorIds.length === 0}
+                disabled={!newAssignmentData.policyId || !newAssignmentData.surveyorId}
               >Create</button>
             </div>
           </div>
@@ -693,22 +704,14 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                       <div key={s._id} className="flex items-center p-2">
                         <input
                           id={`surveyor-${s._id}`}
-                          name="surveyors"
-                          type="checkbox"
+                          name="surveyor"
+                          type="radio"
                           value={s._id}
-                          checked={newAssignmentData.surveyorIds.includes(s._id)}
+                          checked={newAssignmentData.surveyorId === s._id}
                           onChange={e => {
-                            const surveyorId = e.target.value;
-                            const isChecked = e.target.checked;
-                            setNewAssignmentData(prev => {
-                              const surveyorIds = isChecked
-                                ? [...prev.surveyorIds, surveyorId]
-                                : prev.surveyorIds.filter(id => id !== surveyorId);
-                              console.log("Selected Surveyor IDs:", surveyorIds);
-                              return { ...prev, surveyorIds: surveyorIds };
-                            });
+                            setNewAssignmentData(prev => ({ ...prev, surveyorId: e.target.value }));
                           }}
-                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded-full focus:ring-indigo-500"
                         />
                         <label htmlFor={`surveyor-${s._id}`} className="ml-3 text-sm text-gray-700">
                           {(s.userId?.firstname || 'N/A')} {(s.userId?.lastname || 'N/A')} ({(s.userId?.email || 'N/A')}) - {s.profile?.specialization?.join(', ') || 'N/A'}
