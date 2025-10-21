@@ -24,7 +24,7 @@ const SurveyorSidebar = () => {
   const menuItems = [
     { href: "/surveyor/dashboard", label: "Dashboard", icon: Home },
     { href: "/surveyor/dashboard/assignments", label: "My Assignments", icon: FileText },
-    { href: "/surveyor/dashboard/submissions", label: "Submissions", icon: Upload },
+
     { href: "/surveyor/dashboard/settings", label: "Settings", icon: Settings },
   ];
 

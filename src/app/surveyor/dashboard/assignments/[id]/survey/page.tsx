@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SurveySubmissionForm from "@/components/surveyor/SurveySubmissionForm";
+import { submitSurvey, getSurveyorAssignmentById } from "@/services/api";
 import { PolicyRequest, SurveySubmission } from "@/types/api.types";
 
 interface SurveyPageProps {
@@ -16,49 +17,36 @@ export default function SurveyPage({ params }: SurveyPageProps) {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchPolicy = async () => {
+    const fetchAssignment = async () => {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockPolicy: PolicyRequest = {
-        _id: params.id,
-        userId: "user1",
-        propertyDetails: {
-          address: "123 Main St, Wuse 2, Abuja, FCT",
-          propertyType: "Residential House",
-          buildingValue: 50000000,
-          yearBuilt: 2020,
-          squareFootage: 2500,
-          constructionMaterial: "Concrete Block"
-        },
-        contactDetails: {
-          fullName: "John Doe",
-          email: "john.doe@email.com",
-          phoneNumber: "+234 801 234 5678",
-          alternatePhone: "+234 802 345 6789"
-        },
-        requestDetails: {
-          coverageType: "Comprehensive Coverage",
-          policyDuration: "2 Years",
-          additionalCoverage: ["Flood Coverage", "Theft Protection"],
-          specialRequests: "Property has a swimming pool and garage. Please inspect both areas thoroughly."
-        },
-        status: "assigned",
-        assignedSurveyors: ["current_surveyor_id"],
-        createdAt: "2024-10-01T10:00:00Z",
-        updatedAt: "2024-10-01T10:00:00Z"
-      };
-
-      setPolicy(mockPolicy);
-      setLoading(false);
+      try {
+        const response = await getSurveyorAssignmentById(params.id);
+        setPolicy(response.data.policyId);
+      } catch (error) {
+        console.error("Failed to fetch assignment:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchPolicy();
+    fetchAssignment();
   }, [params.id]);
 
-  const handleSurveySubmission = async (submission: SurveySubmission) => {
+  const handleSurveySubmission = async (submission: Omit<SurveySubmission, 'surveyorId' | 'policyId'> & { surveyDocument: File }) => {
     try {
-      // TODO: Call actual API
-      console.log("Survey submission:", submission);
+      const formData = new FormData();
+      formData.append('policyId', policy!._id);
+      formData.append('assignmentId', params.id);
+      formData.append('surveyNotes', submission.surveyNotes);
+      formData.append('recommendedAction', submission.recommendedAction);
+      formData.append('contactLog', JSON.stringify(submission.contactLog));
+      formData.append('surveyDetails', JSON.stringify(submission.surveyDetails));
+      if (submission.surveyDocument) {
+        formData.append('surveyDocument', submission.surveyDocument);
+      }
+
+      await submitSurvey(formData);
+
       alert("Survey submitted successfully!");
       router.push("/surveyor/dashboard/assignments");
     } catch (error) {
@@ -100,7 +88,7 @@ export default function SurveyPage({ params }: SurveyPageProps) {
   }
 
   return (
-    <div className="p-6">
+    <div className="flex-1 h-full">
       <SurveySubmissionForm
         policy={policy}
         onSubmit={handleSurveySubmission}

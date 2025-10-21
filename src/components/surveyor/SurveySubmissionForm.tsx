@@ -5,7 +5,7 @@ import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.ty
 
 interface SurveySubmissionFormProps {
   policy: PolicyRequest;
-  onSubmit: (submission: Omit<SurveySubmission, 'surveyorId'> & { surveyDocument: File }) => Promise<void>;
+  onSubmit: (submission: Omit<SurveySubmission, 'surveyorId' | 'policyId'> & { surveyDocument: File }) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -89,7 +89,6 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
     setLoading(true);
     try {
       const submission = {
-        policyId: policy._id,
         surveyDocument: uploadedDocument,
         surveyNotes,
         contactLog,
@@ -112,7 +111,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="">
       <div className="bg-white shadow-sm border border-gray-200 rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Submit Survey Report</h2>
@@ -250,7 +249,6 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               Property Condition *
             </label>
             <textarea
-              required
               value={propertyCondition}
               onChange={(e) => setPropertyCondition(e.target.value)}
               rows={6}
@@ -264,7 +262,6 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               Structural Assessment *
             </label>
             <textarea
-              required
               value={structuralAssessment}
               onChange={(e) => setStructuralAssessment(e.target.value)}
               rows={6}
@@ -278,7 +275,6 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               Risk Factors *
             </label>
             <textarea
-              required
               value={riskFactors}
               onChange={(e) => setRiskFactors(e.target.value)}
               rows={6}
@@ -292,7 +288,6 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               Recommendations *
             </label>
             <textarea
-              required
               value={recommendations}
               onChange={(e) => setRecommendations(e.target.value)}
               rows={6}
@@ -306,7 +301,6 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               Survey Notes *
             </label>
             <textarea
-              required
               value={surveyNotes}
               onChange={(e) => setSurveyNotes(e.target.value)}
               rows={6}

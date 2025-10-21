@@ -229,13 +229,7 @@ const SurveyorDashboard = () => {
             </div>
           </Link>
           
-          <Link href="/surveyor/dashboard/submissions" className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-            <CheckCircle className="h-7 w-7 text-green-600" />
-            <div className="ml-4">
-              <p className="text-md font-medium text-gray-900">My Submissions</p>
-              <p className="text-sm text-gray-500">Track submitted surveys</p>
-            </div>
-          </Link>
+
           
           <Link href="/surveyor/dashboard/settings" className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
             <Users className="h-7 w-7 text-purple-600" />
