@@ -32,6 +32,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = getAuthToken();
+    console.log("Auth Token for getSurveySubmissions:", token);
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -303,11 +304,15 @@ export const submitSurvey = async (submission: FormData) => {
 export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 10) => {
   try {
     const params = new URLSearchParams();
-    if (status && status !== 'all') params.append('status', status);
+    let statusParam = status;
+    if (status === 'pending') {
+      statusParam = 'submitted,under_review';
+    }
+    if (statusParam && statusParam !== 'all') params.append('status', statusParam);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
-    const url = `/surveyor/submissions?${params.toString()}`;
+    const url = `/submission?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
   } catch (error) {
@@ -522,6 +527,7 @@ export const cancelAssignment = async (assignmentId: string, reason: string) => 
 // Surveyor Assignment Workflow APIs
 export const getSurveyorAssignmentsNew = async (filters?: {
   status?: string;
+  priority?: string;
   page?: number;
   limit?: number;
   sortBy?: string;

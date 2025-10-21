@@ -373,6 +373,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex justify-between">
                   <span>Pending: {dashboardData?.summary.policies.pending || 0}</span>
                   <span>Approved: {dashboardData?.summary.policies.approved || 0}</span>
+                  <span>Rejected: {dashboardData?.summary.policies.rejected || 0}</span>
                 </div>
               </div>
             </div>

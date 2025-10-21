@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -34,6 +35,7 @@ import { adminApi } from '@/services/api';
 import { Assignment, Surveyor } from '@/types/api.types';
 import { useAuth } from '../context/useAuth';
 import DocumentManager from './DocumentManager';
+import AssignSurveyorModal from './admin/AssignSurveyorModal';
 
 interface AssignmentManagementProps {
   className?: string;
@@ -60,110 +62,13 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [policies, setPolicies] = useState<any[]>([]);
-  // Available surveyors for assignment
-  const [availableSurveyors, setAvailableSurveyors] = useState<Surveyor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<any | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [isReassignMode, setIsReassignMode] = useState(false);
 
-  const [isReassign, setIsReassign] = useState(false);
-
-
-
-  const [newAssignmentData, setNewAssignmentData] = useState({
-    policyId: '',
-    surveyorId: '', // Changed from surveyorIds
-    assignedBy: '',
-    status: 'assigned',
-    priority: 'normal',
-    deadline: '',
-    instructions: '',
-  });
-
-
-  // Handle assignment creation
-  const handleCreateAssignment = async () => {
-    if (!newAssignmentData.deadline) {
-      setError('Please select a deadline.');
-      return;
-    }
-    if (!newAssignmentData.surveyorId) {
-        setError('Please select a surveyor.');
-        return;
-    }
-    try {
-        const assignmentData = {
-          policyId: selectedPolicy._id,
-          surveyorId: newAssignmentData.surveyorId,
-          assignedBy: user?._id,
-          deadline: new Date(newAssignmentData.deadline),
-          priority: newAssignmentData.priority,
-          instructions: newAssignmentData.instructions || "N/A",
-        };
-        console.log("Creating assignment with data:", assignmentData);
-        await adminApi.createAssignment(assignmentData);
-
-      setShowCreateModal(false);
-      setShowAssignModal(false);
-      setSelectedPolicy(null);
-      setNewAssignmentData({
-        policyId: '',
-        surveyorId: '', // Reset to an empty string
-        assignedBy: '',
-        status: 'assigned',
-        priority: 'normal',
-        deadline: '',
-        instructions: ''
-      });
-      fetchData();
-      fetchPolicies();
-    } catch (error: any) {
-      console.error("Failed to create assignment:", error);
-      setError(`Failed to create assignment: ${error.message}`);
-    }
-  };
-  const handleReassignSurveyor = async () => {
-    try {
-      const assignmentResponse = await adminApi.getAssignmentByPolicyId(selectedPolicy._id);
-      if (!assignmentResponse.success || !assignmentResponse.data) {
-        setError("Could not find assignment for the selected policy.");
-        return;
-      }
-      const assignment = assignmentResponse.data;
-      const response = await adminApi.reassignSurveyor(
-        assignment._id, 
-        newAssignmentData.surveyorId,
-        newAssignmentData.instructions, // reason
-        newAssignmentData.deadline,
-        newAssignmentData.priority
-      ); 
-      if (response.success) {
-        setShowAssignModal(false);
-        setSelectedPolicy(null);
-        setNewAssignmentData({
-          policyId: '',
-          surveyorId: '',
-          assignedBy: '',
-          status: 'assigned',
-          priority: 'normal',
-          deadline: '',
-          instructions: ''
-        });
-        fetchData();
-        fetchPolicies();
-        fetchAssignedPolicies();
-      } else {
-        setError(response.message || 'Failed to re-assign surveyor');
-      }
-    } catch (error) {
-      console.error("Failed to re-assign surveyor:", error);
-      setError('Failed to re-assign surveyor. Please try again.');
-    }
-  };
-
-  // Filters and Search
   const [filters, setFilters] = useState<AssignmentFilters>({
     status: 'all',
     priority: 'all',
@@ -191,25 +96,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     fetchPolicies();
     fetchAssignedPolicies();
 
-    const fetchSurveyors = async () => {
-      try {
-        const response = await adminApi.getSurveyors({ status: 'active' }); // Fetch only active surveyors
-        console.log("Response from getSurveyors:", response);
-              if (response?.data) {
-                setAvailableSurveyors(response.data);
-                console.log("Available Surveyors:", response.data);
-              } else {
-                setAvailableSurveyors([]);
-              }
-      } catch (error) {
-        setAvailableSurveyors([]);
-      }
-    };
-
     if (policyId) {
-      const fetchPolicyAndSurveyors = async () => {
+      const fetchPolicy = async () => {
         try {
-          await fetchSurveyors();
           const response = await adminApi.getPolicyById(policyId);
           if (response?.data) {
             setSelectedPolicy(response.data);
@@ -219,15 +108,13 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           console.error("Failed to fetch policy:", error);
         }
       };
-      fetchPolicyAndSurveyors();
-    } else {
-      fetchSurveyors();
+      fetchPolicy();
     }
   }, [filters, surveyorId, policyId]);
 
   const fetchPolicies = async () => {
     try {
-      const response = await adminApi.getPolicies({ status: 'submitted', page: 1, limit: 100 }); // Use adminApi.getPolicies
+      const response = await adminApi.getPolicies({ status: 'submitted', page: 1, limit: 100 });
       if (response?.data) {
         setPolicies(response.data.policyRequests);
       } else {
@@ -256,12 +143,12 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       } else {
         assignmentsResponse = await getSurveyorAssignmentsNew({
           status: filters.status !== 'all' ? filters.status : undefined,
+          priority: filters.priority !== 'all' ? filters.priority : undefined,
           page: 1,
           limit: 50
         });
       }
 
-      console.log('assignmentsResponse', assignmentsResponse);
       if (assignmentsResponse.success && assignmentsResponse.data && Array.isArray(assignmentsResponse.data.assignments)) {
         setAssignments(assignmentsResponse.data.assignments);
       } else {
@@ -300,7 +187,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       }
 
       if (response.success) {
-        // Refresh assignments
         fetchData();
         setSelectedAssignment(null);
       } else {
@@ -414,7 +300,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         </button>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
@@ -424,10 +309,8 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         </div>
       )}
 
-      {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
           <div className="relative md:col-span-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -447,7 +330,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
             )}
           </div>
 
-          {/* Status Filter */}
           <select
             value={filters.status}
             onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
@@ -461,7 +343,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
             <option value="rejected">Rejected</option>
           </select>
 
-          {/* Priority Filter */}
           <select
             value={filters.priority}
             onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
@@ -476,7 +357,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         </div>
         {viewMode === 'admin' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            {/* Surveyor Filter (Admin only) */}
             <select
               value={filters.surveyorId}
               onChange={(e) => setFilters(prev => ({ ...prev, surveyorId: e.target.value }))}
@@ -489,7 +369,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                                   </option>              ))}
             </select>
 
-            {/* Clear Filters */}
             <button
               onClick={() => setFilters({
                 status: 'all',
@@ -505,7 +384,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         )}
       </div>
 
-      {/* Submitted Policies */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-4">Submitted Policies</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -535,6 +413,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                   <button
                     onClick={() => {
                       setSelectedPolicy(policy);
+                      setIsReassignMode(false);
                       setShowAssignModal(true);
                     }}
                     className="text-blue-600 hover:text-blue-900"
@@ -547,7 +426,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         </div>
       </div>
 
-      {/* Assigned Policies */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-4">Assigned Policies</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -563,8 +441,8 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                   <button
                     onClick={() => {
                       setSelectedPolicy(policy);
+                      setIsReassignMode(true);
                       setShowAssignModal(true);
-                      setIsReassign(true);
                     }}
                     className="text-indigo-600 hover:text-indigo-900"
                   >
@@ -593,186 +471,15 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         </div>
       </div>
 
-      {/* Create Assignment Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Create New Assignment</h3>
-            <div className="space-y-3">
-              <select
-                value={newAssignmentData.policyId}
-                onChange={e => setNewAssignmentData({ ...newAssignmentData, policyId: e.target.value })}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              >
-                <option value="">Select Policy</option>
-                {Array.isArray(policies) && policies.map(policy => (
-                  <option key={policy._id} value={policy._id}>
-                    {policy.policyNumber ? `${policy.policyNumber} - ${policy.propertyDetails.address}` : policy.propertyDetails.address}
-                  </option>
-                ))}
-              </select>
-              <select
-                multiple
-                value={newAssignmentData.surveyorIds}
-                onChange={e => setNewAssignmentData({ ...newAssignmentData, surveyorIds: Array.from(e.target.selectedOptions, option => option.value) })}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              >
-                <option value="">Select Surveyor</option>
-                {Array.isArray(availableSurveyors) && availableSurveyors.map(s => (
-                  <option key={s._id} value={s._id}>{s.firstname} {s.lastname} ({s.email}) - {s.profile?.specialization?.join(', ') || 'N/A'}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Assigned By (optional)"
-                value={newAssignmentData.assignedBy}
-                onChange={e => setNewAssignmentData({ ...newAssignmentData, assignedBy: e.target.value })}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              />
-              <select
-                value={newAssignmentData.status}
-                onChange={e => setNewAssignmentData({ ...newAssignmentData, status: e.target.value })}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              >
-                <option value="assigned">Assigned</option>
-                <option value="accepted">Accepted</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-              <select
-                value={newAssignmentData.priority}
-                onChange={e => setNewAssignmentData({ ...newAssignmentData, priority: e.target.value })}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              >
-                <option value="normal">Normal</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-              <input
-                type="date"
-                value={newAssignmentData.deadline}
-                onChange={e => setNewAssignmentData({ ...newAssignmentData, deadline: e.target.value })}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              />
-            </div>
-            <div className="flex justify-end space-x-2 mt-6">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
-              >Cancel</button>
-              <button
-                onClick={handleCreateAssignment}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                disabled={!newAssignmentData.policyId || !newAssignmentData.surveyorId}
-              >Create</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Assign Surveyor Modal */}
-      {showAssignModal && selectedPolicy && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-lg p-6 overflow-y-auto max-h-[90vh]">
-            <div className="flex items-start justify-between">
-              <h3 className="text-lg font-semibold mb-4">{isReassign ? 'Re-assign Surveyor' : 'Assign Surveyor'}</h3>
-              <button onClick={() => {
-                setShowAssignModal(false);
-                setIsReassign(false);
-              }} className="text-gray-400 hover:text-gray-600">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Policy Holder</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedPolicy?.contactDetails?.fullName}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Property Address</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedPolicy?.propertyDetails?.address}</p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="surveyor" className="block text-sm font-medium text-gray-700">Select Surveyor(s)</label>
-                <div className="mt-2 h-60 overflow-y-auto border border-gray-300 rounded-md">
-                  {Array.isArray(availableSurveyors) && availableSurveyors.map(s => {
-                    return (
-                      <div key={s._id} className="flex items-center p-2">
-                        <input
-                          id={`surveyor-${s._id}`}
-                          name="surveyor"
-                          type="radio"
-                          value={s._id}
-                          checked={newAssignmentData.surveyorId === s._id}
-                          onChange={e => {
-                            setNewAssignmentData(prev => ({ ...prev, surveyorId: e.target.value }));
-                          }}
-                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded-full focus:ring-indigo-500"
-                        />
-                        <label htmlFor={`surveyor-${s._id}`} className="ml-3 text-sm text-gray-700">
-                          {(s.userId?.firstname || 'N/A')} {(s.userId?.lastname || 'N/A')} ({(s.userId?.email || 'N/A')}) - {s.profile?.specialization?.join(', ') || 'N/A'}
-                        </label>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              <div>
-                <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions</label>
-                <textarea
-                  id="instructions"
-                  value={newAssignmentData.instructions}
-                  onChange={e => setNewAssignmentData({ ...newAssignmentData, instructions: e.target.value })}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="priority" className="block text-sm font-medium text-gray-700">Priority</label>
-                  <select
-                    id="priority"
-                    value={newAssignmentData.priority}
-                    onChange={e => setNewAssignmentData({ ...newAssignmentData, priority: e.target.value })}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                  >
-                    <option value="normal">Normal</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="deadline" className="block text-sm font-medium text-gray-700">Deadline</label>
-                  <input
-                    type="date"
-                    id="deadline"
-                    value={newAssignmentData.deadline}
-                    onChange={e => setNewAssignmentData({ ...newAssignmentData, deadline: e.target.value })}
-                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2 mt-6">
-              <button
-                onClick={() => {
-                  setShowAssignModal(false);
-                  setSelectedPolicy(null);
-                }}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
-              >Cancel</button>
-              <button
-                onClick={isReassign ? handleReassignSurveyor : handleCreateAssignment}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >{isReassign ? 'Re-assign' : 'Assign'}</button>
-            </div>
-          </div>
-        </div>
+      {showAssignModal && (
+        <AssignSurveyorModal
+          show={showAssignModal}
+          onClose={() => setShowAssignModal(false)}
+          selectedPolicy={selectedPolicy}
+          isReassign={isReassignMode}
+          onAssignmentCreated={fetchData}
+          onAssignmentReassigned={fetchData}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -791,7 +498,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         ))}
       </div>
 
-      {/* Empty State */}
       {assignments.length === 0 && !loading && (
         <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -804,7 +510,6 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         </div>
       )}
 
-      {/* Assignment Detail Modal */}
       {selectedAssignment && (
         <AssignmentDetailModal
           assignment={selectedAssignment}
@@ -812,11 +517,15 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           onClose={() => setSelectedAssignment(null)}
           onStatusUpdate={handleStatusUpdate}
           onProgressUpdate={updateProgress}
+          getStatusColor={getStatusColor}
+          getPriorityColor={getPriorityColor}
+          formatDate={formatDate}
         />
       )}
     </div>
   );
 };
+
 
 // Assignment Card Component
 interface AssignmentCardProps {
@@ -1008,6 +717,9 @@ interface AssignmentDetailModalProps {
   onClose: () => void;
   onStatusUpdate: (id: string, action: 'accept' | 'start' | 'complete', data?: any) => void;
   onProgressUpdate: (id: string, data: any) => void;
+  getStatusColor: (status: string) => string;
+  getPriorityColor: (priority: string) => string;
+  formatDate: (date: string) => string;
 }
 
 const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
@@ -1015,7 +727,10 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
   viewMode,
   onClose,
   onStatusUpdate,
-  onProgressUpdate
+  onProgressUpdate,
+  getStatusColor,
+  getPriorityColor,
+  formatDate
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'progress' | 'documents' | 'communication'>('details');
   const [progressNote, setProgressNote] = useState('');

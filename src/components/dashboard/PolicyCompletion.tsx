@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Download, ExternalLink, CheckCircle, Clock, FileText } from "lucide-react";
+import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
 import { downloadFile } from "@/services/fileService";
 import { getUserPolicyRequests } from "@/services/api";
@@ -15,13 +15,15 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     const fetchCompletedPolicies = async () => {
       setLoading(true);
       try {
-        const [approvedResponse, surveyedResponse] = await Promise.all([
+        const [approvedResponse, surveyedResponse, rejectedResponse] = await Promise.all([
           getUserPolicyRequests("approved", 1, 100),
           getUserPolicyRequests("surveyed", 1, 100),
+          getUserPolicyRequests("rejected", 1, 100),
         ]);
         const approved = approvedResponse.data.policyRequests || [];
         const surveyed = surveyedResponse.data.policyRequests || [];
-        setCompletedPolicies([...approved, ...surveyed]);
+        const rejected = rejectedResponse.data.policyRequests || [];
+        setCompletedPolicies([...approved, ...surveyed, ...rejected]);
       } catch (error) {
         console.error("Failed to fetch completed policies:", error);
       } finally {
@@ -76,9 +78,9 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                     </h3>
                     <p className="text-gray-600">{policy.propertyDetails.address}</p>
                   </div>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                    {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> : <FileText className="w-4 h-4 mr-1" />}
-                    {policy.status === 'approved' ? 'Approved' : 'Surveyed'}
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' : policy.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                    {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> : policy.status === 'rejected' ? <XCircle className="w-4 h-4 mr-1" /> : <FileText className="w-4 h-4 mr-1" />}
+                    {policy.status === 'approved' ? 'Approved' : policy.status === 'rejected' ? 'Rejected' : 'Surveyed'}
                   </span>
                 </div>
 
@@ -131,9 +133,8 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                   )}
                   
                   <button
-                    // onClick={() => handleProceedToPayment(policy)}
-                    // disabled={policy.status !== 'approved'}
                     onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+                    disabled={policy.status === 'rejected'}
                     className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
