@@ -831,6 +831,57 @@ export const getAdminProperties = async () => {
   }
 };
 
+// Delete APIs
+export const deleteProperty = async (propertyId: string) => {
+  try {
+    const response = await api.delete(`/property/${propertyId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to delete property:", error);
+    throw error;
+  }
+};
+
+export const deletePolicyRequest = async (policyId: string) => {
+  try {
+    const response = await api.delete(`/policy/${policyId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to delete policy request:", error);
+    throw error;
+  }
+};
+
+export const deleteEmployee = async (employeeId: string) => {
+  try {
+    const response = await api.delete(`/admin/employees/${employeeId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to delete employee:", error);
+    throw error;
+  }
+};
+
+export const deleteAdministrator = async (adminId: string) => {
+  try {
+    const response = await api.delete(`/admin/administrators/${adminId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to delete administrator:", error);
+    throw error;
+  }
+};
+
+export const deleteSurveyor = async (surveyorId: string) => {
+  try {
+    const response = await api.delete(`/admin/surveyor/${surveyorId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to delete surveyor:", error);
+    throw error;
+  }
+};
+
 // Admin API Service
 export const adminApi = {
   getDashboardStats: async () => {
@@ -1095,6 +1146,32 @@ export const adminApi = {
 
   getAdminProperties: async () => {
     const response = await api.get("/admin/property");
+    return response.data;
+  },
+
+  // Delete operations
+  deleteProperty: async (propertyId: string) => {
+    const response = await api.delete(`/property/${propertyId}`);
+    return response.data;
+  },
+
+  deletePolicyRequest: async (policyId: string) => {
+    const response = await api.delete(`/policy/${policyId}`);
+    return response.data;
+  },
+
+  deleteEmployee: async (employeeId: string) => {
+    const response = await api.delete(`/admin/employees/${employeeId}`);
+    return response.data;
+  },
+
+  deleteAdministrator: async (adminId: string) => {
+    const response = await api.delete(`/admin/administrators/${adminId}`);
+    return response.data;
+  },
+
+  deleteSurveyor: async (surveyorId: string) => {
+    const response = await api.delete(`/admin/surveyor/${surveyorId}`);
     return response.data;
   },
 };
