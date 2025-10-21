@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Eye, Users, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical } from 'lucide-react';
 import { PolicyRequest, Surveyor } from '@/types/api.types';
 import { adminApi, withErrorHandling, reviewSubmission } from '@/services/api';
 import { useAuth } from '@/context/useAuth';
@@ -23,6 +23,9 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
   const [selectedPolicySubmissions, setSelectedPolicySubmissions] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'submitted' | 'assigned' | 'surveyed' | 'rejected'>('all');
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
+  const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
 
   const handleFetchDocumentUrl = async (document: any) => {
     if (typeof document === 'string') {
@@ -81,6 +84,32 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
       )
     );
     alert('Policy sent to user successfully!');
+  });
+
+  const handleDeletePolicy = withErrorHandling(async (policy: PolicyRequest) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/policy/${policy._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+          'apiKey': process.env.NEXT_PUBLIC_API_KEY || ''
+        }
+      });
+
+      if (response.ok) {
+        setPolicies(prev => prev.filter(p => p._id !== policy._id));
+        setShowDeleteModal(false);
+        setPolicyToDelete(null);
+        alert('Policy deleted successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Failed to delete policy');
+      }
+    } catch (error) {
+      console.error('Delete policy error:', error);
+      alert('Failed to delete policy');
+    }
   });
 
   const getStatusBadge = (status: string) => {
@@ -176,35 +205,84 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
                   </td>
                   <td className="px-6 py-4">{getStatusBadge(policy.status)}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{new Date(policy.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-sm font-medium space-x-2">
-                    <button onClick={() => setSelectedPolicy(policy)} className="text-[#028835] hover:text-green-700">View</button>
-                    {policy.status === 'submitted' && (
+                  <td className="px-6 py-4 text-sm font-medium">
+                    <div className="relative">
                       <button
-                        onClick={() => {
-                          setSelectedPolicy(policy);
-                          setShowAssignModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-900"
+                        onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
+                        className="p-2 hover:bg-gray-100 rounded-full"
                       >
-                        Assign
+                        <MoreVertical className="h-4 w-4" />
                       </button>
-                    )}
-                    {policy.status === 'surveyed' && (
-                      <button
-                        onClick={async () => {
-                          setSelectedPolicy(policy);
-                          const response = await adminApi.getSurveySubmissions({ policyId: policy._id });
-                          setSelectedPolicySubmissions(response.data.submissions);
-                          setShowReviewModal(true);
-                        }}
-                        className="text-purple-600 hover:text-purple-900"
-                      >
-                        Review
-                      </button>
-                    )}
-                    {policy.status === 'approved' && (
-                      <button onClick={() => handleSendToUser(policy._id)} className="text-green-600 hover:text-green-900">Send to User</button>
-                    )}
+                      {showActionsDropdown === policy._id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                setSelectedPolicy(policy);
+                                setShowActionsDropdown(null);
+                              }}
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              <Eye className="mr-3 h-4 w-4" />
+                              View Details
+                            </button>
+                            {policy.status === 'submitted' && (
+                              <button
+                                onClick={() => {
+                                  setSelectedPolicy(policy);
+                                  setShowAssignModal(true);
+                                  setShowActionsDropdown(null);
+                                }}
+                                className="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"
+                              >
+                                <Users className="mr-3 h-4 w-4" />
+                                Assign Surveyor
+                              </button>
+                            )}
+                            {policy.status === 'surveyed' && (
+                              <button
+                                onClick={async () => {
+                                  setSelectedPolicy(policy);
+                                  const response = await adminApi.getSurveySubmissions({ policyId: policy._id });
+                                  setSelectedPolicySubmissions(response.data.submissions);
+                                  setShowReviewModal(true);
+                                  setShowActionsDropdown(null);
+                                }}
+                                className="flex items-center px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 w-full text-left"
+                              >
+                                <CheckCircle className="mr-3 h-4 w-4" />
+                                Review Submission
+                              </button>
+                            )}
+                            {policy.status === 'approved' && (
+                              <button
+                                onClick={() => {
+                                  handleSendToUser(policy._id);
+                                  setShowActionsDropdown(null);
+                                }}
+                                className="flex items-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"
+                              >
+                                <CheckCircle className="mr-3 h-4 w-4" />
+                                Send to User
+                              </button>
+                            )}
+                            {['submitted', 'assigned', 'rejected'].includes(policy.status) && (
+                              <button
+                                onClick={() => {
+                                  setPolicyToDelete(policy);
+                                  setShowDeleteModal(true);
+                                  setShowActionsDropdown(null);
+                                }}
+                                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                              >
+                                <Trash2 className="mr-3 h-4 w-4" />
+                                Delete Policy
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -284,6 +362,42 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({}) => {
                   Reject
                 </button>
                 <button onClick={() => handleReviewSubmission('approved')} className="px-4 py-2 bg-[#028835] text-white rounded-md hover:bg-green-700">Approve</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && policyToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center mb-4">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Policy Request</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Are you sure you want to delete the policy request for "{policyToDelete.propertyDetails.address}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setPolicyToDelete(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeletePolicy(policyToDelete)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Delete Policy
+                </button>
               </div>
             </div>
           </div>

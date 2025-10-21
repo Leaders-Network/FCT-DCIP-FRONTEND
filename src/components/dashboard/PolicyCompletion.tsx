@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle } from "lucide-react";
+import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
 import { downloadFile } from "@/services/fileService";
 import { getUserPolicyRequests } from "@/services/api";
@@ -10,6 +10,9 @@ interface PolicyCompletionProps {}
 const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
+  const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCompletedPolicies = async () => {
@@ -36,6 +39,31 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
   const handleDownloadSurvey = (documentUrl: string) => {
     window.open(documentUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDeletePolicy = async (policy: PolicyRequest) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/policy/${policy._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+          'apiKey': process.env.NEXT_PUBLIC_API_KEY || ''
+        }
+      });
+
+      if (response.ok) {
+        setCompletedPolicies(prev => prev.filter(p => p._id !== policy._id));
+        setShowDeleteModal(false);
+        setPolicyToDelete(null);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Failed to delete policy');
+      }
+    } catch (error) {
+      console.error('Delete policy error:', error);
+      alert('Failed to delete policy');
+    }
   };
 
   // const handleProceedToPayment = (policy: PolicyRequest) => {
@@ -78,10 +106,39 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                     </h3>
                     <p className="text-gray-600">{policy.propertyDetails.address}</p>
                   </div>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' : policy.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
-                    {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> : policy.status === 'rejected' ? <XCircle className="w-4 h-4 mr-1" /> : <FileText className="w-4 h-4 mr-1" />}
-                    {policy.status === 'approved' ? 'Approved' : policy.status === 'rejected' ? 'Rejected' : 'Surveyed'}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' : policy.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                      {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> : policy.status === 'rejected' ? <XCircle className="w-4 h-4 mr-1" /> : <FileText className="w-4 h-4 mr-1" />}
+                      {policy.status === 'approved' ? 'Approved' : policy.status === 'rejected' ? 'Rejected' : 'Surveyed'}
+                    </span>
+                    {policy.status === 'rejected' && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
+                          className="p-2 hover:bg-gray-100 rounded-full"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                        {showActionsDropdown === policy._id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                            <div className="py-1">
+                              <button
+                                onClick={() => {
+                                  setPolicyToDelete(policy);
+                                  setShowDeleteModal(true);
+                                  setShowActionsDropdown(null);
+                                }}
+                                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                              >
+                                <Trash2 className="mr-3 h-4 w-4" />
+                                Delete Policy
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -154,6 +211,42 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
           <p className="mt-1 text-sm text-gray-500">
             Your approved policies will appear here once the survey and admin review process is complete.
           </p>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && policyToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center mb-4">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Policy Request</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Are you sure you want to delete the policy request for "{policyToDelete.propertyDetails.address}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setPolicyToDelete(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeletePolicy(policyToDelete)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Delete Policy
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
