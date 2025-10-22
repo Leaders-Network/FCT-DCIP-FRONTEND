@@ -3,9 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
 import { downloadFile } from "@/services/fileService";
-import { getUserPolicyRequests } from "@/services/api";
+import { getUserPolicyRequests, deletePolicyRequest } from "@/services/api";
 
-interface PolicyCompletionProps {}
+interface PolicyCompletionProps { }
 
 const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
@@ -18,15 +18,17 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     const fetchCompletedPolicies = async () => {
       setLoading(true);
       try {
-        const [approvedResponse, surveyedResponse, rejectedResponse] = await Promise.all([
+        const [approvedResponse, surveyedResponse, rejectedResponse, requiresMoreInfoResponse] = await Promise.all([
           getUserPolicyRequests("approved", 1, 100),
           getUserPolicyRequests("surveyed", 1, 100),
           getUserPolicyRequests("rejected", 1, 100),
+          getUserPolicyRequests("requires_more_info", 1, 100),
         ]);
         const approved = approvedResponse.data.policyRequests || [];
         const surveyed = surveyedResponse.data.policyRequests || [];
         const rejected = rejectedResponse.data.policyRequests || [];
-        setCompletedPolicies([...approved, ...surveyed, ...rejected]);
+        const requiresMoreInfo = requiresMoreInfoResponse.data.policyRequests || [];
+        setCompletedPolicies([...approved, ...surveyed, ...rejected, ...requiresMoreInfo]);
       } catch (error) {
         console.error("Failed to fetch completed policies:", error);
       } finally {
@@ -43,23 +45,11 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
   const handleDeletePolicy = async (policy: PolicyRequest) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/policy/${policy._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-          'apiKey': process.env.NEXT_PUBLIC_API_KEY || ''
-        }
-      });
-
-      if (response.ok) {
-        setCompletedPolicies(prev => prev.filter(p => p._id !== policy._id));
-        setShowDeleteModal(false);
-        setPolicyToDelete(null);
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete policy');
-      }
+      await deletePolicyRequest(policy._id);
+      setCompletedPolicies(prev => prev.filter(p => p._id !== policy._id));
+      setShowDeleteModal(false);
+      setPolicyToDelete(null);
+      alert('Policy deleted successfully!');
     } catch (error) {
       console.error('Delete policy error:', error);
       alert('Failed to delete policy');
@@ -69,7 +59,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   // const handleProceedToPayment = (policy: PolicyRequest) => {
   //   // Redirect to the external payment verification URL
   //   const userId = localStorage.getItem("userId");
-  //   const paymentUrl = `https://askniid.org/VerifyBuildersPolicy.aspx?policyId=${policy._id}&userId=${userId}`;
+  //   const paymentUrl = `https://askniid.org/VerifyBuildersPolicy.aspx?ammcId=${policy._id}&userId=${userId}`;
   //   window.open(paymentUrl, '_blank', 'noopener,noreferrer');
   // };
 
@@ -91,7 +81,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-gray-900">Completed Policies</h2>
-        <p className="text-gray-600">Download your approved survey reports and proceed to payment.</p>
+        <p className="text-gray-600">Download your approved survey reports and verify policies.</p>
       </div>
 
       {completedPolicies.length > 0 ? (
@@ -107,11 +97,21 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                     <p className="text-gray-600">{policy.propertyDetails.address}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' : policy.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
-                      {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> : policy.status === 'rejected' ? <XCircle className="w-4 h-4 mr-1" /> : <FileText className="w-4 h-4 mr-1" />}
-                      {policy.status === 'approved' ? 'Approved' : policy.status === 'rejected' ? 'Rejected' : 'Surveyed'}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      policy.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        policy.status === 'requires_more_info' ? 'bg-orange-100 text-orange-800' :
+                          'bg-blue-100 text-blue-800'
+                      }`}>
+                      {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> :
+                        policy.status === 'rejected' ? <XCircle className="w-4 h-4 mr-1" /> :
+                          policy.status === 'requires_more_info' ? <Clock className="w-4 h-4 mr-1" /> :
+                            <FileText className="w-4 h-4 mr-1" />}
+                      {policy.status === 'approved' ? 'Approved' :
+                        policy.status === 'rejected' ? 'Rejected' :
+                          policy.status === 'requires_more_info' ? 'Requires More Info' :
+                            'Surveyed'}
                     </span>
-                    {policy.status === 'rejected' && (
+                    {(policy.status === 'rejected' || policy.status === 'requires_more_info') && (
                       <div className="relative">
                         <button
                           onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
@@ -150,7 +150,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       <p><span className="font-medium">Building Value:</span> ₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Survey Information</h4>
                     <div className="space-y-1 text-sm text-gray-600">
@@ -188,15 +188,31 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       Download Survey Report
                     </button>
                   )}
-                  
-                  <button
-                    onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
-                    disabled={policy.status === 'rejected'}
-                    className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Proceed to Payment
-                  </button>
+
+                  {policy.status === 'approved' ? (
+                    <button
+                      onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+                      className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Verify Policy
+                    </button>
+                  ) : policy.status === 'rejected' ? (
+                    <div className="inline-flex items-center px-6 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50">
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Policy Rejected - Policy verification unavailable
+                    </div>
+                  ) : policy.status === 'requires_more_info' ? (
+                    <div className="inline-flex items-center px-6 py-2 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-orange-50">
+                      <Clock className="h-4 w-4 mr-2" />
+                      More Information Required - Policy verification unavailable
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center px-6 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-50">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Awaiting Admin Approval
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

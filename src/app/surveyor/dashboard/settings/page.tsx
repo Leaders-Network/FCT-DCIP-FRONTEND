@@ -23,7 +23,7 @@ const SurveyorSettings = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       // TODO: Call API to update surveyor profile
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -36,7 +36,7 @@ const SurveyorSettings = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="h-full overflow-y-auto p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
@@ -47,7 +47,7 @@ const SurveyorSettings = () => {
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>

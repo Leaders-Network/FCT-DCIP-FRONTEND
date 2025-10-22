@@ -161,9 +161,9 @@ const SubmissionsList = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {submission.policyId.propertyDetails.propertyType}
+                    {submission.ammcId.propertyDetails.propertyType}
                   </h3>
-                  <p className="text-gray-600 mt-1">{submission.policyId.propertyDetails.address}</p>
+                  <p className="text-gray-600 mt-1">{submission.ammcId.propertyDetails.address}</p>
                   <div className="flex items-center text-sm text-gray-500 mt-2">
                     <Calendar className="h-4 w-4 mr-1" />
                     Submitted: {new Date(submission.updatedAt).toLocaleDateString()}
@@ -178,9 +178,9 @@ const SubmissionsList = () => {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-2">Property Details</h4>
                   <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Value:</span> ₦{submission.policyId.propertyDetails.buildingValue.toLocaleString()}</p>
-                    <p><span className="font-medium">Coverage:</span> {submission.policyId.requestDetails.coverageType}</p>
-                    <p><span className="font-medium">Owner:</span> {submission.policyId.contactDetails.fullName}</p>
+                    <p><span className="font-medium">Value:</span> ₦{submission.ammcId.propertyDetails.buildingValue.toLocaleString()}</p>
+                    <p><span className="font-medium">Coverage:</span> {submission.ammcId.requestDetails.coverageType}</p>
+                    <p><span className="font-medium">Owner:</span> {submission.ammcId.contactDetails.fullName}</p>
                   </div>
                 </div>
                 
