@@ -7,6 +7,7 @@ import { addProperty } from "@/services/api";
 interface AddNewPropertyProps {
   isOpen: boolean;
   onClose: () => void;
+  onPropertyAdded?: () => void;
 }
 
 interface Category {
@@ -27,7 +28,7 @@ interface FormData {
   contactOnProperty: string;
 }
 
-const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
+const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onPropertyAdded }) => {
   const [categories, setCategories] = useState<Category[]>(staticCategories);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -172,6 +173,12 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose }) => {
         contactOnProperty: "",
       });
       setImages([]);
+      
+      // Call the callback to refresh the properties list
+      if (onPropertyAdded) {
+        onPropertyAdded();
+      }
+      
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add property");

@@ -24,15 +24,14 @@ const SurveyorSidebar = () => {
   const menuItems = [
     { href: "/surveyor/dashboard", label: "Dashboard", icon: Home },
     { href: "/surveyor/dashboard/assignments", label: "My Assignments", icon: FileText },
-    { href: "/surveyor/dashboard/submissions", label: "Submissions", icon: Upload },
+
     { href: "/surveyor/dashboard/settings", label: "Settings", icon: Settings },
   ];
 
   return (
     <aside
-      className={`bg-white shadow-md transition-all duration-300 flex flex-col ${
-        isCollapsed ? "w-16" : "w-64"
-      }`}
+      className={`bg-white shadow-md transition-all duration-300 flex flex-col  ${isCollapsed ? "w-16" : "w-64"
+        }`}
     >
       <div className="p-4 flex justify-between items-center relative">
         {!isCollapsed ? (
@@ -53,7 +52,7 @@ const SurveyorSidebar = () => {
           </button>
         )}
       </div>
-      
+
       <nav className="mt-8 flex flex-col flex-grow">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -61,24 +60,22 @@ const SurveyorSidebar = () => {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center px-4 py-3 transition-colors ${
-                pathname === item.href
-                  ? "bg-[#028835] text-white"
-                  : "text-gray-700 hover:bg-gray-100"
-              } ${isCollapsed ? "justify-center" : ""}`}
+              className={`flex items-center px-4 py-3 transition-colors ${pathname === item.href
+                ? "bg-[#028835] text-white"
+                : "text-gray-700 hover:bg-gray-100"
+                } ${isCollapsed ? "justify-center" : ""}`}
             >
               <Icon
-                className={`w-5 h-5 ${
-                  isCollapsed ? "" : "mr-3"
-                } ${pathname === item.href ? "text-white" : "text-gray-500"}`}
+                className={`w-5 h-5 ${isCollapsed ? "" : "mr-3"
+                  } ${pathname === item.href ? "text-white" : "text-gray-500"}`}
               />
               {!isCollapsed && <span>{item.label}</span>}
             </Link>
           );
         })}
-        
+
         <div className="flex-grow"></div>
-        
+
         <button
           onClick={handleLogout}
           className="flex items-center px-4 py-3 mb-4 text-gray-700 hover:bg-gray-100 transition-colors"

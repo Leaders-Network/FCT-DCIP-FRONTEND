@@ -1,27 +1,34 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Download, ExternalLink, CheckCircle, Clock, FileText } from "lucide-react";
+import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
 import { downloadFile } from "@/services/fileService";
-import { getUserPolicyRequests } from "@/services/api";
+import { getUserPolicyRequests, deletePolicyRequest } from "@/services/api";
 
-interface PolicyCompletionProps {}
+interface PolicyCompletionProps { }
 
 const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
+  const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCompletedPolicies = async () => {
       setLoading(true);
       try {
-        const [approvedResponse, surveyedResponse] = await Promise.all([
+        const [approvedResponse, surveyedResponse, rejectedResponse, requiresMoreInfoResponse] = await Promise.all([
           getUserPolicyRequests("approved", 1, 100),
           getUserPolicyRequests("surveyed", 1, 100),
+          getUserPolicyRequests("rejected", 1, 100),
+          getUserPolicyRequests("requires_more_info", 1, 100),
         ]);
         const approved = approvedResponse.data.policyRequests || [];
         const surveyed = surveyedResponse.data.policyRequests || [];
-        setCompletedPolicies([...approved, ...surveyed]);
+        const rejected = rejectedResponse.data.policyRequests || [];
+        const requiresMoreInfo = requiresMoreInfoResponse.data.policyRequests || [];
+        setCompletedPolicies([...approved, ...surveyed, ...rejected, ...requiresMoreInfo]);
       } catch (error) {
         console.error("Failed to fetch completed policies:", error);
       } finally {
@@ -36,10 +43,23 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     window.open(documentUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const handleDeletePolicy = async (policy: PolicyRequest) => {
+    try {
+      await deletePolicyRequest(policy._id);
+      setCompletedPolicies(prev => prev.filter(p => p._id !== policy._id));
+      setShowDeleteModal(false);
+      setPolicyToDelete(null);
+      alert('Policy deleted successfully!');
+    } catch (error) {
+      console.error('Delete policy error:', error);
+      alert('Failed to delete policy');
+    }
+  };
+
   // const handleProceedToPayment = (policy: PolicyRequest) => {
   //   // Redirect to the external payment verification URL
   //   const userId = localStorage.getItem("userId");
-  //   const paymentUrl = `https://askniid.org/VerifyBuildersPolicy.aspx?policyId=${policy._id}&userId=${userId}`;
+  //   const paymentUrl = `https://askniid.org/VerifyBuildersPolicy.aspx?ammcId=${policy._id}&userId=${userId}`;
   //   window.open(paymentUrl, '_blank', 'noopener,noreferrer');
   // };
 
@@ -61,7 +81,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-gray-900">Completed Policies</h2>
-        <p className="text-gray-600">Download your approved survey reports and proceed to payment.</p>
+        <p className="text-gray-600">Download your approved survey reports and verify policies.</p>
       </div>
 
       {completedPolicies.length > 0 ? (
@@ -76,10 +96,49 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                     </h3>
                     <p className="text-gray-600">{policy.propertyDetails.address}</p>
                   </div>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                    {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> : <FileText className="w-4 h-4 mr-1" />}
-                    {policy.status === 'approved' ? 'Approved' : 'Surveyed'}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      policy.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        policy.status === 'requires_more_info' ? 'bg-orange-100 text-orange-800' :
+                          'bg-blue-100 text-blue-800'
+                      }`}>
+                      {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> :
+                        policy.status === 'rejected' ? <XCircle className="w-4 h-4 mr-1" /> :
+                          policy.status === 'requires_more_info' ? <Clock className="w-4 h-4 mr-1" /> :
+                            <FileText className="w-4 h-4 mr-1" />}
+                      {policy.status === 'approved' ? 'Approved' :
+                        policy.status === 'rejected' ? 'Rejected' :
+                          policy.status === 'requires_more_info' ? 'Requires More Info' :
+                            'Surveyed'}
+                    </span>
+                    {(policy.status === 'rejected' || policy.status === 'requires_more_info') && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
+                          className="p-2 hover:bg-gray-100 rounded-full"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                        {showActionsDropdown === policy._id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                            <div className="py-1">
+                              <button
+                                onClick={() => {
+                                  setPolicyToDelete(policy);
+                                  setShowDeleteModal(true);
+                                  setShowActionsDropdown(null);
+                                }}
+                                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                              >
+                                <Trash2 className="mr-3 h-4 w-4" />
+                                Delete Policy
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -91,7 +150,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       <p><span className="font-medium">Building Value:</span> ₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Survey Information</h4>
                     <div className="space-y-1 text-sm text-gray-600">
@@ -129,16 +188,31 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       Download Survey Report
                     </button>
                   )}
-                  
-                  <button
-                    // onClick={() => handleProceedToPayment(policy)}
-                    // disabled={policy.status !== 'approved'}
-                    onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
-                    className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Proceed to Payment
-                  </button>
+
+                  {policy.status === 'approved' ? (
+                    <button
+                      onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+                      className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Verify Policy
+                    </button>
+                  ) : policy.status === 'rejected' ? (
+                    <div className="inline-flex items-center px-6 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50">
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Policy Rejected - Policy verification unavailable
+                    </div>
+                  ) : policy.status === 'requires_more_info' ? (
+                    <div className="inline-flex items-center px-6 py-2 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-orange-50">
+                      <Clock className="h-4 w-4 mr-2" />
+                      More Information Required - Policy verification unavailable
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center px-6 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-50">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Awaiting Admin Approval
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -153,6 +227,42 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
           <p className="mt-1 text-sm text-gray-500">
             Your approved policies will appear here once the survey and admin review process is complete.
           </p>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && policyToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center mb-4">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Policy Request</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Are you sure you want to delete the policy request for "{policyToDelete.propertyDetails.address}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setPolicyToDelete(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeletePolicy(policyToDelete)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Delete Policy
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

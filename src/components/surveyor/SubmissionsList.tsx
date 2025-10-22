@@ -7,14 +7,14 @@ import { getSurveyorSubmissions } from "@/services/api";
 
 const SubmissionsList = () => {
   const [submissions, setSubmissions] = useState<PolicyRequest[]>([]);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'revision_required'>('all');
   const [loading, setLoading] = useState(true);
    const filteredSubmissions = (submissions || []).filter(submission => {
     if (filter === 'all') return submission?.status !== 'assigned';
-    if (filter === 'pending') return submission?.status === 'surveyed';
+    if (filter === 'pending') return submission?.status === 'submitted' || submission?.status === 'under_review';
     if (filter === 'approved') return submission?.status === 'approved';
     if (filter === 'rejected') return submission?.status === 'rejected';
-    return true;
+    if (filter === 'revision_required') return submission?.status === 'revision_required';
   });
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const SubmissionsList = () => {
       try {
         const response = await getSurveyorSubmissions(filter);
         console.log("Submissions List Response:", response);
-        const data = response.data;
+        const data = response.data.submissions;
         setSubmissions(Array.isArray(data) ? data : []);
       } catch (error) {
         console.log(error);
@@ -39,7 +39,8 @@ const SubmissionsList = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'surveyed':
+      case 'submitted':
+      case 'under_review':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
             <Clock className="w-3 h-3 mr-1" />
@@ -58,6 +59,13 @@ const SubmissionsList = () => {
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
             <XCircle className="w-3 h-3 mr-1" />
             Rejected
+          </span>
+        );
+      case 'revision_required':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Eye className="w-3 h-3 mr-1" />
+            Requesting More Info
           </span>
         );
       default:
@@ -122,9 +130,10 @@ const SubmissionsList = () => {
         <nav className="-mb-px flex space-x-8">
           {[
             { key: 'all', label: 'All Submissions', count: submissions.filter(s => s.status !== 'assigned').length },
-            { key: 'pending', label: 'Pending Review', count: submissions.filter(s => s.status === 'surveyed').length },
+            { key: 'pending', label: 'Pending Review', count: submissions.filter(s => s.status === 'submitted' || s.status === 'under_review').length },
             { key: 'approved', label: 'Approved', count: submissions.filter(s => s.status === 'approved').length },
-            { key: 'rejected', label: 'Rejected', count: submissions.filter(s => s.status === 'rejected').length }
+            { key: 'rejected', label: 'Rejected', count: submissions.filter(s => s.status === 'rejected').length },
+            { key: 'revision_required', label: 'Revision Required', count: submissions.filter(s => s.status === 'revision_required').length }
           ].map(tab => (
             <button
               key={tab.key}
@@ -152,9 +161,9 @@ const SubmissionsList = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {submission.propertyDetails.propertyType}
+                    {submission.ammcId.propertyDetails.propertyType}
                   </h3>
-                  <p className="text-gray-600 mt-1">{submission.propertyDetails.address}</p>
+                  <p className="text-gray-600 mt-1">{submission.ammcId.propertyDetails.address}</p>
                   <div className="flex items-center text-sm text-gray-500 mt-2">
                     <Calendar className="h-4 w-4 mr-1" />
                     Submitted: {new Date(submission.updatedAt).toLocaleDateString()}
@@ -169,9 +178,9 @@ const SubmissionsList = () => {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-2">Property Details</h4>
                   <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Value:</span> ₦{submission.propertyDetails.buildingValue.toLocaleString()}</p>
-                    <p><span className="font-medium">Coverage:</span> {submission.requestDetails.coverageType}</p>
-                    <p><span className="font-medium">Owner:</span> {submission.contactDetails.fullName}</p>
+                    <p><span className="font-medium">Value:</span> ₦{submission.ammcId.propertyDetails.buildingValue.toLocaleString()}</p>
+                    <p><span className="font-medium">Coverage:</span> {submission.ammcId.requestDetails.coverageType}</p>
+                    <p><span className="font-medium">Owner:</span> {submission.ammcId.contactDetails.fullName}</p>
                   </div>
                 </div>
                 
@@ -186,9 +195,10 @@ const SubmissionsList = () => {
                         : 'Not available'
                     }</p>
                     <p><span className="font-medium">Status:</span> 
-                      {submission.status === 'surveyed' ? 'Under Review' :
+                      {submission.status === 'submitted' || submission.status === 'under_review' ? 'Under Review' :
                        submission.status === 'approved' ? 'Approved by Admin' :
-                       submission.status === 'rejected' ? 'Rejected by Admin' : submission.status}
+                       submission.status === 'rejected' ? 'Rejected by Admin' :
+                       submission.status === 'revision_required' ? 'Revision Required by Admin' : submission.status}
                     </p>
                   </div>
                 </div>
