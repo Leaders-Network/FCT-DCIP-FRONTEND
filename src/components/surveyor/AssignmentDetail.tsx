@@ -48,6 +48,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       formData.append('recommendedAction', submission.recommendedAction);
       formData.append('contactLog', JSON.stringify(submission.contactLog));
       formData.append('surveyDetails', JSON.stringify(submission.surveyDetails));
+      if (submission.expenses) {
+        formData.append('expenses', JSON.stringify(submission.expenses));
+      }
       if (submission.surveyDocument) {
         formData.append('surveyDocument', submission.surveyDocument);
       }

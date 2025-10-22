@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Upload, FileText, Phone, Mail, Calendar, X, Loader2, AlertCircle } from "lucide-react";
+import { Upload, FileText, Phone, Calendar, X, Loader2, AlertCircle } from "lucide-react";
 import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
 
 interface SurveySubmissionFormProps {
@@ -9,7 +9,7 @@ interface SurveySubmissionFormProps {
   onCancel: () => void;
 }
 
-const ErrorMessage = ({ message }) => (
+const ErrorMessage = ({ message }: { message: string }) => (
   <div className="bg-red-50 text-red-700 p-3 rounded-md flex items-center">
     <AlertCircle className="h-5 w-5 mr-2" />
     <span>{message}</span>
@@ -29,6 +29,15 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
   const [contactLog, setContactLog] = useState<ContactLogEntry[]>([]);
   const [recommendedAction, setRecommendedAction] = useState<'approve' | 'reject' | 'request_more_info'>('approve');
+
+  // Expense tracking
+  const [expenses, setExpenses] = useState({
+    transportation: 0,
+    accommodation: 0,
+    meals: 0,
+    equipment: 0,
+    other: 0
+  });
   const [newContact, setNewContact] = useState<ContactLogEntry>({
     date: new Date().toISOString().split('T')[0],
     method: 'phone',
@@ -36,7 +45,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
     successful: true
   });
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +107,8 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
           structuralAssessment,
           riskFactors,
           recommendations
-        }
+        },
+        expenses
       };
 
       await onSubmit(submission);
@@ -236,28 +246,23 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
 
               <div className="mt-1 flex justify-center px-8 pt-8 pb-8 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-500 transition-colors bg-gray-50">
                 <div className="space-y-3 text-center">
-                  {uploading ? (
-                    <Loader2 className="mx-auto h-12 w-12 text-blue-600 animate-spin" />
-                  ) : (
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  )}
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <div className="flex text-base text-gray-600">
                     <label
                       htmlFor="survey-document"
                       className="relative cursor-pointer bg-white rounded-lg px-4 py-2 font-semibold text-blue-600 hover:text-blue-700 focus-within:outline-none border border-blue-600 hover:bg-blue-50 transition-colors"
                     >
-                      <span>{uploading ? 'Uploading...' : 'Choose PDF File'}</span>
+                      <span>Choose PDF File</span>
                       <input
                         id="survey-document"
                         name="survey-document"
                         type="file"
                         accept=".pdf"
                         onChange={handleFileChange}
-                        disabled={uploading}
                         className="sr-only"
                       />
                     </label>
-                    {!uploading && <p className="pl-2 self-center">or drag and drop here</p>}
+                    <p className="pl-2 self-center">or drag and drop here</p>
                   </div>
                   <p className="text-sm text-gray-500">PDF files only • Maximum size: 10MB</p>
                 </div>
@@ -348,6 +353,96 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   placeholder="Provide comprehensive notes about the property survey, including detailed findings, observations, and any additional concerns or recommendations..."
                 />
+              </div>
+            </div>
+
+            {/* Expense Tracking Section */}
+            <div className="border-b border-gray-200 pb-6">
+              <div className="flex items-center mb-4">
+                <FileText className="h-5 w-5 text-blue-600 mr-2" />
+                <h3 className="text-lg font-medium text-gray-900">Survey Expenses</h3>
+              </div>
+              <p className="text-gray-600 mb-4">Record any expenses incurred during the survey process.</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Transportation (₦)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={expenses.transportation}
+                    onChange={(e) => setExpenses(prev => ({ ...prev, transportation: Number(e.target.value) || 0 }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Accommodation (₦)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={expenses.accommodation}
+                    onChange={(e) => setExpenses(prev => ({ ...prev, accommodation: Number(e.target.value) || 0 }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Meals (₦)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={expenses.meals}
+                    onChange={(e) => setExpenses(prev => ({ ...prev, meals: Number(e.target.value) || 0 }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Equipment (₦)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={expenses.equipment}
+                    onChange={(e) => setExpenses(prev => ({ ...prev, equipment: Number(e.target.value) || 0 }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Other Expenses (₦)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={expenses.other}
+                    onChange={(e) => setExpenses(prev => ({ ...prev, other: Number(e.target.value) || 0 }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Total Expenses
+                  </label>
+                  <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 font-medium">
+                    ₦{(expenses.transportation + expenses.accommodation + expenses.meals + expenses.equipment + expenses.other).toLocaleString()}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -449,7 +544,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={loading || uploading || !uploadedDocument || !surveyNotes.trim()}
+                disabled={loading || !uploadedDocument || !surveyNotes.trim()}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
