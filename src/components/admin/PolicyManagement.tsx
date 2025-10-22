@@ -413,6 +413,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       {showDetailsModal && selectedPolicy && (
         <PolicyDetailsModal
           policy={selectedPolicy}
+          getStatusBadge={getStatusBadge}
           onClose={() => {
             setShowDetailsModal(false);
             setSelectedPolicy(null);
@@ -426,10 +427,11 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 // Policy Details Modal Component
 interface PolicyDetailsModalProps {
   policy: PolicyRequest;
+  getStatusBadge: (status: string) => JSX.Element;
   onClose: () => void;
 }
 
-const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, onClose }) => {
+const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, getStatusBadge, onClose }) => {
   const [surveyData, setSurveyData] = useState<any>(null);
   const [assignmentData, setAssignmentData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
