@@ -391,7 +391,9 @@ export default function PropertiesPage() {
                         onCheckedChange={() => togglePropertySelection(property._id)}
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{property?.address}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 max-w-xs">
+                      <div className="truncate">{property?.address}</div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.ownedBy?.firstname} {property?.ownedBy?.lastname}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?._id}</td>
                     <td className="px-6 py-4 whitespace-nowrap">

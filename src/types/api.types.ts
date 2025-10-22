@@ -192,7 +192,7 @@ export interface Surveyor extends Employee {
 }
 
 export interface SurveySubmission {
-  policyId: string;
+  ammcId: string;
   surveyorId: string;
   surveyDocument: File | string | {
     name: string;
@@ -213,7 +213,7 @@ export interface ContactLogEntry {
 
 // Admin Policy Management types
 export interface PolicyAssignment {
-  policyId: string;
+  ammcId: string;
   surveyorIds: string[];
   assignedBy: string;
   deadline?: string;
@@ -222,7 +222,7 @@ export interface PolicyAssignment {
 }
 
 export interface PolicyReview {
-  policyId: string;
+  ammcId: string;
   reviewerId: string;
   decision: 'approved' | 'rejected';
   reviewNotes: string;
@@ -232,7 +232,7 @@ export interface PolicyReview {
 // Assignment Management Types
 export interface Assignment {
   _id: string;
-  policyId: string;
+  ammcId: string;
   surveyorId: string;
   assignedBy: string;
   assignedAt: string;
@@ -352,7 +352,7 @@ export interface DocumentFile {
 // Enhanced Survey Submission Interface
 export interface EnhancedSurveySubmission {
   _id: string;
-  policyId: string;
+  ammcId: string;
   surveyorId: string;
   assignmentId?: string;
   surveyDetails: {

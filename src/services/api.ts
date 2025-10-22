@@ -454,7 +454,7 @@ export const getAdminAssignments = async (filters?: {
   status?: string;
   priority?: string;
   surveyorId?: string;
-  policyId?: string;
+  ammcId?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -723,7 +723,7 @@ export const getSubmissionByAssignment = async (assignmentId: string) => {
 // File Upload APIs
 export const uploadSurveyDocument = async (file: File, data: {
   assignmentId?: string;
-  policyId?: string;
+  ammcId?: string;
   category?: string;
   description?: string;
   documentType?: string;
@@ -750,7 +750,7 @@ export const uploadSurveyDocument = async (file: File, data: {
 
 export const uploadMultipleSurveyDocuments = async (files: File[], data: {
   assignmentId?: string;
-  policyId?: string;
+  ammcId?: string;
   category?: string;
   description?: string;
   documentType?: string;
@@ -778,7 +778,7 @@ export const uploadMultipleSurveyDocuments = async (files: File[], data: {
 
 export const getSurveyDocuments = async (filters: {
   assignmentId?: string;
-  policyId?: string;
+  ammcId?: string;
   category?: string;
   documentType?: string;
 }) => {
@@ -797,11 +797,11 @@ export const getSurveyDocuments = async (filters: {
   }
 };
 
-export const deleteSurveyDocument = async (documentId: string, assignmentId?: string, policyId?: string) => {
+export const deleteSurveyDocument = async (documentId: string, assignmentId?: string, ammcId?: string) => {
   try {
     const endpoint = assignmentId 
       ? `/survey-documents/assignment/${assignmentId}/document/${documentId}`
-      : `/survey-documents/policy/${policyId}/document/${documentId}`;
+      : `/survey-documents/policy/${ammcId}/document/${documentId}`;
     
     const response = await api.delete(endpoint);
     return response.data;
@@ -842,9 +842,9 @@ export const deleteProperty = async (propertyId: string) => {
   }
 };
 
-export const deletePolicyRequest = async (policyId: string) => {
+export const deletePolicyRequest = async (ammcId: string) => {
   try {
-    const response = await api.delete(`/policy/${policyId}`);
+    const response = await api.delete(`/policy/${ammcId}`);
     return response.data;
   } catch (error) {
     console.error("Failed to delete policy request:", error);
@@ -913,23 +913,23 @@ export const adminApi = {
     return response.data;
   },
 
-  getPolicyById: async (policyId: string) => {
-    const response = await api.get(`/admin/policy/${policyId}`);
+  getPolicyById: async (ammcId: string) => {
+    const response = await api.get(`/admin/policy/${ammcId}`);
     return response.data;
   },
 
-  assignSurveyor: async (policyId: string, assignment: { surveyorIds: string[] }) => {
-    const response = await api.post(`/policy/${policyId}/assign`, assignment);
+  assignSurveyor: async (ammcId: string, assignment: { surveyorIds: string[] }) => {
+    const response = await api.post(`/policy/${ammcId}/assign`, assignment);
     return response.data;
   },
 
-  reviewPolicySubmission: async (policyId: string, decision: 'approved' | 'rejected', notes: string) => {
-    const response = await api.post(`/policy/${policyId}/review`, { decision, notes });
+  reviewPolicySubmission: async (ammcId: string, decision: 'approved' | 'rejected', notes: string) => {
+    const response = await api.post(`/policy/${ammcId}/review`, { decision, notes });
     return response.data;
   },
 
-  sendPolicyToUser: async (policyId: string) => {
-    const response = await api.post(`/admin/policy/${policyId}/send-to-user`);
+  sendPolicyToUser: async (ammcId: string) => {
+    const response = await api.post(`/admin/policy/${ammcId}/send-to-user`);
     return response.data;
   },
 
@@ -1054,15 +1054,15 @@ export const adminApi = {
     return response.data;
   },
 
-  getAssignmentByPolicyId: async (policyId: string) => {
-    const response = await api.get(`/admin/assignment/policy/${policyId}`);
+  getAssignmentByAmmcId: async (ammcId: string) => {
+    const response = await api.get(`/admin/assignment/policy/${ammcId}`);
     return response.data;
   },
 
   getSurveySubmissions: async (filters?: {
     status?: string;
     surveyorId?: string;
-    policyId?: string;
+    ammcId?: string;
     page?: number;
     limit?: number;
   }) => {
@@ -1155,8 +1155,8 @@ export const adminApi = {
     return response.data;
   },
 
-  deletePolicyRequest: async (policyId: string) => {
-    const response = await api.delete(`/policy/${policyId}`);
+  deletePolicyRequest: async (ammcId: string) => {
+    const response = await api.delete(`/policy/${ammcId}`);
     return response.data;
   },
 

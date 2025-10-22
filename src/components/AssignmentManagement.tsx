@@ -2,15 +2,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect} from 'react' 
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation';
-import { 
-  MapPin, 
-  Clock, 
-  User, 
-  AlertTriangle, 
-  CheckCircle, 
-  Calendar, 
+import {
+  MapPin,
+  Clock,
+  User,
+  AlertTriangle,
+  CheckCircle,
+  Calendar,
   FileText,
   MessageSquare,
   Camera,
@@ -57,7 +57,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 }) => {
   const { user } = useAuth();
   const searchParams = useSearchParams();
-  const policyId = searchParams.get('policyId');
+  const ammcId = searchParams.get('ammcId');
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -96,10 +96,10 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     fetchPolicies();
     fetchAssignedPolicies();
 
-    if (policyId) {
+    if (ammcId) {
       const fetchPolicy = async () => {
         try {
-          const response = await adminApi.getPolicyById(policyId);
+          const response = await adminApi.getPolicyById(ammcId);
           if (response?.data) {
             setSelectedPolicy(response.data);
             setShowAssignModal(true);
@@ -110,7 +110,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       };
       fetchPolicy();
     }
-  }, [filters, surveyorId, policyId]);
+  }, [filters, surveyorId, ammcId]);
 
   const fetchPolicies = async () => {
     try {
@@ -173,7 +173,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   const handleStatusUpdate = async (assignmentId: string, action: 'accept' | 'start' | 'complete', data?: any) => {
     try {
       let response;
-      
+
       switch (action) {
         case 'accept':
           response = await acceptAssignment(assignmentId);
@@ -200,7 +200,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   const updateProgress = async (assignmentId: string, progressData: any) => {
     try {
       const response = await updateAssignmentProgress(assignmentId, progressData);
-      
+
       if (response.success) {
         fetchData();
       } else {
@@ -364,9 +364,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
             >
               <option value="all">All Surveyors</option>
               {(surveyors || []).map((surveyor) => (
-                                  <option key={surveyor?._id} value={surveyor?._id}>
-                                    {surveyor?.userId?.firstname} {surveyor?.userId?.lastname}
-                                  </option>              ))}
+                <option key={surveyor?._id} value={surveyor?._id}>
+                  {surveyor?.userId?.firstname} {surveyor?.userId?.lastname}
+                </option>))}
             </select>
 
             <button
@@ -388,38 +388,38 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         <h3 className="text-lg font-semibold mb-4">Submitted Policies</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {policies.map((policy) => (
-            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-yellow-100 text-yellow-800 border-yellow-200`}>
+            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 min-w-0">
+                <div className="flex items-start justify-between mb-2 min-w-0">
+                  <div className="flex items-center space-x-2 min-w-0 flex-1">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-yellow-100 text-yellow-800 border-yellow-200 whitespace-nowrap flex-shrink-0`}>
                       {policy.status.replace('_', ' ').toUpperCase()}
                     </span>
-                    <span className="truncate break-words">{policy?.propertyDetails?.address}</span>
+                    <span className="truncate text-sm text-gray-600">{policy?.propertyDetails?.address}</span>
                   </div>
                 </div>
               </div>
-              <div className="p-4 space-y-3">
+              <div className="p-4 space-y-3 min-w-0">
                 <div className="space-y-2 text-xs text-gray-600">
-                  <div className="flex items-center">
-                    <User className="w-3 h-3 mr-2" />
-                    <span className="break-words">{policy?.contactDetails?.fullName}</span>
+                  <div className="flex items-center min-w-0">
+                    <User className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <span className="truncate">{policy?.contactDetails?.fullName}</span>
                   </div>
-                  <div className="flex items-center">
-                    <Calendar className="w-3 h-3 mr-2" />
-                    <span>Submitted: {formatDate(policy.createdAt)}</span>
+                  <div className="flex items-center min-w-0">
+                    <Calendar className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <span className="truncate">Submitted: {formatDate(policy.createdAt)}</span>
                   </div>
                 </div>
-                  <button
-                    onClick={() => {
-                      setSelectedPolicy(policy);
-                      setIsReassignMode(false);
-                      setShowAssignModal(true);
-                    }}
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    Assign
-                  </button>
+                <button
+                  onClick={() => {
+                    setSelectedPolicy(policy);
+                    setIsReassignMode(false);
+                    setShowAssignModal(true);
+                  }}
+                  className="text-blue-600 hover:text-blue-900"
+                >
+                  Assign
+                </button>
               </div>
             </div>
           ))}
@@ -430,11 +430,11 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         <h3 className="text-lg font-semibold mb-4">Assigned Policies</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {assignedPolicies.map((policy) => (
-            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-blue-100 text-blue-800 border-blue-200`}>
+            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 min-w-0">
+                <div className="flex items-start justify-between mb-2 min-w-0 gap-2">
+                  <div className="flex items-center space-x-2 min-w-0">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-blue-100 text-blue-800 border-blue-200 whitespace-nowrap flex-shrink-0`}>
                       {policy.status.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
@@ -444,25 +444,25 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                       setIsReassignMode(true);
                       setShowAssignModal(true);
                     }}
-                    className="text-indigo-600 hover:text-indigo-900"
+                    className="text-indigo-600 hover:text-indigo-900 text-sm whitespace-nowrap flex-shrink-0"
                   >
                     Re-assign Surveyor
                   </button>
                 </div>
-                <div className="flex items-center text-gray-600 text-sm">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  <span className="truncate break-words">{policy?.propertyDetails?.address}</span>
+                <div className="flex items-center text-gray-600 text-sm min-w-0">
+                  <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                  <span className="truncate">{policy?.propertyDetails?.address}</span>
                 </div>
               </div>
-              <div className="p-4 space-y-3">
+              <div className="p-4 space-y-3 min-w-0">
                 <div className="space-y-2 text-xs text-gray-600">
-                  <div className="flex items-center">
-                    <User className="w-3 h-3 mr-2" />
-                    <span>{policy?.contactDetails?.fullName}</span>
+                  <div className="flex items-center min-w-0">
+                    <User className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <span className="truncate">{policy?.contactDetails?.fullName}</span>
                   </div>
-                  <div className="flex items-center">
-                    <Calendar className="w-3 h-3 mr-2" />
-                    <span>Submitted: {formatDate(policy.createdAt)}</span>
+                  <div className="flex items-center min-w-0">
+                    <Calendar className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <span className="truncate">Submitted: {formatDate(policy.createdAt)}</span>
                   </div>
                 </div>
               </div>
@@ -503,7 +503,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
           <p className="text-gray-600">
-            {filters.search || filters.status !== 'all' || filters.priority !== 'all' 
+            {filters.search || filters.status !== 'all' || filters.priority !== 'all'
               ? 'Try adjusting your filters to see more assignments.'
               : 'No assignments have been created yet.'}
           </p>
@@ -551,64 +551,64 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow ${
-        isOverdue(assignment.deadline, assignment.status) ? 'border-red-300 bg-red-50' : 'border-gray-200'
-      }`}
+      className={`bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden ${isOverdue(assignment.deadline, assignment.status) ? 'border-red-300 bg-red-50' : 'border-gray-200'
+        }`}
     >
       {/* Card Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center space-x-2">
-            <span className={`text-xs px-2 py-1 rounded-full font-medium border ${getStatusColor(assignment.status)}`}>
+      <div className="p-4 border-b border-gray-200 min-w-0">
+        <div className="flex items-start justify-between mb-2 min-w-0">
+          <div className="flex items-center space-x-2 min-w-0 flex-1">
+            <span className={`text-xs px-2 py-1 rounded-full font-medium border whitespace-nowrap ${getStatusColor(assignment.status)}`}>
               {assignment.status.replace('_', ' ').toUpperCase()}
             </span>
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(assignment.priority)}`}>
+            <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${getPriorityColor(assignment.priority)}`}>
               {assignment.priority.toUpperCase()}
             </span>
           </div>
-          
+
           <button
             onClick={onView}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ml-2"
           >
             <Eye className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex items-center text-gray-600 text-sm">
-          <MapPin className="w-4 h-4 mr-1" />
-          <span className="truncate">{assignment.location?.address}</span>
+        <div className="flex items-center text-gray-600 text-sm min-w-0">
+          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+          <span className="truncate">{assignment.location?.address || 'No address provided'}</span>
         </div>
       </div>
 
       {/* Card Body */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 min-w-0">
         {/* Instructions */}
         {assignment.instructions && (
-          <p className="text-sm text-gray-700 line-clamp-2">{assignment.instructions}</p>
+          <div className="min-w-0">
+            <p className="text-sm text-gray-700 line-clamp-2 break-words">{assignment.instructions}</p>
+          </div>
         )}
 
         {/* Timeline Info */}
         <div className="space-y-2 text-xs text-gray-600">
-          <div className="flex items-center">
-            <Calendar className="w-3 h-3 mr-2" />
-            <span>Assigned: {formatDate(assignment.assignedAt)}</span>
+          <div className="flex items-center min-w-0">
+            <Calendar className="w-3 h-3 mr-2 flex-shrink-0" />
+            <span className="truncate">Assigned: {formatDate(assignment.assignedAt)}</span>
           </div>
-          
-          <div className={`flex items-center ${
-            isOverdue(assignment.deadline, assignment.status) ? 'text-red-600' : ''
-          }`}>
-            <Clock className="w-3 h-3 mr-2" />
-            <span>Deadline: {formatDate(assignment.deadline)}</span>
+
+          <div className={`flex items-center min-w-0 ${isOverdue(assignment.deadline, assignment.status) ? 'text-red-600' : ''
+            }`}>
+            <Clock className="w-3 h-3 mr-2 flex-shrink-0" />
+            <span className="truncate">Deadline: {formatDate(assignment.deadline)}</span>
             {isOverdue(assignment.deadline, assignment.status) && (
-              <AlertTriangle className="w-3 h-3 ml-1" />
+              <AlertTriangle className="w-3 h-3 ml-1 flex-shrink-0" />
             )}
           </div>
 
           {assignment.progressTracking.startedAt && (
-            <div className="flex items-center text-blue-600">
-              <CheckCircle className="w-3 h-3 mr-2" />
-              <span>Started: {formatDate(assignment.progressTracking.startedAt)}</span>
+            <div className="flex items-center text-blue-600 min-w-0">
+              <CheckCircle className="w-3 h-3 mr-2 flex-shrink-0" />
+              <span className="truncate">Started: {formatDate(assignment.progressTracking.startedAt)}</span>
             </div>
           )}
         </div>
@@ -633,68 +633,68 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 
         {/* Documents Count */}
         {assignment.documents && assignment.documents.length > 0 && (
-          <div className="flex items-center text-sm text-gray-600">
-            <FileText className="w-4 h-4 mr-1" />
-            <span>{assignment.documents.length} document{assignment.documents.length > 1 ? 's' : ''}</span>
+          <div className="flex items-center text-sm text-gray-600 min-w-0">
+            <FileText className="w-4 h-4 mr-1 flex-shrink-0" />
+            <span className="truncate">{assignment.documents.length} document{assignment.documents.length > 1 ? 's' : ''}</span>
           </div>
         )}
 
         {/* Messages Count */}
         {assignment.communication.messages.length > 0 && (
-          <div className="flex items-center text-sm text-gray-600">
-            <MessageSquare className="w-4 h-4 mr-1" />
-            <span>{assignment.communication.messages.length} message{assignment.communication.messages.length > 1 ? 's' : ''}</span>
+          <div className="flex items-center text-sm text-gray-600 min-w-0">
+            <MessageSquare className="w-4 h-4 mr-1 flex-shrink-0" />
+            <span className="truncate">{assignment.communication.messages.length} message{assignment.communication.messages.length > 1 ? 's' : ''}</span>
           </div>
         )}
       </div>
 
       {/* Card Actions */}
       <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between min-w-0 gap-2">
           {viewMode === 'surveyor' ? (
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 min-w-0">
               {assignment.status === 'assigned' && (
                 <button
                   onClick={() => onStatusUpdate(assignment._id, 'accept')}
-                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors whitespace-nowrap"
                 >
                   Accept
                 </button>
               )}
-              
+
               {assignment.status === 'accepted' && (
                 <button
                   onClick={() => onStatusUpdate(assignment._id, 'start')}
-                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
                 >
                   Start Survey
                 </button>
               )}
-              
+
               {assignment.status === 'in_progress' && (
                 <button
                   onClick={onView}
-                  className="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
+                  className="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors whitespace-nowrap"
                 >
                   Update Progress
                 </button>
               )}
             </div>
           ) : (
-            <div className="flex items-center space-x-2 text-xs text-gray-600">
-              <User className="w-3 h-3" />
-              <span>Assigned to Surveyor</span>
+            <div className="flex items-center space-x-2 text-xs text-gray-600 min-w-0">
+              <User className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">Assigned to Surveyor</span>
             </div>
           )}
 
           {viewMode === 'surveyor' ? (
-            <Link href={`/surveyor/dashboard/assignments/${assignment._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
-                View Details
+            <Link href={`/surveyor/dashboard/assignments/${assignment._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0">
+              View Details
             </Link>
           ) : (
             <button
               onClick={onView}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
             >
               View Details
             </button>
@@ -786,7 +786,9 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Assignment Details</h3>
-              <p className="text-sm text-gray-500 mt-1">Policy #{assignment.policyId}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Policy #{typeof assignment.ammcId === 'object' ? assignment.ammcId._id : assignment.ammcId}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -817,11 +819,10 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-3 px-4 rounded-t-lg font-medium text-sm transition-colors ${
-                  activeTab === tab
-                    ? 'bg-white text-blue-600'
-                    : 'bg-gray-50 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`py-3 px-4 rounded-t-lg font-medium text-sm transition-colors ${activeTab === tab
+                  ? 'bg-white text-blue-600'
+                  : 'bg-gray-50 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 {tab === 'communication' && assignment.communication.messages.length > 0 && (
@@ -879,7 +880,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <div className="text-sm text-gray-600">
               Assignment ID: {assignment._id}
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {viewMode === 'surveyor' && assignment.status === 'assigned' && (
                 <button
@@ -889,7 +890,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                   Accept Assignment
                 </button>
               )}
-              
+
               {viewMode === 'surveyor' && assignment.status === 'accepted' && (
                 <button
                   onClick={() => onStatusUpdate(assignment._id, 'start')}
@@ -898,7 +899,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                   Start Survey
                 </button>
               )}
-              
+
               <button
                 onClick={onClose}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -1039,7 +1040,7 @@ const AssignmentProgressTab: React.FC<ProgressTabProps> = ({
     {/* Progress Overview */}
     <div>
       <h4 className="font-medium text-gray-900 mb-4">Progress Overview</h4>
-      
+
       {/* Milestones */}
       {assignment?.progressTracking?.milestones?.length > 0 && (
         <div className="space-y-3">
@@ -1163,63 +1164,64 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
   }
 
   return (
-  <div className="space-y-4">
-    <h4 className="font-medium text-gray-900">Assignment Documents</h4>
-    
-    {/* Existing Documents */}
-    {assignment?.documents?.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {(assignment?.documents || []).map((doc) => (
-          <div key={doc._id} className="border border-gray-200 rounded-lg p-3">
-            <div className="flex items-start space-x-3">
-              <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">{doc.fileName}</p>
-                <p className="text-sm text-gray-500">{doc.category} • {doc.documentType}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
-                </p>
+    <div className="space-y-4">
+      <h4 className="font-medium text-gray-900">Assignment Documents</h4>
+
+      {/* Existing Documents */}
+      {assignment?.documents?.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {(assignment?.documents || []).map((doc) => (
+            <div key={doc._id} className="border border-gray-200 rounded-lg p-3">
+              <div className="flex items-start space-x-3">
+                <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{doc.fileName}</p>
+                  <p className="text-sm text-gray-500">{doc.category} • {doc.documentType}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <a
+                  href={doc.cloudinaryUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  View
+                </a>
               </div>
-              <a
-                href={doc.cloudinaryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                View
-              </a>
             </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div className="text-center py-8 text-gray-500">
-        <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>No documents uploaded yet</p>
-      </div>
-    )}
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8 text-gray-500">
+          <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>No documents uploaded yet</p>
+        </div>
+      )}
 
-    {/* Document Upload for Surveyors */}
-    {viewMode === 'surveyor' && assignment.status !== 'completed' && (
-      <div className="border-t pt-4">
-        <h5 className="text-sm font-medium text-gray-700 mb-3">Upload Documents</h5>
-        <DocumentManager
-          onDocumentsChange={handleDocumentsChange}
-          title="Survey Documents"
-          showCategories={true}
-        />
-      </div>
-    )}
-  </div>
-)};
+      {/* Document Upload for Surveyors */}
+      {viewMode === 'surveyor' && assignment.status !== 'completed' && (
+        <div className="border-t pt-4">
+          <h5 className="text-sm font-medium text-gray-700 mb-3">Upload Documents</h5>
+          <DocumentManager
+            onDocumentsChange={handleDocumentsChange}
+            title="Survey Documents"
+            showCategories={true}
+          />
+        </div>
+      )}
+    </div>
+  )
+};
 
-const AssignmentCommunicationTab: React.FC<{ 
-  assignment: Assignment; 
-  formatTimeAgo: (date: string) => string; 
+const AssignmentCommunicationTab: React.FC<{
+  assignment: Assignment;
+  formatTimeAgo: (date: string) => string;
 }> = ({ assignment, formatTimeAgo }) => (
   <div className="space-y-4">
     <h4 className="font-medium text-gray-900">Messages & Communication</h4>
-    
+
     {assignment?.communication?.messages?.length > 0 ? (
       <div className="space-y-4 max-h-96 overflow-y-auto">
         {(assignment?.communication?.messages || []).map((message) => (
@@ -1227,11 +1229,10 @@ const AssignmentCommunicationTab: React.FC<{
             <div className="flex items-start justify-between mb-2">
               <span className="font-medium text-gray-900">Message</span>
               <div className="flex items-center space-x-2">
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  message.type === 'question' ? 'bg-blue-100 text-blue-800' :
+                <span className={`text-xs px-2 py-1 rounded-full ${message.type === 'question' ? 'bg-blue-100 text-blue-800' :
                   message.type === 'status_update' ? 'bg-green-100 text-green-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
+                    'bg-gray-100 text-gray-800'
+                  }`}>
                   {message.type.replace('_', ' ')}
                 </span>
                 <span className="text-xs text-gray-500">

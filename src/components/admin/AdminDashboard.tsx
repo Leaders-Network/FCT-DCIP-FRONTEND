@@ -298,13 +298,13 @@ const AdminDashboard: React.FC = () => {
 
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
+          <div className="bg-white p-6 rounded-lg shadow-sm border min-w-0 overflow-hidden">
+            <div className="flex items-center min-w-0">
+              <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
                 <FileText className="h-6 w-6 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Today's Policies</p>
+              <div className="ml-4 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 truncate">Today's Policies</p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {quickStats?.todayPolicies || dashboardData?.summary.policies.total || 0}
                 </p>
@@ -312,13 +312,13 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
+          <div className="bg-white p-6 rounded-lg shadow-sm border min-w-0 overflow-hidden">
+            <div className="flex items-center min-w-0">
+              <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
                 <Clock className="h-6 w-6 text-yellow-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending Assignments</p>
+              <div className="ml-4 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 truncate">Pending Assignments</p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {quickStats?.pendingAssignments || dashboardData?.summary.assignments.active || 0}
                 </p>
@@ -326,13 +326,13 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
+          <div className="bg-white p-6 rounded-lg shadow-sm border min-w-0 overflow-hidden">
+            <div className="flex items-center min-w-0">
+              <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
                 <Users className="h-6 w-6 text-green-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Surveyors</p>
+              <div className="ml-4 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 truncate">Active Surveyors</p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {dashboardData?.summary.surveyors.active || 0}
                 </p>
@@ -340,13 +340,13 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
+          <div className="bg-white p-6 rounded-lg shadow-sm border min-w-0 overflow-hidden">
+            <div className="flex items-center min-w-0">
+              <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
                 <CheckCircle className="h-6 w-6 text-purple-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed Surveys</p>
+              <div className="ml-4 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-600 truncate">Completed Surveys</p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {dashboardData?.summary.assignments.completed || 0}
                 </p>
@@ -448,9 +448,9 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Recent Activity */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border">
+          <div className="lg:col-span-3 bg-white rounded-lg shadow-sm border">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
             </div>
@@ -566,40 +566,119 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Top Performing Surveyors */}
-          {/* <div className="bg-white rounded-lg shadow-sm border">
+          {/* Notifications */}
+          <div className="bg-white rounded-lg shadow-sm border">
             <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Top Performers</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {topPerformers.map((surveyor, index) => (
-                  <div key={surveyor.id} className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      index === 0 ? 'bg-yellow-100 text-yellow-800' :
-                      index === 1 ? 'bg-gray-100 text-gray-800' :
-                      'bg-orange-100 text-orange-800'
-                    }`}>
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">{surveyor.name}</p>
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span>{surveyor.completedSurveys} surveys</span>
-                        <span>•</span>
-                        <span className="flex items-center">
-                          <Star className="h-3 w-3 text-yellow-400 mr-1" />
-                          {surveyor.averageRating}
-                        </span>
-                        <span>•</span>
-                        <span>{surveyor.onTimeDelivery}% on-time</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Bell className="w-5 h-5 mr-2" />
+                  Notifications
+                </h3>
+                <button className="text-sm text-blue-600 hover:text-blue-800">
+                  View All
+                </button>
               </div>
             </div>
-          </div> */}
+            <div className="p-6">
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {/* Policy Notifications */}
+                <div className="border-b border-dashed border-gray-200 pb-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-1 bg-blue-100 rounded-full">
+                      <FileText className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">New Policy Request</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Policy request from John Doe for residential property requires assignment.
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assignment Notifications */}
+                <div className="border-b border-dashed border-gray-200 pb-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-1 bg-yellow-100 rounded-full">
+                      <Clock className="h-4 w-4 text-yellow-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">Assignment Overdue</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Survey assignment for Property ID: A012D30 is overdue by 2 days.
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">4 hours ago</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Survey Completion */}
+                <div className="border-b border-dashed border-gray-200 pb-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-1 bg-green-100 rounded-full">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">Survey Completed</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Surveyor Mike Johnson completed survey for Property ID: B045X21.
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">6 hours ago</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* System Alert */}
+                <div className="border-b border-dashed border-gray-200 pb-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-1 bg-red-100 rounded-full">
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">System Alert</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        High volume of pending assignments detected. Consider assigning more surveyors.
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">1 day ago</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Surveyor Status */}
+                <div className="border-b border-dashed border-gray-200 pb-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-1 bg-purple-100 rounded-full">
+                      <Users className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">Surveyor Available</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Sarah Wilson is now available for new assignments.
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">1 day ago</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Policy Approval */}
+                <div className="pb-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-1 bg-emerald-100 rounded-full">
+                      <CheckCircle className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">Policy Approved</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Policy for Property ID: C078M15 has been approved and is now active.
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">2 days ago</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div> 
 
         {/* Quick Actions */}
