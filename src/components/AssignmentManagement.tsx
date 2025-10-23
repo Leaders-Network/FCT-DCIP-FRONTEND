@@ -999,12 +999,21 @@ const AssignmentSurveyTab: React.FC<{ assignment: Assignment }> = ({ assignment 
         // Fetch survey submission data using the existing endpoint
         const response = await getSubmissionByAssignment(assignment._id);
         console.log('Survey data response:', response);
+        console.log('Response structure:', JSON.stringify(response, null, 2));
 
-        if (response.success && response.data.submission) {
+        if (response && response.success && response.data && response.data.submission) {
           console.log('Survey data loaded:', response.data.submission);
           setSurveyData(response.data.submission);
+        } else if (response && response.data && response.data.submission) {
+          // Handle case where success field might be missing
+          console.log('Survey data loaded (fallback):', response.data.submission);
+          setSurveyData(response.data.submission);
+        } else if (response && response.submission) {
+          // Handle case where data is directly in response
+          console.log('Survey data loaded (direct):', response.submission);
+          setSurveyData(response.submission);
         } else {
-          console.log('No survey data found or response failed:', response);
+          console.log('No survey data found. Response:', response);
         }
       } catch (error) {
         console.error('Failed to fetch survey data:', error);
