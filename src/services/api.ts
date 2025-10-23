@@ -842,6 +842,16 @@ export const deleteProperty = async (propertyId: string) => {
   }
 };
 
+export const updatePolicyRequest = async (ammcId: string, policyData: any) => {
+  try {
+    const response = await api.patch(`/policy/${ammcId}`, policyData);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update policy request:", error);
+    throw error;
+  }
+};
+
 export const deletePolicyRequest = async (ammcId: string) => {
   try {
     const response = await api.delete(`/policy/${ammcId}`);

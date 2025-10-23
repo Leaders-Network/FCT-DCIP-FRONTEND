@@ -586,7 +586,7 @@ const EnforcementPage = () => {
                       className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      Approve Policy
+                      Approve Permit
                     </button>
                     
                     <button
@@ -598,7 +598,7 @@ const EnforcementPage = () => {
                       className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center"
                     >
                       <AlertTriangle className="w-4 h-4 mr-2" />
-                      Reject Policy
+                      Reject Permit
                     </button>
                   </div>
                 )}

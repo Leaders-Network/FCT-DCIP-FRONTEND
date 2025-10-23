@@ -63,7 +63,12 @@ const Dashview = () => {
 
         // Set recent insurances (first 5 items from all policies)
         setRecentInsurances(allPolicies?.data?.policyRequests?.slice(0, 5) || []);
-        setSurveyedPolicies(surveyedPolicies?.data?.policyRequests || []);
+
+        // Combine surveyed and approved policies for the "Surveyed Policies" table
+        const surveyedData = surveyedPolicies?.data?.policyRequests || [];
+        const approvedData = approvedPolicies?.data?.policyRequests || [];
+        const combinedSurveyedPolicies = [...surveyedData, ...approvedData];
+        setSurveyedPolicies(combinedSurveyedPolicies);
 
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -427,6 +432,50 @@ interface PolicyActionsDropdownProps {
 const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [surveyData, setSurveyData] = useState<any>(null);
+  const [loadingSurveyData, setLoadingSurveyData] = useState(false);
+
+  // Fetch survey data when dropdown opens
+  useEffect(() => {
+    if (showDropdown && !surveyData && !loadingSurveyData) {
+      fetchSurveyData();
+    }
+  }, [showDropdown]);
+
+  const fetchSurveyData = async () => {
+    setLoadingSurveyData(true);
+    try {
+      console.log('Fetching survey data for policy:', policy._id);
+      console.log('Policy status:', policy.status);
+
+      const { adminApi } = await import('@/services/api');
+      const assignmentResponse = await adminApi.getAssignmentByAmmcId(policy._id);
+      console.log('Assignment response:', assignmentResponse);
+
+      if (assignmentResponse.success && assignmentResponse.data) {
+        const assignment = assignmentResponse.data;
+        console.log('Assignment data:', assignment);
+
+        const { getSubmissionByAssignment } = await import('@/services/api');
+        const surveyResponse = await getSubmissionByAssignment(assignment._id);
+        console.log('Survey response:', surveyResponse);
+
+        if (surveyResponse.success && surveyResponse.data.submission) {
+          console.log('Survey data loaded:', surveyResponse.data.submission);
+          setSurveyData(surveyResponse.data.submission);
+        } else {
+          console.log('No survey submission found');
+        }
+      } else {
+        console.log('No assignment found for policy');
+      }
+    } catch (error) {
+      console.error('Failed to fetch survey data:', error);
+    } finally {
+      setLoadingSurveyData(false);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -441,6 +490,45 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDropdown]);
 
+  const handlePaymentClick = () => {
+    console.log('Payment click - Policy status:', policy.status);
+    console.log('Payment click - Survey data:', surveyData);
+    console.log('Payment click - Recommended action:', surveyData?.recommendedAction);
+
+    // If policy is already approved (admin approved), allow payment regardless of survey recommendation
+    if (policy.status === 'approved') {
+      window.open('https://askniid.org/verifypolicy.aspx', '_blank');
+      return;
+    }
+
+    // For surveyed policies, check the surveyor's recommendation
+    if (surveyData?.recommendedAction === 'reject') {
+      alert('❌ Payment Disabled\n\nThis policy request has been rejected by the surveyor. Please review the survey report for details on why the policy was rejected.');
+      return;
+    }
+
+    if (surveyData?.recommendedAction === 'request_more_info') {
+      alert('⚠️ Payment Disabled\n\nThe surveyor has requested additional information for this policy. Please edit and resubmit your policy request with the required information before proceeding to payment.');
+      return;
+    }
+
+    // If we have survey data and surveyor approved, allow payment
+    if (surveyData?.recommendedAction === 'approve') {
+      window.open('https://askniid.org/verifypolicy.aspx', '_blank');
+      return;
+    }
+
+    // Fallback: If no survey data but policy is surveyed, assume it's approved
+    if (policy.status === 'surveyed' && !surveyData) {
+      console.log('No survey data found, but policy is surveyed - allowing payment');
+      window.open('https://askniid.org/verifypolicy.aspx', '_blank');
+      return;
+    }
+
+    // Default case
+    alert('⚠️ Payment Not Available\n\nPayment is not available for this policy at this time. Please check the policy status.');
+  };
+
   return (
     <div className="relative dropdown-container">
       <button
@@ -451,8 +539,9 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
       </button>
 
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border">
           <div className="py-1">
+            {/* Always show survey details */}
             <button
               onClick={() => {
                 setShowSurveyModal(true);
@@ -464,6 +553,7 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
               View Survey Details
             </button>
 
+            {/* Always show survey document download if available */}
             {policy.surveyDocument && (
               <a
                 href={policy.surveyDocument}
@@ -477,27 +567,95 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
               </a>
             )}
 
-            <a
-              href="https://askniid.org/verifypolicy.aspx"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setShowDropdown(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-            >
-              <CreditCard className="mr-3 h-4 w-4" />
-              Proceed to Payment
-            </a>
+            {/* Conditional actions based on surveyor recommendation */}
+            {loadingSurveyData ? (
+              <div className="flex items-center px-4 py-2 text-sm text-gray-500">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-3"></div>
+                Loading...
+              </div>
+            ) : (
+              <>
+                {/* Payment button - conditional based on recommendation */}
+                <button
+                  onClick={() => {
+                    handlePaymentClick();
+                    setShowDropdown(false);
+                  }}
+                  className={`flex items-center px-4 py-2 text-sm w-full text-left ${
+                    // Enable if: approved by admin, approved by surveyor, or surveyed without explicit rejection
+                    (policy.status === 'approved' ||
+                      surveyData?.recommendedAction === 'approve' ||
+                      (policy.status === 'surveyed' && !surveyData) ||
+                      (policy.status === 'surveyed' && loadingSurveyData))
+                      ? 'text-gray-700 hover:bg-gray-100'
+                      : 'text-gray-400 cursor-not-allowed'
+                    }`}
+                  disabled={
+                    // Disable only if: explicitly rejected or explicitly requesting more info
+                    surveyData?.recommendedAction === 'reject' ||
+                    surveyData?.recommendedAction === 'request_more_info'
+                  }
+                >
+                  <CreditCard className="mr-3 h-4 w-4" />
+                  <div className="flex flex-col">
+                    <span>Proceed to Payment</span>
+                    {policy.status === 'approved' && (
+                      <span className="text-xs text-green-500">Policy Approved</span>
+                    )}
+                    {surveyData?.recommendedAction === 'approve' && policy.status !== 'approved' && (
+                      <span className="text-xs text-blue-500">Survey Approved</span>
+                    )}
+                    {policy.status === 'surveyed' && !surveyData && !loadingSurveyData && (
+                      <span className="text-xs text-green-500">Survey Completed</span>
+                    )}
+                    {loadingSurveyData && (
+                      <span className="text-xs text-gray-500">Loading...</span>
+                    )}
+                    {surveyData?.recommendedAction === 'reject' && (
+                      <span className="text-xs text-red-500">Policy Rejected</span>
+                    )}
+                    {surveyData?.recommendedAction === 'request_more_info' && (
+                      <span className="text-xs text-orange-500">More Info Required</span>
+                    )}
+                  </div>
+                </button>
 
-            <button
-              onClick={() => {
-                // Handle policy certificate download
-                setShowDropdown(false);
-              }}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-            >
-              <FileText className="mr-3 h-4 w-4" />
-              Download Certificate
-            </button>
+                {/* Edit Policy - only show if more info is requested */}
+                {surveyData?.recommendedAction === 'request_more_info' && (
+                  <button
+                    onClick={() => {
+                      setShowEditModal(true);
+                      setShowDropdown(false);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"
+                  >
+                    <svg className="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <div className="flex flex-col">
+                      <span>Edit Policy Request</span>
+                      <span className="text-xs text-gray-500">Update & Resubmit</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Certificate download - for approved or surveyed policies */}
+                {(surveyData?.recommendedAction === 'approve' ||
+                  policy.status === 'approved' ||
+                  (policy.status === 'surveyed' && surveyData?.recommendedAction !== 'reject' && surveyData?.recommendedAction !== 'request_more_info')) && (
+                    <button
+                      onClick={() => {
+                        // Handle policy certificate download
+                        setShowDropdown(false);
+                      }}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <FileText className="mr-3 h-4 w-4" />
+                      Download Certificate
+                    </button>
+                  )}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -507,6 +665,20 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
         <SurveyDetailsModal
           policy={policy}
           onClose={() => setShowSurveyModal(false)}
+        />
+      )}
+
+      {/* Edit Policy Modal */}
+      {showEditModal && (
+        <EditPolicyModal
+          policy={policy}
+          surveyData={surveyData}
+          onClose={() => setShowEditModal(false)}
+          onUpdate={() => {
+            setShowEditModal(false);
+            // Refresh the page or update the policy list
+            window.location.reload();
+          }}
         />
       )}
     </div>
@@ -729,6 +901,310 @@ const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose
             >
               Close
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Edit Policy Modal Component
+interface EditPolicyModalProps {
+  policy: any;
+  surveyData: any;
+  onClose: () => void;
+  onUpdate: () => void;
+}
+
+const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, onClose, onUpdate }) => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    propertyDetails: {
+      propertyType: policy.propertyDetails?.propertyType || '',
+      address: policy.propertyDetails?.address || '',
+      buildingValue: policy.propertyDetails?.buildingValue || 0,
+      yearBuilt: policy.propertyDetails?.yearBuilt || '',
+      squareFootage: policy.propertyDetails?.squareFootage || 0,
+      constructionMaterial: policy.propertyDetails?.constructionMaterial || ''
+    },
+    contactDetails: {
+      fullName: policy.contactDetails?.fullName || '',
+      email: policy.contactDetails?.email || '',
+      phoneNumber: policy.contactDetails?.phoneNumber || '',
+      alternatePhone: policy.contactDetails?.alternatePhone || ''
+    },
+    requestDetails: {
+      coverageType: policy.requestDetails?.coverageType || '',
+      policyDuration: policy.requestDetails?.policyDuration || '',
+      additionalCoverage: policy.requestDetails?.additionalCoverage || [],
+      specialRequests: policy.requestDetails?.specialRequests || ''
+    }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const api = await import('@/services/api');
+      await api.updatePolicyRequest(policy._id, formData);
+      alert('Policy request updated successfully! It will be reassigned for survey.');
+      onUpdate();
+    } catch (error) {
+      console.error('Failed to update policy:', error);
+      alert('Failed to update policy request. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (section: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [field]: value
+      }
+    }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        {/* Modal Header */}
+        <div className="p-6 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">Edit Policy Request</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Update your policy information based on surveyor feedback
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <span className="sr-only">Close</span>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Surveyor Feedback */}
+          {surveyData && (
+            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <h4 className="font-medium text-orange-900 mb-2">Surveyor Feedback</h4>
+              <p className="text-sm text-orange-800 mb-2">
+                <strong>Recommendation:</strong> {surveyData.recommendedAction === 'request_more_info' ? 'Additional Information Required' : surveyData.recommendedAction}
+              </p>
+              {surveyData.surveyNotes && (
+                <p className="text-sm text-orange-800">
+                  <strong>Notes:</strong> {surveyData.surveyNotes}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Content */}
+        <form onSubmit={handleSubmit} className="p-6 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+          <div className="space-y-6">
+            {/* Property Details */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Property Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                  <select
+                    value={formData.propertyDetails.propertyType}
+                    onChange={(e) => handleInputChange('propertyDetails', 'propertyType', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Select Property Type</option>
+                    <option value="Residential">Residential</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Industrial">Industrial</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Building Value (₦)</label>
+                  <input
+                    type="number"
+                    value={formData.propertyDetails.buildingValue}
+                    onChange={(e) => handleInputChange('propertyDetails', 'buildingValue', Number(e.target.value))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Property Address</label>
+                  <textarea
+                    value={formData.propertyDetails.address}
+                    onChange={(e) => handleInputChange('propertyDetails', 'address', e.target.value)}
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Year Built</label>
+                  <input
+                    type="number"
+                    value={formData.propertyDetails.yearBuilt}
+                    onChange={(e) => handleInputChange('propertyDetails', 'yearBuilt', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Square Footage</label>
+                  <input
+                    type="number"
+                    value={formData.propertyDetails.squareFootage}
+                    onChange={(e) => handleInputChange('propertyDetails', 'squareFootage', Number(e.target.value))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Construction Material</label>
+                  <input
+                    type="text"
+                    value={formData.propertyDetails.constructionMaterial}
+                    onChange={(e) => handleInputChange('propertyDetails', 'constructionMaterial', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., Concrete, Brick, Wood"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Details */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Contact Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={formData.contactDetails.fullName}
+                    onChange={(e) => handleInputChange('contactDetails', 'fullName', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={formData.contactDetails.email}
+                    onChange={(e) => handleInputChange('contactDetails', 'email', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={formData.contactDetails.phoneNumber}
+                    onChange={(e) => handleInputChange('contactDetails', 'phoneNumber', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Phone</label>
+                  <input
+                    type="tel"
+                    value={formData.contactDetails.alternatePhone}
+                    onChange={(e) => handleInputChange('contactDetails', 'alternatePhone', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Coverage Details */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Coverage Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
+                  <select
+                    value={formData.requestDetails.coverageType}
+                    onChange={(e) => handleInputChange('requestDetails', 'coverageType', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Select Coverage Type</option>
+                    <option value="Basic">Basic Coverage</option>
+                    <option value="Comprehensive">Comprehensive Coverage</option>
+                    <option value="Premium">Premium Coverage</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Policy Duration</label>
+                  <select
+                    value={formData.requestDetails.policyDuration}
+                    onChange={(e) => handleInputChange('requestDetails', 'policyDuration', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Select Duration</option>
+                    <option value="1 Year">1 Year</option>
+                    <option value="2 Years">2 Years</option>
+                    <option value="3 Years">3 Years</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Special Requests</label>
+                  <textarea
+                    value={formData.requestDetails.specialRequests}
+                    onChange={(e) => handleInputChange('requestDetails', 'specialRequests', e.target.value)}
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Any special requirements or additional information..."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        {/* Modal Footer */}
+        <div className="p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-600">
+              Your updated policy will be reassigned for a new survey.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              >
+                {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>}
+                {loading ? 'Updating...' : 'Update & Resubmit'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -31,6 +31,16 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
     const [contactLog, setContactLog] = useState<ContactLogEntry[]>([]);
     const [recommendedAction, setRecommendedAction] = useState<'approve' | 'reject' | 'request_more_info'>('approve');
+
+    // Expense tracking
+    const [expenses, setExpenses] = useState({
+        transportation: 0,
+        accommodation: 0,
+        meals: 0,
+        equipment: 0,
+        other: 0
+    });
+
     const [newContact, setNewContact] = useState<ContactLogEntry>({
         date: new Date().toISOString().split('T')[0],
         method: 'phone',
@@ -99,7 +109,8 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                     structuralAssessment,
                     riskFactors,
                     recommendations
-                }
+                },
+                expenses
             };
 
             await onSubmit(submission);
