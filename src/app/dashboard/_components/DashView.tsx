@@ -449,8 +449,8 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
       console.log('Fetching survey data for policy:', policy._id);
       console.log('Policy status:', policy.status);
 
-      const { adminApi } = await import('@/services/api');
-      const assignmentResponse = await adminApi.getAssignmentByAmmcId(policy._id);
+      const { getUserAssignmentByAmmcId } = await import('@/services/api');
+      const assignmentResponse = await getUserAssignmentByAmmcId(policy._id);
       console.log('Assignment response:', assignmentResponse);
 
       if (assignmentResponse.success && assignmentResponse.data) {
@@ -699,8 +699,8 @@ const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose
     const fetchSurveyData = async () => {
       try {
         // Get assignment for this policy
-        const { adminApi } = await import('@/services/api');
-        const assignmentResponse = await adminApi.getAssignmentByAmmcId(policy._id);
+        const { getUserAssignmentByAmmcId } = await import('@/services/api');
+        const assignmentResponse = await getUserAssignmentByAmmcId(policy._id);
 
         if (assignmentResponse.success && assignmentResponse.data) {
           const assignment = assignmentResponse.data;
