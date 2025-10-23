@@ -80,8 +80,8 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Completed Policies</h2>
-        <p className="text-gray-600">Download your approved survey reports and verify policies.</p>
+        <h2 className="text-xl font-bold text-gray-900">Completed Permits</h2>
+        <p className="text-gray-600">Download your approved survey reports and AMMC verified permit.</p>
       </div>
 
       {completedPolicies.length > 0 ? (
@@ -131,7 +131,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                                 className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                               >
                                 <Trash2 className="mr-3 h-4 w-4" />
-                                Delete Policy
+                                Delete Permit
                               </button>
                             </div>
                           </div>
@@ -195,17 +195,17 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
-                      Verify Policy
+                      Download Permit
                     </button>
                   ) : policy.status === 'rejected' ? (
                     <div className="inline-flex items-center px-6 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50">
                       <XCircle className="h-4 w-4 mr-2" />
-                      Policy Rejected - Policy verification unavailable
+                      Permit Rejected - Permit verification unavailable
                     </div>
                   ) : policy.status === 'requires_more_info' ? (
                     <div className="inline-flex items-center px-6 py-2 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-orange-50">
                       <Clock className="h-4 w-4 mr-2" />
-                      More Information Required - Policy verification unavailable
+                      More Information Required - Permit verification unavailable
                     </div>
                   ) : (
                     <div className="inline-flex items-center px-6 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-50">
@@ -225,7 +225,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
           </div>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No completed policies</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Your approved policies will appear here once the survey and admin review process is complete.
+            Your approved permits will appear here once the survey and admin review process is complete.
           </p>
         </div>
       )}
@@ -240,9 +240,9 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
               </div>
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Policy Request</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Permit Request</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Are you sure you want to delete the policy request for "{policyToDelete.propertyDetails.address}"? This action cannot be undone.
+                Are you sure you want to delete the permit request for "{policyToDelete.propertyDetails.address}"? This action cannot be undone.
               </p>
               <div className="flex justify-center space-x-4">
                 <button
@@ -258,7 +258,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                   onClick={() => handleDeletePolicy(policyToDelete)}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                 >
-                  Delete Policy
+                  Delete Permit
                 </button>
               </div>
             </div>

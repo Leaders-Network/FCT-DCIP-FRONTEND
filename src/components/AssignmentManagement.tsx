@@ -948,19 +948,31 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
 
       {assignment.expenses && (
         <div>
-          <h4 className="font-medium text-gray-900 mb-2">Expenses</h4>
+          <h4 className="font-medium text-gray-900 mb-2">Survey Expenses</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Transportation:</span>
-              <span>₦{assignment.expenses.transportation.toLocaleString()}</span>
+              <span>₦{(assignment.expenses.transportation || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Accommodation:</span>
+              <span>₦{(assignment.expenses.accommodation || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Meals:</span>
+              <span>₦{(assignment.expenses.meals || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Equipment:</span>
+              <span>₦{(assignment.expenses.equipment || 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span>Other:</span>
-              <span>₦{assignment.expenses.other.toLocaleString()}</span>
+              <span>₦{(assignment.expenses.other || 0).toLocaleString()}</span>
             </div>
-            <div className="flex justify-between font-medium border-t pt-1">
+            <div className="flex justify-between font-medium border-t pt-1 mt-2">
               <span>Total:</span>
-              <span>₦{assignment.expenses.totalExpenses.toLocaleString()}</span>
+              <span>₦{(assignment.expenses.totalExpenses || 0).toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -978,13 +990,21 @@ const AssignmentSurveyTab: React.FC<{ assignment: Assignment }> = ({ assignment 
   useEffect(() => {
     const fetchSurveyData = async () => {
       try {
+        console.log('Fetching survey data for assignment:', assignment._id);
+        console.log('Assignment status:', assignment.status);
+
         // Import the API function
         const { getSubmissionByAssignment } = await import('@/services/api');
 
         // Fetch survey submission data using the existing endpoint
         const response = await getSubmissionByAssignment(assignment._id);
+        console.log('Survey data response:', response);
+
         if (response.success && response.data.submission) {
+          console.log('Survey data loaded:', response.data.submission);
           setSurveyData(response.data.submission);
+        } else {
+          console.log('No survey data found or response failed:', response);
         }
       } catch (error) {
         console.error('Failed to fetch survey data:', error);

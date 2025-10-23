@@ -4,7 +4,6 @@ import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, Check
 import { Assignment } from "@/types/api.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionModal from "./SurveySubmissionModal";
-import SurveySubmissionForm from "./SurveySubmissionForm";
 
 interface AssignmentDetailProps {
   assignmentId: string;
@@ -99,15 +98,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     );
   }
 
-  if (showSurveyForm) {
-    return (
-      <SurveySubmissionForm
-        policy={assignment.ammcId}
-        onSubmit={handleSurveySubmission}
-        onCancel={() => setShowSurveyForm(false)}
-      />
-    );
-  }
+
 
   return (
     <div className="space-y-6">
