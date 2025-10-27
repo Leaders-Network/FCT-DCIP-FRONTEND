@@ -2,15 +2,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect} from 'react' 
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation';
-import { 
-  MapPin, 
-  Clock, 
-  User, 
-  AlertTriangle, 
-  CheckCircle, 
-  Calendar, 
+import {
+  MapPin,
+  Clock,
+  User,
+  AlertTriangle,
+  CheckCircle,
+  Calendar,
   FileText,
   MessageSquare,
   Camera,
@@ -57,7 +57,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
 }) => {
   const { user } = useAuth();
   const searchParams = useSearchParams();
-  const policyId = searchParams.get('policyId');
+  const ammcId = searchParams.get('ammcId');
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -96,10 +96,10 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     fetchPolicies();
     fetchAssignedPolicies();
 
-    if (policyId) {
+    if (ammcId) {
       const fetchPolicy = async () => {
         try {
-          const response = await adminApi.getPolicyById(policyId);
+          const response = await adminApi.getPolicyById(ammcId);
           if (response?.data) {
             setSelectedPolicy(response.data);
             setShowAssignModal(true);
@@ -110,7 +110,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       };
       fetchPolicy();
     }
-  }, [filters, surveyorId, policyId]);
+  }, [filters, surveyorId, ammcId]);
 
   const fetchPolicies = async () => {
     try {
@@ -173,7 +173,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   const handleStatusUpdate = async (assignmentId: string, action: 'accept' | 'start' | 'complete', data?: any) => {
     try {
       let response;
-      
+
       switch (action) {
         case 'accept':
           response = await acceptAssignment(assignmentId);
@@ -200,7 +200,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   const updateProgress = async (assignmentId: string, progressData: any) => {
     try {
       const response = await updateAssignmentProgress(assignmentId, progressData);
-      
+
       if (response.success) {
         fetchData();
       } else {
@@ -364,9 +364,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
             >
               <option value="all">All Surveyors</option>
               {(surveyors || []).map((surveyor) => (
-                                  <option key={surveyor?._id} value={surveyor?._id}>
-                                    {surveyor?.userId?.firstname} {surveyor?.userId?.lastname}
-                                  </option>              ))}
+                <option key={surveyor?._id} value={surveyor?._id}>
+                  {surveyor?.userId?.firstname} {surveyor?.userId?.lastname}
+                </option>))}
             </select>
 
             <button
@@ -388,38 +388,38 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         <h3 className="text-lg font-semibold mb-4">Submitted Policies</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {policies.map((policy) => (
-            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-yellow-100 text-yellow-800 border-yellow-200`}>
+            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 min-w-0">
+                <div className="flex items-start justify-between mb-2 min-w-0">
+                  <div className="flex items-center space-x-2 min-w-0 flex-1">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-yellow-100 text-yellow-800 border-yellow-200 whitespace-nowrap flex-shrink-0`}>
                       {policy.status.replace('_', ' ').toUpperCase()}
                     </span>
-                    <span className="truncate break-words">{policy?.propertyDetails?.address}</span>
+                    <span className="truncate text-sm text-gray-600">{policy?.propertyDetails?.address}</span>
                   </div>
                 </div>
               </div>
-              <div className="p-4 space-y-3">
+              <div className="p-4 space-y-3 min-w-0">
                 <div className="space-y-2 text-xs text-gray-600">
-                  <div className="flex items-center">
-                    <User className="w-3 h-3 mr-2" />
-                    <span className="break-words">{policy?.contactDetails?.fullName}</span>
+                  <div className="flex items-center min-w-0">
+                    <User className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <span className="truncate">{policy?.contactDetails?.fullName}</span>
                   </div>
-                  <div className="flex items-center">
-                    <Calendar className="w-3 h-3 mr-2" />
-                    <span>Submitted: {formatDate(policy.createdAt)}</span>
+                  <div className="flex items-center min-w-0">
+                    <Calendar className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <span className="truncate">Submitted: {formatDate(policy.createdAt)}</span>
                   </div>
                 </div>
-                  <button
-                    onClick={() => {
-                      setSelectedPolicy(policy);
-                      setIsReassignMode(false);
-                      setShowAssignModal(true);
-                    }}
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    Assign
-                  </button>
+                <button
+                  onClick={() => {
+                    setSelectedPolicy(policy);
+                    setIsReassignMode(false);
+                    setShowAssignModal(true);
+                  }}
+                  className="text-blue-600 hover:text-blue-900"
+                >
+                  Assign
+                </button>
               </div>
             </div>
           ))}
@@ -430,11 +430,11 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         <h3 className="text-lg font-semibold mb-4">Assigned Policies</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {assignedPolicies.map((policy) => (
-            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-blue-100 text-blue-800 border-blue-200`}>
+            <div key={policy._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 min-w-0">
+                <div className="flex items-start justify-between mb-2 min-w-0 gap-2">
+                  <div className="flex items-center space-x-2 min-w-0">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium border bg-blue-100 text-blue-800 border-blue-200 whitespace-nowrap flex-shrink-0`}>
                       {policy.status.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
@@ -444,25 +444,25 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                       setIsReassignMode(true);
                       setShowAssignModal(true);
                     }}
-                    className="text-indigo-600 hover:text-indigo-900"
+                    className="text-indigo-600 hover:text-indigo-900 text-sm whitespace-nowrap flex-shrink-0"
                   >
                     Re-assign Surveyor
                   </button>
                 </div>
-                <div className="flex items-center text-gray-600 text-sm">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  <span className="truncate break-words">{policy?.propertyDetails?.address}</span>
+                <div className="flex items-center text-gray-600 text-sm min-w-0">
+                  <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                  <span className="truncate">{policy?.propertyDetails?.address}</span>
                 </div>
               </div>
-              <div className="p-4 space-y-3">
+              <div className="p-4 space-y-3 min-w-0">
                 <div className="space-y-2 text-xs text-gray-600">
-                  <div className="flex items-center">
-                    <User className="w-3 h-3 mr-2" />
-                    <span>{policy?.contactDetails?.fullName}</span>
+                  <div className="flex items-center min-w-0">
+                    <User className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <span className="truncate">{policy?.contactDetails?.fullName}</span>
                   </div>
-                  <div className="flex items-center">
-                    <Calendar className="w-3 h-3 mr-2" />
-                    <span>Submitted: {formatDate(policy.createdAt)}</span>
+                  <div className="flex items-center min-w-0">
+                    <Calendar className="w-3 h-3 mr-2 flex-shrink-0" />
+                    <span className="truncate">Submitted: {formatDate(policy.createdAt)}</span>
                   </div>
                 </div>
               </div>
@@ -503,7 +503,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
           <p className="text-gray-600">
-            {filters.search || filters.status !== 'all' || filters.priority !== 'all' 
+            {filters.search || filters.status !== 'all' || filters.priority !== 'all'
               ? 'Try adjusting your filters to see more assignments.'
               : 'No assignments have been created yet.'}
           </p>
@@ -551,64 +551,64 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow ${
-        isOverdue(assignment.deadline, assignment.status) ? 'border-red-300 bg-red-50' : 'border-gray-200'
-      }`}
+      className={`bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow min-w-0 overflow-hidden ${isOverdue(assignment.deadline, assignment.status) ? 'border-red-300 bg-red-50' : 'border-gray-200'
+        }`}
     >
       {/* Card Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center space-x-2">
-            <span className={`text-xs px-2 py-1 rounded-full font-medium border ${getStatusColor(assignment.status)}`}>
+      <div className="p-4 border-b border-gray-200 min-w-0">
+        <div className="flex items-start justify-between mb-2 min-w-0">
+          <div className="flex items-center space-x-2 min-w-0 flex-1">
+            <span className={`text-xs px-2 py-1 rounded-full font-medium border whitespace-nowrap ${getStatusColor(assignment.status)}`}>
               {assignment.status.replace('_', ' ').toUpperCase()}
             </span>
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(assignment.priority)}`}>
+            <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${getPriorityColor(assignment.priority)}`}>
               {assignment.priority.toUpperCase()}
             </span>
           </div>
-          
+
           <button
             onClick={onView}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ml-2"
           >
             <Eye className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex items-center text-gray-600 text-sm">
-          <MapPin className="w-4 h-4 mr-1" />
-          <span className="truncate">{assignment.location?.address}</span>
+        <div className="flex items-center text-gray-600 text-sm min-w-0">
+          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+          <span className="truncate">{assignment.location?.address || 'No address provided'}</span>
         </div>
       </div>
 
       {/* Card Body */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 min-w-0">
         {/* Instructions */}
         {assignment.instructions && (
-          <p className="text-sm text-gray-700 line-clamp-2">{assignment.instructions}</p>
+          <div className="min-w-0">
+            <p className="text-sm text-gray-700 line-clamp-2 break-words">{assignment.instructions}</p>
+          </div>
         )}
 
         {/* Timeline Info */}
         <div className="space-y-2 text-xs text-gray-600">
-          <div className="flex items-center">
-            <Calendar className="w-3 h-3 mr-2" />
-            <span>Assigned: {formatDate(assignment.assignedAt)}</span>
+          <div className="flex items-center min-w-0">
+            <Calendar className="w-3 h-3 mr-2 flex-shrink-0" />
+            <span className="truncate">Assigned: {formatDate(assignment.assignedAt)}</span>
           </div>
-          
-          <div className={`flex items-center ${
-            isOverdue(assignment.deadline, assignment.status) ? 'text-red-600' : ''
-          }`}>
-            <Clock className="w-3 h-3 mr-2" />
-            <span>Deadline: {formatDate(assignment.deadline)}</span>
+
+          <div className={`flex items-center min-w-0 ${isOverdue(assignment.deadline, assignment.status) ? 'text-red-600' : ''
+            }`}>
+            <Clock className="w-3 h-3 mr-2 flex-shrink-0" />
+            <span className="truncate">Deadline: {formatDate(assignment.deadline)}</span>
             {isOverdue(assignment.deadline, assignment.status) && (
-              <AlertTriangle className="w-3 h-3 ml-1" />
+              <AlertTriangle className="w-3 h-3 ml-1 flex-shrink-0" />
             )}
           </div>
 
           {assignment.progressTracking.startedAt && (
-            <div className="flex items-center text-blue-600">
-              <CheckCircle className="w-3 h-3 mr-2" />
-              <span>Started: {formatDate(assignment.progressTracking.startedAt)}</span>
+            <div className="flex items-center text-blue-600 min-w-0">
+              <CheckCircle className="w-3 h-3 mr-2 flex-shrink-0" />
+              <span className="truncate">Started: {formatDate(assignment.progressTracking.startedAt)}</span>
             </div>
           )}
         </div>
@@ -633,68 +633,68 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 
         {/* Documents Count */}
         {assignment.documents && assignment.documents.length > 0 && (
-          <div className="flex items-center text-sm text-gray-600">
-            <FileText className="w-4 h-4 mr-1" />
-            <span>{assignment.documents.length} document{assignment.documents.length > 1 ? 's' : ''}</span>
+          <div className="flex items-center text-sm text-gray-600 min-w-0">
+            <FileText className="w-4 h-4 mr-1 flex-shrink-0" />
+            <span className="truncate">{assignment.documents.length} document{assignment.documents.length > 1 ? 's' : ''}</span>
           </div>
         )}
 
         {/* Messages Count */}
         {assignment.communication.messages.length > 0 && (
-          <div className="flex items-center text-sm text-gray-600">
-            <MessageSquare className="w-4 h-4 mr-1" />
-            <span>{assignment.communication.messages.length} message{assignment.communication.messages.length > 1 ? 's' : ''}</span>
+          <div className="flex items-center text-sm text-gray-600 min-w-0">
+            <MessageSquare className="w-4 h-4 mr-1 flex-shrink-0" />
+            <span className="truncate">{assignment.communication.messages.length} message{assignment.communication.messages.length > 1 ? 's' : ''}</span>
           </div>
         )}
       </div>
 
       {/* Card Actions */}
       <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between min-w-0 gap-2">
           {viewMode === 'surveyor' ? (
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 min-w-0">
               {assignment.status === 'assigned' && (
                 <button
                   onClick={() => onStatusUpdate(assignment._id, 'accept')}
-                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors whitespace-nowrap"
                 >
                   Accept
                 </button>
               )}
-              
+
               {assignment.status === 'accepted' && (
                 <button
                   onClick={() => onStatusUpdate(assignment._id, 'start')}
-                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
                 >
                   Start Survey
                 </button>
               )}
-              
+
               {assignment.status === 'in_progress' && (
                 <button
                   onClick={onView}
-                  className="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
+                  className="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors whitespace-nowrap"
                 >
                   Update Progress
                 </button>
               )}
             </div>
           ) : (
-            <div className="flex items-center space-x-2 text-xs text-gray-600">
-              <User className="w-3 h-3" />
-              <span>Assigned to Surveyor</span>
+            <div className="flex items-center space-x-2 text-xs text-gray-600 min-w-0">
+              <User className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">Assigned to Surveyor</span>
             </div>
           )}
 
           {viewMode === 'surveyor' ? (
-            <Link href={`/surveyor/dashboard/assignments/${assignment._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
-                View Details
+            <Link href={`/surveyor/dashboard/assignments/${assignment._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0">
+              View Details
             </Link>
           ) : (
             <button
               onClick={onView}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
             >
               View Details
             </button>
@@ -706,11 +706,6 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 };
 
 // Assignment Detail Modal Component
-interface CompletionData {
-  surveyNotes: string;
-  recommendedAction: 'approve' | 'reject' | 'request_more_info';
-}
-
 interface AssignmentDetailModalProps {
   assignment: Assignment;
   viewMode: 'admin' | 'surveyor';
@@ -732,37 +727,8 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
   getPriorityColor,
   formatDate
 }) => {
-  const [activeTab, setActiveTab] = useState<'details' | 'progress' | 'documents' | 'communication'>('details');
-  const [progressNote, setProgressNote] = useState('');
-  const [completionData, setCompletionData] = useState<CompletionData>({
-    surveyNotes: '',
-    recommendedAction: 'approve'
-  });
+  const [activeTab, setActiveTab] = useState<'details' | 'survey' | 'documents' | 'communication'>('details');
 
-  const handleProgressSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!progressNote.trim()) return;
-
-    const checkpoint = {
-      timestamp: new Date().toISOString(),
-      notes: progressNote,
-      photos: [] // Would be populated from photo upload
-    };
-
-    onProgressUpdate(assignment._id, {
-      checkpoints: [checkpoint],
-      lastUpdate: new Date().toISOString()
-    });
-
-    setProgressNote('');
-  };
-
-  const handleComplete = () => {
-    onStatusUpdate(assignment._id, 'complete', {
-      surveyNotes: completionData.surveyNotes,
-      recommendedAction: completionData.recommendedAction
-    });
-  };
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -786,7 +752,9 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Assignment Details</h3>
-              <p className="text-sm text-gray-500 mt-1">Policy #{assignment.policyId}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Policy #{typeof assignment.ammcId === 'object' ? assignment.ammcId._id : assignment.ammcId}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -813,17 +781,16 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
         {/* Tab Navigation */}
         <div className="border-b border-gray-200">
           <div className="flex space-x-1 px-6">
-            {(['details', 'progress', 'documents', 'communication'] as const).map((tab) => (
+            {(['details', 'survey', 'documents', 'communication'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-3 px-4 rounded-t-lg font-medium text-sm transition-colors ${
-                  activeTab === tab
-                    ? 'bg-white text-blue-600'
-                    : 'bg-gray-50 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`py-3 px-4 rounded-t-lg font-medium text-sm transition-colors ${activeTab === tab
+                  ? 'bg-white text-blue-600'
+                  : 'bg-gray-50 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === 'survey' ? 'Survey Results' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                 {tab === 'communication' && assignment.communication.messages.length > 0 && (
                   <span className="ml-1 bg-blue-100 text-blue-600 text-xs rounded-full px-2 py-0.5">
                     {assignment.communication.messages.length}
@@ -845,17 +812,8 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <AssignmentDetailsTab assignment={assignment} />
           )}
 
-          {activeTab === 'progress' && (
-            <AssignmentProgressTab
-              assignment={assignment}
-              viewMode={viewMode}
-              progressNote={progressNote}
-              setProgressNote={setProgressNote}
-              completionData={completionData}
-              setCompletionData={setCompletionData}
-              onProgressSubmit={handleProgressSubmit}
-              onComplete={handleComplete}
-            />
+          {activeTab === 'survey' && (
+            <AssignmentSurveyTab assignment={assignment} />
           )}
 
           {activeTab === 'documents' && (
@@ -879,7 +837,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <div className="text-sm text-gray-600">
               Assignment ID: {assignment._id}
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {viewMode === 'surveyor' && assignment.status === 'assigned' && (
                 <button
@@ -889,7 +847,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                   Accept Assignment
                 </button>
               )}
-              
+
               {viewMode === 'surveyor' && assignment.status === 'accepted' && (
                 <button
                   onClick={() => onStatusUpdate(assignment._id, 'start')}
@@ -898,7 +856,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
                   Start Survey
                 </button>
               )}
-              
+
               <button
                 onClick={onClose}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -990,19 +948,31 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
 
       {assignment.expenses && (
         <div>
-          <h4 className="font-medium text-gray-900 mb-2">Expenses</h4>
+          <h4 className="font-medium text-gray-900 mb-2">Survey Expenses</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Transportation:</span>
-              <span>₦{assignment.expenses.transportation.toLocaleString()}</span>
+              <span>₦{(assignment.expenses.transportation || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Accommodation:</span>
+              <span>₦{(assignment.expenses.accommodation || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Meals:</span>
+              <span>₦{(assignment.expenses.meals || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Equipment:</span>
+              <span>₦{(assignment.expenses.equipment || 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span>Other:</span>
-              <span>₦{assignment.expenses.other.toLocaleString()}</span>
+              <span>₦{(assignment.expenses.other || 0).toLocaleString()}</span>
             </div>
-            <div className="flex justify-between font-medium border-t pt-1">
+            <div className="flex justify-between font-medium border-t pt-1 mt-2">
               <span>Total:</span>
-              <span>₦{assignment.expenses.totalExpenses.toLocaleString()}</span>
+              <span>₦{(assignment.expenses.totalExpenses || 0).toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -1011,245 +981,438 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
   </div>
 );
 
-interface ProgressTabProps {
-  assignment: Assignment;
-  viewMode: 'admin' | 'surveyor';
-  progressNote: string;
-  setProgressNote: (note: string) => void;
-  completionData: {
-    surveyNotes: string;
-    recommendedAction: 'approve' | 'reject' | 'request_more_info';
-  };
-  setCompletionData: (data: any) => void;
-  onProgressSubmit: (e: React.FormEvent) => void;
-  onComplete: () => void;
-}
+// Survey Results Tab Component
+const AssignmentSurveyTab: React.FC<{ assignment: Assignment }> = ({ assignment }) => {
+  // We need to fetch the survey submission data for this assignment
+  const [surveyData, setSurveyData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-const AssignmentProgressTab: React.FC<ProgressTabProps> = ({
-  assignment,
-  viewMode,
-  progressNote,
-  setProgressNote,
-  completionData,
-  setCompletionData,
-  onProgressSubmit,
-  onComplete
-}) => (
-  <div className="space-y-6">
-    {/* Progress Overview */}
-    <div>
-      <h4 className="font-medium text-gray-900 mb-4">Progress Overview</h4>
-      
-      {/* Milestones */}
-      {assignment?.progressTracking?.milestones?.length > 0 && (
-        <div className="space-y-3">
-          <h5 className="text-sm font-medium text-gray-700">Completed Milestones</h5>
-          {(assignment?.progressTracking?.milestones || []).map((milestone, index) => (
-            <div key={index} className="flex items-start space-x-3 bg-green-50 p-3 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-              <div className="flex-1">
-                <p className="font-medium text-green-900">{milestone.name}</p>
-                <p className="text-sm text-green-700">{milestone.notes}</p>
-                <p className="text-xs text-green-600 mt-1">
-                  Completed: {new Date(milestone.completedAt).toLocaleString()}
-                </p>
+  useEffect(() => {
+    const fetchSurveyData = async () => {
+      try {
+        console.log('Fetching survey data for assignment:', assignment._id);
+        console.log('Assignment status:', assignment.status);
+
+        // Import the API function
+        const { getSubmissionByAssignment } = await import('@/services/api');
+
+        // Fetch survey submission data using the existing endpoint
+        const response = await getSubmissionByAssignment(assignment._id);
+        console.log('Survey data response:', response);
+        console.log('Response structure:', JSON.stringify(response, null, 2));
+
+        if (response && response.success && response.data && response.data.submission) {
+          console.log('Survey data loaded:', response.data.submission);
+          setSurveyData(response.data.submission);
+        } else if (response && response.data && response.data.submission) {
+          // Handle case where success field might be missing
+          console.log('Survey data loaded (fallback):', response.data.submission);
+          setSurveyData(response.data.submission);
+        } else if (response && response.submission) {
+          // Handle case where data is directly in response
+          console.log('Survey data loaded (direct):', response.submission);
+          setSurveyData(response.submission);
+        } else {
+          console.log('No survey data found. Response:', response);
+        }
+      } catch (error) {
+        console.error('Failed to fetch survey data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (assignment.status === 'completed') {
+      fetchSurveyData();
+    } else {
+      setLoading(false);
+    }
+  }, [assignment._id, assignment.status]);
+
+  if (assignment.status !== 'completed') {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+        <p>Survey not completed yet</p>
+        <p className="text-sm">Survey results will appear here once the assignment is completed.</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-500 mt-2">Loading survey data...</p>
+      </div>
+    );
+  }
+
+  if (!surveyData) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <AlertTriangle className="w-12 h-12 mx-auto mb-3 opacity-30" />
+        <p>Survey data not found</p>
+        <p className="text-sm">Unable to load survey results for this assignment.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Survey Document */}
+      {surveyData.surveyDocument && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <FileText className="h-5 w-5 text-blue-600 mr-2" />
+              <div>
+                <h4 className="font-medium text-blue-900">Survey Document</h4>
+                <p className="text-sm text-blue-700">Completed survey report</p>
               </div>
             </div>
-          ))}
+            <a
+              href={surveyData.surveyDocument}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Download PDF
+            </a>
+          </div>
         </div>
       )}
 
-      {/* Checkpoints */}
-      {assignment?.progressTracking?.checkpoints?.length > 0 && (
-        <div className="space-y-3 mt-4">
-          <h5 className="text-sm font-medium text-gray-700">Progress Checkpoints</h5>
-          {(assignment?.progressTracking?.checkpoints || []).map((checkpoint, index) => (
-            <div key={index} className="flex items-start space-x-3 bg-blue-50 p-3 rounded-lg">
-              <Clock className="w-4 h-4 text-blue-600 mt-1" />
-              <div className="flex-1">
-                <p className="text-sm text-blue-900">{checkpoint.notes}</p>
-                <p className="text-xs text-blue-600 mt-1">
-                  {new Date(checkpoint.timestamp).toLocaleString()}
-                </p>
-                {checkpoint.photos.length > 0 && (
-                  <div className="flex items-center mt-1 text-xs text-blue-600">
-                    <Camera className="w-3 h-3 mr-1" />
-                    {checkpoint.photos.length} photo{checkpoint.photos.length > 1 ? 's' : ''}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Survey Assessment Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Property Condition</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-700">
+              {surveyData.surveyDetails?.propertyCondition || 'No assessment provided'}
+            </p>
+          </div>
         </div>
-      )}
-    </div>
 
-    {/* Add Progress Update (Surveyor only) */}
-    {viewMode === 'surveyor' && assignment.status === 'in_progress' && (
-      <>
-        <form onSubmit={onProgressSubmit} className="border-t pt-4">
-          <h5 className="text-sm font-medium text-gray-700 mb-3">Add Progress Update</h5>
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Structural Assessment</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-700">
+              {surveyData.surveyDetails?.structuralAssessment || 'No assessment provided'}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Risk Factors</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-700">
+              {surveyData.surveyDetails?.riskFactors || 'No risk factors identified'}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Recommendations</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-700">
+              {surveyData.surveyDetails?.recommendations || 'No recommendations provided'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Survey Notes */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-3">Additional Survey Notes</h4>
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-700">
+            {surveyData.surveyNotes || 'No additional notes provided'}
+          </p>
+        </div>
+      </div>
+
+      {/* Final Recommendation */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-3">Final Recommendation</h4>
+        <div className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium ${surveyData.recommendedAction === 'approve'
+          ? 'bg-green-100 text-green-800 border border-green-200'
+          : surveyData.recommendedAction === 'reject'
+            ? 'bg-red-100 text-red-800 border border-red-200'
+            : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+          }`}>
+          {surveyData.recommendedAction === 'approve' && '✅ Approve Policy'}
+          {surveyData.recommendedAction === 'reject' && '❌ Reject Policy'}
+          {surveyData.recommendedAction === 'request_more_info' && '📋 Request More Information'}
+        </div>
+      </div>
+
+      {/* Contact Log */}
+      {surveyData.contactLog && surveyData.contactLog.length > 0 && (
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Contact Log</h4>
           <div className="space-y-3">
-            <textarea
-              value={progressNote}
-              onChange={(e) => setProgressNote(e.target.value)}
-              placeholder="Describe your progress..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <button
-              type="submit"
-              disabled={!progressNote.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Add Progress Update
-            </button>
-          </div>
-        </form>
-
-        {/* Complete Assignment */}
-        <div className="border-t pt-4">
-          <h5 className="text-sm font-medium text-gray-700 mb-3">Complete Assignment</h5>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Final Survey Notes
-              </label>
-              <textarea
-                value={completionData.surveyNotes}
-                onChange={(e) => setCompletionData((prev: CompletionData) => ({ ...prev, surveyNotes: e.target.value }))}
-                placeholder="Provide your final survey summary and findings..."
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Recommended Action
-              </label>
-              <select
-                value={completionData.recommendedAction}
-                onChange={(e) => setCompletionData((prev: CompletionData) => ({ ...prev, recommendedAction: e.target.value as 'approve' | 'reject' | 'request_more_info' }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="approve">Approve Policy</option>
-                <option value="reject">Reject Policy</option>
-                <option value="request_more_info">Request More Information</option>
-              </select>
-            </div>
-
-            <button
-              onClick={onComplete}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Complete Assignment
-            </button>
+            {surveyData.contactLog.map((entry: any, index: number) => (
+              <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(entry.date).toLocaleDateString()}</span>
+                  <span className="capitalize font-medium">{entry.method}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${entry.successful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                    {entry.successful ? 'Success' : 'Failed'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-800">{entry.notes}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
+};
+
+
 
 const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admin' | 'surveyor' }> = ({
   assignment,
   viewMode
 }) => {
+  const [surveyData, setSurveyData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSurveyData = async () => {
+      try {
+        if (assignment.status === 'completed') {
+          const { getSubmissionByAssignment } = await import('@/services/api');
+          const response = await getSubmissionByAssignment(assignment._id);
+          if (response.success && response.data.submission) {
+            setSurveyData(response.data.submission);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch survey data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSurveyData();
+  }, [assignment._id, assignment.status]);
 
   const handleDocumentsChange = (documents: any) => {
     console.log('Documents updated:', documents);
     // Handle document updates
   }
 
+  if (loading && assignment.status === 'completed') {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-500 mt-2">Loading documents...</p>
+      </div>
+    );
+  }
+
   return (
-  <div className="space-y-4">
-    <h4 className="font-medium text-gray-900">Assignment Documents</h4>
-    
-    {/* Existing Documents */}
-    {assignment?.documents?.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {(assignment?.documents || []).map((doc) => (
-          <div key={doc._id} className="border border-gray-200 rounded-lg p-3">
-            <div className="flex items-start space-x-3">
-              <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">{doc.fileName}</p>
-                <p className="text-sm text-gray-500">{doc.category} • {doc.documentType}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+    <div className="space-y-6">
+      <h4 className="font-medium text-gray-900">Assignment Documents</h4>
+
+      {/* Survey Document */}
+      {surveyData?.surveyDocument && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <FileText className="h-6 w-6 text-blue-600 mr-3" />
+              <div>
+                <h5 className="font-medium text-blue-900">Survey Report</h5>
+                <p className="text-sm text-blue-700">Completed survey document (PDF)</p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Submitted: {surveyData.submissionTime ? new Date(surveyData.submissionTime).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
+            </div>
+            <div className="flex space-x-2">
               <a
-                href={doc.cloudinaryUrl}
+                href={surveyData.surveyDocument}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
-                View
+                View PDF
+              </a>
+              <a
+                href={surveyData.surveyDocument}
+                download
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Download
               </a>
             </div>
           </div>
-        ))}
-      </div>
-    ) : (
-      <div className="text-center py-8 text-gray-500">
-        <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>No documents uploaded yet</p>
-      </div>
-    )}
+        </div>
+      )}
 
-    {/* Document Upload for Surveyors */}
-    {viewMode === 'surveyor' && assignment.status !== 'completed' && (
-      <div className="border-t pt-4">
-        <h5 className="text-sm font-medium text-gray-700 mb-3">Upload Documents</h5>
-        <DocumentManager
-          onDocumentsChange={handleDocumentsChange}
-          title="Survey Documents"
-          showCategories={true}
-        />
-      </div>
-    )}
-  </div>
-)};
-
-const AssignmentCommunicationTab: React.FC<{ 
-  assignment: Assignment; 
-  formatTimeAgo: (date: string) => string; 
-}> = ({ assignment, formatTimeAgo }) => (
-  <div className="space-y-4">
-    <h4 className="font-medium text-gray-900">Messages & Communication</h4>
-    
-    {assignment?.communication?.messages?.length > 0 ? (
-      <div className="space-y-4 max-h-96 overflow-y-auto">
-        {(assignment?.communication?.messages || []).map((message) => (
-          <div key={message._id} className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-start justify-between mb-2">
-              <span className="font-medium text-gray-900">Message</span>
-              <div className="flex items-center space-x-2">
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  message.type === 'question' ? 'bg-blue-100 text-blue-800' :
-                  message.type === 'status_update' ? 'bg-green-100 text-green-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {message.type.replace('_', ' ')}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {formatTimeAgo(message.timestamp)}
-                </span>
+      {/* Other Assignment Documents */}
+      {assignment?.documents?.length > 0 && (
+        <div>
+          <h5 className="text-sm font-medium text-gray-700 mb-3">Other Documents</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(assignment?.documents || []).map((doc) => (
+              <div key={doc._id} className="border border-gray-200 rounded-lg p-3">
+                <div className="flex items-start space-x-3">
+                  <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{doc.fileName}</p>
+                    <p className="text-sm text-gray-500">{doc.category} • {doc.documentType}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <a
+                    href={doc.cloudinaryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    View
+                  </a>
+                </div>
               </div>
-            </div>
-            <p className="text-gray-700 text-sm">{message.message}</p>
+            ))}
           </div>
-        ))}
+        </div>
+      )}
+
+      {/* No Documents Message */}
+      {!surveyData?.surveyDocument && (!assignment?.documents || assignment.documents.length === 0) && (
+        <div className="text-center py-8 text-gray-500">
+          <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>No documents available</p>
+          <p className="text-sm">Documents will appear here once the survey is completed.</p>
+        </div>
+      )}
+
+      {/* Document Upload for Surveyors */}
+      {viewMode === 'surveyor' && assignment.status !== 'completed' && (
+        <div className="border-t pt-4">
+          <h5 className="text-sm font-medium text-gray-700 mb-3">Upload Documents</h5>
+          <DocumentManager
+            onDocumentsChange={handleDocumentsChange}
+            title="Survey Documents"
+            showCategories={true}
+          />
+        </div>
+      )}
+    </div>
+  )
+};
+
+const AssignmentCommunicationTab: React.FC<{
+  assignment: Assignment;
+  formatTimeAgo: (date: string) => string;
+}> = ({ assignment, formatTimeAgo }) => {
+  const [surveyData, setSurveyData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSurveyData = async () => {
+      try {
+        if (assignment.status === 'completed') {
+          const { getSubmissionByAssignment } = await import('@/services/api');
+          const response = await getSubmissionByAssignment(assignment._id);
+          if (response.success && response.data.submission) {
+            setSurveyData(response.data.submission);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch survey data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSurveyData();
+  }, [assignment._id, assignment.status]);
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-500 mt-2">Loading communication data...</p>
       </div>
-    ) : (
-      <div className="text-center py-8 text-gray-500">
-        <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p>No messages yet</p>
-      </div>
-    )}
-  </div>
-);
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h4 className="font-medium text-gray-900">Contact Log & Communication</h4>
+
+      {/* Survey Contact Log */}
+      {surveyData?.contactLog && surveyData.contactLog.length > 0 ? (
+        <div className="space-y-4">
+          <h5 className="text-sm font-medium text-gray-700">Survey Contact Attempts</h5>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {surveyData.contactLog.map((entry: any, index: number) => (
+              <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-gray-900">Contact Attempt</span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${entry.successful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                      {entry.successful ? 'Successful' : 'Failed'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-xs text-gray-500">
+                    <Calendar className="h-3 w-3" />
+                    <span>{new Date(entry.date).toLocaleDateString()}</span>
+                    <span className="capitalize">{entry.method}</span>
+                  </div>
+                </div>
+                <p className="text-gray-700 text-sm">{entry.notes}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-8 text-gray-500">
+          <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>No contact attempts recorded</p>
+          <p className="text-sm">Contact log will appear here once survey is completed.</p>
+        </div>
+      )}
+
+      {/* Assignment Messages (if any) */}
+      {assignment?.communication?.messages?.length > 0 && (
+        <div className="border-t pt-4">
+          <h5 className="text-sm font-medium text-gray-700 mb-3">Assignment Messages</h5>
+          <div className="space-y-3">
+            {assignment.communication.messages.map((message) => (
+              <div key={message._id} className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex items-start justify-between mb-2">
+                  <span className="font-medium text-gray-900 text-sm">System Message</span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${message.type === 'question' ? 'bg-blue-100 text-blue-800' :
+                      message.type === 'status_update' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                      {message.type.replace('_', ' ')}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {formatTimeAgo(message.timestamp)}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-gray-700 text-sm">{message.message}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default AssignmentManagement;

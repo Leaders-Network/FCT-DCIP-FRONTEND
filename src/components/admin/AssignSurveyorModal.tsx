@@ -64,7 +64,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
     }
     try {
       const assignmentData = {
-        policyId: selectedPolicy!._id,
+        ammcId: selectedPolicy!._id,
         surveyorId: newAssignmentData.surveyorId,
         assignedBy: user?._id,
         deadline: new Date(newAssignmentData.deadline),
@@ -81,7 +81,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
 
   const handleReassignSurveyor = async () => {
     try {
-      const assignmentResponse = await adminApi.getAssignmentByPolicyId(selectedPolicy!._id);
+      const assignmentResponse = await adminApi.getAssignmentByAmmcId(selectedPolicy!._id);
       if (!assignmentResponse.success || !assignmentResponse.data) {
         setError('Could not find assignment for the selected policy.');
         return;

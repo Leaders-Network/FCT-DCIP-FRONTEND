@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { getUserProperties } from "@/services/api";
+import { Trash2, MoreVertical } from "lucide-react";
+import { getUserProperties, deleteProperty } from "@/services/api";
 import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import { CreatePolicyRequestData } from "@/types/api.types";
 import PropertyDetailsModal from "@/components/dashboard/usersComponent/PropertyDetailsModal";
+import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty";
 
 const PropertyPage = () => {
   const [properties, setProperties] = useState<any[]>([]);
@@ -13,6 +15,10 @@ const PropertyPage = () => {
   const [showPolicyRequest, setShowPolicyRequest] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedPropertyForView, setSelectedPropertyForView] = useState<any>(null);
+  const [showAddNewProperty, setShowAddNewProperty] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<any>(null);
+  const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
 
   // Get user name from localStorage with SSR safety
   const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
@@ -40,6 +46,47 @@ const PropertyPage = () => {
     setShowPolicyRequest(!showPolicyRequest);
   };
 
+  const toggleAddNewProperty = () => {
+    setShowAddNewProperty(!showAddNewProperty);
+  };
+
+  const handlePropertyAdded = () => {
+    // Refresh the properties list when a new property is added
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const response = await getUserProperties();
+        setProperties(response.allProperties.properties);
+      } catch (error) {
+        console.error("Failed to fetch properties:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProperties();
+  };
+
+  const handleDeleteProperty = async (property: any) => {
+    // Safety check: Only allow deletion of unverified properties
+    if (property.status !== "Unverified") {
+      alert('Only unverified properties can be deleted.');
+      setShowDeleteModal(false);
+      setPropertyToDelete(null);
+      return;
+    }
+
+    try {
+      await deleteProperty(property._id);
+      setProperties(prev => prev.filter(p => p._id !== property._id));
+      setShowDeleteModal(false);
+      setPropertyToDelete(null);
+      alert('Unverified property deleted successfully!');
+    } catch (error) {
+      console.error('Delete property error:', error);
+      alert('Failed to delete property. Please try again.');
+    }
+  };
+
   const handleInsureClick = (property: any) => {
     setSelectedProperty(property);
     setShowPolicyRequest(true);
@@ -62,7 +109,7 @@ const PropertyPage = () => {
       alert("Failed to submit policy request. Please try again.");
     }
   };
-  
+
   return (
     <>
       {/* Greeting */}
@@ -94,9 +141,9 @@ const PropertyPage = () => {
               life&apos;s unexpected twists
             </div>
           </div>
-          <div className="absolute lg:mb-12 right-2 sm:right-4 bottom-2 sm:bottom-4">
+          <div className="absolute lg:mb-12 right-2 sm:right-4 bottom-2 sm:bottom-4 flex space-x-2">
             <button
-              onClick={togglePolicyRequestForm}
+              onClick={toggleAddNewProperty}
               className="px-2 sm:px-4 py-1 sm:py-2 bg-white rounded-[40px] text-[#028835] text-sm sm:text-base lg:text-lg font-semibold flex items-center"
             >
               <div className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 bg-[#028835] rounded-full mr-1 sm:mr-2 flex items-center justify-center">
@@ -113,6 +160,26 @@ const PropertyPage = () => {
                   />
                 </svg>
               </div>
+              New Property
+            </button>
+            <button
+              onClick={togglePolicyRequestForm}
+              className="px-2 sm:px-4 py-1 sm:py-2 bg-[#028835] rounded-[40px] text-white text-sm sm:text-base lg:text-lg font-semibold flex items-center"
+            >
+              <div className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 bg-white rounded-full mr-1 sm:mr-2 flex items-center justify-center">
+                <svg
+                  width="12"
+                  height="13"
+                  viewBox="0 0 12 13"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M0 6.62816V5.70509H5.53846V0.166626H6.46154V5.70509H12V6.62816H6.46154V12.1666H5.53846V6.62816H0Z"
+                    fill="#028835"
+                  />
+                </svg>
+              </div>
               New Policy
             </button>
           </div>
@@ -121,152 +188,173 @@ const PropertyPage = () => {
 
       {/* Main Content */}
       <main className="flex-1 px-4 sm:px-8 pb-8 overflow-y-auto">
-            {/* Property Table */}
-            <div className="w-full bg-white rounded-xl p-4 overflow-x-auto">
-              <table className="w-full min-w-[720px]">
-                <thead>
-                  <tr className="text-left border-b">
-                    <th className="pb-2 font-bold w-5 px-4">
+        {/* Property Table */}
+        <div className="w-full bg-white rounded-xl p-4 overflow-x-auto">
+          <table className="w-full min-w-[720px]">
+            <thead>
+              <tr className="text-left border-b">
+                <th className="pb-2 font-bold w-5 px-4">
+                  <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
+                    <input
+                      type="checkbox"
+                      className="w-full h-full cursor-pointer opacity-0"
+                    />
+                  </div>
+                </th>
+                <th className="pb-2 font-bold">Name</th>
+                <th className="pb-2 font-bold">Expiring Date</th>
+                <th className="pb-2 font-bold">Property ID</th>
+                <th className="pb-2 font-bold">Status</th>
+                <th className="pb-2 font-bold">Actions</th>
+                <th className="pb-2 font-bold w-5">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="1" />
+                    <circle cx="12" cy="5" r="1" />
+                    <circle cx="12" cy="19" r="1" />
+                  </svg>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                // Loading state
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className="border-b animate-pulse">
+                    <td className="py-4 px-4">
+                      <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="h-6 bg-gray-200 rounded w-16"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="w-16 h-8 bg-gray-200 rounded"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : (properties || []).length > 0 ? (
+                (properties || []).map((item, index) => (
+                  <tr key={item._id || index} className="border-b">
+                    <td className="py-4 px-4">
                       <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
                         <input
                           type="checkbox"
                           className="w-full h-full cursor-pointer opacity-0"
                         />
                       </div>
-                    </th>
-                    <th className="pb-2 font-bold">Name</th>
-                    <th className="pb-2 font-bold">Expiring Date</th>
-                    <th className="pb-2 font-bold">Property ID</th>
-                    <th className="pb-2 font-bold">Status</th>
-                    <th className="pb-2 font-bold">Actions</th>
-                    <th className="pb-2 font-bold w-5">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="1" />
-                        <circle cx="12" cy="5" r="1" />
-                        <circle cx="12" cy="19" r="1" />
-                      </svg>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    // Loading state
-                    Array.from({ length: 5 }).map((_, index) => (
-                      <tr key={index} className="border-b animate-pulse">
-                        <td className="py-4 px-4">
-                          <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="h-4 bg-gray-200 rounded w-32"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="h-4 bg-gray-200 rounded w-24"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="h-4 bg-gray-200 rounded w-20"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="h-6 bg-gray-200 rounded w-16"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="w-16 h-8 bg-gray-200 rounded"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (properties || []).length > 0 ? (
-                    (properties || []).map((item, index) => (
-                    <tr key={item._id || index} className="border-b">
-                      <td className="py-4 px-4">
-                        <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
-                          <input
-                            type="checkbox"
-                            className="w-full h-full cursor-pointer opacity-0"
-                          />
-                        </div>
-                      </td>
-                      <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
-                        {item.address}
-                      </td>
-                      <td className="py-4 text-[#2a2828] text-base font-medium">
-                        {"N/A"}
-                      </td>
-                      <td className="py-4 text-[#2a2828] text-base font-medium">
-                        {item._id?.substring(0, 7).toUpperCase() || "N/A"}
-                      </td>
-                      <td className="py-4">
-                        <span
-                          className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium capitalize ${
-                            item.status === "Verified"
-                              ? "bg-[#028835]"
-                              : item.status === "Unverified"
-                                ? "bg-[#ffc52b]"
-                                : item.status === "Blacklist"
-                                  ? "bg-[#bd2721]"
-                                  : "bg-[#2a2a29]"
+                    </td>
+                    <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
+                      {item.address}
+                    </td>
+                    <td className="py-4 text-[#2a2828] text-base font-medium">
+                      {"N/A"}
+                    </td>
+                    <td className="py-4 text-[#2a2828] text-base font-medium">
+                      {item._id?.substring(0, 7).toUpperCase() || "N/A"}
+                    </td>
+                    <td className="py-4">
+                      <span
+                        className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium capitalize ${item.status === "Verified"
+                          ? "bg-[#028835]"
+                          : item.status === "Unverified"
+                            ? "bg-[#ffc52b]"
+                            : item.status === "Blacklist"
+                              ? "bg-[#bd2721]"
+                              : "bg-[#2a2a29]"
                           }`}
-                        >
-                          {item.status || "Unknown"}
-                        </span>
-                      </td>
-                      <td className="py-4">
-                        <button onClick={() => handleViewClick(item)} className="px-2 py-1 bg-blue-500 text-white rounded-md text-sm">
+                      >
+                        {item.status || "Unknown"}
+                      </span>
+                    </td>
+                    <td className="py-4">
+                      <div className="flex flex-col sm:flex-row gap-2 min-w-0">
+                        <button onClick={() => handleViewClick(item)} className="px-2 py-1 bg-blue-500 text-white rounded-md text-sm whitespace-nowrap">
                           View
                         </button>
-                        <button onClick={() => handleInsureClick(item)} className="px-2 py-1 bg-[#028835] text-white rounded-md text-sm ml-2">
+                        <button onClick={() => handleInsureClick(item)} className="px-2 py-1 bg-[#028835] text-white rounded-md text-sm whitespace-nowrap">
                           Insure
                         </button>
-                      </td>
-                      <td className="py-4">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                      </div>
+                    </td>
+                    <td className="py-4">
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowActionsDropdown(showActionsDropdown === item._id ? null : item._id)}
+                          className="p-2 hover:bg-gray-100 rounded-full"
                         >
-                          <circle cx="12" cy="12" r="1" />
-                          <circle cx="12" cy="5" r="1" />
-                          <circle cx="12" cy="19" r="1" />
-                        </svg>
-                      </td>
-                    </tr>
-                  ))
-                  ) : (
-                        // Empty state
-                        <tr className="border-b">
-                          <td colSpan={7} className="py-8 text-center text-gray-500">
-                            <div className="flex flex-col items-center">
-                              <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              <p className="font-medium">No properties found</p>
-                              <p className="text-sm">Your properties will appear here once you have added some.</p>
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                        {showActionsDropdown === item._id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                            <div className="py-1">
+                              {item.status === "Unverified" ? (
+                                <button
+                                  onClick={() => {
+                                    setPropertyToDelete(item);
+                                    setShowDeleteModal(true);
+                                    setShowActionsDropdown(null);
+                                  }}
+                                  className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                >
+                                  <Trash2 className="mr-3 h-4 w-4" />
+                                  Delete Property
+                                </button>
+                              ) : (
+                                <div className="flex items-center px-4 py-2 text-sm text-gray-400 w-full text-left cursor-not-allowed">
+                                  <Trash2 className="mr-3 h-4 w-4" />
+                                  <div>
+                                    <div>Delete Property</div>
+                                    <div className="text-xs">Only unverified properties can be deleted</div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </td>
-                        </tr>
-                  )}
-                </tbody>
-              </table>
-          </div>
-        </main>
-        
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                // Empty state
+                <tr className="border-b">
+                  <td colSpan={7} className="py-8 text-center text-gray-500">
+                    <div className="flex flex-col items-center">
+                      <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p className="font-medium">No properties found</p>
+                      <p className="text-sm">Your properties will appear here once you have added some.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
+
       <PolicyRequestForm
         isOpen={showPolicyRequest}
         onClose={() => setShowPolicyRequest(false)}
@@ -279,6 +367,60 @@ const PropertyPage = () => {
         onClose={() => setShowViewModal(false)}
         property={selectedPropertyForView}
       />
+
+      <AddNewProperty
+        isOpen={showAddNewProperty}
+        onClose={() => setShowAddNewProperty(false)}
+        onPropertyAdded={handlePropertyAdded}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && propertyToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Unverified Property</h3>
+            <div className="mb-6">
+              <p className="text-sm text-gray-500 mb-2">
+                Are you sure you want to delete this unverified property?
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Property:</strong> {propertyToDelete.address}
+                    </p>
+                    <p className="text-xs text-yellow-700 mt-1">
+                      This action cannot be undone. Only unverified properties can be deleted.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setPropertyToDelete(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteProperty(propertyToDelete)}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700"
+              >
+                Delete Property
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { 
-  Users, 
-  Star, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  Mail, 
+import {
+  Users,
+  Star,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
   Calendar,
   CheckCircle,
   AlertCircle,
@@ -54,18 +54,18 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const [selectedSurveyor, setSelectedSurveyor] = useState<Surveyor | null>(null);
   const [performanceData, setPerformanceData] = useState(null);
   const [formData, setFormData] = useState({
-  firstname: "",
-  lastname: "",
-  email: "",
-  phonenumber: "",
-  specializations: [] as string[],
-  licenseNumber: "",
-  address: "",
-  emergencyContact: "",
-  notes: "",
-  role: "Surveyor",
-  status: "active" as "active" | "inactive" | "suspended",
-  rating: 0
+    firstname: "",
+    lastname: "",
+    email: "",
+    phonenumber: "",
+    specializations: [] as string[],
+    licenseNumber: "",
+    address: "",
+    emergencyContact: "",
+    notes: "",
+    role: "Surveyor",
+    status: "active" as "active" | "inactive" | "suspended",
+    rating: 0
   });
 
   useEffect(() => {
@@ -77,16 +77,16 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     setLoading(true);
     try {
       const { adminApi } = await import("@/services/api");
-      
+
       // Fetch surveyors from the API
       const response = await adminApi.getSurveyors({
         status: statusFilter !== "all" ? statusFilter : undefined,
         specialization: specializationFilter !== "all" ? specializationFilter : undefined,
         search: searchTerm || undefined
       });
-      
+
       console.log("Surveyor API response:", response);
-      
+
       if (response?.success && response?.data) {
         setSurveyors(response.data);
       } else {
@@ -103,21 +103,21 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const fetchAssignments = async () => {
     try {
       const { getPolicyRequests } = await import("@/services/api");
-      
+
       // Fetch all policy requests with assignments
       const response = await getPolicyRequests('all', 1, 100);
-      
+
       if (response?.data && Array.isArray(response.data)) {
         // Transform policy requests to assignment format if needed
         const assignmentData = response.data?.map((policy: any) => ({
           _id: policy._id,
           surveyorId: policy.assignedSurveyors?.[0] || null,
-          policyId: policy._id,
+          ammcId: policy._id,
           status: policy.status,
           createdAt: policy.createdAt,
           updatedAt: policy.updatedAt
         })) || [];
-        
+
         setAssignments(assignmentData);
       } else {
         setAssignments([]);
@@ -128,20 +128,85 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }
   };
 
+  const fetchSurveyorAnalytics = async (surveyor: Surveyor) => {
+    setSelectedSurveyor(surveyor);
+
+    try {
+      const { adminApi } = await import("@/services/api");
+
+      // Fetch comprehensive analytics for the surveyor
+      const surveyorAssignments = assignments.filter(a => a.surveyorId === surveyor._id);
+      const completedAssignments = surveyorAssignments.filter(a => a.status === 'completed');
+      const inProgressAssignments = surveyorAssignments.filter(a => a.status === 'in_progress' || a.status === 'assigned');
+      const rejectedAssignments = surveyorAssignments.filter(a => a.status === 'rejected');
+
+      // Calculate performance metrics
+      const totalSurveys = surveyorAssignments.length;
+      const completedSurveys = completedAssignments.length;
+      const currentAssignments = inProgressAssignments.length;
+      const successRate = totalSurveys > 0 ? ((completedSurveys / totalSurveys) * 100).toFixed(1) : '0';
+
+      // Calculate average completion time (mock data for now)
+      const avgCompletionTime = completedSurveys > 0 ? Math.floor(Math.random() * 7) + 1 : 0;
+
+      // Recent activity (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const recentAssignments = surveyorAssignments.filter(a =>
+        new Date(a.createdAt) >= thirtyDaysAgo
+      ).length;
+
+      const performance = {
+        totalSurveys,
+        completedSurveys,
+        currentAssignments,
+        rejectedSurveys: rejectedAssignments.length,
+        successRate: parseFloat(successRate),
+        avgCompletionTime,
+        recentActivity: recentAssignments,
+        rating: surveyor?.rating || 0,
+        joinDate: surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A',
+        lastActive: completedAssignments.length > 0
+          ? new Date(Math.max(...completedAssignments.map(a => new Date(a.updatedAt).getTime()))).toLocaleDateString()
+          : 'N/A'
+      };
+
+      setPerformanceData(performance);
+      setShowDetailsModal(true);
+    } catch (error) {
+      console.error('Failed to fetch surveyor analytics:', error);
+      // Fallback to basic metrics
+      const performance = {
+        totalSurveys: assignments.filter(a => a.surveyorId === surveyor._id).length,
+        completedSurveys: assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'completed').length,
+        currentAssignments: getCurrentAssignments(surveyor._id),
+        rejectedSurveys: assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'rejected').length,
+        successRate: 0,
+        avgCompletionTime: 0,
+        recentActivity: 0,
+        rating: surveyor?.rating || 0,
+        joinDate: surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A',
+        lastActive: 'N/A'
+      };
+      setPerformanceData(performance);
+      setShowDetailsModal(true);
+    }
+  };
+
   const filteredSurveyors = (surveyors || []).filter(surveyor => {
-    const matchesSearch = 
+    const matchesSearch =
       (surveyor?.firstname || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
       (surveyor?.lastname || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
       (surveyor?.email || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
       (surveyor?.licenseNumber || '').toLowerCase().includes((searchTerm || '').toLowerCase());
-    
-    const matchesStatus = 
-      statusFilter === "all" || 
+
+    const matchesStatus =
+      statusFilter === "all" ||
       (surveyor?.employeeStatus?.status || '').toLowerCase() === (statusFilter || '').toLowerCase();
-    
-    const matchesSpecialization = 
-      specializationFilter === "all" || 
-      (surveyor?.specializations || []).some(spec => 
+
+    const matchesSpecialization =
+      specializationFilter === "all" ||
+      (surveyor?.specializations || []).some(spec =>
         (spec || '').toLowerCase().includes((specializationFilter || '').toLowerCase())
       );
 
@@ -159,8 +224,8 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
   const getCurrentAssignments = (surveyorId: string) => {
     return (assignments || []).filter(
-      assignment => 
-        assignment?.surveyorId === surveyorId && 
+      assignment =>
+        assignment?.surveyorId === surveyorId &&
         assignment?.status === "in_progress"
     ).length;
   };
@@ -220,7 +285,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const openEditModal = (surveyor: Surveyor) => {
     setSelectedSurveyor(surveyor);
     console.log('Opening edit modal for surveyor:', surveyor);
-    
+
     setFormData({
       firstname: surveyor.userId?.firstname || surveyor.firstname || "",
       lastname: surveyor.userId?.lastname || surveyor.lastname || "",
@@ -284,7 +349,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2"
             />
           </div>
-          
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -411,16 +476,9 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               </div>
 
               <div className="flex space-x-2">
-                                                    <button
-                                                      onClick={() => {
-                                                        setSelectedSurveyor(surveyor);
-                                                        const performance = {
-                                                          totalSurveys: assignments.filter(a => a.surveyorId === surveyor._id).length,
-                                                          completedSurveys: assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'completed').length,
-                                                        };
-                                                        setPerformanceData(performance);
-                                                        setShowDetailsModal(true);
-                                                      }}                  className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 flex items-center justify-center"
+                <button
+                  onClick={() => fetchSurveyorAnalytics(surveyor)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 flex items-center justify-center"
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   View
@@ -493,7 +551,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   max={5}
                   step={0.1}
                   value={formData.rating || 0}
-                  onChange={(e) => setFormData({...formData, rating: Number(e.target.value)})}
+                  onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                 />
                 <div>
@@ -503,7 +561,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <input
                     type="text"
                     value={formData.firstname}
-                    onChange={(e) => setFormData({...formData, firstname: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                   />
                 </div>
@@ -514,7 +572,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <input
                     type="text"
                     value={formData.lastname}
-                    onChange={(e) => setFormData({...formData, lastname: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                   />
                 </div>
@@ -528,7 +586,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <input
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                   />
                 </div>
@@ -539,7 +597,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <input
                     type="tel"
                     value={formData.phonenumber}
-                    onChange={(e) => setFormData({...formData, phonenumber: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, phonenumber: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                   />
                 </div>
@@ -553,7 +611,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <input
                     type="text"
                     value={formData.licenseNumber}
-                    onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                   />
                 </div>
@@ -564,7 +622,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <input
                     type="tel"
                     value={formData.emergencyContact}
-                    onChange={(e) => setFormData({...formData, emergencyContact: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                   />
                 </div>
@@ -577,7 +635,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <input
                   type="text"
                   value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                 />
               </div>
@@ -619,7 +677,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 </label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                   rows={3}
                 />
@@ -685,19 +743,54 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Performance Metrics</h4>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-4">Performance Metrics</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <p className="text-2xl font-bold text-blue-600">{performanceData?.totalSurveys || 0}</p>
                     <p className="text-sm text-blue-800">Total Surveys</p>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="bg-green-50 p-4 rounded-lg text-center">
                     <p className="text-2xl font-bold text-green-600">{performanceData?.completedSurveys || 0}</p>
                     <p className="text-sm text-green-800">Completed</p>
                   </div>
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <p className="text-2xl font-bold text-yellow-600">{getCurrentAssignments(selectedSurveyor?._id)}</p>
+                  <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-yellow-600">{performanceData?.currentAssignments || 0}</p>
                     <p className="text-sm text-yellow-800">Current Assignments</p>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-red-600">{performanceData?.rejectedSurveys || 0}</p>
+                    <p className="text-sm text-red-800">Rejected</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                  <div className="bg-purple-50 p-4 rounded-lg text-center">
+                    <p className="text-xl font-bold text-purple-600">{performanceData?.successRate || 0}%</p>
+                    <p className="text-sm text-purple-800">Success Rate</p>
+                  </div>
+                  <div className="bg-indigo-50 p-4 rounded-lg text-center">
+                    <p className="text-xl font-bold text-indigo-600">{performanceData?.avgCompletionTime || 0} days</p>
+                    <p className="text-sm text-indigo-800">Avg Completion</p>
+                  </div>
+                  <div className="bg-teal-50 p-4 rounded-lg text-center">
+                    <p className="text-xl font-bold text-teal-600">{performanceData?.recentActivity || 0}</p>
+                    <p className="text-sm text-teal-800">Recent Activity (30d)</p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Last Active:</span>
+                      <span className="ml-2 font-medium">{performanceData?.lastActive || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Overall Rating:</span>
+                      <span className="ml-2 font-medium flex items-center">
+                        <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                        {performanceData?.rating || 0}/5.0
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
