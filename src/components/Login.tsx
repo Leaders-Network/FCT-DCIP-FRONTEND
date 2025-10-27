@@ -3,7 +3,7 @@ import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { useAuth } from "@/context/useAuth";
 
@@ -13,6 +13,22 @@ const loginSchema = z.object({
 });
 
 export function Login() {
+
+   const [currentImage, setCurrentImage] = useState(0)
+   const backgroundImages = [
+     "/abuja-bg.png",
+    "/insurance-bg-4.jpg",
+    "/insurance-bg-3.jpeg",
+    "/insurance-bg-9.jpeg",
+]
+
+  useEffect(() => {
+    const interval = setInterval(()=> {
+      setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
+    },5000); 
+    return () => clearInterval(interval);
+  }, [backgroundImages.length]);
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
       <div className="w-full md:w-2/3 flex flex-col p-4 md:p-8">
@@ -24,13 +40,16 @@ export function Login() {
         </main>
       </div>
       <div className="hidden md:block md:w-1/3 relative">
-        <Image
-          className="w-full h-full object-cover"
-          width={500}
-          height={900}
-          src="/abuja-bg.png"
-          alt="Abuja background"
-        />
+              {backgroundImages.map((src, index) => (
+                <Image 
+                key={index}
+                src={src}
+                alt={`Background ${index + 1}`}
+                fill
+                priority={index === 0}
+                className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
         <div className="absolute inset-0 bg-black opacity-20" />
       </div>
     </div>

@@ -7,7 +7,7 @@ const InsuranceOptions = () => {
     <section className="py-16 bg-gray-100">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between">
-          <div className="w-full md:w-1/2 mb-8 md:mb-0">
+          <div data-aos="fade-right" data-aos-anchor-placement="top-center" className="w-full md:w-1/2 mb-8 md:mb-0">
             <Image
               src="/about.png"
               alt="Happy family"
@@ -16,7 +16,7 @@ const InsuranceOptions = () => {
               className="rounded-lg mx-auto object-cover"
             />
           </div>
-          <div className="w-full md:w-1/2">
+          <div data-aos="fade-left" data-aos-anchor-placement="top-center" data-aos-delay="200" className="w-full md:w-1/2">
             <h2 className="text-3xl font-bold text-center mb-12">
               Insurance that fits your lifestyle
             </h2>
@@ -49,22 +49,19 @@ const InsuranceOptions = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 items-center justify-between mt-10">
-          <div>
+          <div data-aos="fade-right" data-aos-anchor-placement="top-center" data-aos-delay="300">
             <h2 className="text-3xl font-bold text-green-600 mb-4">
               Our Insurance Option
             </h2>
             <p className="text-gray-600 mb-8 max-w-lg">
-              Lorem ipsum dolor sit amet consectetur. Sapien in adipiscing duis
-              orci. Rhoncus nunc consectetur nibh auctor porta tincidunt ac
-              porttitor amet. Proin ac viverra condimentum um venenatis pulvinar
-              tortor ullamcorper aliquam morbi. Sem vulputate
+              Our insurance options provide comprehensive coverage tailored to your specific needs, offering peace of mind, financial security, expert support, and a range of benefits designed to protect your future and well-being.
             </p>
             <button className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors mb-12">
               Explore
             </button>
           </div>
 
-          <div className="grid grid-cols-1  gap-8">
+          <div data-aos="fade-left" data-aos-anchor-placement="top-center" data-aos-delay="500" className="grid grid-cols-1  gap-8">
             <div className="bg-gray-100 p-6 rounded-md">
               <Image
                 width={100}
@@ -85,7 +82,7 @@ const InsuranceOptions = () => {
                 ensures your home and personal property are protected.
               </p>
             </div>
-            <div className="bg-gray-100 p-6 rounded-md">
+            <div  className="bg-gray-100 p-6 rounded-md">
               <Image
                 width={100}
                 height={100}
