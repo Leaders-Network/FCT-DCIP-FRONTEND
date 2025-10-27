@@ -929,7 +929,7 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
     },
     contactDetails: {
       fullName: policy.contactDetails?.fullName || '',
-      email: policy.contactDetails?.email || '',
+      email: localStorage.getItem("email") || '',
       phoneNumber: policy.contactDetails?.phoneNumber || '',
       alternatePhone: policy.contactDetails?.alternatePhone || ''
     },
@@ -1100,14 +1100,21 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                    <span className="text-xs text-green-600 ml-2">(Auto-filled from your account)</span>
+                  </label>
                   <input
                     type="email"
                     value={formData.contactDetails.email}
-                    onChange={(e) => handleInputChange('contactDetails', 'email', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                    disabled
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 cursor-not-allowed"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This email is automatically filled from your account and cannot be changed.
+                  </p>
                 </div>
 
                 <div>
