@@ -4,21 +4,26 @@ import { MapPin} from "lucide-react";
 const ContactForm = () => {
   return (
     <section className="py-16">
-      <div className="container mx-auto px-4">
+      <div className="container  mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12">Contact Us</h2>
         <div className="flex flex-wrap -mx-4">
           <div className="w-full md:w-1/2 px-4 mb-8 md:mb-0">
-            <div className="h-96 bg-gray-200 rounded-lg overflow-hidden relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <MapPin size={48} className="text-gray-400" />
-              </div>
-              {/* <div className="absolute bottom-4 left-4 bg-white px-3 py-1 rounded-full text-sm font-semibold">
-                Dummy Map
-              </div> */}
+            <div data-aos="flip-left" data-aos-duration="500" className="h-[300px] bg-gray-200 rounded-lg overflow-hidden relative">
+              <iframe
+                src="https://www.google.com/maps?q=Zone+6,+Julia+Street,+Wuse,+Abuja&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0, borderRadius: '12px', }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                
+              ></iframe>
             </div>
           </div>
-          <div className="w-full md:w-1/2 px-4">
-            <form>
+
+          <div  className="w-full flex flex-col justify-center md:w-1/2 px-4">
+            <form data-aos="flip-right" data-aos-delay="500">
               <div className="mb-4">
                 <input
                   type="text"
