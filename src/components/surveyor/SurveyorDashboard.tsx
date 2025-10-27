@@ -1,18 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FileText, Clock, CheckCircle, Users, Calendar, MapPin, ClipboardList, AlertCircle } from "lucide-react";
-import { PolicyRequest } from "@/types/api.types";
+import { Assignment } from "@/types/api.types";
 import Link from "next/link";
 import { getSurveyorDashboard, getSurveyorAssignments } from "@/services/api";
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-    <div className="flex items-center">
-      <div className={`p-2 bg-${color}-100 rounded-lg`}>
+  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-w-0 overflow-hidden">
+    <div className="flex items-center min-w-0">
+      <div className={`p-2 bg-${color}-100 rounded-lg flex-shrink-0`}>
         {React.createElement(icon, { className: `h-6 w-6 text-${color}-600` })}
       </div>
-      <div className="ml-4">
-        <p className="text-sm font-medium text-gray-600">{label}</p>
+      <div className="ml-4 flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-600 truncate">{label}</p>
         <p className="text-2xl font-bold text-gray-900">{value}</p>
       </div>
     </div>
@@ -20,7 +20,7 @@ const StatCard = ({ icon, label, value, color }) => (
 );
 
 const SurveyorDashboard = () => {
-  const [assignments, setAssignments] = useState<PolicyRequest[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -40,7 +40,7 @@ const SurveyorDashboard = () => {
           getSurveyorAssignments("all", 1, 10)
         ]);
 
-        let fetchedAssignments: PolicyRequest[] = [];
+        let fetchedAssignments: Assignment[] = [];
 
         if (dashboardResponse.status === 'fulfilled' && dashboardResponse.value?.data) {
           console.log("Dashboard Response:", dashboardResponse.value.data);
@@ -49,7 +49,12 @@ const SurveyorDashboard = () => {
             fetchedAssignments = dashboardData.recentAssignments;
           }
           if (dashboardData.statistics) {
-            setStats(dashboardData.statistics);
+            setStats({
+              total: dashboardData.statistics.total || 0,
+              pending: dashboardData.statistics.pending || 0,
+              inProgress: dashboardData.statistics.inProgress || 0,
+              completed: dashboardData.statistics.completed || 0
+            });
           }
         }
 
@@ -60,12 +65,12 @@ const SurveyorDashboard = () => {
 
         if (fetchedAssignments.length > 0) {
           setAssignments(fetchedAssignments);
-          if (dashboardResponse.status === 'rejected' || !dashboardResponse.value?.data?.stats) {
+          if (dashboardResponse.status === 'rejected' || !dashboardResponse.value?.data?.statistics) {
             setStats({
               total: fetchedAssignments.length,
-              pending: fetchedAssignments.filter(a => a.status === 'assigned' || a.status === 'pending').length,
+              pending: fetchedAssignments.filter(a => a.status === 'assigned' || a.status === 'accepted').length,
               inProgress: fetchedAssignments.filter(a => a.status === 'in-progress').length,
-              completed: fetchedAssignments.filter(a => a.status === 'completed' || a.status === 'surveyed').length
+              completed: fetchedAssignments.filter(a => a.status === 'completed').length
             });
           }
         }
@@ -88,26 +93,45 @@ const SurveyorDashboard = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'assigned':
-      case 'pending':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
             <Clock className="w-3 h-3 mr-1" />
-            Pending
+            New Assignment
+          </span>
+        );
+      case 'accepted':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Accepted
           </span>
         );
       case 'in-progress':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
             <ClipboardList className="w-3 h-3 mr-1" />
             In Progress
           </span>
         );
       case 'completed':
-      case 'surveyed':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Completed
+          </span>
+        );
+      case 'rejected':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Rejected
+          </span>
+        );
+      case 'cancelled':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Cancelled
           </span>
         );
       default:
@@ -177,10 +201,10 @@ const SurveyorDashboard = () => {
                       </div>
                       <div>
                         <h3 className="text-md font-semibold text-gray-900">
-                          {assignment.policyId.propertyDetails.propertyType}
+                          {(assignment.ammcId as any)?.propertyDetails?.propertyType || 'Assignment'}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          {assignment.policyId.propertyDetails.address}
+                          {(assignment.ammcId as any)?.propertyDetails?.address || assignment.location?.address || 'Location not specified'}
                         </p>
                       </div>
                     </div>
@@ -188,11 +212,11 @@ const SurveyorDashboard = () => {
                     <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 mr-1.5" />
-                        {assignment.policyId.contactDetails.fullName}
+                        {(assignment.ammcId as any)?.contactDetails?.fullName || assignment.location?.contactPerson?.name || 'Contact not available'}
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1.5" />
-                        {new Date(assignment.createdAt).toLocaleDateString()}
+                        {new Date(assignment.assignedAt).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
