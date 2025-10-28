@@ -45,9 +45,9 @@ export default function SignUp() {
 
 function Header() {
   return (
-    <header className="flex flex-col md:flex-row justify-between items-center w-full mb-8">
+    <header className="flex flex-col md:flex-row justify-between items-center w-full">
       <Logo />
-      <div className="flex items-center gap-4 mt-4 md:mt-0">
+      <div className="flex items-center gap-4  md:mt-0">
         <p className="text-black text-sm md:text-base font-semibold">
           Already have an account?
         </p>
@@ -217,7 +217,7 @@ function InputField({ id, type, label, value, onChange, error }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder=" "
-        className="peer w-full h-12 md:h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        className="peer w-full h-10 md:h-14 px-4 pt-3 rounded-md bg-gray-100 border border-gray-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
       />
       <label
         htmlFor={id}

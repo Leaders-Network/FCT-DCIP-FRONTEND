@@ -7,6 +7,19 @@ import { X } from "lucide-react";
 const Hero: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"auth" | "contact" | null>(null);
+  const [currentImage, setCurrentImage] = useState(0)
+
+const backgroundImages = [
+     "/abuja-bg.png",
+    "/insurance-bg-4.jpg",
+]
+
+useEffect(() => {
+  const interval = setInterval(()=> {
+    setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
+  },5000); 
+  return () => clearInterval(interval);
+}, [backgroundImages.length]);
 
   const openModal = (type: "auth" | "contact") => {
     setModalType(type);
@@ -34,18 +47,21 @@ const Hero: React.FC = () => {
 
   return (
     <div className="relative h-[700px]">
-      {/* Background image */}
-      <Image
-        src="/abuja-bg.png"
-        alt="City at night"
+    
+      {backgroundImages.map((src, index) => (
+        <Image 
+        key={index}
+        src={src}
+        alt={`Background ${index + 1}`}
         fill
-        className="object-cover brightness-50"
-        priority
-      />
+        priority={index === 0}
+        className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
+        />
+      ))}
 
       {/* Hero content */}
       <div className="absolute inset-0 flex items-center">
-        <div className="container mx-auto px-4">
+        <div data-aos="fade-left" className="container mx-auto px-4">
           <h1 className="text-5xl font-bold text-white mb-4">
             Protect Your Property <br /> with Confidence
           </h1>
