@@ -40,6 +40,21 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     },
   });
 
+  // Auto-populate user email when form opens
+  useEffect(() => {
+    if (isOpen) {
+      const userEmail = localStorage.getItem("email") || "";
+
+      setFormData(prev => ({
+        ...prev,
+        contactDetails: {
+          ...prev.contactDetails,
+          email: userEmail,
+        }
+      }));
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (property) {
       setFormData(prev => ({
@@ -52,7 +67,8 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
           ...prev.contactDetails,
           phoneNumber: property.phonenumber,
           fullName: localStorage.getItem("fullname") || "",
-          email: localStorage.getItem("email") || "",
+          // Keep the user's email from the previous useEffect
+          email: prev.contactDetails.email || localStorage.getItem("email") || "",
         }
       }));
     }
@@ -60,6 +76,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
 
   useEffect(() => {
     if (!isOpen) {
+      // Reset form but preserve user's email
+      const userEmail = localStorage.getItem("email") || "";
+
       setFormData({
         propertyId: undefined,
         propertyDetails: {
@@ -72,7 +91,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         },
         contactDetails: {
           fullName: "",
-          email: "",
+          email: userEmail,
           phoneNumber: "",
           alternatePhone: "",
         },
@@ -109,7 +128,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     const newArray = currentArray.includes(value)
       ? currentArray.filter((item) => item !== value)
       : [...currentArray, value];
-    
+
     setFormData((prev) => ({
       ...prev,
       requestDetails: {
@@ -125,7 +144,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     try {
       await onSubmit(formData);
       onClose();
-      // Reset form
+      // Reset form but preserve user's email
+      const userEmail = localStorage.getItem("email") || "";
+
       setFormData({
         propertyDetails: {
           address: "",
@@ -137,7 +158,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         },
         contactDetails: {
           fullName: "",
-          email: "",
+          email: userEmail,
           phoneNumber: "",
           alternatePhone: "",
         },
@@ -181,33 +202,33 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     "Mixed Materials",
   ];
 
- const coverageTypes = [
-  "Contract Works Coverage",
-  "Public Liability Coverage",
-  "Employer’s Liability Coverage",
-  "Contractor’s Plant and Equipment Coverage",
-  "Professional Indemnity",
-];
+  const coverageTypes = [
+    "Contract Works Coverage",
+    "Public Liability Coverage",
+    "Employer’s Liability Coverage",
+    "Contractor’s Plant and Equipment Coverage",
+    "Professional Indemnity",
+  ];
 
-const policyDurations = [
-  "3 Months (Short-term Project)",
-  "6 Months",
-  "1 Year",
-  "Project-Based (Until Completion)",
-];
+  const policyDurations = [
+    "3 Months (Short-term Project)",
+    "6 Months",
+    "1 Year",
+    "Project-Based (Until Completion)",
+  ];
 
-const additionalCoverageOptions = [
-  "Flood and Storm Damage",
-  "Theft or Vandalism at Site",
-  "Collapse or Structural Failure",
-  "Third-Party Property Damage",
-  "Injury to Non-Employees (Public)",
-  "Machinery Breakdown",
-  "Temporary Structures (Scaffolding, Site Office)",
-  "Fire and Explosion",
-  "Debris Removal Costs",
-  "Cross Liability (Between Contractors/Subcontractors)",
-];
+  const additionalCoverageOptions = [
+    "Flood and Storm Damage",
+    "Theft or Vandalism at Site",
+    "Collapse or Structural Failure",
+    "Third-Party Property Damage",
+    "Injury to Non-Employees (Public)",
+    "Machinery Breakdown",
+    "Temporary Structures (Scaffolding, Site Office)",
+    "Fire and Explosion",
+    "Debris Removal Costs",
+    "Cross Liability (Between Contractors/Subcontractors)",
+  ];
 
   if (!isOpen) return null;
 
@@ -227,13 +248,12 @@ const additionalCoverageOptions = [
             {[1, 2, 3].map((step) => (
               <div key={step} className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    step === currentStep
-                      ? "bg-[#028835] text-white"
-                      : step < currentStep
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === currentStep
+                    ? "bg-[#028835] text-white"
+                    : step < currentStep
                       ? "bg-green-200 text-green-800"
                       : "bg-gray-200 text-gray-500"
-                  }`}
+                    }`}
                 >
                   {step}
                 </div>
@@ -241,14 +261,13 @@ const additionalCoverageOptions = [
                   {step === 1
                     ? "Property Details"
                     : step === 2
-                    ? "Contact Info"
-                    : "Coverage Details"}
+                      ? "Contact Info"
+                      : "Coverage Details"}
                 </span>
                 {step < 3 && (
                   <div
-                    className={`w-8 h-0.5 ml-4 ${
-                      step < currentStep ? "bg-green-300" : "bg-gray-300"
-                    }`}
+                    className={`w-8 h-0.5 ml-4 ${step < currentStep ? "bg-green-300" : "bg-gray-300"
+                      }`}
                   />
                 )}
               </div>
@@ -261,7 +280,7 @@ const additionalCoverageOptions = [
           {currentStep === 1 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold mb-4">Property Details</h3>
-              
+
               {property && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -416,17 +435,20 @@ const additionalCoverageOptions = [
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email Address *
+                    <span className="text-xs text-green-600 ml-2">(Auto-filled from your account)</span>
                   </label>
                   <input
                     required
                     type="email"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-700 cursor-not-allowed"
                     value={formData.contactDetails.email}
-                    onChange={(e) =>
-                      handleInputChange("contactDetails", "email", e.target.value)
-                    }
+                    readOnly
+                    disabled
                     placeholder="your@email.com"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This email is automatically filled from your account and cannot be changed.
+                  </p>
                 </div>
 
                 <div>
