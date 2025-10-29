@@ -28,6 +28,21 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showActionsDropdown && !target.closest('.dropdown-container')) {
+        setShowActionsDropdown(null);
+      }
+    };
+
+    if (showActionsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showActionsDropdown]);
+
   const handleFetchDocumentUrl = async (document: any) => {
     if (typeof document === 'string') {
       const response = await adminApi.getSurveyDocumentDownloadUrl(document);
@@ -199,7 +214,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                   <td className="px-6 py-4">{getStatusBadge(policy.status)}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{new Date(policy.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-sm font-medium">
-                    <div className="relative">
+                    <div className="relative dropdown-container">
                       <button
                         onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
                         className="p-2 hover:bg-gray-100 rounded-full"

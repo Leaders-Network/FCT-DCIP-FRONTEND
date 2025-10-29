@@ -296,9 +296,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Property Owner Details */}
+            {/* Property Builder/Contractor Details */}
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Property Owner</h4>
+              <h4 className="text-sm font-medium text-gray-500 mb-3">Property Builder/Contractor</h4>
               <div className="space-y-3">
                 <div className="flex items-center">
                   <User className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -306,7 +306,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                     <p className="text-base font-medium text-gray-900">
                       {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.fullName || 'N/A'}
                     </p>
-                    <p className="text-sm text-gray-500">Property Owner</p>
+                    <p className="text-sm text-gray-500">Property Builder/Contractor</p>
                   </div>
                 </div>
 
@@ -510,7 +510,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Interview property owner about maintenance history</span>
+                <span>Interview property builder/contractor about construction history</span>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
@@ -545,7 +545,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
               <div className="flex items-start">
                 <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Contact log with property owner</span>
+                <span>Contact log with property builder/contractor</span>
               </div>
               <div className="flex items-start">
                 <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
@@ -577,11 +577,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium flex items-center justify-center"
               >
                 <Phone className="h-5 w-5 mr-2" />
-                Contact Property Owner
+                Contact Builder/Contractor
               </button>
             </div>
             <p className="text-sm text-gray-500 mt-3 text-center">
-              Make sure to contact the property owner before visiting the site
+              Make sure to contact the property builder/contractor before visiting the site
             </p>
           </div>
         </div>

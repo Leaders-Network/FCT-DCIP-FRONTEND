@@ -14,6 +14,21 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showActionsDropdown && !target.closest('.dropdown-container')) {
+        setShowActionsDropdown(null);
+      }
+    };
+
+    if (showActionsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showActionsDropdown]);
+
   useEffect(() => {
     const fetchCompletedPolicies = async () => {
       setLoading(true);
@@ -112,7 +127,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                             'Surveyed'}
                     </span>
                     {(policy.status === 'rejected' || policy.status === 'completed') && (
-                      <div className="relative">
+                      <div className="relative dropdown-container">
                         <button
                           onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
                           className="p-2 hover:bg-gray-100 rounded-full"
