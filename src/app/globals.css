@@ -81,3 +81,22 @@ html{
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-in-out forwards;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.4s ease-in-out forwards;
+}
+

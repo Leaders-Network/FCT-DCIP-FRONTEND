@@ -11,17 +11,13 @@ const Hero: React.FC = () => {
 
 const backgroundImages = [
      "/bg-hero-1.jpg",
-    "/bg-hero-2.jpg",
-    "/bg-hero-3.jpg",
     "/bg-hero-4.jpg",
     "/bg-hero-5.jpg",
     "/bg-hero-6.jpg",
     "/bg-hero-7.jpg",
     "/bg-hero-8.jpg",
     "/bg-hero-9.jpg",
-    "/bg-hero-10.jpg",
     "/bg-hero-11.jpg",
-    "/bg-hero-12.jpg",
     
 ]
 
@@ -69,6 +65,7 @@ useEffect(() => {
         className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
         />
       ))}
+      <div className="absolute inset-0 bg-black/60"></div>
 
       {/* Hero content */}
       <div className="absolute inset-0 flex items-center">
