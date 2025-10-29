@@ -16,34 +16,76 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   onSubmit,
   property,
 }) => {
-  const [formData, setFormData] = useState<CreatePolicyRequestData>({
-    propertyId: undefined,
-    propertyDetails: {
-      address: "",
-      propertyType: "",
-      buildingValue: 0,
-      yearBuilt: new Date().getFullYear(),
-      squareFootage: 0,
-      constructionMaterial: "",
-    },
-    contactDetails: {
-      fullName: "",
-      email: "",
-      phoneNumber: "",
-      alternatePhone: "",
-    },
-    requestDetails: {
-      coverageType: "",
-      policyDuration: "",
-      additionalCoverage: [],
-      specialRequests: "",
-    },
-  });
+  // Initialize form with user data from localStorage
+  const initializeFormData = () => {
+    let userEmail = "";
+    let userFullName = "";
+
+    if (typeof window !== 'undefined') {
+      // Get user data from localStorage
+      const storedUser = localStorage.getItem("user");
+
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+
+          // Only get email from user data
+          userEmail = userData.email || "";
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+
+      // Fallback to direct localStorage keys if user object doesn't exist
+      if (!userEmail) {
+        userEmail = localStorage.getItem("email") || "";
+      }
+    }
+
+    return {
+      propertyId: undefined,
+      propertyDetails: {
+        address: "",
+        propertyType: "",
+        buildingValue: 0,
+        yearBuilt: new Date().getFullYear(),
+        squareFootage: 0,
+        constructionMaterial: "",
+      },
+      contactDetails: {
+        fullName: "",
+        email: userEmail,
+        phoneNumber: "",
+        alternatePhone: "",
+      },
+      requestDetails: {
+        coverageType: "",
+        policyDuration: "",
+        additionalCoverage: [],
+        specialRequests: "",
+      },
+    };
+  };
+
+  const [formData, setFormData] = useState<CreatePolicyRequestData>(initializeFormData());
 
   // Auto-populate user email when form opens
   useEffect(() => {
     if (isOpen) {
-      const userEmail = localStorage.getItem("email") || "";
+      let userEmail = "";
+
+      const storUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(ster);
+          userEmail = userData.email || "";
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+
+      // Fallback to direct localStorage keys
+      if (!userEmail) userEmail = localStorage.getItem("email") || "";
 
       setFormData(prev => ({
         ...prev,
@@ -66,9 +108,19 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         contactDetails: {
           ...prev.contactDetails,
           phoneNumber: property.phonenumber,
-          fullName: localStorage.getItem("fullname") || "",
-          // Keep the user's email from the previous useEffect
-          email: prev.contactDetails.email || localStorage.getItem("email") || "",
+          // Preserve user's email from stored user data
+          email: (() => {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+              try {
+                const userData = JSON.parse(storedUser);
+                return userData.email || "";
+              } catch (error) {
+                return localStorage.getItem("email") || "";
+              }
+            }
+            return localStorage.getItem("email") || "";
+          })(),
         }
       }));
     }
@@ -76,32 +128,8 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
 
   useEffect(() => {
     if (!isOpen) {
-      // Reset form but preserve user's email
-      const userEmail = localStorage.getItem("email") || "";
-
-      setFormData({
-        propertyId: undefined,
-        propertyDetails: {
-          address: "",
-          propertyType: "",
-          buildingValue: 0,
-          yearBuilt: new Date().getFullYear(),
-          squareFootage: 0,
-          constructionMaterial: "",
-        },
-        contactDetails: {
-          fullName: "",
-          email: userEmail,
-          phoneNumber: "",
-          alternatePhone: "",
-        },
-        requestDetails: {
-          coverageType: "",
-          policyDuration: "",
-          additionalCoverage: [],
-          specialRequests: "",
-        },
-      });
+      // Reset form but preserve user's email and name
+      setFormData(initializeFormData());
       setCurrentStep(1);
     }
   }, [isOpen]);
@@ -141,34 +169,14 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+
+
     try {
       await onSubmit(formData);
       onClose();
-      // Reset form but preserve user's email
-      const userEmail = localStorage.getItem("email") || "";
-
-      setFormData({
-        propertyDetails: {
-          address: "",
-          propertyType: "",
-          buildingValue: 0,
-          yearBuilt: new Date().getFullYear(),
-          squareFootage: 0,
-          constructionMaterial: "",
-        },
-        contactDetails: {
-          fullName: "",
-          email: userEmail,
-          phoneNumber: "",
-          alternatePhone: "",
-        },
-        requestDetails: {
-          coverageType: "",
-          policyDuration: "",
-          additionalCoverage: [],
-          specialRequests: "",
-        },
-      });
+      // Reset form but preserve user's email and name
+      setFormData(initializeFormData());
       setCurrentStep(1);
     } catch (error) {
       console.error("Failed to submit policy request:", error);
@@ -429,6 +437,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   }
                   placeholder="Enter your full name"
                 />
+
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -443,12 +452,12 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-700 cursor-not-allowed"
                     value={formData.contactDetails.email}
                     readOnly
-                    disabled
                     placeholder="your@email.com"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     This email is automatically filled from your account and cannot be changed.
                   </p>
+
                 </div>
 
                 <div>
