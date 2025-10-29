@@ -10,7 +10,7 @@ export default function MainView() {
     return <div>Loading...</div>;
   }
 
-  const role = user.employeeRole?.role;
+  const role = (user as any)?.employeeRole?.role;
 
   return (
     <>

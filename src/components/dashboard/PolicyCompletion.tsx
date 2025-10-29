@@ -18,17 +18,17 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     const fetchCompletedPolicies = async () => {
       setLoading(true);
       try {
-        const [approvedResponse, surveyedResponse, rejectedResponse, requiresMoreInfoResponse] = await Promise.all([
+        const [approvedResponse, surveyedResponse, rejectedResponse, completedResponse] = await Promise.all([
           getUserPolicyRequests("approved", 1, 100),
           getUserPolicyRequests("surveyed", 1, 100),
           getUserPolicyRequests("rejected", 1, 100),
-          getUserPolicyRequests("requires_more_info", 1, 100),
+          getUserPolicyRequests("completed", 1, 100),
         ]);
         const approved = approvedResponse.data.policyRequests || [];
         const surveyed = surveyedResponse.data.policyRequests || [];
         const rejected = rejectedResponse.data.policyRequests || [];
-        const requiresMoreInfo = requiresMoreInfoResponse.data.policyRequests || [];
-        setCompletedPolicies([...approved, ...surveyed, ...rejected, ...requiresMoreInfo]);
+        const completed = completedResponse.data.policyRequests || [];
+        setCompletedPolicies([...approved, ...surveyed, ...rejected, ...completed]);
       } catch (error) {
         console.error("Failed to fetch completed policies:", error);
       } finally {
@@ -99,19 +99,19 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                   <div className="flex items-center space-x-2">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' :
                       policy.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                        policy.status === 'requires_more_info' ? 'bg-orange-100 text-orange-800' :
+                        policy.status === 'completed' ? 'bg-orange-100 text-orange-800' :
                           'bg-blue-100 text-blue-800'
                       }`}>
                       {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> :
                         policy.status === 'rejected' ? <XCircle className="w-4 h-4 mr-1" /> :
-                          policy.status === 'requires_more_info' ? <Clock className="w-4 h-4 mr-1" /> :
+                          policy.status === 'completed' ? <Clock className="w-4 h-4 mr-1" /> :
                             <FileText className="w-4 h-4 mr-1" />}
                       {policy.status === 'approved' ? 'Approved' :
                         policy.status === 'rejected' ? 'Rejected' :
-                          policy.status === 'requires_more_info' ? 'Requires More Info' :
+                          policy.status === 'completed' ? 'Completed' :
                             'Surveyed'}
                     </span>
-                    {(policy.status === 'rejected' || policy.status === 'requires_more_info') && (
+                    {(policy.status === 'rejected' || policy.status === 'completed') && (
                       <div className="relative">
                         <button
                           onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
@@ -181,7 +181,11 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                   {policy.surveyDocument && (
                     <button
-                      onClick={() => handleDownloadSurvey(policy.surveyDocument!)}
+                      onClick={() => handleDownloadSurvey(
+                        typeof policy.surveyDocument === 'string'
+                          ? policy.surveyDocument
+                          : policy.surveyDocument!.url
+                      )}
                       className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
                     >
                       <Download className="h-4 w-4 mr-2" />
@@ -202,10 +206,10 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       <XCircle className="h-4 w-4 mr-2" />
                       Permit Rejected - Permit verification unavailable
                     </div>
-                  ) : policy.status === 'requires_more_info' ? (
+                  ) : policy.status === 'completed' ? (
                     <div className="inline-flex items-center px-6 py-2 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-orange-50">
                       <Clock className="h-4 w-4 mr-2" />
-                      More Information Required - Permit verification unavailable
+                      Policy Completed - Permit verification unavailable
                     </div>
                   ) : (
                     <div className="inline-flex items-center px-6 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-50">

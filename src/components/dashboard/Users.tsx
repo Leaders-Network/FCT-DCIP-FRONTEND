@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react'
 import AddAdminForm from './usersComponent/AddAdminForm'
 import { getAllEmployees, } from '@/services/api'
-import { User } from '@/types/api.types'
+import { Employee } from '@/types/api.types'
 
 const Users = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<Employee[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -39,12 +39,12 @@ const Users = () => {
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
-    setSelectedUsers(isChecked ? users.map((user: User) => user._id) : []);
+    setSelectedUsers(isChecked ? users.map((user: Employee) => user._id) : []);
   };
 
   const handleSelectUser = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
+    setSelectedUsers(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
@@ -93,7 +93,7 @@ const Users = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user: User) => (
+            {users.map((user: Employee) => (
               <tr key={user._id}>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                   <input
@@ -107,17 +107,16 @@ const Users = () => {
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
                       <div
-                        className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm ${
-                          getInitials(`${user.firstname} ${user.lastname}`) === "MA"
-                            ? "bg-[#488274]"
-                            : getInitials(`${user.firstname} ${user.lastname}`) === "PB"
+                        className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm ${getInitials(`${user.firstname} ${user.lastname}`) === "MA"
+                          ? "bg-[#488274]"
+                          : getInitials(`${user.firstname} ${user.lastname}`) === "PB"
                             ? "bg-[#8B9FEF]"
                             : getInitials(`${user.firstname} ${user.lastname}`) === "ES"
-                            ? "bg-[#FBD673]"
-                            : getInitials(`${user.firstname} ${user.lastname}`) === "CC"
-                            ? "bg-[#F2A4F1]"
-                            : "bg-[#028835]"
-                        }`}
+                              ? "bg-[#FBD673]"
+                              : getInitials(`${user.firstname} ${user.lastname}`) === "CC"
+                                ? "bg-[#F2A4F1]"
+                                : "bg-[#028835]"
+                          }`}
                       >
                         {getInitials(`${user.firstname} ${user.lastname}`)}
                       </div>

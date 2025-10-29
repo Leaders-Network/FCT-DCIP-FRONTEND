@@ -67,8 +67,8 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
         ammcId: selectedPolicy!._id,
         surveyorId: newAssignmentData.surveyorId,
         assignedBy: user?._id,
-        deadline: new Date(newAssignmentData.deadline),
-        priority: newAssignmentData.priority,
+        deadline: new Date(newAssignmentData.deadline).toISOString(),
+        priority: newAssignmentData.priority as "low" | "medium" | "high" | "urgent",
         instructions: newAssignmentData.instructions || 'N/A',
       };
       await adminApi.createAssignment(assignmentData);
@@ -145,7 +145,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded-full focus:ring-indigo-500"
                   />
                   <label htmlFor={`surveyor-${s._id}`} className="ml-3 text-sm text-gray-700">
-                    {s.userId?.firstname || 'N/A'} {s.userId?.lastname || 'N/A'} ({s.userId?.email || 'N/A'}) - {s.profile?.specialization?.join(', ') || 'N/A'}
+                    {(s.userId as any)?.firstname || 'N/A'} {(s.userId as any)?.lastname || 'N/A'} ({(s.userId as any)?.email || 'N/A'}) - {s.profile?.specialization?.join(', ') || 'N/A'}
                   </label>
                 </div>
               ))}

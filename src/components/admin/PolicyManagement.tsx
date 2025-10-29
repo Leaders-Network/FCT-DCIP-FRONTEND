@@ -62,11 +62,11 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
     const submissionId = selectedPolicySubmissions[0]._id;
 
-    await reviewSubmission(submissionId, decision, reviewNotes);
+    await reviewSubmission(submissionId, decision as 'approved' | 'rejected', reviewNotes);
     setPolicies(prev =>
       prev.map(p =>
         p._id === selectedPolicy._id
-          ? { ...p, status: decision }
+          ? { ...p, status: decision as any }
           : p
       )
     );
@@ -83,7 +83,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     setPolicies(prev =>
       prev.map(p =>
         p._id === ammcId
-          ? { ...p, status: 'sent_to_user' }
+          ? { ...p, status: 'sent_to_user' as any }
           : p
       )
     );
@@ -139,7 +139,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             { key: 'submitted', label: 'Submitted', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'submitted').length : 0 },
             { key: 'assigned', label: 'Assigned', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'assigned').length : 0 },
             { key: 'surveyed', label: 'Surveyed', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'surveyed').length : 0 },
-            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'requires_more_info').length : 0 },
+            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => (p?.status as any) === 'requires_more_info').length : 0 },
             { key: 'rejected', label: 'Rejected', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'rejected').length : 0 }
           ].map(tab => (
             <button
@@ -187,6 +187,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                       <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{policy.contactDetails.fullName}</p>
                       <p className="text-sm text-gray-500">{policy.contactDetails.email}</p>
                       <p className="text-sm text-gray-500">{policy.contactDetails.phoneNumber}</p>
+                      <p className="text-xs text-gray-400">RC: {policy.contactDetails.rcNumber || 'N/A'}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -601,7 +602,7 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: any }>
         <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-600">Name:</span>
+            <span className="text-gray-600">Builder/Contractor:</span>
             <span className="font-medium text-gray-900">{policy.contactDetails.fullName}</span>
           </div>
           <div className="flex justify-between">
@@ -618,6 +619,10 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: any }>
               <span className="font-medium text-gray-900">{policy.contactDetails.alternatePhone}</span>
             </div>
           )}
+          <div className="flex justify-between">
+            <span className="text-gray-600">RC Number:</span>
+            <span className="font-medium text-gray-900">{policy.contactDetails.rcNumber || 'N/A'}</span>
+          </div>
         </div>
       </div>
     </div>

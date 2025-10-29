@@ -34,7 +34,7 @@ import {
 import { adminApi } from '@/services/api';
 import { Assignment, Surveyor } from '@/types/api.types';
 import { useAuth } from '../context/useAuth';
-import DocumentManager from './DocumentManager';
+import DocumentManager from './FileUpload/DocumentManager';
 import AssignSurveyorModal from './admin/AssignSurveyorModal';
 
 interface AssignmentManagementProps {
@@ -136,10 +136,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           status: filters.status !== 'all' ? filters.status : undefined,
           priority: filters.priority !== 'all' ? filters.priority : undefined,
           surveyorId: filters.surveyorId !== 'all' ? filters.surveyorId : undefined,
-          search: filters.search || undefined,
           page: 1,
           limit: 50
-        });
+        } as any);
       } else {
         assignmentsResponse = await getSurveyorAssignmentsNew({
           status: filters.status !== 'all' ? filters.status : undefined,
@@ -365,7 +364,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               <option value="all">All Surveyors</option>
               {(surveyors || []).map((surveyor) => (
                 <option key={surveyor?._id} value={surveyor?._id}>
-                  {surveyor?.userId?.firstname} {surveyor?.userId?.lastname}
+                  {(surveyor?.userId as any)?.firstname} {(surveyor?.userId as any)?.lastname}
                 </option>))}
             </select>
 
@@ -753,7 +752,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Assignment Details</h3>
               <p className="text-sm text-gray-500 mt-1">
-                Policy #{typeof assignment.ammcId === 'object' ? assignment.ammcId._id : assignment.ammcId}
+                Policy #{typeof assignment.ammcId === 'object' ? (assignment.ammcId as any)._id : assignment.ammcId}
               </p>
             </div>
             <button
@@ -946,7 +945,7 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
         </div>
       </div>
 
-      {assignment.expenses && (
+      {/* {assignment.expenses && (
         <div>
           <h4 className="font-medium text-gray-900 mb-2">Survey Expenses</h4>
           <div className="space-y-1 text-sm">
@@ -976,7 +975,7 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   </div>
 );
