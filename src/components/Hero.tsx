@@ -10,8 +10,19 @@ const Hero: React.FC = () => {
   const [currentImage, setCurrentImage] = useState(0)
 
 const backgroundImages = [
-     "/abuja-bg.png",
-    "/insurance-bg-4.jpg",
+     "/bg-hero-1.jpg",
+    "/bg-hero-2.jpg",
+    "/bg-hero-3.jpg",
+    "/bg-hero-4.jpg",
+    "/bg-hero-5.jpg",
+    "/bg-hero-6.jpg",
+    "/bg-hero-7.jpg",
+    "/bg-hero-8.jpg",
+    "/bg-hero-9.jpg",
+    "/bg-hero-10.jpg",
+    "/bg-hero-11.jpg",
+    "/bg-hero-12.jpg",
+    
 ]
 
 useEffect(() => {
