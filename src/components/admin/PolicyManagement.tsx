@@ -165,7 +165,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property Details</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Builder/Contractor</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coverage</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -599,7 +599,7 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: any }>
       </div>
 
       <div>
-        <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
+        <h4 className="font-medium text-gray-900 mb-3">Property Builder/Contractor</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Builder/Contractor:</span>
