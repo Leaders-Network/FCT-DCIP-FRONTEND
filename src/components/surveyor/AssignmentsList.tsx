@@ -58,7 +58,7 @@ const AssignmentsList = () => {
       const { submitSurvey } = await import("@/services/api");
 
       const formData = new FormData();
-      formData.append('ammcId', typeof selectedAssignment!.ammcId === 'object' ? selectedAssignment!.ammcId._id : selectedAssignment!.ammcId);
+      formData.append('ammcId', typeof selectedAssignment!.ammcId === 'object' ? (selectedAssignment!.ammcId as any)._id : selectedAssignment!.ammcId);
       formData.append('assignmentId', selectedAssignment!._id);
       formData.append('surveyNotes', submission.surveyNotes);
       formData.append('recommendedAction', submission.recommendedAction);

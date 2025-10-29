@@ -5,7 +5,7 @@ import { Assignment } from "@/types/api.types";
 import Link from "next/link";
 import { getSurveyorDashboard, getSurveyorAssignments } from "@/services/api";
 
-const StatCard = ({ icon, label, value, color }) => (
+const StatCard = ({ icon, label, value, color }: { icon: any, label: string, value: string | number, color: string }) => (
   <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-w-0 overflow-hidden">
     <div className="flex items-center min-w-0">
       <div className={`p-2 bg-${color}-100 rounded-lg flex-shrink-0`}>
@@ -69,7 +69,7 @@ const SurveyorDashboard = () => {
             setStats({
               total: fetchedAssignments.length,
               pending: fetchedAssignments.filter(a => a.status === 'assigned' || a.status === 'accepted').length,
-              inProgress: fetchedAssignments.filter(a => a.status === 'in-progress').length,
+              inProgress: fetchedAssignments.filter(a => (a.status as any) === 'in-progress').length,
               completed: fetchedAssignments.filter(a => a.status === 'completed').length
             });
           }
@@ -188,7 +188,7 @@ const SurveyorDashboard = () => {
             View All
           </Link>
         </div>
-        
+
         <div className="divide-y divide-gray-200">
           {recentAssignments.length > 0 ? (
             recentAssignments.map((assignment) => (
@@ -208,7 +208,7 @@ const SurveyorDashboard = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 mr-1.5" />
@@ -220,7 +220,7 @@ const SurveyorDashboard = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-4">
                     {getStatusBadge(assignment.status)}
                     <Link href={`/surveyor/dashboard/assignments/${assignment._id}`} className="text-[#028835] hover:text-green-700 text-sm font-medium">
@@ -252,9 +252,9 @@ const SurveyorDashboard = () => {
               <p className="text-sm text-gray-500">See your complete assignment list</p>
             </div>
           </Link>
-          
 
-          
+
+
           <Link href="/surveyor/dashboard/settings" className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
             <Users className="h-7 w-7 text-purple-600" />
             <div className="ml-4">

@@ -514,14 +514,14 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
 
     // If we have survey data and surveyor approved, allow payment
     if (surveyData?.recommendedAction === 'approve') {
-      window.open('https://askniid.org/verifypolicy.aspx', '_blank');
+      window.open('https://https://www.niip.ng/', '_blank');
       return;
     }
 
     // Fallback: If no survey data but policy is surveyed, assume it's approved
     if (policy.status === 'surveyed' && !surveyData) {
       console.log('No survey data found, but policy is surveyed - allowing payment');
-      window.open('https://askniid.org/verifypolicy.aspx', '_blank');
+      window.open('https://https://www.niip.ng/', '_blank');
       return;
     }
 
@@ -1089,7 +1089,7 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
               <h4 className="font-medium text-gray-900 mb-4">Contact Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name of Builder/Contractor</label>
                   <input
                     type="text"
                     value={formData.contactDetails.fullName}

@@ -1180,11 +1180,6 @@ export const adminApi = {
     return response.data;
   },
 
-  deleteEmployee: async (employeeId: string) => {
-    const response = await api.delete(`/admin/employees/${employeeId}`);
-    return response.data;
-  },
-
   deleteAdministrator: async (adminId: string) => {
     const response = await api.delete(`/admin/administrators/${adminId}`);
     return response.data;
