@@ -270,7 +270,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   {step === 1
                     ? "Property Details"
                     : step === 2
-                      ? "Contact Info"
+                      ? "Builder/Contractor"
                       : "Coverage Details"}
                 </span>
                 {step < 3 && (
@@ -419,10 +419,10 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
             </div>
           )}
 
-          {/* Step 2: Contact Details */}
+          {/* Step 2: Builder/Contractor Details */}
           {currentStep === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+              <h3 className="text-lg font-semibold mb-4">Property Builder/Contractor</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
