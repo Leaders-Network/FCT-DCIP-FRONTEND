@@ -10,7 +10,7 @@ const Hero: React.FC = () => {
   const [currentImage, setCurrentImage] = useState(0)
 
 const backgroundImages = [
-<<<<<<< Updated upstream
+
      "/bg-hero-1.jpg",
     "/bg-hero-4.jpg",
     "/bg-hero-5.jpg",
@@ -19,12 +19,12 @@ const backgroundImages = [
     "/bg-hero-8.jpg",
     "/bg-hero-9.jpg",
     "/bg-hero-11.jpg",
-    
-=======
      "/bg-construct-1.webp",
     "/bg-construct-2.webp",
     "/bg-construct-3.jpg",
->>>>>>> Stashed changes
+     "/bg-construct-1.webp",
+    "/bg-construct-2.webp",
+    "/bg-construct-3.jpg",
 ]
 
 useEffect(() => {

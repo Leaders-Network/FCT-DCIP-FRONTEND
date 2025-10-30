@@ -68,12 +68,7 @@ export default function ChatWidget() {
   ];
 
   return (
-<<<<<<< Updated upstream
-    <div className="fixed bottom-6 right-6 z-50 flex flex-row items-end space-y-3 font-sans">
-=======
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-3 font-sans">
->>>>>>> Stashed changes
-      {/* Floating Prompt */}
       {showPrompt && !open && (
         <div
           onClick={() => setOpen(true)}

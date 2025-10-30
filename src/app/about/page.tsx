@@ -1,4 +1,4 @@
-<<<<<<< Updated upstream
+
 "use client";
 import React from "react";
 import Header from "@/components/Header";
@@ -98,20 +98,3 @@ const AboutPage = () => {
 };
 
 export default AboutPage;
-=======
-import Footer from '@/components/Footer'
-import Header from '@/components/Header'
-import React from 'react'
-
-const AboutPage = () => {
-  return (
-    <div>
-      <Header />
-      This is About Page
-      <Footer />
-    </div>
-  )
-}
-
-export default AboutPage
->>>>>>> Stashed changes

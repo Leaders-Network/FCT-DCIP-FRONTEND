@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 "use client";
 import React, { useState } from "react";
 import Header from "@/components/Header";
@@ -115,20 +114,3 @@ const FAQPage = () => {
 };
 
 export default FAQPage;
-=======
-import Footer from '@/components/Footer'
-import Header from '@/components/Header'
-import React from 'react'
-
-const FAQPage = () => {
-  return (
-    <div>
-      <Header />
-      This is FAQ page
-      <Footer />
-    </div>
-  )
-}
-
-export default FAQPage
->>>>>>> Stashed changes
