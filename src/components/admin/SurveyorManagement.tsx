@@ -52,7 +52,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSurveyor, setSelectedSurveyor] = useState<Surveyor | null>(null);
-  const [performanceData, setPerformanceData] = useState(null);
+  const [performanceData, setPerformanceData] = useState<any>(null);
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",

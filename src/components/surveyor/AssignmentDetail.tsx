@@ -41,7 +41,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       const { submitSurvey } = await import("@/services/api");
 
       const formData = new FormData();
-      formData.append('ammcId', typeof assignment!.ammcId === 'object' ? assignment!.ammcId._id : assignment!.ammcId);
+      formData.append('ammcId', typeof assignment!.ammcId === 'object' ? (assignment!.ammcId as any)._id : assignment!.ammcId);
       formData.append('assignmentId', assignmentId || '');
       formData.append('surveyNotes', submission.surveyNotes);
       formData.append('recommendedAction', submission.recommendedAction);
@@ -68,9 +68,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     if (!assignment) return;
 
     if (method === 'phone') {
-      window.open(`tel:${assignment.ammcId.contactDetails.phoneNumber}`);
+      window.open(`tel:${(assignment.ammcId as any).contactDetails.phoneNumber}`);
     } else if (method === 'email') {
-      window.open(`mailto:${assignment.ammcId.contactDetails.email}`);
+      window.open(`mailto:${(assignment.ammcId as any).contactDetails.email}`);
     }
   };
 
@@ -116,7 +116,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Assignment Details</h1>
                 <p className="text-gray-600 mt-1">
-                  {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.propertyType || 'Property Survey'}
+                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.propertyType || 'Property Survey'}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Assignment ID: {assignment._id}
@@ -181,22 +181,22 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.propertyType || 'Property'}
+                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.propertyType || 'Property'}
                 </h3>
                 <p className="text-gray-600 mt-1 flex items-start">
                   <MapPin className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
-                  {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.address || assignment.location?.address || 'Address not available'}
+                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.address || assignment.location?.address || 'Address not available'}
                 </p>
                 <div className="flex items-center text-sm text-gray-500 mt-2">
                   <Calendar className="h-4 w-4 mr-1" />
-                  Policy Request: {typeof assignment.ammcId === 'object' && assignment.ammcId?.createdAt
-                    ? new Date(assignment.ammcId.createdAt).toLocaleDateString()
+                  Policy Request: {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.createdAt
+                    ? new Date((assignment.ammcId as any).createdAt).toLocaleDateString()
                     : 'N/A'}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-gray-900">
-                  ₦{typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
+                  ₦{typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
                 </div>
                 <div className="text-sm text-gray-500">Property Value</div>
               </div>
@@ -211,19 +211,19 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Material:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.constructionMaterial || 'N/A'}
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.constructionMaterial || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Year Built:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.yearBuilt || 'N/A'}
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.yearBuilt || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Square Footage:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.squareFootage?.toLocaleString() || 'N/A'} sq ft
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.squareFootage?.toLocaleString() || 'N/A'} sq ft
                   </span>
                 </div>
               </div>
@@ -296,17 +296,17 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Property Owner Details */}
+            {/* Property Builder/Contractor Details */}
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Property Owner</h4>
+              <h4 className="text-sm font-medium text-gray-500 mb-3">Property Builder/Contractor</h4>
               <div className="space-y-3">
                 <div className="flex items-center">
                   <User className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                   <div>
                     <p className="text-base font-medium text-gray-900">
-                      {typeof assignment.ammcId === 'object' && assignment.ammcId?.contactDetails?.fullName || 'N/A'}
+                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.fullName || 'N/A'}
                     </p>
-                    <p className="text-sm text-gray-500">Property Owner</p>
+                    <p className="text-sm text-gray-500">Property Builder/Contractor</p>
                   </div>
                 </div>
 
@@ -314,11 +314,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                   <Phone className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-base text-gray-900">
-                      {typeof assignment.ammcId === 'object' && assignment.ammcId?.contactDetails?.phoneNumber || 'N/A'}
+                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.phoneNumber || 'N/A'}
                     </p>
-                    {typeof assignment.ammcId === 'object' && assignment.ammcId?.contactDetails?.alternatePhone && (
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.alternatePhone && (
                       <p className="text-sm text-gray-600">
-                        Alt: {assignment.ammcId.contactDetails.alternatePhone}
+                        Alt: {(assignment.ammcId as any).contactDetails.alternatePhone}
                       </p>
                     )}
                   </div>
@@ -328,7 +328,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                   <Mail className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                   <div>
                     <p className="text-base text-gray-900">
-                      {typeof assignment.ammcId === 'object' && assignment.ammcId?.contactDetails?.email || 'N/A'}
+                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.email || 'N/A'}
                     </p>
                     <p className="text-sm text-gray-500">Primary Email</p>
                   </div>
@@ -408,19 +408,19 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Coverage Type:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && assignment.ammcId?.requestDetails?.coverageType || 'N/A'}
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.requestDetails?.coverageType || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Policy Duration:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && assignment.ammcId?.requestDetails?.policyDuration || 'N/A'}
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.requestDetails?.policyDuration || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Property Value:</span>
                   <span className="font-medium text-gray-900">
-                    ₦{typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
+                    ₦{typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
                   </span>
                 </div>
               </div>
@@ -438,11 +438,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             </div>
           </div>
 
-          {typeof assignment.ammcId === 'object' && assignment.ammcId?.requestDetails?.additionalCoverage && assignment.ammcId.requestDetails.additionalCoverage.length > 0 && (
+          {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.requestDetails?.additionalCoverage && (assignment.ammcId as any).requestDetails.additionalCoverage.length > 0 && (
             <div className="mb-4">
               <h4 className="text-sm font-medium text-gray-500 mb-2">Additional Coverage Requested</h4>
               <div className="flex flex-wrap gap-2">
-                {assignment.ammcId.requestDetails.additionalCoverage.map((coverage, index) => (
+                {(assignment.ammcId as any).requestDetails.additionalCoverage.map((coverage: any, index: number) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
@@ -454,12 +454,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             </div>
           )}
 
-          {typeof assignment.ammcId === 'object' && assignment.ammcId?.requestDetails?.specialRequests && (
+          {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.requestDetails?.specialRequests && (
             <div className="mb-4">
               <h4 className="text-sm font-medium text-gray-500 mb-2">Special Requests from Client</h4>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm text-amber-800">
-                  {assignment.ammcId.requestDetails.specialRequests}
+                  {(assignment.ammcId as any).requestDetails.specialRequests}
                 </p>
               </div>
             </div>
@@ -510,7 +510,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Interview property owner about maintenance history</span>
+                <span>Interview property builder/contractor about construction history</span>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
@@ -545,7 +545,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
               <div className="flex items-start">
                 <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Contact log with property owner</span>
+                <span>Contact log with property builder/contractor</span>
               </div>
               <div className="flex items-start">
                 <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
@@ -577,11 +577,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium flex items-center justify-center"
               >
                 <Phone className="h-5 w-5 mr-2" />
-                Contact Property Owner
+                Contact Builder/Contractor
               </button>
             </div>
             <p className="text-sm text-gray-500 mt-3 text-center">
-              Make sure to contact the property owner before visiting the site
+              Make sure to contact the property builder/contractor before visiting the site
             </p>
           </div>
         </div>

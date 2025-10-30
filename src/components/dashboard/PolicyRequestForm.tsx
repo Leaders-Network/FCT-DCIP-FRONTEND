@@ -57,6 +57,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         email: userEmail,
         phoneNumber: "",
         alternatePhone: "",
+        rcNumber: "",
       },
       requestDetails: {
         coverageType: "",
@@ -75,9 +76,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
       let userEmail = "";
 
       const storUser = localStorage.getItem("user");
-      if (storedUser) {
+      if (storUser) {
         try {
-          const userData = JSON.parse(ster);
+          const userData = JSON.parse(storUser);
           userEmail = userData.email || "";
         } catch (error) {
           console.error('Error parsing user data:', error);
@@ -145,7 +146,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     setFormData((prev) => ({
       ...prev,
       [section]: {
-        ...prev[section],
+        ...((prev[section] as any) || {}),
         [field]: value,
       },
     }));
@@ -269,7 +270,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   {step === 1
                     ? "Property Details"
                     : step === 2
-                      ? "Contact Info"
+                      ? "Builder/Contractor"
                       : "Coverage Details"}
                 </span>
                 {step < 3 && (
@@ -418,14 +419,14 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
             </div>
           )}
 
-          {/* Step 2: Contact Details */}
+          {/* Step 2: Builder/Contractor Details */}
           {currentStep === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+              <h3 className="text-lg font-semibold mb-4">Property Builder/Contractor</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
+                  Name of Builder/Contractor *
                 </label>
                 <input
                   required
@@ -435,7 +436,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   onChange={(e) =>
                     handleInputChange("contactDetails", "fullName", e.target.value)
                   }
-                  placeholder="Enter your full name"
+                  placeholder="Enter name of builder/contractor"
                 />
 
               </div>
@@ -490,6 +491,26 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   }
                   placeholder="+234 XXX XXX XXXX"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  RC Number *
+                </label>
+                <input
+                  required
+                  type="text"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835]"
+                  value={formData.contactDetails.rcNumber}
+                  onChange={(e) =>
+                    handleInputChange("contactDetails", "rcNumber", e.target.value.toUpperCase())
+                  }
+                  placeholder="RC123456"
+                  style={{ textTransform: 'uppercase' }}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter your company's Registration Certificate number
+                </p>
               </div>
             </div>
           )}

@@ -28,6 +28,21 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showActionsDropdown && !target.closest('.dropdown-container')) {
+        setShowActionsDropdown(null);
+      }
+    };
+
+    if (showActionsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showActionsDropdown]);
+
   const handleFetchDocumentUrl = async (document: any) => {
     if (typeof document === 'string') {
       const response = await adminApi.getSurveyDocumentDownloadUrl(document);
@@ -62,11 +77,11 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
     const submissionId = selectedPolicySubmissions[0]._id;
 
-    await reviewSubmission(submissionId, decision, reviewNotes);
+    await reviewSubmission(submissionId, decision as 'approved' | 'rejected', reviewNotes);
     setPolicies(prev =>
       prev.map(p =>
         p._id === selectedPolicy._id
-          ? { ...p, status: decision }
+          ? { ...p, status: decision as any }
           : p
       )
     );
@@ -83,7 +98,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     setPolicies(prev =>
       prev.map(p =>
         p._id === ammcId
-          ? { ...p, status: 'sent_to_user' }
+          ? { ...p, status: 'sent_to_user' as any }
           : p
       )
     );
@@ -139,7 +154,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             { key: 'submitted', label: 'Submitted', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'submitted').length : 0 },
             { key: 'assigned', label: 'Assigned', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'assigned').length : 0 },
             { key: 'surveyed', label: 'Surveyed', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'surveyed').length : 0 },
-            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'requires_more_info').length : 0 },
+            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => (p?.status as any) === 'requires_more_info').length : 0 },
             { key: 'rejected', label: 'Rejected', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'rejected').length : 0 }
           ].map(tab => (
             <button
@@ -165,7 +180,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property Details</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Builder/Contractor</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coverage</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -187,6 +202,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                       <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{policy.contactDetails.fullName}</p>
                       <p className="text-sm text-gray-500">{policy.contactDetails.email}</p>
                       <p className="text-sm text-gray-500">{policy.contactDetails.phoneNumber}</p>
+                      <p className="text-xs text-gray-400">RC: {policy.contactDetails.rcNumber || 'N/A'}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -198,7 +214,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                   <td className="px-6 py-4">{getStatusBadge(policy.status)}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{new Date(policy.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-sm font-medium">
-                    <div className="relative">
+                    <div className="relative dropdown-container">
                       <button
                         onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
                         className="p-2 hover:bg-gray-100 rounded-full"
@@ -598,10 +614,10 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: any }>
       </div>
 
       <div>
-        <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
+        <h4 className="font-medium text-gray-900 mb-3">Property Builder/Contractor</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-600">Name:</span>
+            <span className="text-gray-600">Builder/Contractor:</span>
             <span className="font-medium text-gray-900">{policy.contactDetails.fullName}</span>
           </div>
           <div className="flex justify-between">
@@ -618,6 +634,10 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: any }>
               <span className="font-medium text-gray-900">{policy.contactDetails.alternatePhone}</span>
             </div>
           )}
+          <div className="flex justify-between">
+            <span className="text-gray-600">RC Number:</span>
+            <span className="font-medium text-gray-900">{policy.contactDetails.rcNumber || 'N/A'}</span>
+          </div>
         </div>
       </div>
     </div>
