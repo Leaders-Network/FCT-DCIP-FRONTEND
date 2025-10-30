@@ -4,6 +4,12 @@ import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import { CreatePolicyRequestData } from "@/types/api.types";
 import Image from "next/image";
 import { MoreVertical, Download, CreditCard, Eye, FileText } from "lucide-react";
+import {
+  PROPERTY_TYPES,
+  CONSTRUCTION_MATERIALS,
+  COVERAGE_TYPES,
+  POLICY_DURATIONS
+} from "@/constants/policyConstants";
 
 const Dashview = () => {
   const [showPolicyRequest, setShowPolicyRequest] = useState(false);
@@ -514,14 +520,14 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
 
     // If we have survey data and surveyor approved, allow payment
     if (surveyData?.recommendedAction === 'approve') {
-      window.open('https://https://www.niip.ng/', '_blank');
+      window.open('https://niip.ng/', '_blank');
       return;
     }
 
     // Fallback: If no survey data but policy is surveyed, assume it's approved
     if (policy.status === 'surveyed' && !surveyData) {
       console.log('No survey data found, but policy is surveyed - allowing payment');
-      window.open('https://https://www.niip.ng/', '_blank');
+      window.open('https://niip.ng/', '_blank');
       return;
     }
 
@@ -598,7 +604,7 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
                 >
                   <CreditCard className="mr-3 h-4 w-4" />
                   <div className="flex flex-col">
-                    <span>Proceed to Payment</span>
+                    <span>Proceed to Insurace</span>
                     {policy.status === 'approved' && (
                       <span className="text-xs text-green-500">Policy Approved</span>
                     )}
@@ -931,7 +937,8 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
       fullName: policy.contactDetails?.fullName || '',
       email: localStorage.getItem("email") || '',
       phoneNumber: policy.contactDetails?.phoneNumber || '',
-      alternatePhone: policy.contactDetails?.alternatePhone || ''
+      alternatePhone: policy.contactDetails?.alternatePhone || '',
+      rcNumber: policy.contactDetails?.rcNumber || ''
     },
     requestDetails: {
       coverageType: policy.requestDetails?.coverageType || '',
@@ -1008,211 +1015,243 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
         </div>
 
         {/* Modal Content */}
-        <form onSubmit={handleSubmit} className="p-6 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
-          <div className="space-y-6">
-            {/* Property Details */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Property Details</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
+            <div className="p-6 bg-white overflow-y-auto flex-1">
+              <div className="space-y-6">
+                {/* Property Details */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                  <select
-                    value={formData.propertyDetails.propertyType}
-                    onChange={(e) => handleInputChange('propertyDetails', 'propertyType', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="">Select Property Type</option>
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Industrial">Industrial</option>
-                  </select>
+                  <h4 className="font-medium text-gray-900 mb-4">Property Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                      <select
+                        value={formData.propertyDetails.propertyType}
+                        onChange={(e) => handleInputChange('propertyDetails', 'propertyType', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      >
+                        <option value="">Select property type</option>
+                        {PROPERTY_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Building Value (₦)</label>
+                      <input
+                        type="number"
+                        value={formData.propertyDetails.buildingValue}
+                        onChange={(e) => handleInputChange('propertyDetails', 'buildingValue', Number(e.target.value))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Property Address</label>
+                      <textarea
+                        value={formData.propertyDetails.address}
+                        onChange={(e) => handleInputChange('propertyDetails', 'address', e.target.value)}
+                        rows={3}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Year Built</label>
+                      <input
+                        type="number"
+                        value={formData.propertyDetails.yearBuilt}
+                        onChange={(e) => handleInputChange('propertyDetails', 'yearBuilt', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Square Footage</label>
+                      <input
+                        type="number"
+                        value={formData.propertyDetails.squareFootage}
+                        onChange={(e) => handleInputChange('propertyDetails', 'squareFootage', Number(e.target.value))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Construction Material</label>
+                      <select
+                        value={formData.propertyDetails.constructionMaterial}
+                        onChange={(e) => handleInputChange('propertyDetails', 'constructionMaterial', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      >
+                        <option value="">Select material</option>
+                        {CONSTRUCTION_MATERIALS.map((material) => (
+                          <option key={material} value={material}>
+                            {material}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Contact Details */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Building Value (₦)</label>
-                  <input
-                    type="number"
-                    value={formData.propertyDetails.buildingValue}
-                    onChange={(e) => handleInputChange('propertyDetails', 'buildingValue', Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
+                  <h4 className="font-medium text-gray-900 mb-4">Contact Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name of Builder/Contractor</label>
+                      <input
+                        type="text"
+                        value={formData.contactDetails.fullName}
+                        onChange={(e) => handleInputChange('contactDetails', 'fullName', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                        <span className="text-xs text-green-600 ml-2">(Auto-filled from your account)</span>
+                      </label>
+                      <input
+                        type="email"
+                        value={formData.contactDetails.email}
+                        readOnly
+                        disabled
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 cursor-not-allowed"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        This email is automatically filled from your account and cannot be changed.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                      <input
+                        type="tel"
+                        value={formData.contactDetails.phoneNumber}
+                        onChange={(e) => handleInputChange('contactDetails', 'phoneNumber', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Phone</label>
+                      <input
+                        type="tel"
+                        value={formData.contactDetails.alternatePhone}
+                        onChange={(e) => handleInputChange('contactDetails', 'alternatePhone', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">RC Number *</label>
+                      <input
+                        type="text"
+                        value={formData.contactDetails.rcNumber}
+                        onChange={(e) => handleInputChange('contactDetails', 'rcNumber', e.target.value.toUpperCase())}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        style={{ textTransform: 'uppercase' }}
+                        placeholder="RC123456"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Enter your company's Registration Certificate number
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Property Address</label>
-                  <textarea
-                    value={formData.propertyDetails.address}
-                    onChange={(e) => handleInputChange('propertyDetails', 'address', e.target.value)}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-
+                {/* Coverage Details */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Year Built</label>
-                  <input
-                    type="number"
-                    value={formData.propertyDetails.yearBuilt}
-                    onChange={(e) => handleInputChange('propertyDetails', 'yearBuilt', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+                  <h4 className="font-medium text-gray-900 mb-4">Coverage Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
+                      <select
+                        value={formData.requestDetails.coverageType}
+                        onChange={(e) => handleInputChange('requestDetails', 'coverageType', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      >
+                        <option value="">Select coverage type</option>
+                        {COVERAGE_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Square Footage</label>
-                  <input
-                    type="number"
-                    value={formData.propertyDetails.squareFootage}
-                    onChange={(e) => handleInputChange('propertyDetails', 'squareFootage', Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Policy Duration</label>
+                      <select
+                        value={formData.requestDetails.policyDuration}
+                        onChange={(e) => handleInputChange('requestDetails', 'policyDuration', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      >
+                        <option value="">Select duration</option>
+                        {POLICY_DURATIONS.map((duration) => (
+                          <option key={duration} value={duration}>
+                            {duration}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Construction Material</label>
-                  <input
-                    type="text"
-                    value={formData.propertyDetails.constructionMaterial}
-                    onChange={(e) => handleInputChange('propertyDetails', 'constructionMaterial', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., Concrete, Brick, Wood"
-                  />
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Special Requests</label>
+                      <textarea
+                        value={formData.requestDetails.specialRequests}
+                        onChange={(e) => handleInputChange('requestDetails', 'specialRequests', e.target.value)}
+                        rows={3}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Any special requirements or additional information..."
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Contact Details */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Contact Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name of Builder/Contractor</label>
-                  <input
-                    type="text"
-                    value={formData.contactDetails.fullName}
-                    onChange={(e) => handleInputChange('contactDetails', 'fullName', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                    <span className="text-xs text-green-600 ml-2">(Auto-filled from your account)</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.contactDetails.email}
-                    readOnly
-                    disabled
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 cursor-not-allowed"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    This email is automatically filled from your account and cannot be changed.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                  <input
-                    type="tel"
-                    value={formData.contactDetails.phoneNumber}
-                    onChange={(e) => handleInputChange('contactDetails', 'phoneNumber', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Phone</label>
-                  <input
-                    type="tel"
-                    value={formData.contactDetails.alternatePhone}
-                    onChange={(e) => handleInputChange('contactDetails', 'alternatePhone', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+            {/* Modal Footer - Now inside form */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Your updated policy will be reassigned for a new survey.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                  >
+                    {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>}
+                    {loading ? 'Updating...' : 'Update & Resubmit'}
+                  </button>
                 </div>
               </div>
             </div>
-
-            {/* Coverage Details */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Coverage Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
-                  <select
-                    value={formData.requestDetails.coverageType}
-                    onChange={(e) => handleInputChange('requestDetails', 'coverageType', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="">Select Coverage Type</option>
-                    <option value="Basic">Basic Coverage</option>
-                    <option value="Comprehensive">Comprehensive Coverage</option>
-                    <option value="Premium">Premium Coverage</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Policy Duration</label>
-                  <select
-                    value={formData.requestDetails.policyDuration}
-                    onChange={(e) => handleInputChange('requestDetails', 'policyDuration', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="">Select Duration</option>
-                    <option value="1 Year">1 Year</option>
-                    <option value="2 Years">2 Years</option>
-                    <option value="3 Years">3 Years</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Special Requests</label>
-                  <textarea
-                    value={formData.requestDetails.specialRequests}
-                    onChange={(e) => handleInputChange('requestDetails', 'specialRequests', e.target.value)}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Any special requirements or additional information..."
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
-
-        {/* Modal Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              Your updated policy will be reassigned for a new survey.
-            </p>
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-              >
-                {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>}
-                {loading ? 'Updating...' : 'Update & Resubmit'}
-              </button>
-            </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
