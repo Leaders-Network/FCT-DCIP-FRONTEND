@@ -10,8 +10,7 @@ const Footer = () => {
           <div>
             <h3 className="text-2xl font-bold mb-4">FCT-DCIP</h3>
             <p className="text-sm">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean
-              euismod bibendum laoreet.
+              Welcome to DCIP.
             </p>
           </div>
           <div>
