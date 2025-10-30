@@ -77,7 +77,7 @@ useEffect(() => {
       <div className="absolute inset-0 flex items-center">
         <div data-aos="fade-left" className="container mx-auto px-4">
           <h1 className="text-5xl font-bold text-white mb-4">
-            Protect Your Property <br /> with Confidence
+            Protect Your Properties <br /> with Confidence
           </h1>
           <p className="text-xl text-white mb-8">
             Comprehensive insurance solutions tailored to your needs. <br />

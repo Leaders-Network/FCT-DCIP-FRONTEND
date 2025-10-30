@@ -12,28 +12,44 @@ export default function CookieConsent() {
     marketing: false,
   });
 
+  // 🕒 Duration before showing again (24 hours)
+  const REPOPUP_DELAY =   1000; // 24 hours in ms
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowConsent(true);
-      setTimeout(() => setAnimate(true), 50);
-    }, 2000);
-    return () => clearTimeout(timer);
+    const lastConsent = localStorage.getItem("cookieConsentTimestamp");
+
+    // If no consent or expired (older than 24h)
+    if (!lastConsent || Date.now() - parseInt(lastConsent) > REPOPUP_DELAY) {
+      const timer = setTimeout(() => {
+        setShowConsent(true);
+        setTimeout(() => setAnimate(true), 50);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
-  const handleAcceptAll = () => {
+  const closeConsent = () => {
     setAnimate(false);
     setTimeout(() => setShowConsent(false), 300);
+  };
+
+  const handleAcceptAll = () => {
+    localStorage.setItem("cookieConsent", "accepted");
+    localStorage.setItem("cookieConsentTimestamp", Date.now().toString());
+    closeConsent();
   };
 
   const handleDeny = () => {
-    setAnimate(false);
-    setTimeout(() => setShowConsent(false), 300);
+    localStorage.setItem("cookieConsent", "denied");
+    localStorage.setItem("cookieConsentTimestamp", Date.now().toString());
+    closeConsent();
   };
 
   const handleSavePreferences = () => {
+    localStorage.setItem("cookiePreferences", JSON.stringify(preferences));
+    localStorage.setItem("cookieConsentTimestamp", Date.now().toString());
+    closeConsent();
     setShowPreferences(false);
-    setAnimate(false);
-    setTimeout(() => setShowConsent(false), 300);
   };
 
   if (!showConsent) return null;
@@ -42,7 +58,7 @@ export default function CookieConsent() {
     <>
       {/* Bottom Banner */}
       <div
-        className={`fixed left-0 right-0 bottom-0 z-50 transition-transform duration-500 ease-out ${
+        className={`fixed left-0 right-0 bottom-10 z-50 transition-transform duration-500 ease-out ${
           animate ? "translate-y-0" : "translate-y-full"
         }`}
       >
@@ -56,7 +72,7 @@ export default function CookieConsent() {
               to store and/or access device information. Consenting to these
               technologies allows us to process data such as browsing behavior
               or unique IDs on this site. Not consenting or withdrawing consent
-              may adversely affect certain features and functions.
+              may affect certain features and functions.
             </p>
             <a
               href="/privacy-policy"
@@ -139,28 +155,6 @@ export default function CookieConsent() {
                   className="h-5 w-5 accent-[#028835] cursor-pointer"
                 />
               </div>
-
-              {/* Marketing */}
-              {/* <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-800">Marketing</h3>
-                  <p className="text-sm text-gray-600">
-                    Used to personalize advertising and measure its
-                    effectiveness.
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.marketing}
-                  onChange={(e) =>
-                    setPreferences({
-                      ...preferences,
-                      marketing: e.target.checked,
-                    })
-                  }
-                  className="h-5 w-5 accent-[#028835] cursor-pointer"
-                />
-              </div> */}
             </div>
 
             <div className="flex justify-end gap-3 mt-8">
