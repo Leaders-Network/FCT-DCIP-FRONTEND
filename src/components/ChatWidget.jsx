@@ -70,7 +70,7 @@ export default function ChatWidget() {
   ];
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-3 font-sans">
+    <div className="fixed bottom-1 right-6 z-50 flex flex-row items-end space-y-3 font-sans">
       {showPrompt && !open && (
         <div
           onClick={() => setOpen(true)}
