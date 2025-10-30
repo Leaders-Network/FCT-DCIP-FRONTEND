@@ -32,6 +32,8 @@ export default function ChatWidget() {
       return () => clearTimeout(typingTimer);
     } else {
       setShowGreeting(false);
+      // re-enable prompt after closing so the helper bubble can reappear
+      setShowPrompt(true);
       setShowTyping(false);
     }
   }, [open]);
