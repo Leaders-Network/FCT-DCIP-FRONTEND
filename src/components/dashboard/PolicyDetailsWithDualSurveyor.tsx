@@ -402,6 +402,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                 niaSurveyor={niaSurveyor}
                 assignmentStatus={dualAssignmentData.assignmentStatus}
                 showContactActions={true}
+                showAdminContacts={true}
             />
 
             {/* Timeline */}
@@ -429,8 +430,8 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
 
                     <div className="flex items-start space-x-4">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${dualAssignmentData.assignmentStatus !== 'unassigned'
-                                ? 'bg-green-500'
-                                : 'bg-gray-300'
+                            ? 'bg-green-500'
+                            : 'bg-gray-300'
                             }`}>
                             {dualAssignmentData.assignmentStatus !== 'unassigned' ? (
                                 <CheckCircle className="w-4 h-4 text-white" />
@@ -450,8 +451,8 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
 
                     <div className="flex items-start space-x-4">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${dualAssignmentData.completionStatus > 0
-                                ? 'bg-green-500'
-                                : 'bg-gray-300'
+                            ? 'bg-green-500'
+                            : 'bg-gray-300'
                             }`}>
                             {dualAssignmentData.completionStatus > 0 ? (
                                 <CheckCircle className="w-4 h-4 text-white" />
@@ -471,8 +472,8 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
 
                     <div className="flex items-start space-x-4">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${dualAssignmentData.completionStatus === 100
-                                ? 'bg-green-500'
-                                : 'bg-gray-300'
+                            ? 'bg-green-500'
+                            : 'bg-gray-300'
                             }`}>
                             {dualAssignmentData.completionStatus === 100 ? (
                                 <CheckCircle className="w-4 h-4 text-white" />
