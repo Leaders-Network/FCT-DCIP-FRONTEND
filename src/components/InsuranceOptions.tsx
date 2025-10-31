@@ -1,13 +1,14 @@
 import React from "react";
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
+import Link from "next/link";
 
 const InsuranceOptions = () => {
   return (
     <section className="py-16 bg-gray-100">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between">
-          <div data-aos="fade-right" data-aos-anchor-placement="top-center" className="w-full md:w-1/2 mb-8 md:mb-0">
+          <div data-aos="zoom-in" data-aos-anchor-placement="top-center" className="w-full md:w-1/2 mb-8 md:mb-0">
             <Image
               src="/about.png"
               alt="Happy family"
@@ -42,9 +43,11 @@ const InsuranceOptions = () => {
               owners from losses that may arise from building collapse, safety,
               security and financial well-being of Abuja residents.
             </p>
-            <button className="mt-6 bg-green-600 font-semibold  rounded-md p-2 text-white transition-colors">
-              Read More
-            </button>
+            <Link href="/about">
+              <button className="mt-6 bg-green-600 font-semibold  rounded-md p-2 text-white transition-colors">
+                Read More
+              </button>
+            </Link>
           </div>
         </div>
 
@@ -56,9 +59,11 @@ const InsuranceOptions = () => {
             <p className="text-gray-600 mb-8 max-w-lg">
               Our insurance options provide comprehensive coverage tailored to your specific needs, offering peace of mind, financial security, expert support, and a range of benefits designed to protect your future and well-being.
             </p>
+            <Link href="/insurance-options">
             <button className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors mb-12">
               Explore
             </button>
+            </Link>
           </div>
 
           <div data-aos="fade-left" data-aos-anchor-placement="top-center" data-aos-delay="500" className="grid grid-cols-1  gap-8">
