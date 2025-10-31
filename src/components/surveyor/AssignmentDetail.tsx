@@ -114,9 +114,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Assignment Details</h1>
+                <h1 className="text-2xl font-bold text-gray-900">AMMC Survey Assignment Details</h1>
                 <p className="text-gray-600 mt-1">
-                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.propertyType || 'Property Survey'}
+                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.propertyType || 'AMMC Property Survey'}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Assignment ID: {assignment._id}
@@ -489,7 +489,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           <div className="p-6">
             <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
               <FileText className="h-5 w-5 mr-2" />
-              Survey Guidelines
+              AMMC Survey Guidelines
             </h2>
             <div className="space-y-3 text-sm text-blue-800">
               <div className="flex items-start">

@@ -324,15 +324,15 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Surveyor Management</h2>
-          <p className="text-gray-600">Manage surveyor profiles and assignments</p>
+          <h2 className="text-2xl font-bold text-gray-900">AMMC Surveyor Management</h2>
+          <p className="text-gray-600">Manage AMMC surveyor profiles and assignments</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
           className="bg-[#028835] text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Surveyor
+          Add AMMC Surveyor
         </button>
       </div>
 
@@ -343,7 +343,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search surveyors..."
+              placeholder="Search AMMC surveyors..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2"
