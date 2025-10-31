@@ -54,16 +54,16 @@ const NIAAdminSidebar = () => {
             description: "Dual-surveyor assignments"
         },
         {
-            href: "/nia-admin/reports",
-            label: "Reports",
-            icon: FileText,
-            description: "Survey reports and merging"
+            href: "/nia-admin/user-inquiries",
+            label: "User Inquiries",
+            icon: AlertTriangle,
+            description: "Handle user conflict inquiries"
         },
         {
-            href: "/nia-admin/conflicts",
-            label: "Conflicts",
-            icon: AlertTriangle,
-            description: "Resolve report conflicts"
+            href: "/nia-admin/processing-monitor",
+            label: "Processing Monitor",
+            icon: FileText,
+            description: "Monitor automatic report processing"
         },
         {
             href: "/nia-admin/analytics",
