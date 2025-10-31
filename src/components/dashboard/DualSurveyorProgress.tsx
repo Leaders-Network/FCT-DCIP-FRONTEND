@@ -263,7 +263,7 @@ const DualSurveyorProgress: React.FC<DualSurveyorProgressProps> = ({
                         </div>
                         <div>
                             <h5 className="text-sm font-medium text-gray-900">NIA Surveyor</h5>
-                            <p className="text-xs text-gray-600">Nigerian Institute of Architects</p>
+                            <p className="text-xs text-gray-600">Nigerian Insurers Association</p>
                         </div>
                     </div>
                     {niaSurveyorContact ? (
