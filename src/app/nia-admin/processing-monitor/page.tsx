@@ -18,6 +18,24 @@ import {
     AlertCircle
 } from 'lucide-react';
 
+interface SurveyorReport {
+    reportId: string;
+    surveyorName: string;
+    surveyorEmail: string;
+    surveyorLicense: string;
+    submittedAt: string;
+    reportDocument?: string; // URL to PDF
+    findings: {
+        propertyCondition: string;
+        structuralAssessment: string;
+        riskFactors: string;
+        recommendations: string;
+        estimatedValue?: number;
+    };
+    recommendation: 'approve' | 'reject' | 'request_more_info';
+    surveyNotes?: string;
+}
+
 interface ProcessingJob {
     _id: string;
     policyId: string;
@@ -39,6 +57,10 @@ interface ProcessingJob {
         userEmail: string;
         userName: string;
     };
+    // Enhanced report details
+    ammcReport?: SurveyorReport;
+    niaReport?: SurveyorReport;
+    mergedReportDocument?: string;
 }
 
 const ProcessingMonitorPage = () => {
@@ -106,7 +128,42 @@ const ProcessingMonitorPage = () => {
                         address: '123 Garki District, Abuja',
                         userEmail: 'john.adebayo@email.com',
                         userName: 'John Adebayo'
-                    }
+                    },
+                    ammcReport: {
+                        reportId: 'AMMC-RPT-001',
+                        surveyorName: 'Engr. Michael Okafor',
+                        surveyorEmail: 'm.okafor@ammc.gov.ng',
+                        surveyorLicense: 'AMMC-LIC-2024-045',
+                        submittedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+                        reportDocument: '/reports/ammc-rpt-001.pdf',
+                        findings: {
+                            propertyCondition: 'Good overall condition with minor maintenance needs',
+                            structuralAssessment: 'Foundation is solid, walls show minor cracks that need attention',
+                            riskFactors: 'Low flood risk, moderate fire risk due to electrical wiring age',
+                            recommendations: 'Recommend approval with electrical system upgrade within 6 months',
+                            estimatedValue: 45000000
+                        },
+                        recommendation: 'approve',
+                        surveyNotes: 'Property is well-maintained. Owner has been proactive with maintenance. Electrical system needs updating but not critical for approval.'
+                    },
+                    niaReport: {
+                        reportId: 'NIA-RPT-001',
+                        surveyorName: 'Dr. Sarah Adebayo',
+                        surveyorEmail: 's.adebayo@nia.org.ng',
+                        surveyorLicense: 'NIA-LIC-2024-089',
+                        submittedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+                        reportDocument: '/reports/nia-rpt-001.pdf',
+                        findings: {
+                            propertyCondition: 'Satisfactory condition with some structural concerns',
+                            structuralAssessment: 'Foundation shows signs of settling, wall cracks indicate potential structural issues',
+                            riskFactors: 'Moderate structural risk, low environmental risk',
+                            recommendations: 'Recommend structural engineer evaluation before approval',
+                            estimatedValue: 38000000
+                        },
+                        recommendation: 'request_more_info',
+                        surveyNotes: 'Discrepancies noted in foundation assessment. Recommend independent structural evaluation before proceeding with insurance approval.'
+                    },
+                    mergedReportDocument: '/reports/merged-mr-2024-001.pdf'
                 },
                 {
                     _id: '2',
@@ -122,6 +179,40 @@ const ProcessingMonitorPage = () => {
                         address: '456 Wuse II, Abuja',
                         userEmail: 'sarah.okafor@email.com',
                         userName: 'Sarah Okafor'
+                    },
+                    ammcReport: {
+                        reportId: 'AMMC-RPT-002',
+                        surveyorName: 'Engr. Ibrahim Musa',
+                        surveyorEmail: 'i.musa@ammc.gov.ng',
+                        surveyorLicense: 'AMMC-LIC-2024-067',
+                        submittedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+                        reportDocument: '/reports/ammc-rpt-002.pdf',
+                        findings: {
+                            propertyCondition: 'Excellent condition, recently renovated',
+                            structuralAssessment: 'All structural elements in excellent condition',
+                            riskFactors: 'Low risk across all categories',
+                            recommendations: 'Recommend approval without conditions',
+                            estimatedValue: 120000000
+                        },
+                        recommendation: 'approve',
+                        surveyNotes: 'Commercial property recently underwent major renovation. All systems are modern and up to code.'
+                    },
+                    niaReport: {
+                        reportId: 'NIA-RPT-002',
+                        surveyorName: 'Arch. Fatima Hassan',
+                        surveyorEmail: 'f.hassan@nia.org.ng',
+                        surveyorLicense: 'NIA-LIC-2024-123',
+                        submittedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+                        reportDocument: '/reports/nia-rpt-002.pdf',
+                        findings: {
+                            propertyCondition: 'Excellent condition with modern amenities',
+                            structuralAssessment: 'Superior structural integrity, meets all current standards',
+                            riskFactors: 'Minimal risk, excellent fire safety systems',
+                            recommendations: 'Strongly recommend approval',
+                            estimatedValue: 125000000
+                        },
+                        recommendation: 'approve',
+                        surveyNotes: 'Outstanding commercial property. Recent renovation includes state-of-the-art safety systems.'
                     }
                 },
                 {
@@ -139,6 +230,40 @@ const ProcessingMonitorPage = () => {
                         address: '789 Jabi District, Abuja',
                         userEmail: 'michael.okonkwo@email.com',
                         userName: 'Michael Okonkwo'
+                    },
+                    ammcReport: {
+                        reportId: 'AMMC-RPT-003',
+                        surveyorName: 'Engr. Aisha Bello',
+                        surveyorEmail: 'a.bello@ammc.gov.ng',
+                        surveyorLicense: 'AMMC-LIC-2024-089',
+                        submittedAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
+                        reportDocument: '/reports/ammc-rpt-003.pdf',
+                        findings: {
+                            propertyCondition: 'Industrial facility in good operational condition',
+                            structuralAssessment: 'Heavy-duty construction suitable for industrial use',
+                            riskFactors: 'Moderate fire risk due to industrial processes, low flood risk',
+                            recommendations: 'Recommend approval with enhanced fire safety measures',
+                            estimatedValue: 250000000
+                        },
+                        recommendation: 'approve',
+                        surveyNotes: 'Industrial facility meets all safety standards. Fire suppression system is adequate but could be enhanced.'
+                    },
+                    niaReport: {
+                        reportId: 'NIA-RPT-003',
+                        surveyorName: 'Dr. Yusuf Abdullahi',
+                        surveyorEmail: 'y.abdullahi@nia.org.ng',
+                        surveyorLicense: 'NIA-LIC-2024-156',
+                        submittedAt: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
+                        reportDocument: '/reports/nia-rpt-003-incomplete.pdf',
+                        findings: {
+                            propertyCondition: 'Report incomplete - missing environmental assessment',
+                            structuralAssessment: 'Structural evaluation pending completion',
+                            riskFactors: 'Assessment incomplete',
+                            recommendations: 'Report requires completion before processing',
+                            estimatedValue: 0
+                        },
+                        recommendation: 'request_more_info',
+                        surveyNotes: 'Report submission was incomplete. Missing environmental impact assessment and detailed structural analysis sections.'
                     }
                 },
                 {
@@ -158,7 +283,42 @@ const ProcessingMonitorPage = () => {
                         address: '321 Maitama District, Abuja',
                         userEmail: 'fatima.abdullahi@email.com',
                         userName: 'Fatima Abdullahi'
-                    }
+                    },
+                    ammcReport: {
+                        reportId: 'AMMC-RPT-004',
+                        surveyorName: 'Engr. David Okoro',
+                        surveyorEmail: 'd.okoro@ammc.gov.ng',
+                        surveyorLicense: 'AMMC-LIC-2024-112',
+                        submittedAt: new Date(Date.now() - 50 * 60 * 60 * 1000).toISOString(),
+                        reportDocument: '/reports/ammc-rpt-004.pdf',
+                        findings: {
+                            propertyCondition: 'Excellent condition, luxury residential property',
+                            structuralAssessment: 'Superior construction quality, all systems modern',
+                            riskFactors: 'Very low risk profile, excellent location',
+                            recommendations: 'Highly recommend approval',
+                            estimatedValue: 85000000
+                        },
+                        recommendation: 'approve',
+                        surveyNotes: 'Premium residential property in exclusive neighborhood. Construction quality exceeds standards.'
+                    },
+                    niaReport: {
+                        reportId: 'NIA-RPT-004',
+                        surveyorName: 'Arch. Kemi Adeyemi',
+                        surveyorEmail: 'k.adeyemi@nia.org.ng',
+                        surveyorLicense: 'NIA-LIC-2024-178',
+                        submittedAt: new Date(Date.now() - 46 * 60 * 60 * 1000).toISOString(),
+                        reportDocument: '/reports/nia-rpt-004.pdf',
+                        findings: {
+                            propertyCondition: 'Outstanding condition with premium finishes',
+                            structuralAssessment: 'Exceptional structural integrity and design',
+                            riskFactors: 'Minimal risk, premium security systems installed',
+                            recommendations: 'Strongly recommend approval',
+                            estimatedValue: 87000000
+                        },
+                        recommendation: 'approve',
+                        surveyNotes: 'Luxury property with exceptional build quality. All safety and security systems are state-of-the-art.'
+                    },
+                    mergedReportDocument: '/reports/merged-mr-2024-004.pdf'
                 }
             ];
 
@@ -555,6 +715,55 @@ const ProcessingMonitorPage = () => {
                                 )}
                             </div>
 
+                            {/* Report Summary */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                {job.ammcReport && (
+                                    <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h5 className="text-sm font-medium text-green-900">AMMC Report</h5>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${job.ammcReport.recommendation === 'approve' ? 'bg-green-100 text-green-800' :
+                                                job.ammcReport.recommendation === 'reject' ? 'bg-red-100 text-red-800' :
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                {job.ammcReport.recommendation.replace('_', ' ').toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-green-700 mb-1">
+                                            <strong>Surveyor:</strong> {job.ammcReport.surveyorName}
+                                        </p>
+                                        <p className="text-xs text-green-700 mb-1">
+                                            <strong>Value:</strong> ₦{job.ammcReport.findings.estimatedValue?.toLocaleString()}
+                                        </p>
+                                        <p className="text-xs text-green-600">
+                                            Submitted: {new Date(job.ammcReport.submittedAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {job.niaReport && (
+                                    <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h5 className="text-sm font-medium text-blue-900">NIA Report</h5>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${job.niaReport.recommendation === 'approve' ? 'bg-green-100 text-green-800' :
+                                                job.niaReport.recommendation === 'reject' ? 'bg-red-100 text-red-800' :
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                {job.niaReport.recommendation.replace('_', ' ').toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-blue-700 mb-1">
+                                            <strong>Surveyor:</strong> {job.niaReport.surveyorName}
+                                        </p>
+                                        <p className="text-xs text-blue-700 mb-1">
+                                            <strong>Value:</strong> ₦{job.niaReport.findings.estimatedValue?.toLocaleString()}
+                                        </p>
+                                        <p className="text-xs text-blue-600">
+                                            Submitted: {new Date(job.niaReport.submittedAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
                             {job.errorMessage && (
                                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                                     <p className="text-sm text-red-800">
@@ -608,10 +817,24 @@ const ProcessingMonitorPage = () => {
                                         </button>
                                     )}
 
-                                    {job.mergedReportId && (
+                                    {job.ammcReport?.reportDocument && (
                                         <button className="flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors">
                                             <Download className="h-4 w-4 mr-1" />
-                                            Download
+                                            AMMC PDF
+                                        </button>
+                                    )}
+
+                                    {job.niaReport?.reportDocument && (
+                                        <button className="flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors">
+                                            <Download className="h-4 w-4 mr-1" />
+                                            NIA PDF
+                                        </button>
+                                    )}
+
+                                    {job.mergedReportDocument && (
+                                        <button className="flex items-center px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors">
+                                            <Download className="h-4 w-4 mr-1" />
+                                            Merged PDF
                                         </button>
                                     )}
                                 </div>
@@ -673,25 +896,164 @@ const ProcessingMonitorPage = () => {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <h4 className="font-medium text-gray-900 mb-2">Report Information</h4>
-                                    <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                                        <div className="flex justify-between">
-                                            <span className="text-sm text-gray-600">AMMC Report:</span>
-                                            <span className="text-sm text-gray-900">{selectedJob.ammcReportId}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-sm text-gray-600">NIA Report:</span>
-                                            <span className="text-sm text-gray-900">{selectedJob.niaReportId}</span>
-                                        </div>
-                                        {selectedJob.mergedReportId && (
-                                            <div className="flex justify-between">
-                                                <span className="text-sm text-gray-600">Merged Report:</span>
-                                                <span className="text-sm text-gray-900">{selectedJob.mergedReportId}</span>
+                                {/* AMMC Report Details */}
+                                {selectedJob.ammcReport && (
+                                    <div>
+                                        <h4 className="font-medium text-gray-900 mb-2">AMMC Survey Report</h4>
+                                        <div className="bg-green-50 border border-green-200 p-4 rounded-lg space-y-3">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-medium text-green-900">{selectedJob.ammcReport.surveyorName}</p>
+                                                    <p className="text-sm text-green-700">{selectedJob.ammcReport.surveyorEmail}</p>
+                                                    <p className="text-xs text-green-600">License: {selectedJob.ammcReport.surveyorLicense}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-sm text-green-700">
+                                                        {new Date(selectedJob.ammcReport.submittedAt).toLocaleDateString()}
+                                                    </p>
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedJob.ammcReport.recommendation === 'approve' ? 'bg-green-100 text-green-800' :
+                                                        selectedJob.ammcReport.recommendation === 'reject' ? 'bg-red-100 text-red-800' :
+                                                            'bg-yellow-100 text-yellow-800'
+                                                        }`}>
+                                                        {selectedJob.ammcReport.recommendation.replace('_', ' ').toUpperCase()}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        )}
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                                <div>
+                                                    <p className="font-medium text-green-900">Property Condition:</p>
+                                                    <p className="text-green-700">{selectedJob.ammcReport.findings.propertyCondition}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-green-900">Structural Assessment:</p>
+                                                    <p className="text-green-700">{selectedJob.ammcReport.findings.structuralAssessment}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-green-900">Risk Factors:</p>
+                                                    <p className="text-green-700">{selectedJob.ammcReport.findings.riskFactors}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-green-900">Estimated Value:</p>
+                                                    <p className="text-green-700">₦{selectedJob.ammcReport.findings.estimatedValue?.toLocaleString()}</p>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <p className="font-medium text-green-900">Recommendations:</p>
+                                                <p className="text-green-700">{selectedJob.ammcReport.findings.recommendations}</p>
+                                            </div>
+
+                                            {selectedJob.ammcReport.surveyNotes && (
+                                                <div>
+                                                    <p className="font-medium text-green-900">Survey Notes:</p>
+                                                    <p className="text-green-700">{selectedJob.ammcReport.surveyNotes}</p>
+                                                </div>
+                                            )}
+
+                                            {selectedJob.ammcReport.reportDocument && (
+                                                <div className="flex items-center justify-between pt-2 border-t border-green-200">
+                                                    <span className="text-sm font-medium text-green-900">Report Document:</span>
+                                                    <button className="flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors">
+                                                        <Download className="h-4 w-4 mr-1" />
+                                                        Download PDF
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {/* NIA Report Details */}
+                                {selectedJob.niaReport && (
+                                    <div>
+                                        <h4 className="font-medium text-gray-900 mb-2">NIA Survey Report</h4>
+                                        <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg space-y-3">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-medium text-blue-900">{selectedJob.niaReport.surveyorName}</p>
+                                                    <p className="text-sm text-blue-700">{selectedJob.niaReport.surveyorEmail}</p>
+                                                    <p className="text-xs text-blue-600">License: {selectedJob.niaReport.surveyorLicense}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-sm text-blue-700">
+                                                        {new Date(selectedJob.niaReport.submittedAt).toLocaleDateString()}
+                                                    </p>
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedJob.niaReport.recommendation === 'approve' ? 'bg-green-100 text-green-800' :
+                                                        selectedJob.niaReport.recommendation === 'reject' ? 'bg-red-100 text-red-800' :
+                                                            'bg-yellow-100 text-yellow-800'
+                                                        }`}>
+                                                        {selectedJob.niaReport.recommendation.replace('_', ' ').toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                                <div>
+                                                    <p className="font-medium text-blue-900">Property Condition:</p>
+                                                    <p className="text-blue-700">{selectedJob.niaReport.findings.propertyCondition}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-blue-900">Structural Assessment:</p>
+                                                    <p className="text-blue-700">{selectedJob.niaReport.findings.structuralAssessment}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-blue-900">Risk Factors:</p>
+                                                    <p className="text-blue-700">{selectedJob.niaReport.findings.riskFactors}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-blue-900">Estimated Value:</p>
+                                                    <p className="text-blue-700">₦{selectedJob.niaReport.findings.estimatedValue?.toLocaleString()}</p>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <p className="font-medium text-blue-900">Recommendations:</p>
+                                                <p className="text-blue-700">{selectedJob.niaReport.findings.recommendations}</p>
+                                            </div>
+
+                                            {selectedJob.niaReport.surveyNotes && (
+                                                <div>
+                                                    <p className="font-medium text-blue-900">Survey Notes:</p>
+                                                    <p className="text-blue-700">{selectedJob.niaReport.surveyNotes}</p>
+                                                </div>
+                                            )}
+
+                                            {selectedJob.niaReport.reportDocument && (
+                                                <div className="flex items-center justify-between pt-2 border-t border-blue-200">
+                                                    <span className="text-sm font-medium text-blue-900">Report Document:</span>
+                                                    <button className="flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors">
+                                                        <Download className="h-4 w-4 mr-1" />
+                                                        Download PDF
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Merged Report */}
+                                {selectedJob.mergedReportId && (
+                                    <div>
+                                        <h4 className="font-medium text-gray-900 mb-2">Merged Report</h4>
+                                        <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-medium text-purple-900">Report ID: {selectedJob.mergedReportId}</p>
+                                                    <p className="text-sm text-purple-700">
+                                                        Combined AMMC and NIA findings
+                                                    </p>
+                                                </div>
+                                                {selectedJob.mergedReportDocument && (
+                                                    <button className="flex items-center px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors">
+                                                        <Download className="h-4 w-4 mr-1" />
+                                                        Download Merged PDF
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {selectedJob.conflictDetected && (
                                     <div>
