@@ -2,7 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, FileText, Settings, Briefcase, Building, ClipboardList, Shield } from "lucide-react";
+import { Home, Users, FileText, Settings, Briefcase, Building, ClipboardList, Shield, AlertTriangle } from "lucide-react";
 
 import { useAuth } from "@/context/useAuth";
 import { IoMdLogOut } from "react-icons/io";
@@ -40,6 +40,8 @@ export default function Sidebar() {
         <NavItem href="/admin/dashboard/enforcement" icon={Shield} label="Enforcement" />
         <NavItem href="/admin/dashboard/surveyors" icon={Users} label="Surveyors" />
         <NavItem href="/admin/dashboard/users" icon={Users} label="Users" />
+        <NavItem href="/admin/dashboard/user-inquiries" icon={AlertTriangle} label="User Inquiries" />
+        <NavItem href="/admin/dashboard/processing-monitor" icon={FileText} label="Processing Monitor" />
         <NavItem href="/admin/dashboard/administrators" icon={ClipboardList} label="Administrators" />
         <NavItem href="/admin/dashboard/settings" icon={Settings} label="Settings" />
       </nav>
