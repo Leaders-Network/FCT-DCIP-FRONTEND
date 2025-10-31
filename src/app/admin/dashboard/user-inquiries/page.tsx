@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // Import token setup for development
 import '@/utils/tokenSetup';
+import { userConflictInquiriesService, UserInquiry, InquiryFilters } from '@/services/userConflictInquiries';
 import {
     AlertTriangle,
     MessageCircle,
@@ -17,35 +18,11 @@ import {
     Eye,
     Reply,
     Archive,
-    Flag
+    Flag,
+    Plus,
+    Edit3,
+    ArrowUp
 } from 'lucide-react';
-
-interface UserInquiry {
-    _id: string;
-    policyId: string;
-    mergedReportId?: string;
-    userId: {
-        _id: string;
-        fullName: string;
-        email: string;
-        phoneNumber?: string;
-    };
-    conflictType: string;
-    description: string;
-    urgency: 'low' | 'medium' | 'high';
-    contactPreference: 'email' | 'phone' | 'both';
-    userContact: {
-        email: string;
-        phone: string;
-        preferredTime?: string;
-    };
-    inquiryStatus: 'open' | 'in_progress' | 'resolved' | 'closed';
-    assignedAdminId?: string;
-    adminResponse?: string;
-    createdAt: string;
-    respondedAt?: string;
-    referenceId: string;
-}
 
 const AMMCUserInquiriesPage = () => {
     const [inquiries, setInquiries] = useState<UserInquiry[]>([]);
@@ -53,113 +30,168 @@ const AMMCUserInquiriesPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [selectedInquiry, setSelectedInquiry] = useState<UserInquiry | null>(null);
     const [showResponseModal, setShowResponseModal] = useState(false);
+    const [showNoteModal, setShowNoteModal] = useState(false);
     const [responseText, setResponseText] = useState('');
-    const [filters, setFilters] = useState({
+    const [noteText, setNoteText] = useState('');
+    const [noteType, setNoteType] = useState<'general' | 'follow_up' | 'escalation' | 'resolution'>('general');
+    const [submitting, setSubmitting] = useState(false);
+    const [stats, setStats] = useState({
+        open: 0,
+        in_progress: 0,
+        resolved: 0,
+        closed: 0
+    });
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pages: 1,
+        total: 0
+    });
+    const [filters, setFilters] = useState<InquiryFilters>({
         status: 'all',
         urgency: 'all',
         conflictType: 'all',
-        search: ''
+        organization: 'AMMC', // Changed from NIA to AMMC
+        page: 1,
+        limit: 20
     });
+    const [searchTerm, setSearchTerm] = useState(''); useE
+    ffect(() => {
+        fetchInquiries();
+    }, [filters]);
 
     useEffect(() => {
-        fetchInquiries();
-    }, []);
+        const delayedSearch = setTimeout(() => {
+            if (searchTerm !== filters.search) {
+                setFilters(prev => ({ ...prev, search: searchTerm, page: 1 }));
+            }
+        }, 500);
+
+        return () => clearTimeout(delayedSearch);
+    }, [searchTerm]);
 
     const fetchInquiries = async () => {
         try {
             setLoading(true);
-            // Try multiple token keys for flexibility
-            const token = localStorage.getItem('adminToken') ||
-                localStorage.getItem('niaAdminToken') ||
-                localStorage.getItem('token') ||
-                localStorage.getItem('authToken');
+            setError(null);
 
-            if (!token) {
-                console.warn('No authentication token found, using mock data');
-                console.log('Available localStorage keys:', Object.keys(localStorage));
-                // Continue with mock data instead of throwing error
+            const response = await userConflictInquiriesService.getInquiries(filters);
+
+            if (response.success) {
+                setInquiries(response.data.inquiries);
+                setStats(response.data.stats);
+                setPagination(response.data.pagination);
             } else {
-                console.log('Found authentication token');
+                throw new Error(response.message || 'Failed to fetch inquiries');
             }
-
-            // Mock data for demonstration - replace with actual API call
-            const mockInquiries: UserInquiry[] = [
-                {
-                    _id: '1',
-                    policyId: 'POL-2024-001',
-                    mergedReportId: 'MR-2024-001',
-                    userId: {
-                        _id: 'user1',
-                        fullName: 'John Adebayo',
-                        email: 'john.adebayo@email.com',
-                        phoneNumber: '+234-803-123-4567'
-                    },
-                    conflictType: 'disagreement_findings',
-                    description: 'I disagree with the AMMC surveyor\'s assessment of my property\'s foundation. The report states there are structural issues, but I recently had renovations done that should have addressed these concerns.',
-                    urgency: 'high',
-                    contactPreference: 'both',
-                    userContact: {
-                        email: 'john.adebayo@email.com',
-                        phone: '+234-803-123-4567',
-                        preferredTime: 'Weekdays 9 AM - 5 PM'
-                    },
-                    inquiryStatus: 'open',
-                    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-                    referenceId: 'CF-234567'
-                },
-                {
-                    _id: '2',
-                    policyId: 'POL-2024-005',
-                    userId: {
-                        _id: 'user2',
-                        fullName: 'Amina Hassan',
-                        email: 'amina.hassan@email.com',
-                        phoneNumber: '+234-807-555-1234'
-                    },
-                    conflictType: 'surveyor_conduct',
-                    description: 'The AMMC surveyor arrived late to the appointment and seemed unprepared. They also did not provide clear explanations for their assessment methodology.',
-                    urgency: 'medium',
-                    contactPreference: 'email',
-                    userContact: {
-                        email: 'amina.hassan@email.com',
-                        phone: '+234-807-555-1234'
-                    },
-                    inquiryStatus: 'in_progress',
-                    assignedAdminId: 'admin1',
-                    createdAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
-                    referenceId: 'CF-345678'
-                },
-                {
-                    _id: '3',
-                    policyId: 'POL-2024-006',
-                    userId: {
-                        _id: 'user3',
-                        fullName: 'Ibrahim Musa',
-                        email: 'ibrahim.musa@email.com'
-                    },
-                    conflictType: 'missing_information',
-                    description: 'The merged report seems to be missing some sections that were discussed during the AMMC survey. Specifically, the electrical system assessment is not included.',
-                    urgency: 'low',
-                    contactPreference: 'email',
-                    userContact: {
-                        email: 'ibrahim.musa@email.com',
-                        phone: ''
-                    },
-                    inquiryStatus: 'resolved',
-                    assignedAdminId: 'admin2',
-                    adminResponse: 'Thank you for bringing this to our attention. I have reviewed the report and found that the electrical assessment was indeed omitted due to a technical error. I have updated the merged report to include this section.',
-                    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                    respondedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-                    referenceId: 'CF-456789'
-                }
-            ];
-
-            setInquiries(mockInquiries);
         } catch (error) {
             console.error('Failed to fetch inquiries:', error);
             setError(error instanceof Error ? error.message : 'Failed to load inquiries');
+
+            // Fallback to empty state instead of mock data
+            setInquiries([]);
+            setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
+            setPagination({ current: 1, pages: 1, total: 0 });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAssignToSelf = async (inquiryId: string) => {
+        try {
+            setSubmitting(true);
+            const response = await userConflictInquiriesService.assignInquiry(inquiryId, 'AMMC');
+
+            if (response.success) {
+                setInquiries(prev => prev.map(inquiry =>
+                    inquiry._id === inquiryId ? response.data : inquiry
+                ));
+            } else {
+                throw new Error('Failed to assign inquiry');
+            }
+        } catch (error) {
+            console.error('Failed to assign inquiry:', error);
+            setError(error instanceof Error ? error.message : 'Failed to assign inquiry');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+    const handleSendResponse = async () => {
+        if (!selectedInquiry || !responseText.trim()) return;
+
+        try {
+            setSubmitting(true);
+            const response = await userConflictInquiriesService.respondToInquiry(
+                selectedInquiry._id,
+                responseText,
+                'email'
+            );
+
+            if (response.success) {
+                setInquiries(prev => prev.map(inquiry =>
+                    inquiry._id === selectedInquiry._id ? response.data : inquiry
+                ));
+
+                setShowResponseModal(false);
+                setResponseText('');
+                setSelectedInquiry(null);
+            } else {
+                throw new Error('Failed to send response');
+            }
+        } catch (error) {
+            console.error('Failed to send response:', error);
+            setError(error instanceof Error ? error.message : 'Failed to send response');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleAddNote = async () => {
+        if (!selectedInquiry || !noteText.trim()) return;
+
+        try {
+            setSubmitting(true);
+            const response = await userConflictInquiriesService.addInternalNote(
+                selectedInquiry._id,
+                noteText,
+                noteType
+            );
+
+            if (response.success) {
+                setInquiries(prev => prev.map(inquiry =>
+                    inquiry._id === selectedInquiry._id ? response.data : inquiry
+                ));
+
+                setShowNoteModal(false);
+                setNoteText('');
+                setNoteType('general');
+                setSelectedInquiry(null);
+            } else {
+                throw new Error('Failed to add note');
+            }
+        } catch (error) {
+            console.error('Failed to add note:', error);
+            setError(error instanceof Error ? error.message : 'Failed to add note');
+        } finally {
+            setSubmitting(false);
+        }
+    }; con
+st handleCloseInquiry = async (inquiryId: string, reason?: string) => {
+        try {
+            setSubmitting(true);
+            const response = await userConflictInquiriesService.closeInquiry(inquiryId, reason);
+
+            if (response.success) {
+                setInquiries(prev => prev.map(inquiry =>
+                    inquiry._id === inquiryId ? response.data : inquiry
+                ));
+            } else {
+                throw new Error('Failed to close inquiry');
+            }
+        } catch (error) {
+            console.error('Failed to close inquiry:', error);
+            setError(error instanceof Error ? error.message : 'Failed to close inquiry');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -195,53 +227,8 @@ const AMMCUserInquiriesPage = () => {
         return labels[type] || type;
     };
 
-    const handleAssignToSelf = async (inquiryId: string) => {
-        try {
-            setInquiries(prev => prev.map(inquiry =>
-                inquiry._id === inquiryId
-                    ? { ...inquiry, inquiryStatus: 'in_progress', assignedAdminId: 'current_admin' }
-                    : inquiry
-            ));
-        } catch (error) {
-            console.error('Failed to assign inquiry:', error);
-        }
-    };
-
-    const handleSendResponse = async () => {
-        if (!selectedInquiry || !responseText.trim()) return;
-
-        try {
-            setInquiries(prev => prev.map(inquiry =>
-                inquiry._id === selectedInquiry._id
-                    ? {
-                        ...inquiry,
-                        inquiryStatus: 'resolved',
-                        adminResponse: responseText,
-                        respondedAt: new Date().toISOString()
-                    }
-                    : inquiry
-            ));
-
-            setShowResponseModal(false);
-            setResponseText('');
-            setSelectedInquiry(null);
-        } catch (error) {
-            console.error('Failed to send response:', error);
-        }
-    };
-
-    const filteredInquiries = inquiries.filter(inquiry => {
-        const matchesStatus = filters.status === 'all' || inquiry.inquiryStatus === filters.status;
-        const matchesUrgency = filters.urgency === 'all' || inquiry.urgency === filters.urgency;
-        const matchesType = filters.conflictType === 'all' || inquiry.conflictType === filters.conflictType;
-        const matchesSearch = filters.search === '' ||
-            inquiry.userId.fullName.toLowerCase().includes(filters.search.toLowerCase()) ||
-            inquiry.description.toLowerCase().includes(filters.search.toLowerCase()) ||
-            inquiry.referenceId.toLowerCase().includes(filters.search.toLowerCase());
-
-        return matchesStatus && matchesUrgency && matchesType && matchesSearch;
-    });
-
+    // Filtering is now handled by the backend API
+    const filteredInquiries = inquiries;
     if (loading) {
         return (
             <div className="space-y-6">
@@ -278,20 +265,19 @@ const AMMCUserInquiriesPage = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">AMMC User Conflict Inquiries</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">User Conflict Inquiries</h1>
                     <p className="text-gray-600 mt-1">
-                        Manage and respond to user-raised conflicts about AMMC survey reports
+                        Manage and respond to user-raised conflicts about survey reports (AMMC)
                     </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <div className="bg-green-50 px-3 py-1 rounded-full">
-                        <span className="text-sm font-medium text-green-700">
+                    <div className="bg-blue-50 px-3 py-1 rounded-full">
+                        <span className="text-sm font-medium text-blue-700">
                             {filteredInquiries.length} inquiries
                         </span>
                     </div>
                 </div>
             </div>
-
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -302,7 +288,7 @@ const AMMCUserInquiriesPage = () => {
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Open Inquiries</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {inquiries.filter(i => i.inquiryStatus === 'open').length}
+                                {stats.open}
                             </p>
                         </div>
                     </div>
@@ -316,7 +302,7 @@ const AMMCUserInquiriesPage = () => {
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">In Progress</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {inquiries.filter(i => i.inquiryStatus === 'in_progress').length}
+                                {stats.in_progress}
                             </p>
                         </div>
                     </div>
@@ -330,7 +316,7 @@ const AMMCUserInquiriesPage = () => {
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Resolved</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {inquiries.filter(i => i.inquiryStatus === 'resolved').length}
+                                {stats.resolved}
                             </p>
                         </div>
                     </div>
@@ -350,7 +336,6 @@ const AMMCUserInquiriesPage = () => {
                     </div>
                 </div>
             </div>
-
             {/* Filters */}
             <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -360,10 +345,10 @@ const AMMCUserInquiriesPage = () => {
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input
                                 type="text"
-                                value={filters.search}
-                                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search by name, reference, or description..."
-                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             />
                         </div>
                     </div>
@@ -372,8 +357,8 @@ const AMMCUserInquiriesPage = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select
                             value={filters.status}
-                            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value, page: 1 }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="all">All Statuses</option>
                             <option value="open">Open</option>
@@ -387,8 +372,8 @@ const AMMCUserInquiriesPage = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Urgency</label>
                         <select
                             value={filters.urgency}
-                            onChange={(e) => setFilters(prev => ({ ...prev, urgency: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            onChange={(e) => setFilters(prev => ({ ...prev, urgency: e.target.value, page: 1 }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="all">All Urgencies</option>
                             <option value="high">High</option>
@@ -401,8 +386,8 @@ const AMMCUserInquiriesPage = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                         <select
                             value={filters.conflictType}
-                            onChange={(e) => setFilters(prev => ({ ...prev, conflictType: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            onChange={(e) => setFilters(prev => ({ ...prev, conflictType: e.target.value, page: 1 }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="all">All Types</option>
                             <option value="disagreement_findings">Disagreement with Findings</option>
@@ -414,7 +399,6 @@ const AMMCUserInquiriesPage = () => {
                     </div>
                 </div>
             </div>
-
             {/* Inquiries List */}
             <div className="space-y-4">
                 {filteredInquiries.length === 0 ? (
@@ -465,7 +449,6 @@ const AMMCUserInquiriesPage = () => {
                                     {inquiry.description}
                                 </p>
                             </div>
-
                             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                                     <div className="flex items-center">
@@ -487,7 +470,8 @@ const AMMCUserInquiriesPage = () => {
                                     {inquiry.inquiryStatus === 'open' && (
                                         <button
                                             onClick={() => handleAssignToSelf(inquiry._id)}
-                                            className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+                                            disabled={submitting}
+                                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             Assign to Me
                                         </button>
@@ -497,14 +481,27 @@ const AMMCUserInquiriesPage = () => {
                                         <button
                                             onClick={() => {
                                                 setSelectedInquiry(inquiry);
+                                                setResponseText('');
                                                 setShowResponseModal(true);
                                             }}
-                                            className="flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                                            className="flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
                                         >
                                             <Reply className="h-4 w-4 mr-1" />
                                             Respond
                                         </button>
                                     )}
+
+                                    <button
+                                        onClick={() => {
+                                            setSelectedInquiry(inquiry);
+                                            setNoteText('');
+                                            setShowNoteModal(true);
+                                        }}
+                                        className="flex items-center px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors"
+                                    >
+                                        <Plus className="h-4 w-4 mr-1" />
+                                        Add Note
+                                    </button>
 
                                     {inquiry.adminResponse && (
                                         <button
@@ -519,13 +516,68 @@ const AMMCUserInquiriesPage = () => {
                                             View Response
                                         </button>
                                     )}
+
+                                    {inquiry.inquiryStatus !== 'closed' && (
+                                        <button
+                                            onClick={() => handleCloseInquiry(inquiry._id, 'Closed by admin')}
+                                            disabled={submitting}
+                                            className="flex items-center px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <Archive className="h-4 w-4 mr-1" />
+                                            Close
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     ))
                 )}
             </div>
+            {/* Pagination */}
+            {pagination.pages > 1 && (
+                <div className="bg-white px-6 py-4 rounded-lg shadow-sm border">
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600">
+                            Showing {((pagination.current - 1) * (filters.limit || 20)) + 1} to {Math.min(pagination.current * (filters.limit || 20), pagination.total)} of {pagination.total} inquiries
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <button
+                                onClick={() => setFilters(prev => ({ ...prev, page: Math.max(1, pagination.current - 1) }))}
+                                disabled={pagination.current === 1}
+                                className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Previous
+                            </button>
 
+                            {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                                const page = i + Math.max(1, pagination.current - 2);
+                                if (page > pagination.pages) return null;
+
+                                return (
+                                    <button
+                                        key={page}
+                                        onClick={() => setFilters(prev => ({ ...prev, page }))}
+                                        className={`px-3 py-1 border rounded-md text-sm ${page === pagination.current
+                                            ? 'bg-blue-600 text-white border-blue-600'
+                                            : 'border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {page}
+                                    </button>
+                                );
+                            })}
+
+                            <button
+                                onClick={() => setFilters(prev => ({ ...prev, page: Math.min(pagination.pages, pagination.current + 1) }))}
+                                disabled={pagination.current === pagination.pages}
+                                className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Response Modal */}
             {showResponseModal && selectedInquiry && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -555,7 +607,7 @@ const AMMCUserInquiriesPage = () => {
                                     value={responseText}
                                     onChange={(e) => setResponseText(e.target.value)}
                                     rows={6}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Type your response to the user's inquiry..."
                                     readOnly={!!selectedInquiry.adminResponse}
                                 />
@@ -576,12 +628,79 @@ const AMMCUserInquiriesPage = () => {
                             {!selectedInquiry.adminResponse && (
                                 <button
                                     onClick={handleSendResponse}
-                                    disabled={!responseText.trim()}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    disabled={!responseText.trim() || submitting}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    Send Response
+                                    {submitting ? 'Sending...' : 'Send Response'}
                                 </button>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Add Note Modal */}
+            {showNoteModal && selectedInquiry && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                        <div className="p-6 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Add Internal Note
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Reference: {selectedInquiry.referenceId} • {selectedInquiry.userId.fullName}
+                            </p>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Note Type
+                                </label>
+                                <select
+                                    value={noteType}
+                                    onChange={(e) => setNoteType(e.target.value as any)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="general">General Note</option>
+                                    <option value="follow_up">Follow-up Required</option>
+                                    <option value="escalation">Escalation</option>
+                                    <option value="resolution">Resolution Note</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Note Content
+                                </label>
+                                <textarea
+                                    value={noteText}
+                                    onChange={(e) => setNoteText(e.target.value)}
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Add your internal note here..."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+                            <button
+                                onClick={() => {
+                                    setShowNoteModal(false);
+                                    setNoteText('');
+                                    setNoteType('general');
+                                    setSelectedInquiry(null);
+                                }}
+                                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAddNote}
+                                disabled={!noteText.trim() || submitting}
+                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {submitting ? 'Adding...' : 'Add Note'}
+                            </button>
                         </div>
                     </div>
                 </div>

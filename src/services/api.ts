@@ -963,10 +963,7 @@ export const adminApi = {
     return response.data;
   },
 
-  deleteEmployee: async (employeeId: string) => {
-    const response = await api.delete(`/admin/employees/${employeeId}`);
-    return response.data;
-  },
+
 
   updateEmployeeStatus: async (employeeId: string, status: string) => {
     const response = await api.patch(`/admin/employees/${employeeId}/status`, { status });
@@ -1169,26 +1166,7 @@ export const adminApi = {
     return response.data;
   },
 
-  // Delete operations
-  deleteProperty: async (propertyId: string) => {
-    const response = await api.delete(`/property/${propertyId}`);
-    return response.data;
-  },
 
-  deletePolicyRequest: async (ammcId: string) => {
-    const response = await api.delete(`/policy/${ammcId}`);
-    return response.data;
-  },
-
-  deleteAdministrator: async (adminId: string) => {
-    const response = await api.delete(`/admin/administrators/${adminId}`);
-    return response.data;
-  },
-
-  deleteSurveyor: async (surveyorId: string) => {
-    const response = await api.delete(`/admin/surveyor/${surveyorId}`);
-    return response.data;
-  },
 };
 
 export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
@@ -1209,6 +1187,69 @@ export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
       throw err;
     }
   }) as T;
+};
+
+// Additional API utility functions for new services
+interface ApiResponse<T = any> {
+    success: boolean;
+    data?: T;
+    message?: string;
+    error?: string;
+}
+
+/**
+ * Make an authenticated API request using the existing axios instance
+ */
+export const apiRequest = async <T = any>(
+    endpoint: string,
+    options: RequestInit = {}
+): Promise<ApiResponse<T>> => {
+    try {
+        const method = (options.method || 'GET').toLowerCase();
+        const data = options.body ? JSON.parse(options.body as string) : undefined;
+        
+        let response;
+        
+        switch (method) {
+            case 'get':
+                response = await api.get(endpoint);
+                break;
+            case 'post':
+                response = await api.post(endpoint, data);
+                break;
+            case 'put':
+                response = await api.put(endpoint, data);
+                break;
+            case 'patch':
+                response = await api.patch(endpoint, data);
+                break;
+            case 'delete':
+                response = await api.delete(endpoint);
+                break;
+            default:
+                throw new Error(`Unsupported HTTP method: ${method}`);
+        }
+
+        return {
+            success: true,
+            data: response.data,
+            message: response.data?.message
+        };
+
+    } catch (error: any) {
+        console.error('API Request Error:', error);
+        
+        const errorMessage = error.response?.data?.message || 
+                           error.response?.data?.error || 
+                           error.message || 
+                           'An unexpected error occurred';
+
+        return {
+            success: false,
+            error: errorMessage,
+            message: errorMessage
+        };
+    }
 };
 
 export default api;
