@@ -10,7 +10,6 @@ const Hero: React.FC = () => {
   const [currentImage, setCurrentImage] = useState(0)
 
 const backgroundImages = [
-
      "/bg-hero-1.jpg",
     "/bg-hero-4.jpg",
     "/bg-hero-5.jpg",
@@ -19,10 +18,6 @@ const backgroundImages = [
     "/bg-hero-8.jpg",
     "/bg-hero-9.jpg",
     "/bg-hero-11.jpg",
-     "/bg-construct-1.webp",
-    "/bg-construct-2.webp",
-    "/bg-construct-3.jpg",
-     "/bg-construct-1.webp",
     "/bg-construct-2.webp",
     "/bg-construct-3.jpg",
 ]
@@ -87,16 +82,16 @@ useEffect(() => {
           <div className="flex space-x-4">
             <button
               onClick={() => openModal("auth")}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition"
+              className="bg-green-600 text-white px-6 py-3 font-semibold rounded-lg shadow-md hover:bg-green-700 transition"
             >
-              Login/Register Now<span className="ml-2">→</span>
+              Register Now<span className="ml-2">→</span>
             </button>
 
             <button
               onClick={() => openModal("contact")}
-              className="bg-white text-green-600 px-6 py-3 rounded-lg shadow-md hover:bg-gray-100 transition"
+              className="bg-white text-green-600 px-6 font-semibold py-3 rounded-lg shadow-md hover:bg-gray-100 transition"
             >
-              Contact Us
+              Login
             </button>
           </div>
         </div>
