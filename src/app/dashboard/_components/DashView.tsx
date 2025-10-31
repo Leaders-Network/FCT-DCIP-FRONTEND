@@ -258,7 +258,7 @@ const Dashview = () => {
                     <tr className="text-left border-b">
                       <th className="pb-2 font-bold">Name</th>
                       <th className="pb-2 font-bold">Survey Date</th>
-                      <th className="pb-2 font-bold">AMMC ID</th>
+                      <th className="pb-2 font-bold">AMMC Policy ID</th>
                       <th className="pb-2 font-bold">Status</th>
                       <th className="pb-2 font-bold">Actions</th>
                     </tr>
