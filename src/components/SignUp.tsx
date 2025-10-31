@@ -4,8 +4,9 @@ import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
+import { toast } from "sonner";
 
 const signUpSchema = z.object({
   fullName: z.string().min(1, "Full Name is required"),
@@ -19,6 +20,29 @@ const signUpSchema = z.object({
 });
 
 export default function SignUp() {
+     const [currentImage, setCurrentImage] = useState(0)
+     const backgroundImages = [
+      "/bg-construct-2.webp",
+      "/bg-hero-1.jpg",
+      "/bg-hero-4.jpg",
+      "/bg-hero-5.jpg",
+      "/bg-hero-6.jpg",
+      "/bg-hero-7.jpg",
+      "/bg-hero-8.jpg",
+      "/bg-hero-9.jpg",
+      "/bg-hero-11.jpg",
+  ]
+  
+  useEffect(() => {
+    const interval = setInterval(()=> {
+      setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
+    },5000); 
+    return () => clearInterval(interval);
+  }, [backgroundImages.length]);
+
+
+    
+  
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
       <div className="w-full md:w-2/3 flex flex-col p-4 md:p-8">
@@ -29,15 +53,34 @@ export default function SignUp() {
           <SignUpForm />
         </main>
       </div>
-      <div className="hidden md:block md:w-1/3 relative">
-        <Image
-          className="w-full h-full object-cover"
-          src="/abuja-bg.png"
-          alt="Abuja background"
-          width={500}
-          height={900}
-        />
-        <div className="absolute inset-0 bg-black opacity-20" />
+      <div className="hidden md:block md:w-1/3 relative overflow-hidden">
+        {backgroundImages.map((src, index) => (
+          <Image
+            key={index}
+            src={src}
+            alt={`Background ${index + 1}`}
+            fill
+            priority={index === 0}
+            className={`object-cover transition-opacity duration-[2000ms] ${
+              index === currentImage ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
+        
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/65"></div>
+
+        {/* Text Overlay */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 md:px-10 text-white">
+          <div className="max-w-md">
+            <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">
+              Welcome to FCT-DCIP
+            </h2>
+            <p className="text-sm md:text-[1.1rem] leading-relaxed fade-in-text mt-2">
+              Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -134,6 +177,7 @@ function SignUpForm() {
     try {
       signUpSchema.parse({ fullName, email, phone: phoneNumber, password, confirmPassword });
       setErrors({});
+      toast.success("All inputs look good! ✅")
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -142,6 +186,11 @@ function SignUpForm() {
           return acc;
         }, {} as { [key: string]: string });
         setErrors(formattedErrors);
+
+        //Show the first validation error as a red toast
+        toast.error(formattedErrors[Object.keys(formattedErrors)[0]]);
+      }else {
+        toast.error("Something went wrong. Please try again.")
       }
       return false;
     }
@@ -225,7 +274,12 @@ function InputField({ id, type, label, value, onChange, error }: {
       >
         {label}
       </label>
-      {error && <p className="text-red-500 text-xs md:text-sm mt-1">{error}</p>}
+      {error && (
+        <p 
+        className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -287,15 +341,25 @@ function SignUpButton({
           console.error("Error parsing response:", parseError);
           // Use default error message if parsing fails
         }
+        toast.error(errorMessage || "Failed to request OTP. ❌");
         throw new Error(errorMessage);
       }
 
       await response.json();
+
+      toast.success("OTP sent to your email! ✅");
       localStorage.setItem("pendingUser", JSON.stringify({ fullName, phone, email, password }));
       localStorage.setItem("pendingEmail", email);
       router.push("/verify");
     } catch (error) {
       console.error("Sign-up error:", error);
+
+          const message =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+
+      setError(message);
+
+      toast.error(message);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -304,7 +368,12 @@ function SignUpButton({
 
   return (
     <>
-      {error && <p className="text-red-500 text-xs md:text-sm mb-4">{error}</p>}
+      {error && (
+        <p 
+        className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
+          {error}
+        </p>
+      )}
       <button
         onClick={handleSubmit}
         disabled={isLoading}

@@ -5,9 +5,32 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 // Component for handling new account verification
 export default function Verify() {
+
+  const [currentImage, setCurrentImage] = useState(0)
+       const backgroundImages = [
+        "/bg-construct-2.webp",
+        "/bg-hero-1.jpg",
+        "/bg-hero-4.jpg",
+        "/bg-hero-5.jpg",
+        "/bg-hero-6.jpg",
+        "/bg-hero-7.jpg",
+        "/bg-hero-8.jpg",
+        "/bg-hero-9.jpg",
+        "/bg-hero-11.jpg",
+    ]
+    
+    useEffect(() => {
+      const interval = setInterval(()=> {
+        setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
+      },5000); 
+      return () => clearInterval(interval);
+    }, [backgroundImages.length]);
+  
+
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +48,9 @@ export default function Verify() {
     setError(null);
 
     if (otp.length !== 5) {
-      setError("OTP must be 5 digits");
+      toast.error("OTP must be 5 digits", {
+        description: "Please check and try again.",
+      });
       return;
     }
 
@@ -34,14 +59,19 @@ export default function Verify() {
 
     const pendingUserStr = localStorage.getItem("pendingUser");
     if (!pendingUserStr) {
-      setError("User data not found. Please try signing up again.");
+      toast.error("User data not found", {
+        description: "Please try signing up again.",
+      });
       setIsLoading(false);
+      // router.push("/signup");
       return;
     }
 
     const pendingUser = JSON.parse(pendingUserStr);
 
     try {
+
+      // toast.loading("Verifying OTP...");
       // Verify OTP
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
       const verifyResponse = await fetch(
@@ -63,6 +93,11 @@ export default function Verify() {
         const errorData = await verifyResponse.json();
         throw new Error(errorData.message || `HTTP error! status: ${verifyResponse.status}`);
       }
+
+       toast.dismiss(); // remove the loading toast
+      toast.success("✅ OTP Verified Successfully!", {
+        description: "Completing your registration...",
+      });
 
       // Complete registration
       const registerResponse = await fetch(
@@ -99,10 +134,22 @@ export default function Verify() {
       localStorage.removeItem("pendingUser");
       localStorage.removeItem("pendingEmail");
 
-      router.push("/dashboard");
+      // 🎉 Success message before redirect
+      toast.success("Welcome aboard 🎉", {
+        description: `Glad to have you, ${result.user.fullname}!`,
+        duration: 4000,
+      });
+
+      // router.push("/dashboard");
+      setTimeout(() => router.push("/dashboard"), 1200);
     } catch (error) {
       console.error("Verification/Registration error:", error);
-      setError(error instanceof Error ? error.message : "An unexpected error occurred");
+
+      const message =  error instanceof Error
+          ? error.message
+          : "An unexpected error occurred. Please try again.";
+          setError(message);
+      toast.error("Verification failed", { description: message });
     } finally {
       setIsLoading(false);
     }
@@ -124,16 +171,35 @@ export default function Verify() {
           />
         </main>
       </div>
-      <div className="hidden md:block md:w-1/3 relative">
-        <Image
-          width={500}
-          height={900}
-          className="w-full h-full object-cover"
-          src="/abuja-bg.png"
-          alt="Abuja background"
-        />
-        <div className="absolute inset-0 bg-black opacity-20" />
-      </div>
+      <div className="hidden md:block md:w-1/3 relative overflow-hidden">
+              {backgroundImages.map((src, index) => (
+                <Image
+                  key={index}
+                  src={src}
+                  alt={`Background ${index + 1}`}
+                  fill
+                  priority={index === 0}
+                  className={`object-cover transition-opacity duration-[2000ms] ${
+                    index === currentImage ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              ))}
+              
+              {/* Dark Overlay */}
+              <div className="absolute inset-0 bg-black/60"></div>
+      
+              {/* Text Overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 md:px-10 text-white">
+                <div className="max-w-md">
+                  <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">
+                    OTP Verification
+                  </h2>
+                  <p className="text-[3rem] md:text-[1.5rem] leading-relaxed fade-in-text mt-2">
+                    Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
+                  </p>
+                </div>
+              </div>
+            </div>
     </div>
   );
 }
@@ -250,7 +316,9 @@ function VerifyForm({
         </label>
       </div>
 
-      {error && <p className="text-red-500 text-xs md:text-sm mb-4">{error}</p>}
+      {error && <p 
+        className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
+          {error}</p>}
 
       <button
         type="submit"

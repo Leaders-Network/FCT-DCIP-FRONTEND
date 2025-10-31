@@ -66,7 +66,7 @@ useEffect(() => {
         className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
         />
       ))}
-      <div className="absolute inset-0 bg-black/60"></div>
+      <div className="absolute inset-0 bg-black/65"></div>
 
       {/* Hero content */}
       <div className="absolute inset-0 flex items-center">
@@ -80,19 +80,22 @@ useEffect(() => {
           </p>
 
           <div className="flex space-x-4">
+            <Link href="/signup">
             <button
-              onClick={() => openModal("auth")}
               className="bg-green-600 text-white px-6 py-3 font-semibold rounded-lg shadow-md hover:bg-green-700 transition"
             >
+              
               Register Now<span className="ml-2">→</span>
             </button>
-
+             </Link>
+            
+            <Link href="/login">
             <button
-              onClick={() => openModal("contact")}
               className="bg-white text-green-600 px-6 font-semibold py-3 rounded-lg shadow-md hover:bg-gray-100 transition"
             >
               Login
             </button>
+            </Link>
           </div>
         </div>
       </div>

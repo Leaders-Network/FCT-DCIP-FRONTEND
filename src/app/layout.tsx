@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthProvider";
 //always run npm run lint to heck errors before deployment 
 import CookieConsent from "@/components/CookieConsent"
 import ChatWidget from "@/components/ChatWidget"
+import { Toaster} from "sonner"
 
 
 export const metadata: Metadata = {
@@ -26,6 +27,18 @@ export default function RootLayout({
         <AuthProvider>{children}</AuthProvider>
         <CookieConsent />
         <ChatWidget />
+        <Toaster
+          richColors
+          position="top-right"
+          toastOptions={{
+            duration: 4000, // 4s auto-close
+            classNames: {
+              toast: "rounded-lg shadow-md font-semibold",
+              title: "text-base",
+              description: "text-sm text-gray-200",
+            },
+          }}
+        />
       </body>
 
 
