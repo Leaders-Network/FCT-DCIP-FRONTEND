@@ -229,16 +229,16 @@ const AMMCProcessingMonitorPage = () => {
             {/* System Health Alert */}
             {systemHealth && systemHealth.systemStatus !== 'healthy' && (
                 <div className={`p-4 rounded-lg border ${systemHealth.systemStatus === 'critical'
-                        ? 'bg-red-50 border-red-200'
-                        : 'bg-yellow-50 border-yellow-200'
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-yellow-50 border-yellow-200'
                     }`}>
                     <div className="flex items-center">
                         {getSystemStatusIcon(systemHealth.systemStatus)}
                         <div className="ml-3">
-                            <h3 className={`text-sm font-medium ${getSystemStatusColor(systemHealth.systemStatus)}`}>
-                                System Status: {systemHealth.systemStatus.toUpperCase()}
+                            <h3 className={`text-sm font-medium ${getSystemStatusColor(systemHealth?.systemStatus)}`}>
+                                System Status: {systemHealth?.systemStatus?.toUpperCase() || 'UNKNOWN'}
                             </h3>
-                            {systemHealth.alerts.length > 0 && (
+                            {systemHealth?.alerts?.length > 0 && (
                                 <div className="mt-2">
                                     <ul className="text-sm text-gray-600 space-y-1">
                                         {systemHealth.alerts.map((alert, index) => (
@@ -262,7 +262,7 @@ const AMMCProcessingMonitorPage = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Total Assignments</p>
-                                <p className="text-2xl font-bold text-gray-900">{overview.overview.totalDualAssignments}</p>
+                                <p className="text-2xl font-bold text-gray-900">{overview?.overview?.totalDualAssignments || 0}</p>
                             </div>
                         </div>
                     </div>
@@ -274,7 +274,7 @@ const AMMCProcessingMonitorPage = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Merged Reports</p>
-                                <p className="text-2xl font-bold text-gray-900">{overview.overview.totalMergedReports}</p>
+                                <p className="text-2xl font-bold text-gray-900">{overview?.overview?.totalMergedReports || 0}</p>
                             </div>
                         </div>
                     </div>
@@ -286,7 +286,7 @@ const AMMCProcessingMonitorPage = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Conflict Flags</p>
-                                <p className="text-2xl font-bold text-gray-900">{overview.overview.totalConflictFlags}</p>
+                                <p className="text-2xl font-bold text-gray-900">{overview?.overview?.totalConflictFlags || 0}</p>
                             </div>
                         </div>
                     </div>
@@ -298,7 +298,7 @@ const AMMCProcessingMonitorPage = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">User Inquiries</p>
-                                <p className="text-2xl font-bold text-gray-900">{overview.overview.totalUserInquiries}</p>
+                                <p className="text-2xl font-bold text-gray-900">{overview?.overview?.totalUserInquiries || 0}</p>
                             </div>
                         </div>
                     </div>
@@ -317,19 +317,22 @@ const AMMCProcessingMonitorPage = () => {
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Avg Processing Time:</span>
                                 <span className="text-sm font-medium text-gray-900">
-                                    {formatDuration(performanceMetrics.processingPerformance.avgProcessingTime)}
+                                    {performanceMetrics?.processingPerformance?.avgProcessingTime
+                                        ? formatDuration(performanceMetrics.processingPerformance.avgProcessingTime)
+                                        : 'N/A'
+                                    }
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Total Reports:</span>
                                 <span className="text-sm font-medium text-gray-900">
-                                    {performanceMetrics.processingPerformance.totalReports}
+                                    {performanceMetrics?.processingPerformance?.totalReports || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Released Reports:</span>
                                 <span className="text-sm font-medium text-green-600">
-                                    {performanceMetrics.successRates.released}
+                                    {performanceMetrics?.successRates?.released || 0}
                                 </span>
                             </div>
                         </div>
@@ -346,25 +349,25 @@ const AMMCProcessingMonitorPage = () => {
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Critical:</span>
                                 <span className="text-sm font-medium text-red-600">
-                                    {overview.activeConflictsBySeverity.critical}
+                                    {overview?.activeConflictsBySeverity?.critical || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">High:</span>
                                 <span className="text-sm font-medium text-orange-600">
-                                    {overview.activeConflictsBySeverity.high}
+                                    {overview?.activeConflictsBySeverity?.high || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Medium:</span>
                                 <span className="text-sm font-medium text-yellow-600">
-                                    {overview.activeConflictsBySeverity.medium}
+                                    {overview?.activeConflictsBySeverity?.medium || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Low:</span>
                                 <span className="text-sm font-medium text-green-600">
-                                    {overview.activeConflictsBySeverity.low}
+                                    {overview?.activeConflictsBySeverity?.low || 0}
                                 </span>
                             </div>
                         </div>
@@ -375,31 +378,37 @@ const AMMCProcessingMonitorPage = () => {
                     <div className="bg-white p-6 rounded-lg shadow-sm border">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-900">System Health</h3>
-                            {getSystemStatusIcon(systemHealth.systemStatus)}
+                            {getSystemStatusIcon(systemHealth?.systemStatus || 'unknown')}
                         </div>
                         <div className="space-y-3">
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">System Status:</span>
-                                <span className={`text-sm font-medium ${getSystemStatusColor(systemHealth.systemStatus)}`}>
-                                    {systemHealth.systemStatus.charAt(0).toUpperCase() + systemHealth.systemStatus.slice(1)}
+                                <span className={`text-sm font-medium ${getSystemStatusColor(systemHealth?.systemStatus || 'unknown')}`}>
+                                    {systemHealth?.systemStatus
+                                        ? systemHealth.systemStatus.charAt(0).toUpperCase() + systemHealth.systemStatus.slice(1)
+                                        : 'Unknown'
+                                    }
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Recent Activity:</span>
                                 <span className="text-sm font-medium text-gray-900">
-                                    {systemHealth.metrics.recentActivity}
+                                    {systemHealth?.metrics?.recentActivity || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Stuck Processing:</span>
-                                <span className={`text-sm font-medium ${systemHealth.metrics.stuckProcessing > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                    {systemHealth.metrics.stuckProcessing}
+                                <span className={`text-sm font-medium ${(systemHealth?.metrics?.stuckProcessing || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                    {systemHealth?.metrics?.stuckProcessing || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Last Check:</span>
                                 <span className="text-sm font-medium text-gray-900">
-                                    {new Date(systemHealth.lastChecked).toLocaleTimeString()}
+                                    {systemHealth?.lastChecked
+                                        ? new Date(systemHealth.lastChecked).toLocaleTimeString()
+                                        : 'N/A'
+                                    }
                                 </span>
                             </div>
                         </div>
@@ -412,11 +421,11 @@ const AMMCProcessingMonitorPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-white p-6 rounded-lg shadow-sm border">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Assignments</h3>
-                        {activeProcessing.activeAssignments.length === 0 ? (
+                        {(activeProcessing?.activeAssignments?.length || 0) === 0 ? (
                             <p className="text-gray-600 text-center py-8">No active assignments</p>
                         ) : (
                             <div className="space-y-3">
-                                {activeProcessing.activeAssignments.slice(0, 5).map((assignment) => (
+                                {activeProcessing?.activeAssignments?.slice(0, 5).map((assignment) => (
                                     <div key={assignment._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div>
                                             <p className="text-sm font-medium text-gray-900">{assignment.policyId}</p>
@@ -426,14 +435,14 @@ const AMMCProcessingMonitorPage = () => {
                                         </div>
                                         <div className="flex items-center space-x-2">
                                             <div className={`w-3 h-3 rounded-full ${assignment.completionStatus === 100 ? 'bg-green-500' :
-                                                    assignment.completionStatus === 50 ? 'bg-yellow-500' : 'bg-gray-300'
+                                                assignment.completionStatus === 50 ? 'bg-yellow-500' : 'bg-gray-300'
                                                 }`}></div>
                                         </div>
                                     </div>
                                 ))}
-                                {activeProcessing.activeAssignments.length > 5 && (
+                                {(activeProcessing?.activeAssignments?.length || 0) > 5 && (
                                     <p className="text-sm text-gray-600 text-center">
-                                        +{activeProcessing.activeAssignments.length - 5} more assignments
+                                        +{(activeProcessing?.activeAssignments?.length || 0) - 5} more assignments
                                     </p>
                                 )}
                             </div>
@@ -442,11 +451,11 @@ const AMMCProcessingMonitorPage = () => {
 
                     <div className="bg-white p-6 rounded-lg shadow-sm border">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending Reports</h3>
-                        {activeProcessing.pendingReports.length === 0 ? (
+                        {(activeProcessing?.pendingReports?.length || 0) === 0 ? (
                             <p className="text-gray-600 text-center py-8">No pending reports</p>
                         ) : (
                             <div className="space-y-3">
-                                {activeProcessing.pendingReports.slice(0, 5).map((report) => (
+                                {activeProcessing?.pendingReports?.slice(0, 5).map((report) => (
                                     <div key={report._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div>
                                             <p className="text-sm font-medium text-gray-900">{report.policyId}</p>
@@ -459,9 +468,9 @@ const AMMCProcessingMonitorPage = () => {
                                         </div>
                                     </div>
                                 ))}
-                                {activeProcessing.pendingReports.length > 5 && (
+                                {(activeProcessing?.pendingReports?.length || 0) > 5 && (
                                     <p className="text-sm text-gray-600 text-center">
-                                        +{activeProcessing.pendingReports.length - 5} more reports
+                                        +{(activeProcessing?.pendingReports?.length || 0) - 5} more reports
                                     </p>
                                 )}
                             </div>
@@ -476,18 +485,21 @@ const AMMCProcessingMonitorPage = () => {
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
                         <div className="text-sm text-gray-600">
-                            Last updated: {new Date(recentActivity.lastUpdated).toLocaleTimeString()}
+                            Last updated: {recentActivity?.lastUpdated
+                                ? new Date(recentActivity.lastUpdated).toLocaleTimeString()
+                                : 'N/A'
+                            }
                         </div>
                     </div>
-                    {recentActivity.activities.length === 0 ? (
+                    {(recentActivity?.activities?.length || 0) === 0 ? (
                         <p className="text-gray-600 text-center py-8">No recent activity</p>
                     ) : (
                         <div className="space-y-3">
-                            {recentActivity.activities.slice(0, 10).map((activity, index) => (
+                            {recentActivity?.activities?.slice(0, 10).map((activity, index) => (
                                 <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                                     <div className={`p-1 rounded-full ${activity.type === 'report_merged' ? 'bg-green-100' :
-                                            activity.type === 'conflict_detected' ? 'bg-orange-100' :
-                                                'bg-blue-100'
+                                        activity.type === 'conflict_detected' ? 'bg-orange-100' :
+                                            'bg-blue-100'
                                         }`}>
                                         {activity.type === 'report_merged' ? (
                                             <FileText className="h-4 w-4 text-green-600" />
@@ -511,9 +523,9 @@ const AMMCProcessingMonitorPage = () => {
                                     </div>
                                 </div>
                             ))}
-                            {recentActivity.activities.length > 10 && (
+                            {(recentActivity?.activities?.length || 0) > 10 && (
                                 <p className="text-sm text-gray-600 text-center">
-                                    +{recentActivity.activities.length - 10} more activities
+                                    +{(recentActivity?.activities?.length || 0) - 10} more activities
                                 </p>
                             )}
                         </div>
