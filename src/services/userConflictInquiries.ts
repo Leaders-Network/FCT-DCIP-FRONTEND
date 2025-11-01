@@ -43,6 +43,7 @@ export interface InquiryFilters {
     urgency?: string;
     conflictType?: string;
     organization?: string;
+    search?: string;
     page?: number;
     limit?: number;
 }
@@ -93,11 +94,11 @@ export interface InquiryResponse {
 }
 
 class UserConflictInquiriesService {
-    private baseUrl = '/api/v1/user-conflict-inquiries';
+    private baseUrl = '/user-conflict-inquiries';
 
     async getInquiries(filters: InquiryFilters = {}): Promise<InquiryResponse> {
         const queryParams = new URLSearchParams();
-        
+
         Object.entries(filters).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
                 queryParams.append(key, value.toString());

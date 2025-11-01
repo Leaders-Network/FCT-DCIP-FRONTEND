@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // Import token setup for development
 import '@/utils/tokenSetup';
+import '@/utils/apiTest';
 import { userConflictInquiriesService, UserInquiry, InquiryFilters } from '@/services/userConflictInquiries';
 import {
     AlertTriangle,
@@ -233,7 +234,7 @@ const UserInquiriesPage = () => {
     };
 
     // Filtering is now handled by the backend API
-    const filteredInquiries = inquiries;
+    const filteredInquiries = inquiries || [];
 
     if (loading) {
         return (
@@ -279,7 +280,7 @@ const UserInquiriesPage = () => {
                 <div className="flex items-center space-x-2">
                     <div className="bg-blue-50 px-3 py-1 rounded-full">
                         <span className="text-sm font-medium text-blue-700">
-                            {filteredInquiries.length} inquiries
+                            {filteredInquiries?.length || 0} inquiries
                         </span>
                     </div>
                 </div>
@@ -295,7 +296,7 @@ const UserInquiriesPage = () => {
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Open Inquiries</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {stats.open}
+                                {stats?.open || 0}
                             </p>
                         </div>
                     </div>
@@ -309,7 +310,7 @@ const UserInquiriesPage = () => {
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">In Progress</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {stats.in_progress}
+                                {stats?.in_progress || 0}
                             </p>
                         </div>
                     </div>
@@ -323,7 +324,7 @@ const UserInquiriesPage = () => {
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Resolved</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {stats.resolved}
+                                {stats?.resolved || 0}
                             </p>
                         </div>
                     </div>
@@ -337,7 +338,7 @@ const UserInquiriesPage = () => {
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">High Priority</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {inquiries.filter(i => i.urgency === 'high').length}
+                                {inquiries?.filter(i => i.urgency === 'high')?.length || 0}
                             </p>
                         </div>
                     </div>
@@ -410,7 +411,7 @@ const UserInquiriesPage = () => {
 
             {/* Inquiries List */}
             <div className="space-y-4">
-                {filteredInquiries.length === 0 ? (
+                {(filteredInquiries?.length || 0) === 0 ? (
                     <div className="bg-white p-12 rounded-lg shadow-sm border text-center">
                         <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No inquiries found</h3>
@@ -421,7 +422,7 @@ const UserInquiriesPage = () => {
                         </p>
                     </div>
                 ) : (
-                    filteredInquiries.map((inquiry) => (
+                    (filteredInquiries || []).map((inquiry) => (
                         <div key={inquiry._id} className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex-1">
@@ -430,10 +431,10 @@ const UserInquiriesPage = () => {
                                             {getConflictTypeLabel(inquiry.conflictType)}
                                         </h3>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getUrgencyColor(inquiry.urgency)}`}>
-                                            {inquiry.urgency.toUpperCase()}
+                                            {inquiry.urgency?.toUpperCase() || 'UNKNOWN'}
                                         </span>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(inquiry.inquiryStatus)}`}>
-                                            {inquiry.inquiryStatus.replace('_', ' ').toUpperCase()}
+                                            {inquiry.inquiryStatus?.replace('_', ' ')?.toUpperCase() || 'UNKNOWN'}
                                         </span>
                                     </div>
                                     <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
@@ -545,30 +546,30 @@ const UserInquiriesPage = () => {
             </div>
 
             {/* Pagination */}
-            {pagination.pages > 1 && (
+            {(pagination?.pages || 0) > 1 && (
                 <div className="bg-white px-6 py-4 rounded-lg shadow-sm border">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-gray-600">
-                            Showing {((pagination.current - 1) * (filters.limit || 20)) + 1} to {Math.min(pagination.current * (filters.limit || 20), pagination.total)} of {pagination.total} inquiries
+                            Showing {(((pagination?.current || 1) - 1) * (filters.limit || 20)) + 1} to {Math.min((pagination?.current || 1) * (filters.limit || 20), pagination?.total || 0)} of {pagination?.total || 0} inquiries
                         </div>
                         <div className="flex items-center space-x-2">
                             <button
-                                onClick={() => setFilters(prev => ({ ...prev, page: Math.max(1, pagination.current - 1) }))}
-                                disabled={pagination.current === 1}
+                                onClick={() => setFilters(prev => ({ ...prev, page: Math.max(1, (pagination?.current || 1) - 1) }))}
+                                disabled={(pagination?.current || 1) === 1}
                                 className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Previous
                             </button>
 
-                            {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                                const page = i + Math.max(1, pagination.current - 2);
-                                if (page > pagination.pages) return null;
+                            {Array.from({ length: Math.min(5, pagination?.pages || 1) }, (_, i) => {
+                                const page = i + Math.max(1, (pagination?.current || 1) - 2);
+                                if (page > (pagination?.pages || 1)) return null;
 
                                 return (
                                     <button
                                         key={page}
                                         onClick={() => setFilters(prev => ({ ...prev, page }))}
-                                        className={`px-3 py-1 border rounded-md text-sm ${page === pagination.current
+                                        className={`px-3 py-1 border rounded-md text-sm ${page === (pagination?.current || 1)
                                             ? 'bg-blue-600 text-white border-blue-600'
                                             : 'border-gray-300 hover:bg-gray-50'
                                             }`}
@@ -579,8 +580,8 @@ const UserInquiriesPage = () => {
                             })}
 
                             <button
-                                onClick={() => setFilters(prev => ({ ...prev, page: Math.min(pagination.pages, pagination.current + 1) }))}
-                                disabled={pagination.current === pagination.pages}
+                                onClick={() => setFilters(prev => ({ ...prev, page: Math.min(pagination?.pages || 1, (pagination?.current || 1) + 1) }))}
+                                disabled={(pagination?.current || 1) === (pagination?.pages || 1)}
                                 className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Next

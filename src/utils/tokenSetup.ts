@@ -72,5 +72,8 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     if (!hasTokens) {
         console.log('No tokens found, setting up test tokens...');
         setupTestTokens();
+    } else {
+        console.log('Tokens already present, debugging current state...');
+        debugTokens();
     }
 }

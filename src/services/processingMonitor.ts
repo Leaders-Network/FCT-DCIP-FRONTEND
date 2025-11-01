@@ -127,7 +127,7 @@ export interface RecentActivity {
 }
 
 class ProcessingMonitorService {
-    private baseUrl = '/api/v1/processing-monitor';
+    private baseUrl = '/processing-monitor';
 
     async getOverview(organization = 'all', timeframe = '24h'): Promise<{ success: boolean; data: ProcessingOverview }> {
         return apiRequest(`${this.baseUrl}/overview?organization=${organization}&timeframe=${timeframe}`, {
