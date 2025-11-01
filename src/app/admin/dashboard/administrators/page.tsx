@@ -23,7 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 export default function AdministratorsPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
-  const [administrators, setAdministrators] = useState([])
+  const [administrators, setAdministrators] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -49,7 +49,7 @@ export default function AdministratorsPage() {
     fetchAdministrators()
   }, [])
 
-  const handleDeleteAdministrator = async (adminId) => {
+  const handleDeleteAdministrator = async (adminId: string) => {
     try {
       await adminApi.deleteAdministrator(adminId)
       setAdministrators(administrators.filter(admin => admin._id !== adminId))
@@ -58,7 +58,7 @@ export default function AdministratorsPage() {
     }
   }
 
-  const handleToggleStatus = async (adminId, currentStatus) => {
+  const handleToggleStatus = async (adminId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
     try {
       const updatedAdmin = await adminApi.updateAdministratorStatus(adminId, newStatus)

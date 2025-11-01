@@ -23,7 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 export default function UsersPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
-  const [employees, setEmployees] = useState([])
+  const [employees, setEmployees] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -49,7 +49,7 @@ export default function UsersPage() {
     fetchEmployees()
   }, [])
 
-  const handleDeleteEmployee = async (employeeId) => {
+  const handleDeleteEmployee = async (employeeId: string) => {
     try {
       await adminApi.deleteEmployee(employeeId)
       setEmployees(employees.filter(emp => emp._id !== employeeId))
@@ -58,7 +58,7 @@ export default function UsersPage() {
     }
   }
 
-  const handleToggleStatus = async (employeeId, currentStatus) => {
+  const handleToggleStatus = async (employeeId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
     try {
       const updatedEmployee = await adminApi.updateEmployeeStatus(employeeId, newStatus)

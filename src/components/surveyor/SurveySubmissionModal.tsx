@@ -31,6 +31,16 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
     const [contactLog, setContactLog] = useState<ContactLogEntry[]>([]);
     const [recommendedAction, setRecommendedAction] = useState<'approve' | 'reject' | 'request_more_info'>('approve');
+
+    // Expense tracking
+    const [expenses, setExpenses] = useState({
+        transportation: 0,
+        accommodation: 0,
+        meals: 0,
+        equipment: 0,
+        other: 0
+    });
+
     const [newContact, setNewContact] = useState<ContactLogEntry>({
         date: new Date().toISOString().split('T')[0],
         method: 'phone',
@@ -99,7 +109,8 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                     structuralAssessment,
                     riskFactors,
                     recommendations
-                }
+                },
+                expenses
             };
 
             await onSubmit(submission);
@@ -148,7 +159,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                             <Phone className="h-5 w-5 text-blue-600 mr-2" />
                             <h3 className="text-lg font-medium text-gray-900">Contact Log</h3>
                         </div>
-                        <p className="text-gray-600 mb-4">Record all contact attempts made with the property owner or occupant.</p>
+                        <p className="text-gray-600 mb-4">Record all contact attempts made with the property builder/contractor or occupant.</p>
                         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end min-w-0">
                                 <div className="lg:col-span-2">

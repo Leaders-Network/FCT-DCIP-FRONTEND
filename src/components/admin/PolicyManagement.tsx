@@ -26,6 +26,22 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showActionsDropdown && !target.closest('.dropdown-container')) {
+        setShowActionsDropdown(null);
+      }
+    };
+
+    if (showActionsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showActionsDropdown]);
 
   const handleFetchDocumentUrl = async (document: any) => {
     if (typeof document === 'string') {
@@ -61,11 +77,11 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
     const submissionId = selectedPolicySubmissions[0]._id;
 
-    await reviewSubmission(submissionId, decision, reviewNotes);
+    await reviewSubmission(submissionId, decision as 'approved' | 'rejected', reviewNotes);
     setPolicies(prev =>
       prev.map(p =>
         p._id === selectedPolicy._id
-          ? { ...p, status: decision }
+          ? { ...p, status: decision as any }
           : p
       )
     );
@@ -82,7 +98,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     setPolicies(prev =>
       prev.map(p =>
         p._id === ammcId
-          ? { ...p, status: 'sent_to_user' }
+          ? { ...p, status: 'sent_to_user' as any }
           : p
       )
     );
@@ -138,7 +154,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             { key: 'submitted', label: 'Submitted', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'submitted').length : 0 },
             { key: 'assigned', label: 'Assigned', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'assigned').length : 0 },
             { key: 'surveyed', label: 'Surveyed', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'surveyed').length : 0 },
-            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'requires_more_info').length : 0 },
+            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => (p?.status as any) === 'requires_more_info').length : 0 },
             { key: 'rejected', label: 'Rejected', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'rejected').length : 0 }
           ].map(tab => (
             <button
@@ -164,7 +180,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property Details</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Builder/Contractor</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coverage</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -186,6 +202,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                       <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{policy.contactDetails.fullName}</p>
                       <p className="text-sm text-gray-500">{policy.contactDetails.email}</p>
                       <p className="text-sm text-gray-500">{policy.contactDetails.phoneNumber}</p>
+                      <p className="text-xs text-gray-400">RC: {policy.contactDetails.rcNumber || 'N/A'}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -197,7 +214,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                   <td className="px-6 py-4">{getStatusBadge(policy.status)}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{new Date(policy.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-sm font-medium">
-                    <div className="relative">
+                    <div className="relative dropdown-container">
                       <button
                         onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
                         className="p-2 hover:bg-gray-100 rounded-full"
@@ -210,6 +227,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                             <button
                               onClick={() => {
                                 setSelectedPolicy(policy);
+                                setShowDetailsModal(true);
                                 setShowActionsDropdown(null);
                               }}
                               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
@@ -404,6 +422,487 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Policy Details Modal */}
+      {showDetailsModal && selectedPolicy && (
+        <PolicyDetailsModal
+          policy={selectedPolicy}
+          getStatusBadge={getStatusBadge}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedPolicy(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Policy Details Modal Component
+interface PolicyDetailsModalProps {
+  policy: PolicyRequest;
+  getStatusBadge: (status: string) => JSX.Element;
+  onClose: () => void;
+}
+
+const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, getStatusBadge, onClose }) => {
+  const [surveyData, setSurveyData] = useState<any>(null);
+  const [assignmentData, setAssignmentData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'details' | 'survey' | 'documents'>('details');
+
+  useEffect(() => {
+    const fetchPolicyData = async () => {
+      try {
+        // If policy has been surveyed, fetch survey data
+        if (policy.status === 'surveyed' || policy.status === 'approved' || policy.status === 'rejected') {
+          // First get the assignment for this policy
+          const assignmentResponse = await adminApi.getAssignmentByAmmcId(policy._id);
+
+          if (assignmentResponse.success && assignmentResponse.data) {
+            const assignment = assignmentResponse.data;
+            setAssignmentData(assignment);
+
+            // Then get the survey submission
+            const { getSubmissionByAssignment } = await import('@/services/api');
+            const surveyResponse = await getSubmissionByAssignment(assignment._id);
+            if (surveyResponse.success && surveyResponse.data.submission) {
+              setSurveyData(surveyResponse.data.submission);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch policy data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPolicyData();
+  }, [policy._id, policy.status]);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        {/* Modal Header */}
+        <div className="p-6 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">Policy Details</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Policy #{policy._id} • {policy.propertyDetails.propertyType}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <span className="sr-only">Close</span>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex items-center space-x-4 mt-4">
+            <div className="flex items-center space-x-2">
+              {getStatusBadge(policy.status)}
+            </div>
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Submitted:</span> {new Date(policy.createdAt).toLocaleDateString()}
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200">
+          <div className="flex space-x-1 px-6">
+            {(['details', 'survey', 'documents'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-3 px-4 rounded-t-lg font-medium text-sm transition-colors ${activeTab === tab
+                  ? 'bg-white text-blue-600 border-b-2 border-blue-600'
+                  : 'bg-gray-50 text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+              >
+                {tab === 'survey' ? 'Survey Results' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+          {activeTab === 'details' && (
+            <PolicyDetailsTab policy={policy} assignmentData={assignmentData} />
+          )}
+
+          {activeTab === 'survey' && (
+            <PolicySurveyTab
+              policy={policy}
+              surveyData={surveyData}
+              loading={loading}
+            />
+          )}
+
+          {activeTab === 'documents' && (
+            <PolicyDocumentsTab
+              policy={policy}
+              surveyData={surveyData}
+              loading={loading}
+            />
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Policy ID: {policy._id}
+            </div>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Policy Details Tab
+const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: any }> = ({
+  policy,
+  assignmentData
+}) => (
+  <div className="space-y-6">
+    {/* Property Information */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h4 className="font-medium text-gray-900 mb-3">Property Details</h4>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Type:</span>
+            <span className="font-medium text-gray-900">{policy.propertyDetails.propertyType}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Value:</span>
+            <span className="font-medium text-gray-900">₦{policy.propertyDetails.buildingValue.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Year Built:</span>
+            <span className="font-medium text-gray-900">{policy.propertyDetails.yearBuilt || 'N/A'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Square Footage:</span>
+            <span className="font-medium text-gray-900">{policy.propertyDetails.squareFootage?.toLocaleString() || 'N/A'} sq ft</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Construction:</span>
+            <span className="font-medium text-gray-900">{policy.propertyDetails.constructionMaterial || 'N/A'}</span>
+          </div>
+        </div>
+        <div className="mt-3">
+          <span className="text-gray-600 text-sm">Address:</span>
+          <p className="text-sm text-gray-900 mt-1">{policy.propertyDetails.address}</p>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="font-medium text-gray-900 mb-3">Property Builder/Contractor</h4>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Builder/Contractor:</span>
+            <span className="font-medium text-gray-900">{policy.contactDetails.fullName}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Email:</span>
+            <span className="font-medium text-gray-900">{policy.contactDetails.email}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Phone:</span>
+            <span className="font-medium text-gray-900">{policy.contactDetails.phoneNumber}</span>
+          </div>
+          {policy.contactDetails.alternatePhone && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Alt Phone:</span>
+              <span className="font-medium text-gray-900">{policy.contactDetails.alternatePhone}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-gray-600">RC Number:</span>
+            <span className="font-medium text-gray-900">{policy.contactDetails.rcNumber || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Coverage Details */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h4 className="font-medium text-gray-900 mb-3">Coverage Details</h4>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Coverage Type:</span>
+            <span className="font-medium text-gray-900">{policy.requestDetails.coverageType}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Duration:</span>
+            <span className="font-medium text-gray-900">{policy.requestDetails.policyDuration}</span>
+          </div>
+        </div>
+        {policy.requestDetails.additionalCoverage && policy.requestDetails.additionalCoverage.length > 0 && (
+          <div className="mt-3">
+            <span className="text-gray-600 text-sm">Additional Coverage:</span>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {policy.requestDetails.additionalCoverage.map((coverage, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                  {coverage}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {assignmentData && (
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Assignment Details</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Assigned:</span>
+              <span className="font-medium text-gray-900">
+                {new Date(assignmentData.assignedAt).toLocaleDateString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Deadline:</span>
+              <span className="font-medium text-gray-900">
+                {new Date(assignmentData.deadline).toLocaleDateString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Priority:</span>
+              <span className={`font-medium ${assignmentData.priority === 'urgent' ? 'text-red-600' :
+                assignmentData.priority === 'high' ? 'text-orange-600' :
+                  assignmentData.priority === 'medium' ? 'text-yellow-600' :
+                    'text-green-600'
+                }`}>
+                {assignmentData.priority.toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* Special Requests */}
+    {policy.requestDetails.specialRequests && (
+      <div>
+        <h4 className="font-medium text-gray-900 mb-2">Special Requests</h4>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <p className="text-sm text-amber-800">{policy.requestDetails.specialRequests}</p>
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+// Policy Survey Tab
+const PolicySurveyTab: React.FC<{
+  policy: PolicyRequest;
+  surveyData: any;
+  loading: boolean;
+}> = ({ policy, surveyData, loading }) => {
+  if (policy.status === 'submitted' || policy.status === 'assigned') {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <Eye className="w-12 h-12 mx-auto mb-3 opacity-30" />
+        <p>Survey not completed yet</p>
+        <p className="text-sm">Survey results will appear here once the survey is completed.</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-500 mt-2">Loading survey data...</p>
+      </div>
+    );
+  }
+
+  if (!surveyData) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <Eye className="w-12 h-12 mx-auto mb-3 opacity-30" />
+        <p>Survey data not found</p>
+        <p className="text-sm">Unable to load survey results for this policy.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Survey Assessment Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Property Condition</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-700">
+              {surveyData.surveyDetails?.propertyCondition || 'No assessment provided'}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Structural Assessment</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-700">
+              {surveyData.surveyDetails?.structuralAssessment || 'No assessment provided'}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Risk Factors</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-700">
+              {surveyData.surveyDetails?.riskFactors || 'No risk factors identified'}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Recommendations</h4>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-700">
+              {surveyData.surveyDetails?.recommendations || 'No recommendations provided'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Survey Notes */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-3">Additional Survey Notes</h4>
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <p className="text-sm text-gray-700">
+            {surveyData.surveyNotes || 'No additional notes provided'}
+          </p>
+        </div>
+      </div>
+
+      {/* Final Recommendation */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-3">Final Recommendation</h4>
+        <div className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium ${surveyData.recommendedAction === 'approve'
+          ? 'bg-green-100 text-green-800 border border-green-200'
+          : surveyData.recommendedAction === 'reject'
+            ? 'bg-red-100 text-red-800 border border-red-200'
+            : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+          }`}>
+          {surveyData.recommendedAction === 'approve' && '✅ Approve Policy'}
+          {surveyData.recommendedAction === 'reject' && '❌ Reject Policy'}
+          {surveyData.recommendedAction === 'request_more_info' && '📋 Request More Information'}
+        </div>
+      </div>
+
+      {/* Contact Log */}
+      {surveyData.contactLog && surveyData.contactLog.length > 0 && (
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Contact Log</h4>
+          <div className="space-y-3">
+            {surveyData.contactLog.map((entry: any, index: number) => (
+              <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(entry.date).toLocaleDateString()}</span>
+                  <span className="capitalize font-medium">{entry.method}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${entry.successful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                    {entry.successful ? 'Success' : 'Failed'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-800">{entry.notes}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Policy Documents Tab
+const PolicyDocumentsTab: React.FC<{
+  policy: PolicyRequest;
+  surveyData: any;
+  loading: boolean;
+}> = ({ policy, surveyData, loading }) => {
+  if (loading && (policy.status === 'surveyed' || policy.status === 'approved' || policy.status === 'rejected')) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-500 mt-2">Loading documents...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <h4 className="font-medium text-gray-900">Policy Documents</h4>
+
+      {/* Survey Document */}
+      {surveyData?.surveyDocument && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Eye className="h-6 w-6 text-blue-600 mr-3" />
+              <div>
+                <h5 className="font-medium text-blue-900">Survey Report</h5>
+                <p className="text-sm text-blue-700">Completed survey document (PDF)</p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Submitted: {surveyData.submissionTime ? new Date(surveyData.submissionTime).toLocaleDateString() : 'N/A'}
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <a
+                href={surveyData.surveyDocument}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                View PDF
+              </a>
+              <a
+                href={surveyData.surveyDocument}
+                download
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No Documents Message */}
+      {!surveyData?.surveyDocument && (
+        <div className="text-center py-8 text-gray-500">
+          <Eye className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>No documents available</p>
+          <p className="text-sm">Documents will appear here once the survey is completed.</p>
         </div>
       )}
     </div>

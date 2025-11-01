@@ -2,6 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { CreatePolicyRequestData } from "@/types/api.types";
+import {
+  PROPERTY_TYPES,
+  CONSTRUCTION_MATERIALS,
+  COVERAGE_TYPES,
+  POLICY_DURATIONS,
+  ADDITIONAL_COVERAGE_OPTIONS
+} from "@/constants/policyConstants";
 
 interface PolicyRequestFormProps {
   isOpen: boolean;
@@ -16,29 +23,86 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   onSubmit,
   property,
 }) => {
-  const [formData, setFormData] = useState<CreatePolicyRequestData>({
-    propertyId: undefined,
-    propertyDetails: {
-      address: "",
-      propertyType: "",
-      buildingValue: 0,
-      yearBuilt: new Date().getFullYear(),
-      squareFootage: 0,
-      constructionMaterial: "",
-    },
-    contactDetails: {
-      fullName: "",
-      email: "",
-      phoneNumber: "",
-      alternatePhone: "",
-    },
-    requestDetails: {
-      coverageType: "",
-      policyDuration: "",
-      additionalCoverage: [],
-      specialRequests: "",
-    },
-  });
+  // Initialize form with user data from localStorage
+  const initializeFormData = () => {
+    let userEmail = "";
+
+    if (typeof window !== 'undefined') {
+      // Get user data from localStorage
+      const storedUser = localStorage.getItem("user");
+
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+
+          // Only get email from user data
+          userEmail = userData.email || "";
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+
+      // Fallback to direct localStorage keys if user object doesn't exist
+      if (!userEmail) {
+        userEmail = localStorage.getItem("email") || "";
+      }
+    }
+
+    return {
+      propertyId: undefined,
+      propertyDetails: {
+        address: "",
+        propertyType: "",
+        buildingValue: 0,
+        yearBuilt: new Date().getFullYear(),
+        squareFootage: 0,
+        constructionMaterial: "",
+      },
+      contactDetails: {
+        fullName: "",
+        email: userEmail,
+        phoneNumber: "",
+        alternatePhone: "",
+        rcNumber: "",
+      },
+      requestDetails: {
+        coverageType: "",
+        policyDuration: "",
+        additionalCoverage: [],
+        specialRequests: "",
+      },
+    };
+  };
+
+  const [formData, setFormData] = useState<CreatePolicyRequestData>(initializeFormData());
+
+  // Auto-populate user email when form opens
+  useEffect(() => {
+    if (isOpen) {
+      let userEmail = "";
+
+      const storUser = localStorage.getItem("user");
+      if (storUser) {
+        try {
+          const userData = JSON.parse(storUser);
+          userEmail = userData.email || "";
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+
+      // Fallback to direct localStorage keys
+      if (!userEmail) userEmail = localStorage.getItem("email") || "";
+
+      setFormData(prev => ({
+        ...prev,
+        contactDetails: {
+          ...prev.contactDetails,
+          email: userEmail,
+        }
+      }));
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (property) {
@@ -51,8 +115,19 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         contactDetails: {
           ...prev.contactDetails,
           phoneNumber: property.phonenumber,
-          fullName: localStorage.getItem("fullname") || "",
-          email: localStorage.getItem("email") || "",
+          // Preserve user's email from stored user data
+          email: (() => {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+              try {
+                const userData = JSON.parse(storedUser);
+                return userData.email || "";
+              } catch (error) {
+                return localStorage.getItem("email") || "";
+              }
+            }
+            return localStorage.getItem("email") || "";
+          })(),
         }
       }));
     }
@@ -60,29 +135,8 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
 
   useEffect(() => {
     if (!isOpen) {
-      setFormData({
-        propertyId: undefined,
-        propertyDetails: {
-          address: "",
-          propertyType: "",
-          buildingValue: 0,
-          yearBuilt: new Date().getFullYear(),
-          squareFootage: 0,
-          constructionMaterial: "",
-        },
-        contactDetails: {
-          fullName: "",
-          email: "",
-          phoneNumber: "",
-          alternatePhone: "",
-        },
-        requestDetails: {
-          coverageType: "",
-          policyDuration: "",
-          additionalCoverage: [],
-          specialRequests: "",
-        },
-      });
+      // Reset form but preserve user's email and name
+      setFormData(initializeFormData());
       setCurrentStep(1);
     }
   }, [isOpen]);
@@ -98,7 +152,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     setFormData((prev) => ({
       ...prev,
       [section]: {
-        ...prev[section],
+        ...((prev[section] as any) || {}),
         [field]: value,
       },
     }));
@@ -109,7 +163,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     const newArray = currentArray.includes(value)
       ? currentArray.filter((item) => item !== value)
       : [...currentArray, value];
-    
+
     setFormData((prev) => ({
       ...prev,
       requestDetails: {
@@ -122,32 +176,14 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+
+
     try {
       await onSubmit(formData);
       onClose();
-      // Reset form
-      setFormData({
-        propertyDetails: {
-          address: "",
-          propertyType: "",
-          buildingValue: 0,
-          yearBuilt: new Date().getFullYear(),
-          squareFootage: 0,
-          constructionMaterial: "",
-        },
-        contactDetails: {
-          fullName: "",
-          email: "",
-          phoneNumber: "",
-          alternatePhone: "",
-        },
-        requestDetails: {
-          coverageType: "",
-          policyDuration: "",
-          additionalCoverage: [],
-          specialRequests: "",
-        },
-      });
+      // Reset form but preserve user's email and name
+      setFormData(initializeFormData());
       setCurrentStep(1);
     } catch (error) {
       console.error("Failed to submit policy request:", error);
@@ -164,50 +200,33 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const propertyTypes = [
-    "Residential House",
-    "Apartment/Condo",
-    "Commercial Building",
-    "Industrial Facility",
-    "Mixed Use",
+  const coverageTypes = [
+    "Contract Works Coverage",
+    "Public Liability Coverage",
+    "Employer’s Liability Coverage",
+    "Contractor’s Plant and Equipment Coverage",
+    "Professional Indemnity",
   ];
 
-  const constructionMaterials = [
-    "Concrete Block",
-    "Steel Frame",
-    "Wood Frame",
-    "Brick",
-    "Stone",
-    "Mixed Materials",
+  const policyDurations = [
+    "3 Months (Short-term Project)",
+    "6 Months",
+    "1 Year",
+    "Project-Based (Until Completion)",
   ];
 
- const coverageTypes = [
-  "Contract Works Coverage",
-  "Public Liability Coverage",
-  "Employer’s Liability Coverage",
-  "Contractor’s Plant and Equipment Coverage",
-  "Professional Indemnity",
-];
-
-const policyDurations = [
-  "3 Months (Short-term Project)",
-  "6 Months",
-  "1 Year",
-  "Project-Based (Until Completion)",
-];
-
-const additionalCoverageOptions = [
-  "Flood and Storm Damage",
-  "Theft or Vandalism at Site",
-  "Collapse or Structural Failure",
-  "Third-Party Property Damage",
-  "Injury to Non-Employees (Public)",
-  "Machinery Breakdown",
-  "Temporary Structures (Scaffolding, Site Office)",
-  "Fire and Explosion",
-  "Debris Removal Costs",
-  "Cross Liability (Between Contractors/Subcontractors)",
-];
+  const additionalCoverageOptions = [
+    "Flood and Storm Damage",
+    "Theft or Vandalism at Site",
+    "Collapse or Structural Failure",
+    "Third-Party Property Damage",
+    "Injury to Non-Employees (Public)",
+    "Machinery Breakdown",
+    "Temporary Structures (Scaffolding, Site Office)",
+    "Fire and Explosion",
+    "Debris Removal Costs",
+    "Cross Liability (Between Contractors/Subcontractors)",
+  ];
 
   if (!isOpen) return null;
 
@@ -227,13 +246,12 @@ const additionalCoverageOptions = [
             {[1, 2, 3].map((step) => (
               <div key={step} className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    step === currentStep
-                      ? "bg-[#028835] text-white"
-                      : step < currentStep
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === currentStep
+                    ? "bg-[#028835] text-white"
+                    : step < currentStep
                       ? "bg-green-200 text-green-800"
                       : "bg-gray-200 text-gray-500"
-                  }`}
+                    }`}
                 >
                   {step}
                 </div>
@@ -241,14 +259,13 @@ const additionalCoverageOptions = [
                   {step === 1
                     ? "Property Details"
                     : step === 2
-                    ? "Contact Info"
-                    : "Coverage Details"}
+                      ? "Builder/Contractor"
+                      : "Coverage Details"}
                 </span>
                 {step < 3 && (
                   <div
-                    className={`w-8 h-0.5 ml-4 ${
-                      step < currentStep ? "bg-green-300" : "bg-gray-300"
-                    }`}
+                    className={`w-8 h-0.5 ml-4 ${step < currentStep ? "bg-green-300" : "bg-gray-300"
+                      }`}
                   />
                 )}
               </div>
@@ -261,7 +278,7 @@ const additionalCoverageOptions = [
           {currentStep === 1 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold mb-4">Property Details</h3>
-              
+
               {property && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -306,7 +323,7 @@ const additionalCoverageOptions = [
                     }
                   >
                     <option value="">Select property type</option>
-                    {propertyTypes.map((type) => (
+                    {PROPERTY_TYPES.map((type) => (
                       <option key={type} value={type}>
                         {type}
                       </option>
@@ -327,7 +344,7 @@ const additionalCoverageOptions = [
                     }
                   >
                     <option value="">Select material</option>
-                    {constructionMaterials.map((material) => (
+                    {CONSTRUCTION_MATERIALS.map((material) => (
                       <option key={material} value={material}>
                         {material}
                       </option>
@@ -391,14 +408,14 @@ const additionalCoverageOptions = [
             </div>
           )}
 
-          {/* Step 2: Contact Details */}
+          {/* Step 2: Builder/Contractor Details */}
           {currentStep === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+              <h3 className="text-lg font-semibold mb-4">Property Builder/Contractor</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
+                  Name of Builder/Contractor *
                 </label>
                 <input
                   required
@@ -408,25 +425,29 @@ const additionalCoverageOptions = [
                   onChange={(e) =>
                     handleInputChange("contactDetails", "fullName", e.target.value)
                   }
-                  placeholder="Enter your full name"
+                  placeholder="Enter name of builder/contractor"
                 />
+
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email Address *
+                    <span className="text-xs text-green-600 ml-2">(Auto-filled from your account)</span>
                   </label>
                   <input
                     required
                     type="email"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-700 cursor-not-allowed"
                     value={formData.contactDetails.email}
-                    onChange={(e) =>
-                      handleInputChange("contactDetails", "email", e.target.value)
-                    }
+                    readOnly
                     placeholder="your@email.com"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This email is automatically filled from your account and cannot be changed.
+                  </p>
+
                 </div>
 
                 <div>
@@ -460,6 +481,26 @@ const additionalCoverageOptions = [
                   placeholder="+234 XXX XXX XXXX"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  RC Number *
+                </label>
+                <input
+                  required
+                  type="text"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835]"
+                  value={formData.contactDetails.rcNumber}
+                  onChange={(e) =>
+                    handleInputChange("contactDetails", "rcNumber", e.target.value.toUpperCase())
+                  }
+                  placeholder="RC123456"
+                  style={{ textTransform: 'uppercase' }}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter your company's Registration Certificate number
+                </p>
+              </div>
             </div>
           )}
 
@@ -482,7 +523,7 @@ const additionalCoverageOptions = [
                     }
                   >
                     <option value="">Select coverage type</option>
-                    {coverageTypes.map((type) => (
+                    {COVERAGE_TYPES.map((type) => (
                       <option key={type} value={type}>
                         {type}
                       </option>
@@ -503,7 +544,7 @@ const additionalCoverageOptions = [
                     }
                   >
                     <option value="">Select duration</option>
-                    {policyDurations.map((duration) => (
+                    {POLICY_DURATIONS.map((duration) => (
                       <option key={duration} value={duration}>
                         {duration}
                       </option>
@@ -517,7 +558,7 @@ const additionalCoverageOptions = [
                   Additional Coverage (Optional)
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {additionalCoverageOptions.map((option) => (
+                  {ADDITIONAL_COVERAGE_OPTIONS.map((option) => (
                     <label key={option} className="flex items-center">
                       <input
                         type="checkbox"

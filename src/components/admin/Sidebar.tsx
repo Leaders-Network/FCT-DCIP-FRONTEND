@@ -7,18 +7,17 @@ import { Home, Users, FileText, Settings, Briefcase, Building, ClipboardList, Sh
 import { useAuth } from "@/context/useAuth";
 import { IoMdLogOut } from "react-icons/io";
 
-const NavItem = ({ href, icon, label }) => {
+const NavItem = ({ href, icon, label }: { href: string; icon: any; label: string }) => {
   const pathname = usePathname();
   const isActive = pathname === href;
 
   return (
     <Link href={href}>
       <div
-        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-          isActive
-            ? "bg-[#028835] text-white"
-            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-        }`}>
+        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive
+          ? "bg-[#028835] text-white"
+          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+          }`}>
         {React.createElement(icon, { className: "h-5 w-5 mr-3" })}
         <span>{label}</span>
       </div>

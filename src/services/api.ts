@@ -842,6 +842,26 @@ export const deleteProperty = async (propertyId: string) => {
   }
 };
 
+export const updatePolicyRequest = async (ammcId: string, policyData: any) => {
+  try {
+    const response = await api.patch(`/policy/${ammcId}`, policyData);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update policy request:", error);
+    throw error;
+  }
+};
+
+export const getUserAssignmentByAmmcId = async (ammcId: string) => {
+  try {
+    const response = await api.get(`/admin/assignment/policy/${ammcId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get assignment by AMMC ID:", error);
+    throw error;
+  }
+};
+
 export const deletePolicyRequest = async (ammcId: string) => {
   try {
     const response = await api.delete(`/policy/${ammcId}`);
@@ -1157,11 +1177,6 @@ export const adminApi = {
 
   deletePolicyRequest: async (ammcId: string) => {
     const response = await api.delete(`/policy/${ammcId}`);
-    return response.data;
-  },
-
-  deleteEmployee: async (employeeId: string) => {
-    const response = await api.delete(`/admin/employees/${employeeId}`);
     return response.data;
   },
 
