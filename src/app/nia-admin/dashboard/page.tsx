@@ -81,10 +81,11 @@ const NIAAdminDashboard = () => {
                 return;
             }
 
-            const response = await fetch('/api/v1/nia-admin/dashboard', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/nia-admin/dashboard`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'apikey': process.env.NEXT_PUBLIC_API_KEY || ''
                 }
             });
 
