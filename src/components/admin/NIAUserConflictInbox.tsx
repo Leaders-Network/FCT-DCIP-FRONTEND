@@ -11,7 +11,9 @@ import {
     ArrowUp,
     Eye,
     Reply,
-    UserCheck
+    UserCheck,
+    MessageSquare,
+    FileText
 } from 'lucide-react';
 
 interface ConflictInquiry {
@@ -238,7 +240,8 @@ const NIAUserConflictInbox: React.FC = () => {
                             User Conflict Inquiries (NIA)
                         </h1>
                         <p className="text-gray-600 mt-1">
-                            Manage and respond to user-submitted conflict inquiries for NIA
+                            Manage and respond to user-submitted conflict inquiries and disputes about survey reports.
+                            All user inquiries or conflicts raised will be managed on this page.
                         </p>
                     </div>
                 </div>
@@ -355,9 +358,68 @@ const NIAUserConflictInbox: React.FC = () => {
                         <p className="text-gray-600 mt-2">Loading inquiries...</p>
                     </div>
                 ) : inquiries.length === 0 ? (
-                    <div className="p-8 text-center">
-                        <Inbox className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">No conflict inquiries found</p>
+                    <div className="p-12 text-center">
+                        <div className="max-w-md mx-auto">
+                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <MessageSquare className="w-10 h-10 text-green-600" />
+                            </div>
+
+                            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                                NIA User Conflict Inquiry Management
+                            </h3>
+
+                            <p className="text-gray-600 mb-6 leading-relaxed">
+                                This page manages all user-submitted conflict inquiries and disputes related to survey reports.
+                                When users raise concerns about their merged survey reports, they will appear here for NIA administrators to review and respond.
+                            </p>
+
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                                <h4 className="text-sm font-semibold text-green-900 mb-3">What you can manage here:</h4>
+                                <div className="text-left space-y-2 text-sm text-green-800">
+                                    <div className="flex items-start space-x-2">
+                                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                        <span>User complaints about survey findings or recommendations</span>
+                                    </div>
+                                    <div className="flex items-start space-x-2">
+                                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                        <span>Technical errors or missing information in reports</span>
+                                    </div>
+                                    <div className="flex items-start space-x-2">
+                                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                        <span>Surveyor conduct issues and clarification requests</span>
+                                    </div>
+                                    <div className="flex items-start space-x-2">
+                                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                        <span>Conflicts between AMMC and NIA survey recommendations</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <p className="text-sm text-gray-600">
+                                    <strong>No inquiries at the moment.</strong> When users submit conflict inquiries through their dashboard,
+                                    they will appear here with options to assign, respond, and track resolution progress.
+                                </p>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Users can raise conflicts by clicking "Raise Conflict" on their merged survey reports when they disagree with findings or need clarification.
+                                </p>
+                            </div>
+
+                            <div className="mt-6 flex items-center justify-center space-x-4 text-sm text-gray-500">
+                                <div className="flex items-center space-x-1">
+                                    <Clock className="w-4 h-4" />
+                                    <span>Real-time updates</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                    <User className="w-4 h-4" />
+                                    <span>User notifications</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                    <FileText className="w-4 h-4" />
+                                    <span>Response tracking</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 ) : (
                     <div className="overflow-hidden">
