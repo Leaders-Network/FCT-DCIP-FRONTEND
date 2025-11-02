@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 
 const faqs = [
   // === Existing FCT-DCIP-focused FAQs ===
@@ -112,7 +113,7 @@ const FAQPage = () => {
         style={{ backgroundImage: "url('/bg-hero-1.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/70"></div>
-        <div className="relative z-10 text-center text-white px-4">
+        <div data-aos="zoom-in" className="relative z-10 text-center text-white px-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-3">
             Frequently Asked Questions
           </h1>
@@ -162,7 +163,7 @@ const FAQPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-green-600 text-white text-center py-16 px-6">
+      <section className="bg-[#00800010] text-green-700 text-center py-16 px-6">
         <h2 className="text-3xl font-semibold mb-4">
           Still Have Questions?
         </h2>
@@ -170,12 +171,12 @@ const FAQPage = () => {
           Our team is available to assist with inquiries about registration,
           insurance verification, or compliance under the FCT-DCIP program.
         </p>
-        <a
+        <Link
           href="/contact"
           className="inline-block bg-white text-green-700 font-medium px-8 py-3 rounded-full shadow hover:bg-gray-100 transition"
         >
           Contact Us
-        </a>
+        </Link>
       </section>
 
       <Footer />
