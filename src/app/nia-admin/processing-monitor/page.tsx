@@ -72,7 +72,10 @@ const ProcessingMonitorPage = () => {
             ]);
 
             if (overviewResponse.success) {
+                console.log('Overview Response:', overviewResponse.data);
                 setOverview(overviewResponse.data);
+            } else {
+                console.error('Overview Error:', overviewResponse);
             }
 
             if (activeResponse.success) {
@@ -80,7 +83,10 @@ const ProcessingMonitorPage = () => {
             }
 
             if (performanceResponse.success) {
+                console.log('Performance Metrics Response:', performanceResponse.data);
                 setPerformanceMetrics(performanceResponse.data);
+            } else {
+                console.error('Performance Metrics Error:', performanceResponse);
             }
 
             if (healthResponse.success) {
@@ -227,21 +233,21 @@ const ProcessingMonitorPage = () => {
             </div>
 
             {/* System Health Alert */}
-            {systemHealth && systemHealth.systemStatus !== 'healthy' && (
-                <div className={`p-4 rounded-lg border ${systemHealth.systemStatus === 'critical'
+            {systemHealth && systemHealth?.systemStatus !== 'healthy' && (
+                <div className={`p-4 rounded-lg border ${systemHealth?.systemStatus === 'critical'
                     ? 'bg-red-50 border-red-200'
                     : 'bg-yellow-50 border-yellow-200'
                     }`}>
                     <div className="flex items-center">
-                        {getSystemStatusIcon(systemHealth.systemStatus)}
+                        {getSystemStatusIcon(systemHealth?.systemStatus || 'unknown')}
                         <div className="ml-3">
-                            <h3 className={`text-sm font-medium ${getSystemStatusColor(systemHealth.systemStatus)}`}>
+                            <h3 className={`text-sm font-medium ${getSystemStatusColor(systemHealth?.systemStatus || 'unknown')}`}>
                                 System Status: {systemHealth?.systemStatus?.toUpperCase() || 'UNKNOWN'}
                             </h3>
                             {(systemHealth?.alerts?.length || 0) > 0 && (
                                 <div className="mt-2">
                                     <ul className="text-sm text-gray-600 space-y-1">
-                                        {systemHealth.alerts.map((alert, index) => (
+                                        {systemHealth?.alerts?.map((alert, index) => (
                                             <li key={index}>• {alert}</li>
                                         ))}
                                     </ul>
@@ -317,19 +323,24 @@ const ProcessingMonitorPage = () => {
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Avg Processing Time:</span>
                                 <span className="text-sm font-medium text-gray-900">
-                                    {formatDuration(performanceMetrics.processingPerformance.avgProcessingTime)}
+                                    {performanceMetrics?.processingPerformance?.avgProcessingTime
+                                        ? formatDuration(performanceMetrics?.processingPerformance?.avgProcessingTime)
+                                        : 'N/A'
+                                    }
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Total Reports:</span>
                                 <span className="text-sm font-medium text-gray-900">
-                                    {performanceMetrics.processingPerformance.totalReports}
+                                    {performanceMetrics?.processingPerformance?.totalReports || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Released Reports:</span>
                                 <span className="text-sm font-medium text-green-600">
-                                    {performanceMetrics.successRates.released}
+                                    {(performanceMetrics?.successRates && typeof performanceMetrics.successRates === 'object' && 'released' in performanceMetrics.successRates)
+                                        ? performanceMetrics?.successRates?.released
+                                        : 0}
                                 </span>
                             </div>
                         </div>
@@ -346,25 +357,25 @@ const ProcessingMonitorPage = () => {
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Critical:</span>
                                 <span className="text-sm font-medium text-red-600">
-                                    {overview.activeConflictsBySeverity.critical}
+                                    {overview?.activeConflictsBySeverity?.critical || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">High:</span>
                                 <span className="text-sm font-medium text-orange-600">
-                                    {overview.activeConflictsBySeverity.high}
+                                    {overview?.activeConflictsBySeverity?.high || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Medium:</span>
                                 <span className="text-sm font-medium text-yellow-600">
-                                    {overview.activeConflictsBySeverity.medium}
+                                    {overview?.activeConflictsBySeverity?.medium || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Low:</span>
                                 <span className="text-sm font-medium text-green-600">
-                                    {overview.activeConflictsBySeverity.low}
+                                    {overview?.activeConflictsBySeverity?.low || 0}
                                 </span>
                             </div>
                         </div>
@@ -375,31 +386,31 @@ const ProcessingMonitorPage = () => {
                     <div className="bg-white p-6 rounded-lg shadow-sm border">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-900">System Health</h3>
-                            {getSystemStatusIcon(systemHealth.systemStatus)}
+                            {getSystemStatusIcon(systemHealth?.systemStatus || 'unknown')}
                         </div>
                         <div className="space-y-3">
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">System Status:</span>
-                                <span className={`text-sm font-medium ${getSystemStatusColor(systemHealth.systemStatus)}`}>
-                                    {systemHealth?.systemStatus ? systemHealth.systemStatus.charAt(0).toUpperCase() + systemHealth.systemStatus.slice(1) : 'Unknown'}
+                                <span className={`text-sm font-medium ${getSystemStatusColor(systemHealth?.systemStatus || 'unknown')}`}>
+                                    {systemHealth?.systemStatus ? systemHealth?.systemStatus.charAt(0).toUpperCase() + systemHealth?.systemStatus.slice(1) : 'Unknown'}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Recent Activity:</span>
                                 <span className="text-sm font-medium text-gray-900">
-                                    {systemHealth.metrics.recentActivity}
+                                    {systemHealth?.metrics?.recentActivity || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Stuck Processing:</span>
-                                <span className={`text-sm font-medium ${systemHealth.metrics.stuckProcessing > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                    {systemHealth.metrics.stuckProcessing}
+                                <span className={`text-sm font-medium ${(systemHealth?.metrics?.stuckProcessing || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                    {systemHealth?.metrics?.stuckProcessing || 0}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Last Check:</span>
                                 <span className="text-sm font-medium text-gray-900">
-                                    {new Date(systemHealth.lastChecked).toLocaleTimeString()}
+                                    {systemHealth?.lastChecked ? new Date(systemHealth?.lastChecked).toLocaleTimeString() : 'N/A'}
                                 </span>
                             </div>
                         </div>
@@ -476,7 +487,7 @@ const ProcessingMonitorPage = () => {
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
                         <div className="text-sm text-gray-600">
-                            Last updated: {new Date(recentActivity.lastUpdated).toLocaleTimeString()}
+                            Last updated: {recentActivity?.lastUpdated ? new Date(recentActivity?.lastUpdated).toLocaleTimeString() : 'N/A'}
                         </div>
                     </div>
                     {(recentActivity?.activities?.length || 0) === 0 ? (

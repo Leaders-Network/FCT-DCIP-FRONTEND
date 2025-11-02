@@ -35,7 +35,7 @@ api.interceptors.request.use(
     config.headers['apikey'] = API_KEY;
 
     const token = getAuthToken();
-    console.log("Auth Token:", token ? 'Present' : 'Missing');
+    console.log("Auth Token:", token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -43,7 +43,7 @@ api.interceptors.request.use(
     console.log("Request Headers:", {
       'Content-Type': config.headers['Content-Type'],
       'apikey': config.headers['apikey'] ? `${config.headers['apikey'].substring(0, 20)}...` : 'Missing',
-      'Authorization': config.headers['Authorization'] ? 'Present' : 'Missing'
+      'Authorization': config.headers['Authorization'] || 'Missing'
     });
 
     // Debug: Log full API key for troubleshooting
