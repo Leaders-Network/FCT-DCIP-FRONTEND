@@ -20,6 +20,7 @@ import {
 interface PolicyDetailsWithDualSurveyorProps {
     policyId: string;
     onBack: () => void;
+    showBackButton?: boolean;
 }
 
 interface DualAssignmentData {
@@ -81,7 +82,8 @@ interface DualAssignmentData {
 
 const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps> = ({
     policyId,
-    onBack
+    onBack,
+    showBackButton = true
 }) => {
     const [dualAssignmentData, setDualAssignmentData] = useState<DualAssignmentData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -194,13 +196,15 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
     if (error || !dualAssignmentData) {
         return (
             <div className="space-y-6">
-                <button
-                    onClick={onBack}
-                    className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Policies
-                </button>
+                {showBackButton && (
+                    <button
+                        onClick={onBack}
+                        className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Policies
+                    </button>
+                )}
 
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                     <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -250,13 +254,15 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <button
-                    onClick={onBack}
-                    className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Policies
-                </button>
+                {showBackButton && (
+                    <button
+                        onClick={onBack}
+                        className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Policies
+                    </button>
+                )}
 
                 <div className="text-sm text-gray-500">
                     Policy ID: {policy._id.substring(0, 8).toUpperCase()}
