@@ -104,7 +104,8 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch('/api/v1/nia-admin/surveyors/available', {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+      const response = await fetch(`${baseUrl}/nia-admin/surveyors/available`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

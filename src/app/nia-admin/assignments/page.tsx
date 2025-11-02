@@ -81,7 +81,8 @@ const NIAAssignmentsPage = () => {
             if (filters.completionStatus !== 'all') queryParams.append('completionStatus', filters.completionStatus);
             if (filters.priority !== 'all') queryParams.append('priority', filters.priority);
 
-            const response = await fetch(`/api/v1/dual-assignment?${queryParams.toString()}`, {
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            const response = await fetch(`${baseUrl}/dual-assignment?${queryParams.toString()}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
