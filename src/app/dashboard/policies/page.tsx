@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import PolicyCompletion from "@/components/dashboard/PolicyCompletion";
 import PolicyDetailsWithDualSurveyor from "@/components/dashboard/PolicyDetailsWithDualSurveyor";
+import EnhancedPolicyDetails from "@/components/dashboard/EnhancedPolicyDetails";
 import DualSurveyorProgress from "@/components/dashboard/DualSurveyorProgress";
 import {
   FileText,
@@ -11,7 +12,8 @@ import {
   ArrowRight,
   Building,
   Calendar,
-  MapPin
+  MapPin,
+  TrendingUp
 } from "lucide-react";
 import { getUserPolicyRequests } from "@/services/api";
 
@@ -39,6 +41,7 @@ interface PolicyRequest {
 export default function PoliciesPage() {
   const [activeTab, setActiveTab] = useState<'in-progress' | 'completed'>('in-progress');
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
+  const [showEnhancedView, setShowEnhancedView] = useState(false);
   const [inProgressPolicies, setInProgressPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -113,10 +116,20 @@ export default function PoliciesPage() {
   if (selectedPolicyId) {
     return (
       <div className="p-6">
-        <PolicyDetailsWithDualSurveyor
-          policyId={selectedPolicyId}
-          onBack={() => setSelectedPolicyId(null)}
-        />
+        {showEnhancedView ? (
+          <EnhancedPolicyDetails
+            policyId={selectedPolicyId}
+            onBack={() => {
+              setSelectedPolicyId(null);
+              setShowEnhancedView(false);
+            }}
+          />
+        ) : (
+          <PolicyDetailsWithDualSurveyor
+            policyId={selectedPolicyId}
+            onBack={() => setSelectedPolicyId(null)}
+          />
+        )}
       </div>
     );
   }
@@ -137,8 +150,8 @@ export default function PoliciesPage() {
           <button
             onClick={() => setActiveTab('in-progress')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'in-progress'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             In Progress ({inProgressPolicies.length})
@@ -146,8 +159,8 @@ export default function PoliciesPage() {
           <button
             onClick={() => setActiveTab('completed')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'completed'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             Completed
@@ -214,6 +227,16 @@ export default function PoliciesPage() {
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
                           </button>
+                          <button
+                            onClick={() => {
+                              setSelectedPolicyId(policy._id);
+                              setShowEnhancedView(true);
+                            }}
+                            className="flex items-center px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                          >
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            Enhanced View
+                          </button>
                         </div>
                       </div>
 
@@ -229,8 +252,8 @@ export default function PoliciesPage() {
                         <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
                           <div
                             className={`h-2 rounded-full transition-all duration-300 ${dualSurveyorData.completionStatus === 0 ? 'bg-gray-200' :
-                                dualSurveyorData.completionStatus === 50 ? 'bg-yellow-400' :
-                                  'bg-green-500'
+                              dualSurveyorData.completionStatus === 50 ? 'bg-yellow-400' :
+                                'bg-green-500'
                               }`}
                             style={{ width: `${dualSurveyorData.completionStatus}%` }}
                           ></div>
@@ -276,13 +299,25 @@ export default function PoliciesPage() {
                                   'Fully Assigned'
                             }
                           </div>
-                          <button
-                            onClick={() => setSelectedPolicyId(policy._id)}
-                            className="flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
-                          >
-                            View Full Progress
-                            <ArrowRight className="w-3 h-3 ml-1" />
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => setSelectedPolicyId(policy._id)}
+                              className="flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              View Progress
+                              <ArrowRight className="w-3 h-3 ml-1" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedPolicyId(policy._id);
+                                setShowEnhancedView(true);
+                              }}
+                              className="flex items-center text-xs text-green-600 hover:text-green-800 transition-colors"
+                            >
+                              Enhanced
+                              <TrendingUp className="w-3 h-3 ml-1" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
