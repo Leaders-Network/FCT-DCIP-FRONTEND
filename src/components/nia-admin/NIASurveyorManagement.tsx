@@ -75,6 +75,29 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [saving, setSaving] = useState(false);
+
+    // Phone number formatting helper
+    const formatPhoneNumber = (value: string) => {
+        // Remove all non-digits
+        const digits = value.replace(/\D/g, '');
+
+        // If starts with 234, add +
+        if (digits.startsWith('234') && digits.length <= 13) {
+            return '+' + digits;
+        }
+
+        // If starts with 0 and has 11 digits, keep as is
+        if (digits.startsWith('0') && digits.length <= 11) {
+            return digits;
+        }
+
+        // If doesn't start with + or 0 or 234, assume it needs +234 prefix
+        if (!digits.startsWith('0') && !digits.startsWith('234')) {
+            return '+234' + digits;
+        }
+
+        return digits;
+    };
     const [newSpecialization, setNewSpecialization] = useState('');
     const [newQualification, setNewQualification] = useState('');
 
@@ -82,11 +105,7 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
         'residential',
         'commercial',
         'industrial',
-        'land-survey',
-        'structural',
-        'environmental',
-        'valuation',
-        'quantity-surveying'
+        'agricultural'
     ];
 
     const handleInputChange = (field: string, value: any) => {
@@ -167,6 +186,13 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
 
         if (!formData.phoneNumber.trim()) {
             newErrors.phoneNumber = 'Phone number is required';
+        } else {
+            // Validate phone number format (remove spaces and dashes for validation)
+            const cleanPhone = formData.phoneNumber.replace(/[\s-]/g, '');
+            const phoneRegex = /^(?:\+234\d{10}|234\d{10}|0\d{10})$/;
+            if (!phoneRegex.test(cleanPhone)) {
+                newErrors.phoneNumber = 'Invalid format. Use: +234xxxxxxxxxx, 234xxxxxxxxxx, or 0xxxxxxxxxx';
+            }
         }
 
         if (!formData.licenseNumber.trim()) {
@@ -187,6 +213,13 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
 
         if (formData.specialization.length === 0) {
             newErrors.specialization = 'At least one specialization is required';
+        } else {
+            // Validate specializations against allowed values
+            const validSpecializations = ['residential', 'commercial', 'industrial', 'agricultural'];
+            const invalidSpecs = formData.specialization.filter(spec => !validSpecializations.includes(spec));
+            if (invalidSpecs.length > 0) {
+                newErrors.specialization = `Invalid specializations: ${invalidSpecs.join(', ')}`;
+            }
         }
 
         setErrors(newErrors);
@@ -200,7 +233,27 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
 
         setSaving(true);
         try {
-            await onSave(formData);
+            // Transform data to match backend expectations
+            const backendData = {
+                ...formData,
+                phonenumber: formData.phoneNumber.replace(/[\s-]/g, ''), // Clean and map phoneNumber to phonenumber
+                specializations: formData.specialization || ['residential'], // Ensure specializations is an array
+                experience: parseInt(formData.experience?.toString() || '0'), // Ensure experience is a number
+                // Transform emergency contact object to string
+                emergencyContact: formData.emergencyContact ?
+                    `${formData.emergencyContact.name} (${formData.emergencyContact.relationship}) - ${formData.emergencyContact.phone}` :
+                    '',
+                location: {
+                    state: 'FCT',
+                    city: 'Abuja',
+                    area: []
+                }
+            };
+
+            // Remove the frontend field names
+            delete backendData.phoneNumber;
+
+            await onSave(backendData);
         } catch (error) {
             console.error('Save error:', error);
         } finally {
@@ -308,12 +361,18 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
                                 <input
                                     type="tel"
                                     value={formData.phoneNumber}
-                                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                                    onChange={(e) => {
+                                        const formatted = formatPhoneNumber(e.target.value);
+                                        handleInputChange('phoneNumber', formatted);
+                                    }}
                                     disabled={isReadOnly}
                                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isReadOnly ? 'bg-gray-50' : ''
                                         } ${errors.phoneNumber ? 'border-red-500' : 'border-gray-300'}`}
-                                    placeholder="Enter phone number"
+                                    placeholder="+2348012345678"
                                 />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Format: +234xxxxxxxxxx, 234xxxxxxxxxx, or 0xxxxxxxxxx
+                                </p>
                                 {errors.phoneNumber && (
                                     <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>
                                 )}
