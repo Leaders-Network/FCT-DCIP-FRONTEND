@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // Import token setup for development
 import '@/utils/tokenSetup';
+import { NIATokenProvider } from '@/components/nia-admin/NIATokenProvider';
 import {
     Users,
     FileText,
@@ -150,243 +151,245 @@ const NIAAdminDashboard = () => {
     const adminName = adminInfo.name || 'NIA Admin';
 
     return (
-        <div className="space-y-6">
-            {/* Welcome Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold mb-2">Welcome back, {adminName}!</h1>
-                        <p className="text-blue-100">
-                            Manage Nigerian Insurers Association surveyors and dual-surveyor assignments from your dashboard
-                        </p>
-                    </div>
-                    <div className="hidden md:block">
-                        <div className="bg-white/10 p-3 rounded-full">
-                            <Building2 className="h-8 w-8 text-white" />
+        <NIATokenProvider>
+            <div className="space-y-6">
+                {/* Welcome Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold mb-2">Welcome back, {adminName}!</h1>
+                            <p className="text-blue-100">
+                                Manage Nigerian Insurers Association surveyors and dual-surveyor assignments from your dashboard
+                            </p>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                    <div className="flex items-center">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <Users className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Total NIA Surveyors</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats?.totalNIASurveyors || 0}</p>
+                        <div className="hidden md:block">
+                            <div className="bg-white/10 p-3 rounded-full">
+                                <Building2 className="h-8 w-8 text-white" />
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                    <div className="flex items-center">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                            <UserCheck className="h-6 w-6 text-green-600" />
+                {/* Stats Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="bg-white p-6 rounded-lg shadow-sm border">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                                <Users className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">Total NIA Surveyors</p>
+                                <p className="text-2xl font-bold text-gray-900">{stats?.totalNIASurveyors || 0}</p>
+                            </div>
                         </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Active Surveyors</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats?.activeNIASurveyors || 0}</p>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg shadow-sm border">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                                <UserCheck className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">Active Surveyors</p>
+                                <p className="text-2xl font-bold text-gray-900">{stats?.activeNIASurveyors || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg shadow-sm border">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-purple-100 rounded-lg">
+                                <FileText className="h-6 w-6 text-purple-600" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">NIA Assignments</p>
+                                <p className="text-2xl font-bold text-gray-900">{stats?.niaAssignments || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-lg shadow-sm border">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-orange-100 rounded-lg">
+                                <ClipboardList className="h-6 w-6 text-orange-600" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">Dual Assignments</p>
+                                <p className="text-2xl font-bold text-gray-900">{stats?.dualAssignments?.totalDualAssignments || 0}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                    <div className="flex items-center">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                            <FileText className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">NIA Assignments</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats?.niaAssignments || 0}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                    <div className="flex items-center">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                            <ClipboardList className="h-6 w-6 text-orange-600" />
-                        </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">Dual Assignments</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats?.dualAssignments?.totalDualAssignments || 0}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Dual Assignment Overview */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Dual-Surveyor Assignment Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className="text-2xl font-bold text-gray-900">{stats?.dualAssignments?.niaAssigned || 0}</div>
-                        <div className="text-sm text-gray-600">NIA Assigned</div>
-                    </div>
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{stats?.dualAssignments?.fullyAssigned || 0}</div>
-                        <div className="text-sm text-gray-600">Fully Assigned</div>
-                    </div>
-                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                        <div className="text-2xl font-bold text-yellow-600">{stats?.dualAssignments?.partiallyComplete || 0}</div>
-                        <div className="text-sm text-gray-600">50% Complete</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">{stats?.dualAssignments?.fullyComplete || 0}</div>
-                        <div className="text-sm text-gray-600">100% Complete</div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Assignment Status Breakdown */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Dual Assignment Overview */}
                 <div className="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">NIA Assignment Status</h3>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                                <span className="text-sm text-gray-600">Assigned</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">
-                                {stats?.assignmentStats?.assigned || 0}
-                            </span>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Dual-Surveyor Assignment Overview</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="text-center p-4 bg-gray-50 rounded-lg">
+                            <div className="text-2xl font-bold text-gray-900">{stats?.dualAssignments?.niaAssigned || 0}</div>
+                            <div className="text-sm text-gray-600">NIA Assigned</div>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                                <span className="text-sm text-gray-600">Accepted</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">
-                                {stats?.assignmentStats?.accepted || 0}
-                            </span>
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-600">{stats?.dualAssignments?.fullyAssigned || 0}</div>
+                            <div className="text-sm text-gray-600">Fully Assigned</div>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                                <span className="text-sm text-gray-600">In Progress</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">
-                                {stats?.assignmentStats?.['in-progress'] || 0}
-                            </span>
+                        <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                            <div className="text-2xl font-bold text-yellow-600">{stats?.dualAssignments?.partiallyComplete || 0}</div>
+                            <div className="text-sm text-gray-600">50% Complete</div>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                                <span className="text-sm text-gray-600">Completed</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">
-                                {stats?.assignmentStats?.completed || 0}
-                            </span>
+                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                            <div className="text-2xl font-bold text-green-600">{stats?.dualAssignments?.fullyComplete || 0}</div>
+                            <div className="text-sm text-gray-600">100% Complete</div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent NIA Assignments</h3>
-                    <div className="space-y-3">
-                        {stats?.recentAssignments && stats.recentAssignments.length > 0 ? (
-                            stats.recentAssignments.slice(0, 5).map((assignment, index) => (
-                                <div key={assignment._id || index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">
-                                            {assignment.ammcId?.propertyDetails?.propertyType || 'Property Survey'}
-                                        </p>
-                                        <p className="text-xs text-gray-500 truncate">
-                                            {assignment.ammcId?.propertyDetails?.address || 'No address'}
-                                        </p>
-                                    </div>
-                                    <div className="ml-4 flex-shrink-0">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                            assignment.status === 'in-progress' ? 'bg-purple-100 text-purple-800' :
-                                                assignment.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                            {assignment.status}
-                                        </span>
-                                    </div>
+                {/* Assignment Status Breakdown */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-lg shadow-sm border p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">NIA Assignment Status</h3>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
+                                    <span className="text-sm text-gray-600">Assigned</span>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="text-center py-4 text-gray-500">
-                                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">No recent assignments</p>
+                                <span className="text-sm font-medium text-gray-900">
+                                    {stats?.assignmentStats?.assigned || 0}
+                                </span>
                             </div>
-                        )}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                                    <span className="text-sm text-gray-600">Accepted</span>
+                                </div>
+                                <span className="text-sm font-medium text-gray-900">
+                                    {stats?.assignmentStats?.accepted || 0}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                                    <span className="text-sm text-gray-600">In Progress</span>
+                                </div>
+                                <span className="text-sm font-medium text-gray-900">
+                                    {stats?.assignmentStats?.['in-progress'] || 0}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                                    <span className="text-sm text-gray-600">Completed</span>
+                                </div>
+                                <span className="text-sm font-medium text-gray-900">
+                                    {stats?.assignmentStats?.completed || 0}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-sm border p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent NIA Assignments</h3>
+                        <div className="space-y-3">
+                            {stats?.recentAssignments && stats.recentAssignments.length > 0 ? (
+                                stats.recentAssignments.slice(0, 5).map((assignment, index) => (
+                                    <div key={assignment._id || index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                                {assignment.ammcId?.propertyDetails?.propertyType || 'Property Survey'}
+                                            </p>
+                                            <p className="text-xs text-gray-500 truncate">
+                                                {assignment.ammcId?.propertyDetails?.address || 'No address'}
+                                            </p>
+                                        </div>
+                                        <div className="ml-4 flex-shrink-0">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                                assignment.status === 'in-progress' ? 'bg-purple-100 text-purple-800' :
+                                                    assignment.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                {assignment.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-4 text-gray-500">
+                                    <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">No recent assignments</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Automatic Processing Status */}
+                <div className="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Automatic Processing Status</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-600">2</div>
+                            <div className="text-sm text-gray-600">Reports Processing</div>
+                        </div>
+                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                            <div className="text-2xl font-bold text-green-600">15</div>
+                            <div className="text-sm text-gray-600">Auto-Merged Today</div>
+                        </div>
+                        <div className="text-center p-4 bg-orange-50 rounded-lg">
+                            <div className="text-2xl font-bold text-orange-600">3</div>
+                            <div className="text-sm text-gray-600">User Inquiries</div>
+                        </div>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-3">
+                            Reports are automatically merged when both AMMC and NIA surveyors submit their assessments
+                        </p>
+                        <div className="flex items-center justify-center space-x-2 text-sm text-green-600">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>System Status: Healthy</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <button className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                            <Users className="h-6 w-6 text-blue-600 mr-3" />
+                            <div className="text-left">
+                                <div className="font-medium text-gray-900">Manage Surveyors</div>
+                                <div className="text-sm text-gray-600">Add, edit, or view NIA surveyors</div>
+                            </div>
+                        </button>
+
+                        <button className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                            <ClipboardList className="h-6 w-6 text-green-600 mr-3" />
+                            <div className="text-left">
+                                <div className="font-medium text-gray-900">View Assignments</div>
+                                <div className="text-sm text-gray-600">Manage dual-surveyor assignments</div>
+                            </div>
+                        </button>
+
+                        <button className="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                            <AlertTriangle className="h-6 w-6 text-orange-600 mr-3" />
+                            <div className="text-left">
+                                <div className="font-medium text-gray-900">User Inquiries</div>
+                                <div className="text-sm text-gray-600">Handle user conflict inquiries</div>
+                            </div>
+                        </button>
+
+                        <button className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                            <FileText className="h-6 w-6 text-purple-600 mr-3" />
+                            <div className="text-left">
+                                <div className="font-medium text-gray-900">Processing Monitor</div>
+                                <div className="text-sm text-gray-600">Monitor automatic processing</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </div>
-
-            {/* Automatic Processing Status */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Automatic Processing Status</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">2</div>
-                        <div className="text-sm text-gray-600">Reports Processing</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">15</div>
-                        <div className="text-sm text-gray-600">Auto-Merged Today</div>
-                    </div>
-                    <div className="text-center p-4 bg-orange-50 rounded-lg">
-                        <div className="text-2xl font-bold text-orange-600">3</div>
-                        <div className="text-sm text-gray-600">User Inquiries</div>
-                    </div>
-                </div>
-                <div className="text-center">
-                    <p className="text-sm text-gray-600 mb-3">
-                        Reports are automatically merged when both AMMC and NIA surveyors submit their assessments
-                    </p>
-                    <div className="flex items-center justify-center space-x-2 text-sm text-green-600">
-                        <CheckCircle className="h-4 w-4" />
-                        <span>System Status: Healthy</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <button className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                        <Users className="h-6 w-6 text-blue-600 mr-3" />
-                        <div className="text-left">
-                            <div className="font-medium text-gray-900">Manage Surveyors</div>
-                            <div className="text-sm text-gray-600">Add, edit, or view NIA surveyors</div>
-                        </div>
-                    </button>
-
-                    <button className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                        <ClipboardList className="h-6 w-6 text-green-600 mr-3" />
-                        <div className="text-left">
-                            <div className="font-medium text-gray-900">View Assignments</div>
-                            <div className="text-sm text-gray-600">Manage dual-surveyor assignments</div>
-                        </div>
-                    </button>
-
-                    <button className="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-                        <AlertTriangle className="h-6 w-6 text-orange-600 mr-3" />
-                        <div className="text-left">
-                            <div className="font-medium text-gray-900">User Inquiries</div>
-                            <div className="text-sm text-gray-600">Handle user conflict inquiries</div>
-                        </div>
-                    </button>
-
-                    <button className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                        <FileText className="h-6 w-6 text-purple-600 mr-3" />
-                        <div className="text-left">
-                            <div className="font-medium text-gray-900">Processing Monitor</div>
-                            <div className="text-sm text-gray-600">Monitor automatic processing</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
+        </NIATokenProvider>
     );
 };
 

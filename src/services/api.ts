@@ -34,7 +34,9 @@ api.interceptors.request.use(
     // Ensure API key is always present (lowercase to match validation middleware)
     config.headers['apikey'] = API_KEY;
 
-    const token = getAuthToken();
+    // Check if this is a NIA admin request
+    const isNIAAdminRequest = config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor');
+    const token = getAuthToken(isNIAAdminRequest);
     console.log("Auth Token:", token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
