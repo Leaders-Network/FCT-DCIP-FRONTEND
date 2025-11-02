@@ -2,13 +2,18 @@
  * Authentication utility functions
  */
 
-export const getAuthToken = (): string | null => {
+export const getAuthToken = (preferNIA: boolean = false): string | null => {
     if (typeof window === 'undefined') return null;
 
-    // Try different token keys in order of preference
-    const tokenKeys = [
+    // For NIA admin pages, prioritize NIA admin token
+    const tokenKeys = preferNIA ? [
         'niaAdminToken',
         'adminToken',
+        'token',
+        'authToken'
+    ] : [
+        'adminToken',
+        'niaAdminToken',
         'token',
         'authToken'
     ];
