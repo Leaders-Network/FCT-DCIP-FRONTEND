@@ -46,6 +46,8 @@ const NIASurveyorsPage = () => {
     const [showManagementModal, setShowManagementModal] = useState(false);
     const [selectedSurveyor, setSelectedSurveyor] = useState<NIASurveyor | null>(null);
     const [managementMode, setManagementMode] = useState<'add' | 'edit' | 'view'>('add');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [surveyorToDelete, setSurveyorToDelete] = useState<{ id: string, name: string } | null>(null);
     const [filters, setFilters] = useState({
         status: 'all',
         availability: 'all',
@@ -175,6 +177,40 @@ const NIASurveyorsPage = () => {
         setSelectedSurveyor(surveyor);
         setManagementMode('view');
         setShowManagementModal(true);
+    };
+
+    const handleDeleteSurveyor = (surveyorId: string, surveyorName: string) => {
+        setSurveyorToDelete({ id: surveyorId, name: surveyorName });
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDeleteSurveyor = async () => {
+        if (!surveyorToDelete) return;
+
+        try {
+            const token = localStorage.getItem('niaAdminToken');
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+
+            const response = await fetch(`${baseUrl}/nia-admin/surveyors/${surveyorToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                fetchSurveyors(); // Refresh the list
+                setShowDeleteConfirm(false);
+                setSurveyorToDelete(null);
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete surveyor');
+            }
+        } catch (error) {
+            console.error('Delete surveyor error:', error);
+            alert(`Failed to delete surveyor: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     };
 
     const handleSaveSurveyor = async (surveyorData: any) => {
@@ -486,6 +522,16 @@ const NIASurveyorsPage = () => {
                                                 >
                                                     {surveyor.status === 'active' ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                                                 </button>
+                                                <button
+                                                    onClick={() => handleDeleteSurveyor(
+                                                        surveyor._id,
+                                                        `${surveyor.userId?.firstname} ${surveyor.userId?.lastname}`
+                                                    )}
+                                                    className="text-red-600 hover:text-red-900 transition-colors"
+                                                    title="Delete Surveyor"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -521,6 +567,50 @@ const NIASurveyorsPage = () => {
                     onSave={handleSaveSurveyor}
                     onClose={handleCloseModal}
                 />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <div className="flex items-center mb-4">
+                            <div className="flex-shrink-0">
+                                <Trash2 className="h-6 w-6 text-red-600" />
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-lg font-medium text-gray-900">
+                                    Delete Surveyor
+                                </h3>
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-500">
+                                Are you sure you want to delete <strong>{surveyorToDelete?.name}</strong>?
+                                This action cannot be undone and will permanently remove the surveyor from the system.
+                            </p>
+                            <p className="text-sm text-red-600 mt-2">
+                                Note: Surveyors with active assignments cannot be deleted.
+                            </p>
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteConfirm(false);
+                                    setSurveyorToDelete(null);
+                                }}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteSurveyor}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                                Delete Surveyor
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
