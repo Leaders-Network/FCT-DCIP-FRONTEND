@@ -39,7 +39,7 @@ const ContactPage = () => {
         style={{ backgroundImage: "url('/bg-hero-1.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/60"></div>
-        <div className="relative z-10 text-center text-white px-4">
+        <div data-aos="zoom-in" className="relative z-10 text-center text-white px-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-3">Contact Us</h1>
           <p className="max-w-2xl mx-auto text-lg">
             We're here to help with any questions about our property insurance services.
@@ -51,16 +51,16 @@ const ContactPage = () => {
       <section className="py-16 px-6 md:px-16 bg-white flex-grow">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10">
           {/* Form */}
-          <div>
+          <div data-aos="fade-right" data-aos-delay="300">
             <h2 className="text-3xl font-semibold mb-6 text-gray-900">Send Us a Message</h2>
 
             {isSubmitted ? (
-              <div className="p-6 bg-green-50 border border-green-200 rounded-xl text-green-700 font-medium">
+              <div  className="p-6 bg-green-50 border border-green-200 rounded-xl text-green-700 font-medium">
                 ✅ Thank you! Your message has been received. We’ll get back to you soon.
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
+              <form  onSubmit={handleSubmit} className="space-y-5">
+                <div >
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Full Name
                   </label>
@@ -124,7 +124,7 @@ const ContactPage = () => {
           </div>
 
           {/* Contact Info */}
-          <div className="bg-gray-50 rounded-2xl p-8 shadow-md">
+          <div data-aos="fade-left" data-aos-delay="300" className="bg-gray-50 rounded-2xl p-8 shadow-md">
             <h3 className="text-2xl font-semibold mb-4 text-gray-900">Get In Touch</h3>
             <p className="text-gray-600 mb-6">
               You can reach us anytime through the following contact details:
@@ -154,7 +154,7 @@ const ContactPage = () => {
       </section>
 
       {/* Map Section (optional) */}
-      <section className="w-full h-[400px]">
+      <section data-aos="zoom-in" data-aos-delay="300" className="w-full h-[400px]">
         <iframe
           src="https://www.google.com/maps?q=Zone+6,+Julia+Street,+Wuse,+Abuja&output=embed"
           width="100%"

@@ -70,7 +70,7 @@ useEffect(() => {
 
       {/* Hero content */}
       <div className="absolute inset-0 flex items-center">
-        <div data-aos="fade-left" className="container mx-auto px-4">
+        <div data-aos="zoom-in" className="container mx-auto px-4">
           <h1 className="text-5xl font-bold text-white mb-4">
             Protect Your Properties <br /> with Confidence
           </h1>
