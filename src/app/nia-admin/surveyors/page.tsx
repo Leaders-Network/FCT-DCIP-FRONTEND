@@ -71,7 +71,8 @@ const NIASurveyorsPage = () => {
             if (filters.availability !== 'all') queryParams.append('availability', filters.availability);
             if (filters.specialization !== 'all') queryParams.append('specialization', filters.specialization);
 
-            const response = await fetch(`/api/v1/nia-admin/surveyors?${queryParams.toString()}`, {
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            const response = await fetch(`${baseUrl}/nia-admin/surveyors?${queryParams.toString()}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -90,9 +91,9 @@ const NIASurveyorsPage = () => {
                 // Apply search filter
                 if (filters.search) {
                     filteredSurveyors = filteredSurveyors.filter((surveyor: NIASurveyor) =>
-                        `${surveyor.firstname} ${surveyor.lastname}`.toLowerCase().includes(filters.search.toLowerCase()) ||
-                        surveyor.email.toLowerCase().includes(filters.search.toLowerCase()) ||
-                        surveyor.licenseNumber.toLowerCase().includes(filters.search.toLowerCase())
+                        `${surveyor.userId?.firstname} ${surveyor.userId?.lastname}`.toLowerCase().includes(filters.search.toLowerCase()) ||
+                        surveyor.userId?.email.toLowerCase().includes(filters.search.toLowerCase()) ||
+                        surveyor.licenseNumber?.toLowerCase().includes(filters.search.toLowerCase())
                     );
                 }
 
@@ -137,7 +138,8 @@ const NIASurveyorsPage = () => {
     const handleUpdateStatus = async (surveyorId: string, newStatus: string) => {
         try {
             const token = localStorage.getItem('niaAdminToken');
-            const response = await fetch(`/api/v1/nia-admin/surveyors/${surveyorId}/status`, {
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            const response = await fetch(`${baseUrl}/nia-admin/surveyors/${surveyorId}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -178,9 +180,10 @@ const NIASurveyorsPage = () => {
     const handleSaveSurveyor = async (surveyorData: any) => {
         try {
             const token = localStorage.getItem('niaAdminToken');
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
             const url = managementMode === 'add'
-                ? '/api/v1/nia-admin/surveyors'
-                : `/api/v1/nia-admin/surveyors/${selectedSurveyor?._id}`;
+                ? `${baseUrl}/nia-admin/surveyors`
+                : `${baseUrl}/nia-admin/surveyors/${selectedSurveyor?._id}`;
 
             const method = managementMode === 'add' ? 'POST' : 'PUT';
 
@@ -407,18 +410,18 @@ const NIASurveyorsPage = () => {
                                             <div className="flex items-center">
                                                 <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
                                                     <span className="text-white font-medium text-sm">
-                                                        {surveyor.firstname[0]}{surveyor.lastname[0]}
+                                                        {surveyor.userId?.firstname?.[0]}{surveyor.userId?.lastname?.[0]}
                                                     </span>
                                                 </div>
                                                 <div className="ml-4">
                                                     <div className="text-sm font-medium text-gray-900">
-                                                        {surveyor.firstname} {surveyor.lastname}
+                                                        {surveyor.userId?.firstname} {surveyor.userId?.lastname}
                                                     </div>
                                                     <div className="text-sm text-gray-500">
-                                                        License: {surveyor.licenseNumber}
+                                                        License: {surveyor.licenseNumber || 'N/A'}
                                                     </div>
                                                     <div className="text-xs text-gray-400">
-                                                        {surveyor.experience} years experience
+                                                        {surveyor.profile?.experience} years experience
                                                     </div>
                                                 </div>
                                             </div>
@@ -426,17 +429,17 @@ const NIASurveyorsPage = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-900 flex items-center">
                                                 <Mail className="w-4 h-4 mr-1 text-gray-400" />
-                                                {surveyor.email}
+                                                {surveyor.userId?.email}
                                             </div>
                                             <div className="text-sm text-gray-500 flex items-center mt-1">
                                                 <Phone className="w-4 h-4 mr-1 text-gray-400" />
-                                                {surveyor.phoneNumber}
+                                                {surveyor.userId?.phonenumber}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="space-y-1">
                                                 {getStatusBadge(surveyor.status)}
-                                                {getAvailabilityBadge(surveyor.availability)}
+                                                {getAvailabilityBadge(surveyor.profile?.availability)}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -449,7 +452,7 @@ const NIASurveyorsPage = () => {
                                             <div className="flex items-center">
                                                 <Award className="w-4 h-4 text-yellow-500 mr-1" />
                                                 <span className="text-sm font-medium text-gray-900">
-                                                    {surveyor.rating.toFixed(1)}
+                                                    {surveyor.rating?.toFixed(1) || '0.0'}
                                                 </span>
                                                 <span className="text-sm text-gray-500 ml-1">/5.0</span>
                                             </div>
