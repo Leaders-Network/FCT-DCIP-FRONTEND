@@ -31,28 +31,35 @@ const NIAAdminLogin = () => {
         setError('');
 
         try {
-            // TODO: Implement NIA admin login API call
-            const response = await fetch('/api/v1/auth/login', {
+            // NIA admin login API call
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/loginEmployee`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'apikey': process.env.NEXT_PUBLIC_API_KEY || '',
                 },
                 body: JSON.stringify({
-                    ...formData,
-                    loginType: 'nia-admin'
+                    email: formData.email,
+                    password: formData.password
                 }),
             });
 
             const data = await response.json();
 
-            if (data.success) {
-                // Store NIA admin token and info
-                localStorage.setItem('niaAdminToken', data.token);
-                localStorage.setItem('niaAdminInfo', JSON.stringify(data.user));
-                localStorage.setItem('organization', 'NIA');
+            if (response.ok && data.success) {
+                // Check if user is NIA admin
+                if (data.employee?.employeeRole?.role === 'NIA-Admin' || data.employee?.organization === 'NIA') {
+                    // Store NIA admin token and info
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('employeeInfo', JSON.stringify(data.employee));
+                    localStorage.setItem('organization', 'NIA');
 
-                // Redirect to NIA admin dashboard
-                router.push('/nia-admin/dashboard');
+                    // Redirect to NIA admin dashboard
+                    router.push('/nia-admin/dashboard');
+                } else {
+                    setError('Access denied. This portal is for NIA administrators only.');
+                }
             } else {
                 setError(data.message || 'Login failed. Please check your credentials.');
             }
