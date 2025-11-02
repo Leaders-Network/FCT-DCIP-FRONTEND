@@ -238,7 +238,7 @@ export const getUserPolicyRequests = async (status?: string, page = 1, limit = 1
 
 export const getUserProperties = async () => {
   try {
-    const response = await api.get("/auth/user/get-all-properties");
+    const response = await api.get("/property/user");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch user properties", error);
@@ -775,7 +775,7 @@ export const uploadSurveyDocument = async (file: File, data: {
 
     const response = await api.post("/survey-documents/upload/single", formData, {
       headers: {
-        apiKey: API_KEY,
+        apikey: API_KEY,
         // Don't set Content-Type for FormData
       },
     });
@@ -804,7 +804,7 @@ export const uploadMultipleSurveyDocuments = async (files: File[], data: {
 
     const response = await api.post("/survey-documents/upload/multiple", formData, {
       headers: {
-        apiKey: API_KEY,
+        apikey: API_KEY,
       },
     });
     return response.data;

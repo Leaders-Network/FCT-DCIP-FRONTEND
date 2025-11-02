@@ -1,5 +1,6 @@
-import React from "react";
-import { X } from "lucide-react";
+import React, { useState } from "react";
+import { X, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 
 interface PropertyDetailsModalProps {
   isOpen: boolean;
