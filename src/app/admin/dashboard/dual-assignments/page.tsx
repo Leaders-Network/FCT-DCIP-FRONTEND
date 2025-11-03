@@ -13,7 +13,6 @@ import {
     Eye,
     UserPlus
 } from 'lucide-react';
-import NIAAssignmentManagement from '@/components/nia-admin/NIAAssignmentManagement';
 
 interface DualAssignment {
     _id: string;
@@ -50,12 +49,10 @@ interface DualAssignment {
     createdAt: string;
 }
 
-const NIAAssignmentsPage = () => {
+const AMMCDualAssignmentsPage = () => {
     const [assignments, setAssignments] = useState<DualAssignment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
-    const [selectedAssignment, setSelectedAssignment] = useState<DualAssignment | null>(null);
     const [filters, setFilters] = useState({
         assignmentStatus: 'all',
         completionStatus: 'all',
@@ -70,7 +67,7 @@ const NIAAssignmentsPage = () => {
     const fetchAssignments = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('niaAdminToken');
+            const token = localStorage.getItem('token');
 
             if (!token) {
                 throw new Error('No authentication token found');
@@ -90,23 +87,13 @@ const NIAAssignmentsPage = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch assignments');
+                throw new Error('Failed to fetch dual assignments');
             }
 
             const data = await response.json();
 
             if (data.success) {
                 let filteredAssignments = data.data.dualAssignments || [];
-
-                // Debug: Log the raw data to see what's being returned (temporary)
-                console.log('🔍 NIA Assignments Debug:', filteredAssignments.map(a => ({
-                    id: a._id?.slice(-6),
-                    status: a.assignmentStatus,
-                    hasNIA: !!a.niaSurveyorContact,
-                    niaName: a.niaSurveyorContact?.name,
-                    niaType: typeof a.niaSurveyorContact,
-                    canAssign: !a.niaSurveyorContact || (typeof a.niaSurveyorContact === 'object' && Object.keys(a.niaSurveyorContact).length === 0)
-                })));
 
                 // Apply search filter
                 if (filters.search) {
@@ -119,11 +106,11 @@ const NIAAssignmentsPage = () => {
 
                 setAssignments(filteredAssignments);
             } else {
-                throw new Error(data.message || 'Failed to load assignments');
+                throw new Error(data.message || 'Failed to load dual assignments');
             }
         } catch (error) {
-            console.error('Assignments fetch error:', error);
-            setError(error instanceof Error ? error.message : 'Failed to load assignments');
+            console.error('Dual assignments fetch error:', error);
+            setError(error instanceof Error ? error.message : 'Failed to load dual assignments');
         } finally {
             setLoading(false);
         }
@@ -155,27 +142,26 @@ const NIAAssignmentsPage = () => {
         }
     };
 
-    const canAssignNIASurveyor = (assignment: DualAssignment) => {
-        // Check if niaSurveyorContact is null, undefined, or an empty object
-        return !assignment.niaSurveyorContact ||
-            (typeof assignment.niaSurveyorContact === 'object' &&
-                Object.keys(assignment.niaSurveyorContact).length === 0);
+    const canAssignAMMCSurveyor = (assignment: DualAssignment) => {
+        return !assignment.ammcSurveyorContact;
     };
 
-    const handleAssignSurveyor = (assignment: DualAssignment) => {
-        setSelectedAssignment(assignment);
-        setShowAssignmentModal(true);
-    };
+    const handleAssignSurveyor = async (assignment: DualAssignment) => {
+        try {
+            // For now, let's try to assign directly using the policy assignment endpoint
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
 
-    const handleAssignmentComplete = () => {
-        fetchAssignments(); // Refresh the assignments list
-        setShowAssignmentModal(false);
-        setSelectedAssignment(null);
-    };
+            console.log('Attempting to assign AMMC surveyor for assignment:', assignment._id);
 
-    const handleCloseModal = () => {
-        setShowAssignmentModal(false);
-        setSelectedAssignment(null);
+            // Navigate to assignment page with dual assignment context
+            window.location.href = `/admin/dashboard/assignments?ammcId=${assignment.policyId._id}&dualAssignmentId=${assignment._id}&mode=dual`;
+        } catch (error) {
+            console.error('Assignment error:', error);
+            setError(error instanceof Error ? error.message : 'Failed to initiate assignment');
+        }
     };
 
     return (
@@ -183,8 +169,8 @@ const NIAAssignmentsPage = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Nigerian Insurers Association Assignment Management</h1>
-                    <p className="text-gray-600 mt-1">Manage dual-surveyor assignments and coordinate with AMMC</p>
+                    <h1 className="text-2xl font-bold text-gray-900">AMMC Dual Assignment Management</h1>
+                    <p className="text-gray-600 mt-1">Manage dual-surveyor assignments and coordinate with NIA</p>
                 </div>
                 <div className="flex items-center space-x-3">
                     <button
@@ -207,14 +193,14 @@ const NIAAssignmentsPage = () => {
                             placeholder="Search assignments..."
                             value={filters.search}
                             onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
                         />
                     </div>
 
                     <select
                         value={filters.assignmentStatus}
                         onChange={(e) => setFilters(prev => ({ ...prev, assignmentStatus: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
                     >
                         <option value="all">All Assignment Status</option>
                         <option value="unassigned">Unassigned</option>
@@ -225,7 +211,7 @@ const NIAAssignmentsPage = () => {
                     <select
                         value={filters.completionStatus}
                         onChange={(e) => setFilters(prev => ({ ...prev, completionStatus: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
                     >
                         <option value="all">All Completion</option>
                         <option value="0">Not Started (0%)</option>
@@ -236,7 +222,7 @@ const NIAAssignmentsPage = () => {
                     <select
                         value={filters.priority}
                         onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
                     >
                         <option value="all">All Priority</option>
                         <option value="urgent">Urgent</option>
@@ -315,14 +301,14 @@ const NIAAssignmentsPage = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-gray-500">AMMC Surveyor:</span>
-                                        <span className={`text-xs font-medium ${assignment.ammcSurveyorContact?.name ? 'text-green-600' : 'text-gray-400'}`}>
-                                            {assignment.ammcSurveyorContact?.name || 'Not Assigned'}
+                                        <span className={`text-xs font-medium ${assignment.ammcSurveyorContact ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {assignment.ammcSurveyorContact ? assignment.ammcSurveyorContact.name : 'Not Assigned'}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-gray-500">NIA Surveyor:</span>
-                                        <span className={`text-xs font-medium ${assignment.niaSurveyorContact?.name ? 'text-blue-600' : 'text-gray-400'}`}>
-                                            {assignment.niaSurveyorContact?.name || 'Not Assigned'}
+                                        <span className={`text-xs font-medium ${assignment.niaSurveyorContact ? 'text-blue-600' : 'text-gray-400'}`}>
+                                            {assignment.niaSurveyorContact ? assignment.niaSurveyorContact.name : 'Not Assigned'}
                                         </span>
                                     </div>
                                 </div>
@@ -339,22 +325,22 @@ const NIAAssignmentsPage = () => {
                             {/* Card Actions */}
                             <div className="p-4 border-t border-gray-200 bg-gray-50">
                                 <div className="flex items-center justify-between">
-                                    {canAssignNIASurveyor(assignment) ? (
+                                    {canAssignAMMCSurveyor(assignment) ? (
                                         <button
                                             onClick={() => handleAssignSurveyor(assignment)}
-                                            className="flex items-center space-x-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                                            className="flex items-center space-x-2 px-3 py-1 bg-[#028835] text-white text-sm rounded hover:bg-green-700 transition-colors"
                                         >
                                             <UserPlus className="w-4 h-4" />
-                                            <span>Assign NIA Surveyor</span>
+                                            <span>Assign AMMC Surveyor</span>
                                         </button>
                                     ) : (
                                         <div className="flex items-center space-x-2 text-xs text-gray-500">
                                             <CheckCircle className="w-3 h-3" />
-                                            <span>NIA Surveyor Assigned</span>
+                                            <span>AMMC Surveyor Assigned</span>
                                         </div>
                                     )}
 
-                                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
+                                    <button className="text-[#028835] hover:text-green-700 text-sm font-medium transition-colors">
                                         View Details
                                     </button>
                                 </div>
@@ -365,7 +351,7 @@ const NIAAssignmentsPage = () => {
             ) : (
                 <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No dual assignments found</h3>
                     <p className="text-gray-600">
                         {filters.search || filters.assignmentStatus !== 'all' || filters.completionStatus !== 'all' || filters.priority !== 'all'
                             ? 'Try adjusting your filters to see more assignments.'
@@ -373,17 +359,8 @@ const NIAAssignmentsPage = () => {
                     </p>
                 </div>
             )}
-
-            {/* Assignment Management Modal */}
-            {showAssignmentModal && selectedAssignment && (
-                <NIAAssignmentManagement
-                    assignment={selectedAssignment}
-                    onAssignmentComplete={handleAssignmentComplete}
-                    onClose={handleCloseModal}
-                />
-            )}
         </div>
     );
 };
 
-export default NIAAssignmentsPage;
+export default AMMCDualAssignmentsPage;
