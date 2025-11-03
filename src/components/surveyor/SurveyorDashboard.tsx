@@ -5,7 +5,7 @@ import { Assignment } from "@/types/api.types";
 import Link from "next/link";
 import { getSurveyorDashboard, getSurveyorAssignments } from "@/services/api";
 
-const StatCard = ({ icon, label, value, color }) => (
+const StatCard = ({ icon, label, value, color }: { icon: any, label: string, value: string | number, color: string }) => (
   <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-w-0 overflow-hidden">
     <div className="flex items-center min-w-0">
       <div className={`p-2 bg-${color}-100 rounded-lg flex-shrink-0`}>
@@ -69,7 +69,7 @@ const SurveyorDashboard = () => {
             setStats({
               total: fetchedAssignments.length,
               pending: fetchedAssignments.filter(a => a.status === 'assigned' || a.status === 'accepted').length,
-              inProgress: fetchedAssignments.filter(a => a.status === 'in-progress').length,
+              inProgress: fetchedAssignments.filter(a => (a.status as any) === 'in-progress').length,
               completed: fetchedAssignments.filter(a => a.status === 'completed').length
             });
           }
@@ -171,7 +171,7 @@ const SurveyorDashboard = () => {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Welcome back, {firstName}!</h1>
-        <p className="text-gray-600 mt-1">Here's an overview of your survey assignments.</p>
+        <p className="text-gray-600 mt-1">Here's an overview of your AMMC survey assignments.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -188,7 +188,7 @@ const SurveyorDashboard = () => {
             View All
           </Link>
         </div>
-        
+
         <div className="divide-y divide-gray-200">
           {recentAssignments.length > 0 ? (
             recentAssignments.map((assignment) => (
@@ -208,7 +208,7 @@ const SurveyorDashboard = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 mr-1.5" />
@@ -220,7 +220,7 @@ const SurveyorDashboard = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-4">
                     {getStatusBadge(assignment.status)}
                     <Link href={`/surveyor/dashboard/assignments/${assignment._id}`} className="text-[#028835] hover:text-green-700 text-sm font-medium">
@@ -235,7 +235,7 @@ const SurveyorDashboard = () => {
               <FileText className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-4 text-lg font-medium text-gray-900">No assignments yet</h3>
               <p className="mt-1 text-sm text-gray-500">
-                New survey assignments will appear here.
+                New AMMC survey assignments will appear here.
               </p>
             </div>
           )}
@@ -252,9 +252,9 @@ const SurveyorDashboard = () => {
               <p className="text-sm text-gray-500">See your complete assignment list</p>
             </div>
           </Link>
-          
 
-          
+
+
           <Link href="/surveyor/dashboard/settings" className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
             <Users className="h-7 w-7 text-purple-600" />
             <div className="ml-4">

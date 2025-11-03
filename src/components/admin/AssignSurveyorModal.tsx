@@ -59,7 +59,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
       return;
     }
     if (!newAssignmentData.surveyorId) {
-      setError('Please select a surveyor.');
+      setError('Please select an AMMC surveyor.');
       return;
     }
     try {
@@ -67,8 +67,8 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
         ammcId: selectedPolicy!._id,
         surveyorId: newAssignmentData.surveyorId,
         assignedBy: user?._id,
-        deadline: new Date(newAssignmentData.deadline),
-        priority: newAssignmentData.priority,
+        deadline: new Date(newAssignmentData.deadline).toISOString(),
+        priority: newAssignmentData.priority as "low" | "medium" | "high" | "urgent",
         instructions: newAssignmentData.instructions || 'N/A',
       };
       await adminApi.createAssignment(assignmentData);
@@ -98,10 +98,10 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
         onAssignmentReassigned();
         onClose();
       } else {
-        setError(response.message || 'Failed to re-assign surveyor');
+        setError(response.message || 'Failed to re-assign AMMC surveyor');
       }
     } catch (error) {
-      setError('Failed to re-assign surveyor. Please try again.');
+      setError('Failed to re-assign AMMC surveyor. Please try again.');
     }
   };
 
@@ -113,7 +113,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-lg p-6 overflow-y-auto max-h-[90vh]">
         <div className="flex items-start justify-between">
-          <h3 className="text-lg font-semibold mb-4">{isReassign ? 'Re-assign Surveyor' : 'Assign Surveyor'}</h3>
+          <h3 className="text-lg font-semibold mb-4">{isReassign ? 'Re-assign AMMC Surveyor' : 'Assign AMMC Surveyor'}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-6 h-6" />
           </button>
@@ -131,7 +131,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
         </div>
         <div className="space-y-4">
           <div>
-            <label htmlFor="surveyor" className="block text-sm font-medium text-gray-700">Select Surveyor(s)</label>
+            <label htmlFor="surveyor" className="block text-sm font-medium text-gray-700">Select AMMC Surveyor(s)</label>
             <div className="mt-2 h-60 overflow-y-auto border border-gray-300 rounded-md">
               {Array.isArray(availableSurveyors) && availableSurveyors.map(s => (
                 <div key={s._id} className="flex items-center p-2">
@@ -145,7 +145,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded-full focus:ring-indigo-500"
                   />
                   <label htmlFor={`surveyor-${s._id}`} className="ml-3 text-sm text-gray-700">
-                    {s.userId?.firstname || 'N/A'} {s.userId?.lastname || 'N/A'} ({s.userId?.email || 'N/A'}) - {s.profile?.specialization?.join(', ') || 'N/A'}
+                    {(s.userId as any)?.firstname || 'N/A'} {(s.userId as any)?.lastname || 'N/A'} ({(s.userId as any)?.email || 'N/A'}) - {s.profile?.specialization?.join(', ') || 'N/A'}
                   </label>
                 </div>
               ))}

@@ -4,10 +4,10 @@ import axios from 'axios';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function AdminSurveyorAvailability() {
-  const [surveyors, setSurveyors] = useState([]);
+  const [surveyors, setSurveyors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedSurveyor, setSelectedSurveyor] = useState(null);
+  const [selectedSurveyor, setSelectedSurveyor] = useState<any>(null);
   const [newAvailability, setNewAvailability] = useState('available');
   const [updating, setUpdating] = useState(false);
 

@@ -2,23 +2,22 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, FileText, Settings, Briefcase, Building, ClipboardList, Shield } from "lucide-react";
+import { Home, Users, FileText, Settings, Briefcase, Building, ClipboardList, Shield, AlertTriangle } from "lucide-react";
 
 import { useAuth } from "@/context/useAuth";
 import { IoMdLogOut } from "react-icons/io";
 
-const NavItem = ({ href, icon, label }) => {
+const NavItem = ({ href, icon, label }: { href: string; icon: any; label: string }) => {
   const pathname = usePathname();
   const isActive = pathname === href;
 
   return (
     <Link href={href}>
       <div
-        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-          isActive
-            ? "bg-[#028835] text-white"
-            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-        }`}>
+        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive
+          ? "bg-[#028835] text-white"
+          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+          }`}>
         {React.createElement(icon, { className: "h-5 w-5 mr-3" })}
         <span>{label}</span>
       </div>
@@ -41,6 +40,8 @@ export default function Sidebar() {
         <NavItem href="/admin/dashboard/enforcement" icon={Shield} label="Enforcement" />
         <NavItem href="/admin/dashboard/surveyors" icon={Users} label="Surveyors" />
         <NavItem href="/admin/dashboard/users" icon={Users} label="Users" />
+        <NavItem href="/admin/dashboard/user-inquiries" icon={AlertTriangle} label="User Inquiries" />
+        <NavItem href="/admin/dashboard/processing-monitor" icon={FileText} label="Processing Monitor" />
         <NavItem href="/admin/dashboard/administrators" icon={ClipboardList} label="Administrators" />
         <NavItem href="/admin/dashboard/settings" icon={Settings} label="Settings" />
       </nav>

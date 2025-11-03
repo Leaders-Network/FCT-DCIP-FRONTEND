@@ -35,7 +35,7 @@ const EmployeeManagement: React.FC = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await adminApi.getAllEmployees();
+      const response = await adminApi.getEmployees();
       setEmployees(response.data || []);
     } catch (error) {
       console.error('Error fetching employees:', error);
@@ -132,8 +132,8 @@ const EmployeeManagement: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${employee.employeeStatus?.status === 'active'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
                     }`}>
                     {employee.employeeStatus?.status || 'N/A'}
                   </span>

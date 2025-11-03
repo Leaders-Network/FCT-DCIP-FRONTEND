@@ -2,6 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { CreatePolicyRequestData } from "@/types/api.types";
+import {
+  PROPERTY_TYPES,
+  CONSTRUCTION_MATERIALS,
+  COVERAGE_TYPES,
+  POLICY_DURATIONS,
+  ADDITIONAL_COVERAGE_OPTIONS
+} from "@/constants/policyConstants";
 
 interface PolicyRequestFormProps {
   isOpen: boolean;
@@ -19,7 +26,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   // Initialize form with user data from localStorage
   const initializeFormData = () => {
     let userEmail = "";
-    let userFullName = "";
 
     if (typeof window !== 'undefined') {
       // Get user data from localStorage
@@ -57,6 +63,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         email: userEmail,
         phoneNumber: "",
         alternatePhone: "",
+        rcNumber: "",
       },
       requestDetails: {
         coverageType: "",
@@ -145,7 +152,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     setFormData((prev) => ({
       ...prev,
       [section]: {
-        ...(prev[section] as object),
+        ...((prev[section] as any) || {}),
         [field]: value,
       },
     }));
@@ -192,23 +199,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
-
-  const propertyTypes = [
-    "Residential House",
-    "Apartment/Condo",
-    "Commercial Building",
-    "Industrial Facility",
-    "Mixed Use",
-  ];
-
-  const constructionMaterials = [
-    "Concrete Block",
-    "Steel Frame",
-    "Wood Frame",
-    "Brick",
-    "Stone",
-    "Mixed Materials",
-  ];
 
   const coverageTypes = [
     "Contract Works Coverage",
@@ -269,7 +259,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   {step === 1
                     ? "Property Details"
                     : step === 2
-                      ? "Contact Info"
+                      ? "Builder/Contractor"
                       : "Coverage Details"}
                 </span>
                 {step < 3 && (
@@ -333,7 +323,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     }
                   >
                     <option value="">Select property type</option>
-                    {propertyTypes.map((type) => (
+                    {PROPERTY_TYPES.map((type) => (
                       <option key={type} value={type}>
                         {type}
                       </option>
@@ -354,7 +344,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     }
                   >
                     <option value="">Select material</option>
-                    {constructionMaterials.map((material) => (
+                    {CONSTRUCTION_MATERIALS.map((material) => (
                       <option key={material} value={material}>
                         {material}
                       </option>
@@ -418,14 +408,14 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
             </div>
           )}
 
-          {/* Step 2: Contact Details */}
+          {/* Step 2: Builder/Contractor Details */}
           {currentStep === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+              <h3 className="text-lg font-semibold mb-4">Property Builder/Contractor</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
+                  Name of Builder/Contractor *
                 </label>
                 <input
                   required
@@ -435,7 +425,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   onChange={(e) =>
                     handleInputChange("contactDetails", "fullName", e.target.value)
                   }
-                  placeholder="Enter your full name"
+                  placeholder="Enter name of builder/contractor"
                 />
 
               </div>
@@ -491,6 +481,26 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   placeholder="+234 XXX XXX XXXX"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  RC Number *
+                </label>
+                <input
+                  required
+                  type="text"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835]"
+                  value={formData.contactDetails.rcNumber}
+                  onChange={(e) =>
+                    handleInputChange("contactDetails", "rcNumber", e.target.value.toUpperCase())
+                  }
+                  placeholder="RC123456"
+                  style={{ textTransform: 'uppercase' }}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter your company's Registration Certificate number
+                </p>
+              </div>
             </div>
           )}
 
@@ -513,7 +523,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     }
                   >
                     <option value="">Select coverage type</option>
-                    {coverageTypes.map((type) => (
+                    {COVERAGE_TYPES.map((type) => (
                       <option key={type} value={type}>
                         {type}
                       </option>
@@ -534,7 +544,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     }
                   >
                     <option value="">Select duration</option>
-                    {policyDurations.map((duration) => (
+                    {POLICY_DURATIONS.map((duration) => (
                       <option key={duration} value={duration}>
                         {duration}
                       </option>
@@ -548,7 +558,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   Additional Coverage (Optional)
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {additionalCoverageOptions.map((option) => (
+                  {ADDITIONAL_COVERAGE_OPTIONS.map((option) => (
                     <label key={option} className="flex items-center">
                       <input
                         type="checkbox"
