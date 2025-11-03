@@ -12,7 +12,7 @@ const faqItems = [
   {
     question: "What is FCT-DCIP?",
     answer:
-      "FCT-DCIP stands for Federal Capital Territory Development Control Insurance Program. It is a comprehensive insurance solution for property owners in Abuja.",
+      "FCT-DCIP stands for Federal Capital Territory Development Control Insurance Program. It is a comprehensive insurance solution for property builders and contractors in Abuja.",
   },
   {
     question: "What are the benefits of the FCT-DCIP?",
@@ -22,7 +22,7 @@ const faqItems = [
   {
     question: "Who are the stakeholders in the FCT-DCIP?",
     answer:
-      "Stakeholders include property owners, developers, insurance providers, and the FCT Development Control Department.",
+      "Stakeholders include property builders/contractors, developers, insurance providers, and the FCT Development Control Department.",
   },
   {
     question: "What is the advantage of the FCT-DCIP?",
@@ -36,7 +36,7 @@ const FAQ = () => {
     <section className="py-16 bg-[#004C3F]">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row">
-          <div data-aos="zoom-in"  data-aos-anchor-placement="top-center" className="w-full items-center justify-center md:pr-8">
+          <div data-aos="zoom-in" data-aos-anchor-placement="top-center" className="w-full items-center justify-center md:pr-8">
             <Image
               src="/house.png"
               alt="House protected by hands"

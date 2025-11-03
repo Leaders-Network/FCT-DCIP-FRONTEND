@@ -1,0 +1,376 @@
+"use client";
+import React, { useState, useEffect } from 'react';
+import {
+    Plus,
+    Filter,
+    Search,
+    RefreshCw,
+    FileText,
+    Users,
+    Clock,
+    AlertTriangle,
+    CheckCircle,
+    Eye,
+    UserPlus
+} from 'lucide-react';
+import NIAAssignmentManagement from '@/components/nia-admin/NIAAssignmentManagement';
+
+interface DualAssignment {
+    _id: string;
+    policyId: {
+        _id: string;
+        propertyDetails: {
+            propertyType: string;
+            address: string;
+            buildingValue: number;
+        };
+        contactDetails: {
+            fullName: string;
+            email: string;
+            phoneNumber: string;
+        };
+        status: string;
+    };
+    assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
+    completionStatus: 0 | 50 | 100;
+    ammcSurveyorContact?: {
+        name: string;
+        email: string;
+        phone: string;
+    };
+    niaSurveyorContact?: {
+        name: string;
+        email: string;
+        phone: string;
+    };
+    priority: string;
+    estimatedCompletion: {
+        overallDeadline: string;
+    };
+    createdAt: string;
+}
+
+const NIAAssignmentsPage = () => {
+    const [assignments, setAssignments] = useState<DualAssignment[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState<DualAssignment | null>(null);
+    const [filters, setFilters] = useState({
+        assignmentStatus: 'all',
+        completionStatus: 'all',
+        priority: 'all',
+        search: ''
+    });
+
+    useEffect(() => {
+        fetchAssignments();
+    }, [filters]);
+
+    const fetchAssignments = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('niaAdminToken');
+
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const queryParams = new URLSearchParams();
+            if (filters.assignmentStatus !== 'all') queryParams.append('assignmentStatus', filters.assignmentStatus);
+            if (filters.completionStatus !== 'all') queryParams.append('completionStatus', filters.completionStatus);
+            if (filters.priority !== 'all') queryParams.append('priority', filters.priority);
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            const response = await fetch(`${baseUrl}/dual-assignment?${queryParams.toString()}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch assignments');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                let filteredAssignments = data.data.dualAssignments || [];
+
+                // Apply search filter
+                if (filters.search) {
+                    filteredAssignments = filteredAssignments.filter((assignment: DualAssignment) =>
+                        assignment.policyId?.propertyDetails?.address?.toLowerCase().includes(filters.search.toLowerCase()) ||
+                        assignment.policyId?.contactDetails?.fullName?.toLowerCase().includes(filters.search.toLowerCase()) ||
+                        assignment.policyId?.propertyDetails?.propertyType?.toLowerCase().includes(filters.search.toLowerCase())
+                    );
+                }
+
+                setAssignments(filteredAssignments);
+            } else {
+                throw new Error(data.message || 'Failed to load assignments');
+            }
+        } catch (error) {
+            console.error('Assignments fetch error:', error);
+            setError(error instanceof Error ? error.message : 'Failed to load assignments');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'unassigned':
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Unassigned</span>;
+            case 'partially_assigned':
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Partially Assigned</span>;
+            case 'fully_assigned':
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Fully Assigned</span>;
+            default:
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{status}</span>;
+        }
+    };
+
+    const getCompletionBadge = (completion: number) => {
+        switch (completion) {
+            case 0:
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Not Started (0%)</span>;
+            case 50:
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Partially Complete (50%)</span>;
+            case 100:
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Fully Complete (100%)</span>;
+            default:
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{completion}%</span>;
+        }
+    };
+
+    const canAssignNIASurveyor = (assignment: DualAssignment) => {
+        return !assignment.niaSurveyorContact && assignment.assignmentStatus !== 'unassigned';
+    };
+
+    const handleAssignSurveyor = (assignment: DualAssignment) => {
+        setSelectedAssignment(assignment);
+        setShowAssignmentModal(true);
+    };
+
+    const handleAssignmentComplete = () => {
+        fetchAssignments(); // Refresh the assignments list
+        setShowAssignmentModal(false);
+        setSelectedAssignment(null);
+    };
+
+    const handleCloseModal = () => {
+        setShowAssignmentModal(false);
+        setSelectedAssignment(null);
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Nigerian Insurers Association Assignment Management</h1>
+                    <p className="text-gray-600 mt-1">Manage dual-surveyor assignments and coordinate with AMMC</p>
+                </div>
+                <div className="flex items-center space-x-3">
+                    <button
+                        onClick={fetchAssignments}
+                        className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Filters */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div className="relative md:col-span-2">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Search assignments..."
+                            value={filters.search}
+                            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+
+                    <select
+                        value={filters.assignmentStatus}
+                        onChange={(e) => setFilters(prev => ({ ...prev, assignmentStatus: e.target.value }))}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="all">All Assignment Status</option>
+                        <option value="unassigned">Unassigned</option>
+                        <option value="partially_assigned">Partially Assigned</option>
+                        <option value="fully_assigned">Fully Assigned</option>
+                    </select>
+
+                    <select
+                        value={filters.completionStatus}
+                        onChange={(e) => setFilters(prev => ({ ...prev, completionStatus: e.target.value }))}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="all">All Completion</option>
+                        <option value="0">Not Started (0%)</option>
+                        <option value="50">Partially Complete (50%)</option>
+                        <option value="100">Fully Complete (100%)</option>
+                    </select>
+
+                    <select
+                        value={filters.priority}
+                        onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="all">All Priority</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+            </div>
+
+            {/* Error Display */}
+            {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                        <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
+                        <p className="text-red-700">{error}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Assignments Grid */}
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="bg-white p-6 rounded-lg shadow-sm border animate-pulse">
+                            <div className="space-y-3">
+                                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                                <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : assignments.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {assignments.map((assignment) => (
+                        <div key={assignment._id} className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            {/* Card Header */}
+                            <div className="p-4 border-b border-gray-200">
+                                <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-center space-x-2">
+                                        {getStatusBadge(assignment.assignmentStatus)}
+                                        {getCompletionBadge(assignment.completionStatus)}
+                                    </div>
+                                    <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                                        <Eye className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    {assignment.policyId?.propertyDetails?.propertyType || 'Property Survey'}
+                                </h3>
+                                <p className="text-sm text-gray-600 truncate">
+                                    {assignment.policyId?.propertyDetails?.address || 'No address provided'}
+                                </p>
+                            </div>
+
+                            {/* Card Body */}
+                            <div className="p-4 space-y-3">
+                                {/* Property Value */}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-600">Property Value:</span>
+                                    <span className="text-sm font-medium text-gray-900">
+                                        ₦{assignment.policyId?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
+                                    </span>
+                                </div>
+
+                                {/* Contact Info */}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-600">Contact:</span>
+                                    <span className="text-sm font-medium text-gray-900 truncate">
+                                        {assignment.policyId?.contactDetails?.fullName || 'No contact'}
+                                    </span>
+                                </div>
+
+                                {/* Surveyor Status */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-500">AMMC Surveyor:</span>
+                                        <span className={`text-xs font-medium ${assignment.ammcSurveyorContact ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {assignment.ammcSurveyorContact ? assignment.ammcSurveyorContact.name : 'Not Assigned'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-500">NIA Surveyor:</span>
+                                        <span className={`text-xs font-medium ${assignment.niaSurveyorContact ? 'text-blue-600' : 'text-gray-400'}`}>
+                                            {assignment.niaSurveyorContact ? assignment.niaSurveyorContact.name : 'Not Assigned'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Deadline */}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-600">Deadline:</span>
+                                    <span className="text-sm font-medium text-gray-900">
+                                        {new Date(assignment.estimatedCompletion.overallDeadline).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Card Actions */}
+                            <div className="p-4 border-t border-gray-200 bg-gray-50">
+                                <div className="flex items-center justify-between">
+                                    {canAssignNIASurveyor(assignment) ? (
+                                        <button
+                                            onClick={() => handleAssignSurveyor(assignment)}
+                                            className="flex items-center space-x-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                                        >
+                                            <UserPlus className="w-4 h-4" />
+                                            <span>Assign NIA Surveyor</span>
+                                        </button>
+                                    ) : (
+                                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                            <CheckCircle className="w-3 h-3" />
+                                            <span>NIA Surveyor Assigned</span>
+                                        </div>
+                                    )}
+
+                                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
+                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
+                    <p className="text-gray-600">
+                        {filters.search || filters.assignmentStatus !== 'all' || filters.completionStatus !== 'all' || filters.priority !== 'all'
+                            ? 'Try adjusting your filters to see more assignments.'
+                            : 'Dual-surveyor assignments will appear here when policies are submitted.'}
+                    </p>
+                </div>
+            )}
+
+            {/* Assignment Management Modal */}
+            {showAssignmentModal && selectedAssignment && (
+                <NIAAssignmentManagement
+                    assignment={selectedAssignment}
+                    onAssignmentComplete={handleAssignmentComplete}
+                    onClose={handleCloseModal}
+                />
+            )}
+        </div>
+    );
+};
+
+export default NIAAssignmentsPage;

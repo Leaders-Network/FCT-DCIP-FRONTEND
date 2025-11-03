@@ -95,6 +95,7 @@ export interface PolicyRequest {
     email: string;
     phoneNumber: string;
     alternatePhone?: string;
+    rcNumber: string;
   };
   requestDetails: {
     coverageType: string;
@@ -138,6 +139,7 @@ export interface CreatePolicyRequestData {
     email: string;
     phoneNumber: string;
     alternatePhone?: string;
+    rcNumber: string;
   };
   requestDetails: {
     coverageType: string;

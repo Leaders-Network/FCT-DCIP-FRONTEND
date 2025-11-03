@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical } from "lucide-react";
+import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical, Shield } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
-import { downloadFile } from "@/services/fileService";
 import { getUserPolicyRequests, deletePolicyRequest } from "@/services/api";
 
 interface PolicyCompletionProps { }
@@ -14,21 +13,36 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showActionsDropdown && !target.closest('.dropdown-container')) {
+        setShowActionsDropdown(null);
+      }
+    };
+
+    if (showActionsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showActionsDropdown]);
+
   useEffect(() => {
     const fetchCompletedPolicies = async () => {
       setLoading(true);
       try {
-        const [approvedResponse, surveyedResponse, rejectedResponse, requiresMoreInfoResponse] = await Promise.all([
+        const [approvedResponse, surveyedResponse, rejectedResponse, completedResponse] = await Promise.all([
           getUserPolicyRequests("approved", 1, 100),
           getUserPolicyRequests("surveyed", 1, 100),
           getUserPolicyRequests("rejected", 1, 100),
-          getUserPolicyRequests("requires_more_info", 1, 100),
+          getUserPolicyRequests("completed", 1, 100),
         ]);
         const approved = approvedResponse.data.policyRequests || [];
         const surveyed = surveyedResponse.data.policyRequests || [];
         const rejected = rejectedResponse.data.policyRequests || [];
-        const requiresMoreInfo = requiresMoreInfoResponse.data.policyRequests || [];
-        setCompletedPolicies([...approved, ...surveyed, ...rejected, ...requiresMoreInfo]);
+        const completed = completedResponse.data.policyRequests || [];
+        setCompletedPolicies([...approved, ...surveyed, ...rejected, ...completed]);
       } catch (error) {
         console.error("Failed to fetch completed policies:", error);
       } finally {
@@ -79,9 +93,18 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">Completed Permits</h2>
-        <p className="text-gray-600">Download your approved survey reports and AMMC verified permit.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Completed Permits</h2>
+          <p className="text-gray-600">Download your approved survey reports, verify policies, and access AMMC verified permits.</p>
+        </div>
+        <button
+          onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+          className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          Verify Policy
+        </button>
       </div>
 
       {completedPolicies.length > 0 ? (
@@ -99,20 +122,20 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                   <div className="flex items-center space-x-2">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' :
                       policy.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                        policy.status === 'requires_more_info' ? 'bg-orange-100 text-orange-800' :
+                        policy.status === 'completed' ? 'bg-orange-100 text-orange-800' :
                           'bg-blue-100 text-blue-800'
                       }`}>
                       {policy.status === 'approved' ? <CheckCircle className="w-4 h-4 mr-1" /> :
                         policy.status === 'rejected' ? <XCircle className="w-4 h-4 mr-1" /> :
-                          policy.status === 'requires_more_info' ? <Clock className="w-4 h-4 mr-1" /> :
+                          policy.status === 'completed' ? <Clock className="w-4 h-4 mr-1" /> :
                             <FileText className="w-4 h-4 mr-1" />}
                       {policy.status === 'approved' ? 'Approved' :
                         policy.status === 'rejected' ? 'Rejected' :
-                          policy.status === 'requires_more_info' ? 'Requires More Info' :
+                          policy.status === 'completed' ? 'Completed' :
                             'Surveyed'}
                     </span>
-                    {(policy.status === 'rejected' || policy.status === 'requires_more_info') && (
-                      <div className="relative">
+                    {(policy.status === 'rejected' || policy.status === 'completed') && (
+                      <div className="relative dropdown-container">
                         <button
                           onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
                           className="p-2 hover:bg-gray-100 rounded-full"
@@ -179,9 +202,22 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                 )}
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                  {/* Verify Policy Button - Always Available */}
+                  <button
+                    onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+                    className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Verify Policy
+                  </button>
+
                   {policy.surveyDocument && (
                     <button
-                      onClick={() => handleDownloadSurvey(policy.surveyDocument!)}
+                      onClick={() => handleDownloadSurvey(
+                        typeof policy.surveyDocument === 'string'
+                          ? policy.surveyDocument
+                          : policy.surveyDocument!.url
+                      )}
                       className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
                     >
                       <Download className="h-4 w-4 mr-2" />
@@ -202,10 +238,10 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       <XCircle className="h-4 w-4 mr-2" />
                       Permit Rejected - Permit verification unavailable
                     </div>
-                  ) : policy.status === 'requires_more_info' ? (
+                  ) : policy.status === 'completed' ? (
                     <div className="inline-flex items-center px-6 py-2 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-orange-50">
                       <Clock className="h-4 w-4 mr-2" />
-                      More Information Required - Permit verification unavailable
+                      Policy Completed - Permit verification unavailable
                     </div>
                   ) : (
                     <div className="inline-flex items-center px-6 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-50">
@@ -227,6 +263,15 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
           <p className="mt-1 text-sm text-gray-500">
             Your approved permits will appear here once the survey and admin review process is complete.
           </p>
+          <div className="mt-4">
+            <button
+              onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+              className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Verify Policy
+            </button>
+          </div>
         </div>
       )}
 

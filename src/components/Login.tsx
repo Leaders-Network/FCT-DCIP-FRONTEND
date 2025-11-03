@@ -29,9 +29,9 @@ export function Login() {
 ]
 
   useEffect(() => {
-    const interval = setInterval(()=> {
+    const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
-    },5000); 
+    }, 5000);
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
 
@@ -297,8 +297,8 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
         onClick={handleSubmit}
         disabled={isLoading || !email || !password}
         className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly transition-all duration-200 ${isLoading || !email || !password
-            ? 'opacity-50 cursor-not-allowed'
-            : 'hover:bg-green-700 hover:shadow-lg transform hover:scale-105'
+          ? 'opacity-50 cursor-not-allowed'
+          : 'hover:bg-green-700 hover:shadow-lg transform hover:scale-105'
           }`}
       >
         {isLoading ? (

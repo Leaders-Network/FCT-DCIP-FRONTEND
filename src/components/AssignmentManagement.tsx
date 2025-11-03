@@ -34,7 +34,7 @@ import {
 import { adminApi } from '@/services/api';
 import { Assignment, Surveyor } from '@/types/api.types';
 import { useAuth } from '../context/useAuth';
-import DocumentManager from './DocumentManager';
+import DocumentManager from './FileUpload/DocumentManager';
 import AssignSurveyorModal from './admin/AssignSurveyorModal';
 
 interface AssignmentManagementProps {
@@ -136,10 +136,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           status: filters.status !== 'all' ? filters.status : undefined,
           priority: filters.priority !== 'all' ? filters.priority : undefined,
           surveyorId: filters.surveyorId !== 'all' ? filters.surveyorId : undefined,
-          search: filters.search || undefined,
           page: 1,
           limit: 50
-        });
+        } as any);
       } else {
         assignmentsResponse = await getSurveyorAssignmentsNew({
           status: filters.status !== 'all' ? filters.status : undefined,
@@ -282,10 +281,10 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
-            {viewMode === 'admin' ? 'Assignment Management' : 'My Assignments'}
+            {viewMode === 'admin' ? 'AMMC Surveyor Assignment Management' : 'My AMMC Assignments'}
           </h2>
           <p className="text-gray-600 mt-1">
-            Manage surveyor assignments and track progress
+            Manage AMMC surveyor assignments and track progress
           </p>
         </div>
       </div>
@@ -362,10 +361,10 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               onChange={(e) => setFilters(prev => ({ ...prev, surveyorId: e.target.value }))}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="all">All Surveyors</option>
+              <option value="all">All AMMC Surveyors</option>
               {(surveyors || []).map((surveyor) => (
                 <option key={surveyor?._id} value={surveyor?._id}>
-                  {surveyor?.userId?.firstname} {surveyor?.userId?.lastname}
+                  {(surveyor?.userId as any)?.firstname} {(surveyor?.userId as any)?.lastname}
                 </option>))}
             </select>
 
@@ -418,7 +417,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                   }}
                   className="text-blue-600 hover:text-blue-900"
                 >
-                  Assign
+                  Assign AMMC Surveyor
                 </button>
               </div>
             </div>
@@ -446,7 +445,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
                     }}
                     className="text-indigo-600 hover:text-indigo-900 text-sm whitespace-nowrap flex-shrink-0"
                   >
-                    Re-assign Surveyor
+                    Re-assign AMMC Surveyor
                   </button>
                 </div>
                 <div className="flex items-center text-gray-600 text-sm min-w-0">
@@ -753,7 +752,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Assignment Details</h3>
               <p className="text-sm text-gray-500 mt-1">
-                Policy #{typeof assignment.ammcId === 'object' ? assignment.ammcId._id : assignment.ammcId}
+                Policy #{typeof assignment.ammcId === 'object' ? (assignment.ammcId as any)._id : assignment.ammcId}
               </p>
             </div>
             <button
@@ -946,7 +945,7 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
         </div>
       </div>
 
-      {assignment.expenses && (
+      {/* {assignment.expenses && (
         <div>
           <h4 className="font-medium text-gray-900 mb-2">Survey Expenses</h4>
           <div className="space-y-1 text-sm">
@@ -976,7 +975,7 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   </div>
 );
