@@ -1,17 +1,14 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import {
-    Plus,
-    Filter,
     Search,
     RefreshCw,
     FileText,
-    Users,
-    Clock,
     AlertTriangle,
     CheckCircle,
     Eye,
-    UserPlus
+    UserPlus,
+    X
 } from 'lucide-react';
 import AMMCAssignmentManagement from '@/components/admin/AMMCAssignmentManagement';
 
@@ -37,11 +34,17 @@ interface DualAssignment {
         name: string;
         email: string;
         phone: string;
+        licenseNumber?: string;
+        experience?: number;
+        specialization?: string[];
     };
     niaSurveyorContact?: {
         name: string;
         email: string;
         phone: string;
+        licenseNumber?: string;
+        experience?: number;
+        specialization?: string[];
     };
     priority: string;
     estimatedCompletion: {
@@ -55,6 +58,7 @@ const AMMCDualAssignmentsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState<DualAssignment | null>(null);
     const [filters, setFilters] = useState({
         assignmentStatus: 'all',
@@ -165,6 +169,16 @@ const AMMCDualAssignmentsPage = () => {
         setSelectedAssignment(null);
     };
 
+    const handleViewDetails = (assignment: DualAssignment) => {
+        setSelectedAssignment(assignment);
+        setShowDetailsModal(true);
+    };
+
+    const handleCloseDetailsModal = () => {
+        setShowDetailsModal(false);
+        setSelectedAssignment(null);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -268,7 +282,11 @@ const AMMCDualAssignmentsPage = () => {
                                         {getStatusBadge(assignment.assignmentStatus)}
                                         {getCompletionBadge(assignment.completionStatus)}
                                     </div>
-                                    <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                                    <button
+                                        onClick={() => handleViewDetails(assignment)}
+                                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                                        title="View Details"
+                                    >
                                         <Eye className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -341,7 +359,10 @@ const AMMCDualAssignmentsPage = () => {
                                         </div>
                                     )}
 
-                                    <button className="text-[#028835] hover:text-green-700 text-sm font-medium transition-colors">
+                                    <button
+                                        onClick={() => handleViewDetails(assignment)}
+                                        className="text-[#028835] hover:text-green-700 text-sm font-medium transition-colors"
+                                    >
                                         View Details
                                     </button>
                                 </div>
@@ -368,6 +389,198 @@ const AMMCDualAssignmentsPage = () => {
                     onAssignmentComplete={handleAssignmentComplete}
                     onClose={handleCloseModal}
                 />
+            )}
+
+            {/* Assignment Details Modal */}
+            {showDetailsModal && selectedAssignment && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                        {/* Header */}
+                        <div className="bg-[#028835] text-white p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-bold">Assignment Details</h2>
+                                    <p className="text-green-100 mt-1">
+                                        {selectedAssignment.policyId.propertyDetails.propertyType} - {selectedAssignment.policyId.propertyDetails.address}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={handleCloseDetailsModal}
+                                    className="text-green-100 hover:text-white transition-colors"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Property Information */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                                        Property Information
+                                    </h3>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Property Type</label>
+                                            <p className="text-gray-900">{selectedAssignment.policyId.propertyDetails.propertyType}</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Address</label>
+                                            <p className="text-gray-900">{selectedAssignment.policyId.propertyDetails.address}</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Property Value</label>
+                                            <p className="text-gray-900">₦{selectedAssignment.policyId.propertyDetails.buildingValue.toLocaleString()}</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Priority</label>
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${selectedAssignment.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                                                selectedAssignment.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                                                    selectedAssignment.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-green-100 text-green-800'
+                                                }`}>
+                                                {selectedAssignment.priority}
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Deadline</label>
+                                            <p className="text-gray-900">{new Date(selectedAssignment.estimatedCompletion.overallDeadline).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Contact Information */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                                        Contact Information
+                                    </h3>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Client Name</label>
+                                            <p className="text-gray-900">{selectedAssignment.policyId.contactDetails.fullName}</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Email</label>
+                                            <p className="text-gray-900">{selectedAssignment.policyId.contactDetails.email}</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Phone Number</label>
+                                            <p className="text-gray-900">{selectedAssignment.policyId.contactDetails.phoneNumber}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Assignment Status */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                                        Assignment Status
+                                    </h3>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Overall Status</label>
+                                            <div className="mt-1">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedAssignment.assignmentStatus === 'unassigned' ? 'bg-gray-100 text-gray-800' :
+                                                    selectedAssignment.assignmentStatus === 'partially_assigned' ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-green-100 text-green-800'
+                                                    }`}>
+                                                    {selectedAssignment.assignmentStatus === 'unassigned' ? 'Unassigned' :
+                                                        selectedAssignment.assignmentStatus === 'partially_assigned' ? 'Partially Assigned' :
+                                                            'Fully Assigned'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">Completion Status</label>
+                                            <div className="mt-1">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedAssignment.completionStatus === 0 ? 'bg-gray-100 text-gray-800' :
+                                                    selectedAssignment.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-green-100 text-green-800'
+                                                    }`}>
+                                                    {selectedAssignment.completionStatus === 0 ? 'Not Started (0%)' :
+                                                        selectedAssignment.completionStatus === 50 ? 'Partially Complete (50%)' :
+                                                            'Fully Complete (100%)'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Surveyor Information */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                                        Assigned Surveyors
+                                    </h3>
+
+                                    <div className="space-y-4">
+                                        {/* AMMC Surveyor */}
+                                        <div className="p-3 bg-green-50 rounded-lg">
+                                            <h4 className="font-medium text-green-800 mb-2">AMMC Surveyor</h4>
+                                            {selectedAssignment.ammcSurveyorContact ? (
+                                                <div className="space-y-1 text-sm">
+                                                    <p><span className="font-medium">Name:</span> {selectedAssignment.ammcSurveyorContact.name}</p>
+                                                    <p><span className="font-medium">Email:</span> {selectedAssignment.ammcSurveyorContact.email}</p>
+                                                    <p><span className="font-medium">Phone:</span> {selectedAssignment.ammcSurveyorContact.phone}</p>
+                                                    {selectedAssignment.ammcSurveyorContact.licenseNumber && (
+                                                        <p><span className="font-medium">License:</span> {selectedAssignment.ammcSurveyorContact.licenseNumber}</p>
+                                                    )}
+                                                    {selectedAssignment.ammcSurveyorContact.experience && (
+                                                        <p><span className="font-medium">Experience:</span> {selectedAssignment.ammcSurveyorContact.experience} years</p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-600">Not assigned</p>
+                                            )}
+                                        </div>
+
+                                        {/* NIA Surveyor */}
+                                        <div className="p-3 bg-blue-50 rounded-lg">
+                                            <h4 className="font-medium text-blue-800 mb-2">NIA Surveyor</h4>
+                                            {selectedAssignment.niaSurveyorContact ? (
+                                                <div className="space-y-1 text-sm">
+                                                    <p><span className="font-medium">Name:</span> {selectedAssignment.niaSurveyorContact.name}</p>
+                                                    <p><span className="font-medium">Email:</span> {selectedAssignment.niaSurveyorContact.email}</p>
+                                                    <p><span className="font-medium">Phone:</span> {selectedAssignment.niaSurveyorContact.phone}</p>
+                                                    {selectedAssignment.niaSurveyorContact.licenseNumber && (
+                                                        <p><span className="font-medium">License:</span> {selectedAssignment.niaSurveyorContact.licenseNumber}</p>
+                                                    )}
+                                                    {selectedAssignment.niaSurveyorContact.experience && (
+                                                        <p><span className="font-medium">Experience:</span> {selectedAssignment.niaSurveyorContact.experience} years</p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-600">Not assigned</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="border-t border-gray-200 p-6 bg-gray-50">
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={handleCloseDetailsModal}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
