@@ -20,23 +20,46 @@ import {
 } from 'lucide-react';
 import NIASurveyorManagement from '@/components/nia-admin/NIASurveyorManagement';
 
-interface NIASurveyor {
+interface NIAUser {
     _id: string;
     firstname: string;
     lastname: string;
     email: string;
-    phoneNumber: string;
-    address: string;
-    licenseNumber: string;
-    specialization: string[];
-    experience: number;
+    phonenumber: string;
+}
+
+interface NIASurveyor {
+    _id: string;
+    userId: NIAUser | string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    phoneNumber?: string;
+    address?: string;
+    licenseNumber?: string;
+    specialization?: string[];
+    experience?: number;
     status: 'active' | 'inactive' | 'suspended';
-    availability: 'available' | 'busy' | 'unavailable';
+    availability?: 'available' | 'busy' | 'unavailable';
+    maxAssignments?: number;
     currentAssignments: number;
     completedAssignments: number;
     rating: number;
     joinedDate: string;
     lastActive: string;
+    dateOfBirth?: string;
+    emergencyContact?: {
+        name: string;
+        phone: string;
+        relationship: string;
+    };
+    qualifications?: string[];
+    notes?: string;
+    profile?: {
+        experience?: number;
+        availability?: 'available' | 'busy' | 'unavailable';
+        specialization?: string[];
+    };
 }
 
 const NIASurveyorsPage = () => {
@@ -44,7 +67,7 @@ const NIASurveyorsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showManagementModal, setShowManagementModal] = useState(false);
-    const [selectedSurveyor, setSelectedSurveyor] = useState<NIASurveyor | null>(null);
+    const [selectedSurveyor, setSelectedSurveyor] = useState<any>(null);
     const [managementMode, setManagementMode] = useState<'add' | 'edit' | 'view'>('add');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [surveyorToDelete, setSurveyorToDelete] = useState<{ id: string, name: string } | null>(null);
@@ -92,11 +115,16 @@ const NIASurveyorsPage = () => {
 
                 // Apply search filter
                 if (filters.search) {
-                    filteredSurveyors = filteredSurveyors.filter((surveyor: NIASurveyor) =>
-                        `${surveyor.userId?.firstname} ${surveyor.userId?.lastname}`.toLowerCase().includes(filters.search.toLowerCase()) ||
-                        surveyor.userId?.email.toLowerCase().includes(filters.search.toLowerCase()) ||
-                        surveyor.licenseNumber?.toLowerCase().includes(filters.search.toLowerCase())
-                    );
+                    filteredSurveyors = filteredSurveyors.filter((surveyor: NIASurveyor) => {
+                        const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
+                        const fullName = user ? `${user.firstname} ${user.lastname}` : '';
+                        const email = user?.email || '';
+                        const license = surveyor.licenseNumber || '';
+
+                        return fullName.toLowerCase().includes(filters.search.toLowerCase()) ||
+                            email.toLowerCase().includes(filters.search.toLowerCase()) ||
+                            license.toLowerCase().includes(filters.search.toLowerCase());
+                    });
                 }
 
                 setSurveyors(filteredSurveyors);
@@ -168,13 +196,13 @@ const NIASurveyorsPage = () => {
     };
 
     const handleEditSurveyor = (surveyor: NIASurveyor) => {
-        setSelectedSurveyor(surveyor);
+        setSelectedSurveyor(convertSurveyorForManagement(surveyor));
         setManagementMode('edit');
         setShowManagementModal(true);
     };
 
     const handleViewSurveyor = (surveyor: NIASurveyor) => {
-        setSelectedSurveyor(surveyor);
+        setSelectedSurveyor(convertSurveyorForManagement(surveyor));
         setManagementMode('view');
         setShowManagementModal(true);
     };
@@ -211,6 +239,28 @@ const NIASurveyorsPage = () => {
             console.error('Delete surveyor error:', error);
             alert(`Failed to delete surveyor: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
+    };
+
+    const convertSurveyorForManagement = (surveyor: NIASurveyor) => {
+        const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
+        return {
+            _id: surveyor._id,
+            firstname: user?.firstname || surveyor.firstname || '',
+            lastname: user?.lastname || surveyor.lastname || '',
+            email: user?.email || surveyor.email || '',
+            phoneNumber: user?.phonenumber || surveyor.phoneNumber || '',
+            address: surveyor.address || '',
+            licenseNumber: surveyor.licenseNumber || '',
+            specialization: surveyor.specialization || surveyor.profile?.specialization || [],
+            experience: surveyor.experience || surveyor.profile?.experience || 0,
+            status: surveyor.status,
+            availability: surveyor.availability || surveyor.profile?.availability || 'unavailable',
+            maxAssignments: surveyor.maxAssignments || 10,
+            dateOfBirth: surveyor.dateOfBirth,
+            emergencyContact: surveyor.emergencyContact,
+            qualifications: surveyor.qualifications,
+            notes: surveyor.notes
+        };
     };
 
     const handleSaveSurveyor = async (surveyorData: any) => {
@@ -446,18 +496,24 @@ const NIASurveyorsPage = () => {
                                             <div className="flex items-center">
                                                 <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
                                                     <span className="text-white font-medium text-sm">
-                                                        {surveyor.userId?.firstname?.[0]}{surveyor.userId?.lastname?.[0]}
+                                                        {(() => {
+                                                            const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
+                                                            return `${user?.firstname?.[0] || ''}${user?.lastname?.[0] || ''}`;
+                                                        })()}
                                                     </span>
                                                 </div>
                                                 <div className="ml-4">
                                                     <div className="text-sm font-medium text-gray-900">
-                                                        {surveyor.userId?.firstname} {surveyor.userId?.lastname}
+                                                        {(() => {
+                                                            const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
+                                                            return user ? `${user.firstname} ${user.lastname}` : 'N/A';
+                                                        })()}
                                                     </div>
                                                     <div className="text-sm text-gray-500">
                                                         License: {surveyor.licenseNumber || 'N/A'}
                                                     </div>
                                                     <div className="text-xs text-gray-400">
-                                                        {surveyor.profile?.experience} years experience
+                                                        {surveyor.profile?.experience || surveyor.experience || 0} years experience
                                                     </div>
                                                 </div>
                                             </div>
@@ -465,17 +521,23 @@ const NIASurveyorsPage = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-900 flex items-center">
                                                 <Mail className="w-4 h-4 mr-1 text-gray-400" />
-                                                {surveyor.userId?.email}
+                                                {(() => {
+                                                    const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
+                                                    return user?.email || surveyor.email || 'N/A';
+                                                })()}
                                             </div>
                                             <div className="text-sm text-gray-500 flex items-center mt-1">
                                                 <Phone className="w-4 h-4 mr-1 text-gray-400" />
-                                                {surveyor.userId?.phonenumber}
+                                                {(() => {
+                                                    const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
+                                                    return user?.phonenumber || surveyor.phoneNumber || 'N/A';
+                                                })()}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="space-y-1">
                                                 {getStatusBadge(surveyor.status)}
-                                                {getAvailabilityBadge(surveyor.profile?.availability)}
+                                                {getAvailabilityBadge(surveyor.profile?.availability || surveyor.availability || 'unavailable')}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -523,10 +585,11 @@ const NIASurveyorsPage = () => {
                                                     {surveyor.status === 'active' ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDeleteSurveyor(
-                                                        surveyor._id,
-                                                        `${surveyor.userId?.firstname} ${surveyor.userId?.lastname}`
-                                                    )}
+                                                    onClick={() => {
+                                                        const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
+                                                        const name = user ? `${user.firstname} ${user.lastname}` : 'Unknown Surveyor';
+                                                        handleDeleteSurveyor(surveyor._id, name);
+                                                    }}
                                                     className="text-red-600 hover:text-red-900 transition-colors"
                                                     title="Delete Surveyor"
                                                 >
