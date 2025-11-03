@@ -13,6 +13,7 @@ import {
     Eye,
     UserPlus
 } from 'lucide-react';
+import AMMCAssignmentManagement from '@/components/admin/AMMCAssignmentManagement';
 
 interface DualAssignment {
     _id: string;
@@ -53,6 +54,8 @@ const AMMCDualAssignmentsPage = () => {
     const [assignments, setAssignments] = useState<DualAssignment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState<DualAssignment | null>(null);
     const [filters, setFilters] = useState({
         assignmentStatus: 'all',
         completionStatus: 'all',
@@ -146,22 +149,20 @@ const AMMCDualAssignmentsPage = () => {
         return !assignment.ammcSurveyorContact;
     };
 
-    const handleAssignSurveyor = async (assignment: DualAssignment) => {
-        try {
-            // For now, let's try to assign directly using the policy assignment endpoint
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
+    const handleAssignSurveyor = (assignment: DualAssignment) => {
+        setSelectedAssignment(assignment);
+        setShowAssignmentModal(true);
+    };
 
-            console.log('Attempting to assign AMMC surveyor for assignment:', assignment._id);
+    const handleAssignmentComplete = () => {
+        fetchAssignments(); // Refresh the assignments list
+        setShowAssignmentModal(false);
+        setSelectedAssignment(null);
+    };
 
-            // Navigate to assignment page with dual assignment context
-            window.location.href = `/admin/dashboard/assignments?ammcId=${assignment.policyId._id}&dualAssignmentId=${assignment._id}&mode=dual`;
-        } catch (error) {
-            console.error('Assignment error:', error);
-            setError(error instanceof Error ? error.message : 'Failed to initiate assignment');
-        }
+    const handleCloseModal = () => {
+        setShowAssignmentModal(false);
+        setSelectedAssignment(null);
     };
 
     return (
@@ -301,14 +302,14 @@ const AMMCDualAssignmentsPage = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-gray-500">AMMC Surveyor:</span>
-                                        <span className={`text-xs font-medium ${assignment.ammcSurveyorContact ? 'text-green-600' : 'text-gray-400'}`}>
-                                            {assignment.ammcSurveyorContact ? assignment.ammcSurveyorContact.name : 'Not Assigned'}
+                                        <span className={`text-xs font-medium ${assignment.ammcSurveyorContact?.name ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {assignment.ammcSurveyorContact?.name || 'Not Assigned'}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-gray-500">NIA Surveyor:</span>
-                                        <span className={`text-xs font-medium ${assignment.niaSurveyorContact ? 'text-blue-600' : 'text-gray-400'}`}>
-                                            {assignment.niaSurveyorContact ? assignment.niaSurveyorContact.name : 'Not Assigned'}
+                                        <span className={`text-xs font-medium ${assignment.niaSurveyorContact?.name ? 'text-blue-600' : 'text-gray-400'}`}>
+                                            {assignment.niaSurveyorContact?.name || 'Not Assigned'}
                                         </span>
                                     </div>
                                 </div>
@@ -358,6 +359,15 @@ const AMMCDualAssignmentsPage = () => {
                             : 'Dual-surveyor assignments will appear here when policies are submitted.'}
                     </p>
                 </div>
+            )}
+
+            {/* Assignment Management Modal */}
+            {showAssignmentModal && selectedAssignment && (
+                <AMMCAssignmentManagement
+                    assignment={selectedAssignment}
+                    onAssignmentComplete={handleAssignmentComplete}
+                    onClose={handleCloseModal}
+                />
             )}
         </div>
     );
