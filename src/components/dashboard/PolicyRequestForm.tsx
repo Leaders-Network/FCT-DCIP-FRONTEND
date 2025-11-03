@@ -305,8 +305,11 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   onChange={(e) =>
                     handleInputChange("propertyDetails", "address", e.target.value)
                   }
-                  placeholder="Enter complete property address"
+                  placeholder="Enter complete property address including street, area, city, and state"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Provide the full address where the property is located. Include landmarks if necessary for easy identification by surveyors.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -329,6 +332,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Choose the category that best describes your property. This helps determine appropriate coverage and surveyor specialization.
+                  </p>
                 </div>
 
                 <div>
@@ -367,8 +373,11 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "buildingValue", Number(e.target.value))
                     }
-                    placeholder="0"
+                    placeholder="5000000"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter the current market value or replacement cost of the building in Nigerian Naira. This determines your coverage amount and premium calculation.
+                  </p>
                 </div>
 
                 <div>
@@ -401,8 +410,11 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "squareFootage", Number(e.target.value))
                     }
-                    placeholder="0"
+                    placeholder="2500"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Total floor area of the building in square feet. Include all floors and usable space. This helps assess risk and coverage needs.
+                  </p>
                 </div>
               </div>
             </div>
@@ -498,7 +510,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   style={{ textTransform: 'uppercase' }}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Enter your company's Registration Certificate number
+                  Enter your company's Registration Certificate number issued by the Corporate Affairs Commission (CAC). Format: RC followed by numbers (e.g., RC123456).
                 </p>
               </div>
             </div>
@@ -529,6 +541,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Choose the primary type of insurance coverage needed for your construction project or property.
+                  </p>
                 </div>
 
                 <div>
@@ -550,6 +565,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select how long you need the insurance coverage. Project-based coverage lasts until construction completion.
+                  </p>
                 </div>
               </div>
 
@@ -570,6 +588,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     </label>
                   ))}
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Select additional protections you may need. These extend beyond basic coverage and may affect your premium. Choose based on your project's specific risks.
+                </p>
               </div>
 
               <div>

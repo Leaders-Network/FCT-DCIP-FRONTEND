@@ -189,6 +189,12 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
       }
 
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+      console.log('Assigning NIA surveyor:', {
+        assignmentId: assignment._id,
+        surveyorId: selectedSurveyor._id,
+        token: token ? 'Present' : 'Missing'
+      });
+
       const response = await fetch(`${baseUrl}/dual-assignment/${assignment._id}/assign-nia`, {
         method: 'POST',
         headers: {
@@ -202,13 +208,17 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to assign surveyor');
-      }
+      console.log('Assignment response status:', response.status);
 
       const data = await response.json();
+      console.log('Assignment response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP ${response.status}: Failed to assign surveyor`);
+      }
 
       if (data.success) {
+        console.log('Assignment successful');
         onAssignmentComplete();
         onClose();
       } else {
