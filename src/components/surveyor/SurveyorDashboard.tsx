@@ -171,7 +171,7 @@ const SurveyorDashboard = () => {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Welcome back, {firstName}!</h1>
-        <p className="text-gray-600 mt-1">Here's an overview of your survey assignments.</p>
+        <p className="text-gray-600 mt-1">Here's an overview of your AMMC survey assignments.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -235,7 +235,7 @@ const SurveyorDashboard = () => {
               <FileText className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-4 text-lg font-medium text-gray-900">No assignments yet</h3>
               <p className="mt-1 text-sm text-gray-500">
-                New survey assignments will appear here.
+                New AMMC survey assignments will appear here.
               </p>
             </div>
           )}

@@ -25,21 +25,59 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
-    apiKey: API_KEY,
+    "apikey": API_KEY, // Note: lowercase 'apikey' as expected by validation middleware
   },
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = getAuthToken();
-    console.log("Auth Token for getSurveySubmissions:", token);
+    // Ensure API key is always present (lowercase to match validation middleware)
+    config.headers['apikey'] = API_KEY;
+
+    // Check if this is a NIA admin request
+    const isNIAAdminRequest = config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor');
+    const token = getAuthToken(isNIAAdminRequest);
+    console.log("Auth Token:", token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-    console.log("Request Headers:", config.headers);
+
+    console.log("Request Headers:", {
+      'Content-Type': config.headers['Content-Type'],
+      'apikey': config.headers['apikey'] ? `${config.headers['apikey'].substring(0, 20)}...` : 'Missing',
+      'Authorization': config.headers['Authorization'] || 'Missing'
+    });
+
+    // Debug: Log full API key for troubleshooting
+    console.log("Full API Key:", config.headers['apikey']);
+
     return config;
   },
   (error) => {
+    console.error("Request interceptor error:", error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    console.error("API Response Error:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
+
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      console.error("Unauthorized access - check API key and authentication token");
+    }
+
     return Promise.reject(error);
   }
 );
@@ -79,7 +117,7 @@ export const loginEmployee = async (email: string, password: string) => {
 };
 
 export const getUserRole = () =>
-  api.get("/auth/user-role"); 
+  api.get("/auth/user-role");
 
 // Property Management APIs
 export const getCategories = async (): Promise<Category[]> => {
@@ -172,7 +210,7 @@ export const getPolicyRequests = async (status?: string, page = 1, limit = 10) =
     if (status && status !== 'all') params.append('status', status);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
-    
+
     const url = `/policy?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
@@ -188,7 +226,7 @@ export const getUserPolicyRequests = async (status?: string, page = 1, limit = 1
     if (status && status !== 'all') params.append('status', status);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
-    
+
     const url = `/policy/user?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
@@ -200,7 +238,7 @@ export const getUserPolicyRequests = async (status?: string, page = 1, limit = 1
 
 export const getUserProperties = async () => {
   try {
-    const response = await api.get("/auth/user/get-all-properties");
+    const response = await api.get("/property/user");
     return response.data;
   } catch (error) {
     console.error("Failed to fetch user properties", error);
@@ -213,8 +251,8 @@ export const getAvailableSurveyors = async (specialization?: string, location?: 
     const params = new URLSearchParams();
     if (specialization) params.append('specialization', specialization);
     if (location) params.append('location', location);
-    
-  const url = `/policy/surveyors/available?${params.toString()}`;
+
+    const url = `/policy/surveyors/available?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
   } catch (error) {
@@ -225,10 +263,10 @@ export const getAvailableSurveyors = async (specialization?: string, location?: 
 
 export const reviewSubmission = async (submissionId: string, decision: 'approved' | 'rejected', reviewNotes: string, qualityCheck?: any) => {
   try {
-    const response = await api.post(`/policy/submissions/${submissionId}/review`, { 
-      decision, 
-      reviewNotes, 
-      qualityCheck 
+    const response = await api.post(`/policy/submissions/${submissionId}/review`, {
+      decision,
+      reviewNotes,
+      qualityCheck
     });
     return response.data;
   } catch (error) {
@@ -264,7 +302,7 @@ export const getSurveyorAssignments = async (status?: string, page = 1, limit = 
     if (status && status !== 'all') params.append('status', status);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
-    
+
     const url = `/surveyor/assignments?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
@@ -311,7 +349,7 @@ export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 
     if (statusParam && statusParam !== 'all') params.append('status', statusParam);
     params.append('page', page.toString());
     params.append('limit', limit.toString());
-    
+
     const url = `/submission?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
@@ -399,7 +437,7 @@ export const getAdminSurveyors = async (filters?: {
         }
       });
     }
-    
+
     const url = `/admin/surveyor${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await api.get(url);
     return response.data;
@@ -469,7 +507,7 @@ export const getAdminAssignments = async (filters?: {
         }
       });
     }
-    
+
     const url = `/admin/assignment${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await api.get(url);
     return response.data;
@@ -542,7 +580,7 @@ export const getSurveyorAssignmentsNew = async (filters?: {
         }
       });
     }
-    
+
     const url = `/surveyor/assignments?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
@@ -664,7 +702,7 @@ export const getSurveySubmissions = async (filters?: {
         }
       });
     }
-    
+
     const url = `/submission?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
@@ -737,7 +775,7 @@ export const uploadSurveyDocument = async (file: File, data: {
 
     const response = await api.post("/survey-documents/upload/single", formData, {
       headers: {
-        apiKey: API_KEY,
+        apikey: API_KEY,
         // Don't set Content-Type for FormData
       },
     });
@@ -766,7 +804,7 @@ export const uploadMultipleSurveyDocuments = async (files: File[], data: {
 
     const response = await api.post("/survey-documents/upload/multiple", formData, {
       headers: {
-        apiKey: API_KEY,
+        apikey: API_KEY,
       },
     });
     return response.data;
@@ -787,7 +825,7 @@ export const getSurveyDocuments = async (filters: {
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.append(key, value);
     });
-    
+
     const url = `/survey-documents?${params.toString()}`;
     const response = await api.get(url);
     return response.data;
@@ -799,10 +837,10 @@ export const getSurveyDocuments = async (filters: {
 
 export const deleteSurveyDocument = async (documentId: string, assignmentId?: string, ammcId?: string) => {
   try {
-    const endpoint = assignmentId 
+    const endpoint = assignmentId
       ? `/survey-documents/assignment/${assignmentId}/document/${documentId}`
       : `/survey-documents/policy/${ammcId}/document/${documentId}`;
-    
+
     const response = await api.delete(endpoint);
     return response.data;
   } catch (error) {
@@ -963,10 +1001,7 @@ export const adminApi = {
     return response.data;
   },
 
-  deleteEmployee: async (employeeId: string) => {
-    const response = await api.delete(`/admin/employees/${employeeId}`);
-    return response.data;
-  },
+
 
   updateEmployeeStatus: async (employeeId: string, status: string) => {
     const response = await api.patch(`/admin/employees/${employeeId}/status`, { status });
@@ -1169,26 +1204,7 @@ export const adminApi = {
     return response.data;
   },
 
-  // Delete operations
-  deleteProperty: async (propertyId: string) => {
-    const response = await api.delete(`/property/${propertyId}`);
-    return response.data;
-  },
 
-  deletePolicyRequest: async (ammcId: string) => {
-    const response = await api.delete(`/policy/${ammcId}`);
-    return response.data;
-  },
-
-  deleteAdministrator: async (adminId: string) => {
-    const response = await api.delete(`/admin/administrators/${adminId}`);
-    return response.data;
-  },
-
-  deleteSurveyor: async (surveyorId: string) => {
-    const response = await api.delete(`/admin/surveyor/${surveyorId}`);
-    return response.data;
-  },
 };
 
 export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
@@ -1201,14 +1217,77 @@ export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error occurred');
       console.error('API Error:', err);
-      
+
       if (onError) {
         onError(err);
       }
-      
+
       throw err;
     }
   }) as T;
+};
+
+// Additional API utility functions for new services
+interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+/**
+ * Make an authenticated API request using the existing axios instance
+ */
+export const apiRequest = async <T = any>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> => {
+  try {
+    const method = (options.method || 'GET').toLowerCase();
+    const data = options.body ? JSON.parse(options.body as string) : undefined;
+
+    let response;
+
+    switch (method) {
+      case 'get':
+        response = await api.get(endpoint);
+        break;
+      case 'post':
+        response = await api.post(endpoint, data);
+        break;
+      case 'put':
+        response = await api.put(endpoint, data);
+        break;
+      case 'patch':
+        response = await api.patch(endpoint, data);
+        break;
+      case 'delete':
+        response = await api.delete(endpoint);
+        break;
+      default:
+        throw new Error(`Unsupported HTTP method: ${method}`);
+    }
+
+    return {
+      success: true,
+      data: response.data,
+      message: response.data?.message
+    };
+
+  } catch (error: any) {
+    console.error('API Request Error:', error);
+
+    const errorMessage = error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      'An unexpected error occurred';
+
+    return {
+      success: false,
+      error: errorMessage,
+      message: errorMessage
+    };
+  }
 };
 
 export default api;

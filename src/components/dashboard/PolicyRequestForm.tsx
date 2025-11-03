@@ -2,6 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { CreatePolicyRequestData } from "@/types/api.types";
+import {
+  PROPERTY_TYPES,
+  CONSTRUCTION_MATERIALS,
+  COVERAGE_TYPES,
+  POLICY_DURATIONS,
+  ADDITIONAL_COVERAGE_OPTIONS
+} from "@/constants/policyConstants";
 
 interface PolicyRequestFormProps {
   isOpen: boolean;
@@ -19,7 +26,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   // Initialize form with user data from localStorage
   const initializeFormData = () => {
     let userEmail = "";
-    let userFullName = "";
 
     if (typeof window !== 'undefined') {
       // Get user data from localStorage
@@ -194,23 +200,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const propertyTypes = [
-    "Residential House",
-    "Apartment/Condo",
-    "Commercial Building",
-    "Industrial Facility",
-    "Mixed Use",
-  ];
-
-  const constructionMaterials = [
-    "Concrete Block",
-    "Steel Frame",
-    "Wood Frame",
-    "Brick",
-    "Stone",
-    "Mixed Materials",
-  ];
-
   const coverageTypes = [
     "Contract Works Coverage",
     "Public Liability Coverage",
@@ -334,7 +323,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     }
                   >
                     <option value="">Select property type</option>
-                    {propertyTypes.map((type) => (
+                    {PROPERTY_TYPES.map((type) => (
                       <option key={type} value={type}>
                         {type}
                       </option>
@@ -355,7 +344,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     }
                   >
                     <option value="">Select material</option>
-                    {constructionMaterials.map((material) => (
+                    {CONSTRUCTION_MATERIALS.map((material) => (
                       <option key={material} value={material}>
                         {material}
                       </option>
@@ -534,7 +523,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     }
                   >
                     <option value="">Select coverage type</option>
-                    {coverageTypes.map((type) => (
+                    {COVERAGE_TYPES.map((type) => (
                       <option key={type} value={type}>
                         {type}
                       </option>
@@ -555,7 +544,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     }
                   >
                     <option value="">Select duration</option>
-                    {policyDurations.map((duration) => (
+                    {POLICY_DURATIONS.map((duration) => (
                       <option key={duration} value={duration}>
                         {duration}
                       </option>
@@ -569,7 +558,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   Additional Coverage (Optional)
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {additionalCoverageOptions.map((option) => (
+                  {ADDITIONAL_COVERAGE_OPTIONS.map((option) => (
                     <label key={option} className="flex items-center">
                       <input
                         type="checkbox"

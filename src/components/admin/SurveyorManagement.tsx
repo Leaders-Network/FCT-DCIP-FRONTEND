@@ -65,7 +65,12 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     notes: "",
     role: "Surveyor",
     status: "active" as "active" | "inactive" | "suspended",
-    rating: 0
+    rating: 0,
+    experience: 0,
+    maxAssignments: 5,
+    dateOfBirth: "",
+    qualifications: [] as string[],
+    availability: "available" as "available" | "busy" | "unavailable"
   });
 
   useEffect(() => {
@@ -249,7 +254,12 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         notes: "",
         role: "Surveyor",
         status: "active",
-        rating: 0
+        rating: 0,
+        experience: 0,
+        maxAssignments: 5,
+        dateOfBirth: "",
+        qualifications: [],
+        availability: "available"
       });
       fetchSurveyors();
     } catch (error) {
@@ -298,7 +308,12 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       notes: surveyor.notes || "",
       role: surveyor.role || "Surveyor",
       status: surveyor.status || "active",
-      rating: surveyor.rating || 0
+      rating: surveyor.rating || 0,
+      experience: surveyor.experience || 0,
+      maxAssignments: surveyor.maxAssignments || 5,
+      dateOfBirth: surveyor.dateOfBirth || "",
+      qualifications: surveyor.qualifications || [],
+      availability: surveyor.availability || "available"
     });
     setShowEditModal(true);
   };
@@ -324,15 +339,15 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Surveyor Management</h2>
-          <p className="text-gray-600">Manage surveyor profiles and assignments</p>
+          <h2 className="text-2xl font-bold text-gray-900">AMMC Surveyor Management</h2>
+          <p className="text-gray-600">Comprehensive management of AMMC surveyor profiles, qualifications, and assignments</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
           className="bg-[#028835] text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Surveyor
+          Add AMMC Surveyor
         </button>
       </div>
 
@@ -343,7 +358,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search surveyors..."
+              placeholder="Search AMMC surveyors..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2"
@@ -418,24 +433,23 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   {surveyor.userId?.phonenumber || 'N/A'}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-semibold">Emergency Contact:</span> {surveyor?.emergencyContact || 'N/A'}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-semibold">Address:</span> {surveyor?.address || 'N/A'}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
                   <MapPin className="h-4 w-4 mr-2 text-gray-400" />
                   License: {surveyor?.licenseNumber || 'N/A'}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-semibold">Role:</span> {surveyor?.role || 'N/A'}
+                  <span className="font-semibold">Experience:</span> {surveyor?.experience || 0} years
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-semibold">Status:</span> {surveyor?.status || 'N/A'}
+                  <span className="font-semibold">Max Assignments:</span> {surveyor?.maxAssignments || 5}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                  {surveyor?.rating || 0}/5.0
+                  <span className="font-semibold">Availability:</span>
+                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${surveyor?.availability === 'available' ? 'bg-green-100 text-green-800' :
+                    surveyor?.availability === 'busy' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                    {surveyor?.availability || 'Available'}
+                  </span>
                 </div>
               </div>
 
@@ -464,15 +478,35 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 </div>
               </div>
 
-              <div className="mb-4">
-                <p className="text-xs text-gray-600 mb-1">Specializations:</p>
-                <div className="flex flex-wrap gap-1">
-                  {surveyor.specializations?.map((spec, index) => (
-                    <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                      {spec}
-                    </span>
-                  ))}
+              <div className="mb-4 space-y-3">
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Specializations:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {surveyor.specializations?.map((spec, index) => (
+                      <span key={index} className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                        {spec}
+                      </span>
+                    ))}
+                  </div>
                 </div>
+
+                {surveyor.qualifications && surveyor.qualifications.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Qualifications:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {surveyor.qualifications.slice(0, 2).map((qual, index) => (
+                        <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                          {qual}
+                        </span>
+                      ))}
+                      {surveyor.qualifications.length > 2 && (
+                        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+                          +{surveyor.qualifications.length - 2} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-2">
@@ -503,201 +537,377 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         </div>
       )}
 
-      {/* Create/Edit Surveyor Modal */}
+      {/* Create/Edit Surveyor Modal - Enhanced Comprehensive Form */}
       {(showCreateModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-lg font-semibold">
-                {showCreateModal ? "Add New Surveyor" : "Edit Surveyor"}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setShowEditModal(false);
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                {/* Role selection removed for create surveyor. Only 'Surveyor' will be created. */}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="bg-green-600 text-white p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={formData.status || ''}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      status: e.target.value as "active" | "inactive" | "suspended"
-                    })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="">Select Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
-                  </select>
+                  <h2 className="text-xl font-bold">
+                    {showCreateModal ? "Add New AMMC Surveyor" : "Edit AMMC Surveyor"}
+                  </h2>
+                  <p className="text-green-100 mt-1">
+                    {showCreateModal ? 'Register a new AMMC surveyor' : 'Update surveyor information'}
+                  </p>
                 </div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rating
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={5}
-                  step={0.1}
-                  value={formData.rating || 0}
-                  onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.firstname}
-                    onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.lastname}
-                    onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phonenumber}
-                    onChange={(e) => setFormData({ ...formData, phonenumber: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    License Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.licenseNumber}
-                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Emergency Contact
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.emergencyContact}
-                    onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Specializations
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {["Residential", "Commercial", "Industrial", "Agricultural"].map(spec => (
-                    <label key={spec} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.specializations.includes(spec)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData({
-                              ...formData,
-                              specializations: [...formData.specializations, spec]
-                            });
-                          } else {
-                            setFormData({
-                              ...formData,
-                              specializations: formData.specializations.filter(s => s !== spec)
-                            });
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      {spec}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4 border-t">
                 <button
                   onClick={() => {
                     setShowCreateModal(false);
                     setShowEditModal(false);
                   }}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="text-green-100 hover:text-white transition-colors"
+                >
+                  <span className="text-2xl">×</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Personal Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                    Personal Information
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.firstname}
+                        onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter first name"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.lastname}
+                        onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter last name"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Enter email address"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phonenumber}
+                      onChange={(e) => setFormData({ ...formData, phonenumber: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Enter phone number"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address *
+                    </label>
+                    <textarea
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Enter full address"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Professional Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                    Professional Information
+                  </h3>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      License Number *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.licenseNumber}
+                      onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Enter license number"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value as "active" | "inactive" | "suspended" })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Rating
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        value={formData.rating}
+                        onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="0.0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Specializations */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Specializations *
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {["residential", "commercial", "industrial", "agricultural", "structural", "environmental", "valuation", "quantity-surveying"].map(spec => (
+                        <label key={spec} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.specializations.includes(spec)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({
+                                  ...formData,
+                                  specializations: [...formData.specializations, spec]
+                                });
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  specializations: formData.specializations.filter(s => s !== spec)
+                                });
+                              }
+                            }}
+                            className="mr-2 text-green-600 focus:ring-green-500"
+                          />
+                          <span className="text-sm capitalize">{spec.replace('-', ' ')}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Years of Experience
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.experience}
+                        onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="0"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Max Assignments
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.maxAssignments}
+                        onChange={(e) => setFormData({ ...formData, maxAssignments: parseInt(e.target.value) || 1 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="5"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Availability
+                      </label>
+                      <select
+                        value={formData.availability}
+                        onChange={(e) => setFormData({ ...formData, availability: e.target.value as "available" | "busy" | "unavailable" })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      >
+                        <option value="available">Available</option>
+                        <option value="busy">Busy</option>
+                        <option value="unavailable">Unavailable</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Date of Birth
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.dateOfBirth}
+                        onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Emergency Contact
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.emergencyContact}
+                      onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Emergency contact phone number"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Qualifications */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Qualifications
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      placeholder="Enter qualification"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const input = e.target as HTMLInputElement;
+                          const qualification = input.value.trim();
+                          if (qualification && !formData.qualifications.includes(qualification)) {
+                            setFormData(prev => ({
+                              ...prev,
+                              qualifications: [...prev.qualifications, qualification]
+                            }));
+                            input.value = '';
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = (e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement;
+                        const qualification = input.value.trim();
+                        if (qualification && !formData.qualifications.includes(qualification)) {
+                          setFormData(prev => ({
+                            ...prev,
+                            qualifications: [...prev.qualifications, qualification]
+                          }));
+                          input.value = '';
+                        }
+                      }}
+                      className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div className="space-y-1">
+                    {formData.qualifications.map((qual, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg"
+                      >
+                        <span className="text-sm text-gray-900">{qual}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              qualifications: prev.qualifications.filter((_, i) => i !== index)
+                            }));
+                          }}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    placeholder="Enter any additional notes about the surveyor"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-200 p-6">
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setShowEditModal(false);
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={showCreateModal ? handleCreateSurveyor : handleUpdateSurveyor}
-                  className="px-4 py-2 bg-[#028835] text-white rounded-md hover:bg-green-700"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
                 >
-                  {showCreateModal ? "Create Surveyor" : "Update Surveyor"}
+                  <span>{showCreateModal ? "Add Surveyor" : "Save Changes"}</span>
                 </button>
               </div>
             </div>
@@ -734,7 +944,16 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <h4 className="font-medium text-gray-900 mb-2">Professional Information</h4>
                   <div className="space-y-2 text-sm">
                     <p><span className="text-gray-600">License:</span> {selectedSurveyor?.licenseNumber || 'N/A'}</p>
-                    <p><span className="text-gray-600">Role:</span> {selectedSurveyor?.role || 'N/A'}</p>
+                    <p><span className="text-gray-600">Experience:</span> {selectedSurveyor?.experience || 0} years</p>
+                    <p><span className="text-gray-600">Max Assignments:</span> {selectedSurveyor?.maxAssignments || 5}</p>
+                    <p><span className="text-gray-600">Availability:</span>
+                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${selectedSurveyor?.availability === 'available' ? 'bg-green-100 text-green-800' :
+                        selectedSurveyor?.availability === 'busy' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                        {selectedSurveyor?.availability || 'Available'}
+                      </span>
+                    </p>
                     <p><span className="text-gray-600">Status:</span> {selectedSurveyor?.status || 'N/A'}</p>
                     <p><span className="text-gray-600">Rating:</span> {selectedSurveyor?.rating || 0}/5.0</p>
                     <p><span className="text-gray-600">Joined:</span> {selectedSurveyor?.createdAt ? new Date(selectedSurveyor.createdAt).toLocaleDateString() : 'N/A'}</p>
@@ -799,12 +1018,25 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <h4 className="font-medium text-gray-900 mb-2">Specializations</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedSurveyor.specializations?.map((spec, index) => (
-                    <span key={index} className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                    <span key={index} className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
                       {spec}
                     </span>
                   ))}
                 </div>
               </div>
+
+              {selectedSurveyor?.qualifications && selectedSurveyor.qualifications.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Qualifications</h4>
+                  <div className="space-y-1">
+                    {selectedSurveyor.qualifications.map((qual, index) => (
+                      <div key={index} className="flex items-center px-3 py-2 bg-gray-50 rounded-lg">
+                        <span className="text-sm text-gray-900">{qual}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {selectedSurveyor?.notes && (
                 <div>

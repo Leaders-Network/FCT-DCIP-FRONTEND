@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical } from "lucide-react";
+import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical, Shield } from "lucide-react";
 import { PolicyRequest } from "@/types/api.types";
-import { downloadFile } from "@/services/fileService";
 import { getUserPolicyRequests, deletePolicyRequest } from "@/services/api";
 
 interface PolicyCompletionProps { }
@@ -94,9 +93,18 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">Completed Permits</h2>
-        <p className="text-gray-600">Download your approved survey reports and AMMC verified permit.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Completed Permits</h2>
+          <p className="text-gray-600">Download your approved survey reports, verify policies, and access AMMC verified permits.</p>
+        </div>
+        <button
+          onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+          className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          Verify Policy
+        </button>
       </div>
 
       {completedPolicies.length > 0 ? (
@@ -194,6 +202,15 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                 )}
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                  {/* Verify Policy Button - Always Available */}
+                  <button
+                    onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+                    className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Verify Policy
+                  </button>
+
                   {policy.surveyDocument && (
                     <button
                       onClick={() => handleDownloadSurvey(
@@ -246,6 +263,15 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
           <p className="mt-1 text-sm text-gray-500">
             Your approved permits will appear here once the survey and admin review process is complete.
           </p>
+          <div className="mt-4">
+            <button
+              onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+              className="inline-flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Verify Policy
+            </button>
+          </div>
         </div>
       )}
 
