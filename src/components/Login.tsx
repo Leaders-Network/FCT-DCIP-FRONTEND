@@ -14,12 +14,6 @@ const loginSchema = z.object({
 });
 
 export function Login() {
-  //  useEffect(() => {
-  //   toast.success('👋 Welcome back!', {
-  //     description: 'Glad to see you again!',
-  //     duration: 3000,
-  //   });
-  // }, []);
 
    const [currentImage, setCurrentImage] = useState(0)
    const backgroundImages = [
