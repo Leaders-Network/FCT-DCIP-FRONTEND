@@ -435,6 +435,7 @@ export const getAdminSurveyors = async (filters?: {
   search?: string;
   status?: string;
   specialization?: string;
+  organization?: string;
   page?: number;
   limit?: number;
 }) => {
@@ -1036,6 +1037,7 @@ export const adminApi = {
   getSurveyors: async (filters?: {
     status?: string;
     specialization?: string;
+    organization?: string;
     search?: string;
     page?: number;
     limit?: number;
