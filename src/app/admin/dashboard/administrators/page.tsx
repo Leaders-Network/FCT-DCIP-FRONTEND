@@ -9,9 +9,10 @@ import {
   PlusCircle,
   MoreVertical,
   Trash2,
-  Edit
+  Edit,
+  UserPlus,
+  X
 } from 'lucide-react'
-import AdminSidebar from '@/components/dashboard/usersComponent/AdminSideBar'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkout'
 import { adminApi } from '@/services/api'
@@ -28,6 +29,47 @@ export default function AdministratorsPage() {
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [formData, setFormData] = useState({
+    firstname: "",
+    lastname: "",
+    email: "",
+    phonenumber: "",
+    role: "",
+    status: "Active",
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      await adminApi.createAdministrator(formData);
+      setShowAdminSidebar(false);
+      // Reset form
+      setFormData({
+        firstname: "",
+        lastname: "",
+        email: "",
+        phonenumber: "",
+        role: "",
+        status: "Active",
+      });
+      // Refresh administrators list
+      const response = await adminApi.getAdministrators()
+      if (response?.success && response?.data) {
+        setAdministrators(response.data)
+      }
+    } catch (error) {
+      console.error("Failed to create administrator:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const fetchAdministrators = async () => {
@@ -84,14 +126,17 @@ export default function AdministratorsPage() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Administrators</h1>
+        <div>
+          <h1 className="text-2xl font-bold">AMMC Administrators</h1>
+          <p className="text-gray-600 mt-1">Manage AMMC administrative users and their permissions</p>
+        </div>
         <div className="flex gap-4">
           <Button
             onClick={() => setShowAdminSidebar(true)}
             className="bg-[#028835] text-white hover:bg-[#026a29] rounded-full"
           >
             <PlusCircle className="mr-2 h-5 w-5" />
-            Add New Admin
+            Add AMMC Admin
           </Button>
           <Button variant="outline" className="text-gray-700">
             Export
@@ -211,7 +256,127 @@ export default function AdministratorsPage() {
           </div>
         </div>
       </div>
-      <AdminSidebar isOpen={showAdminSidebar} onClose={() => setShowAdminSidebar(false)} />
+      {/* Add Admin Modal */}
+      {showAdminSidebar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-[#028835] text-white p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">Add AMMC Administrator</h2>
+                <button
+                  onClick={() => setShowAdminSidebar(false)}
+                  className="text-green-100 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="firstname"
+                    value={formData.firstname}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="lastname"
+                    value={formData.lastname}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  name="phonenumber"
+                  value={formData.phonenumber}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role *
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                  required
+                >
+                  <option value="">Select a role</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Super Admin">Super Admin</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminSidebar(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      <span>Create Administrator</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   )
 }
