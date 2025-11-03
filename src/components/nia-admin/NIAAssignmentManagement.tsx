@@ -302,10 +302,38 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
               {assignment.ammcSurveyorContact && (
                 <div>
                   <label className="text-sm font-medium text-gray-600">AMMC Surveyor</label>
-                  <div className="text-sm text-gray-900">
-                    <p>{assignment.ammcSurveyorContact.name}</p>
-                    <p>{assignment.ammcSurveyorContact.email}</p>
-                    <p>{assignment.ammcSurveyorContact.phone}</p>
+                  <div className="text-sm text-gray-900 space-y-1">
+                    <p className="font-medium">{assignment.ammcSurveyorContact.name}</p>
+                    <p className="flex items-center">
+                      <Mail className="w-3 h-3 mr-1 text-gray-400" />
+                      {assignment.ammcSurveyorContact.email}
+                    </p>
+                    <p className="flex items-center">
+                      <Phone className="w-3 h-3 mr-1 text-gray-400" />
+                      {assignment.ammcSurveyorContact.phone}
+                    </p>
+                    {assignment.ammcSurveyorContact.licenseNumber && (
+                      <p className="text-xs text-gray-600">
+                        License: {assignment.ammcSurveyorContact.licenseNumber}
+                      </p>
+                    )}
+                    {assignment.ammcSurveyorContact.experience && (
+                      <p className="text-xs text-gray-600">
+                        Experience: {assignment.ammcSurveyorContact.experience} years
+                      </p>
+                    )}
+                    {assignment.ammcSurveyorContact.specialization && assignment.ammcSurveyorContact.specialization.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {assignment.ammcSurveyorContact.specialization.map((spec: string, index: number) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
