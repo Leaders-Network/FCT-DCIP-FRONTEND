@@ -3,18 +3,14 @@ import React, { useState, useEffect } from 'react';
 import {
     UserPlus,
     Search,
-    Filter,
     AlertTriangle,
     CheckCircle,
-    Clock,
     User,
     Phone,
     Mail,
-    MapPin,
-    Building,
-    Calendar,
     X
 } from 'lucide-react';
+import { getAuthToken } from '@/utils/auth';
 
 interface Surveyor {
     _id: string;
@@ -104,14 +100,15 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
     const fetchAvailableSurveyors = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
+            // Get auth token using utility function
+            const token = getAuthToken();
 
             if (!token) {
                 throw new Error('No authentication token found');
             }
 
             const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-            const response = await fetch(`${baseUrl}/admin/surveyor?status=active`, {
+            const response = await fetch(`${baseUrl}/admin/surveyor?status=active&organization=AMMC`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -126,7 +123,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
             if (data.success) {
                 // Transform the data to match our interface
-                const transformedSurveyors = (data.data || []).map((surveyor: any) => ({
+                const ammcSurveyors = (data.data || []).map((surveyor: any) => ({
                     _id: surveyor.userId._id,
                     firstname: surveyor.userId.firstname,
                     lastname: surveyor.userId.lastname,
@@ -141,7 +138,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                     completedSurveys: surveyor.statistics?.completedSurveys || 0
                 }));
 
-                setSurveyors(transformedSurveyors);
+                setSurveyors(ammcSurveyors);
             } else {
                 throw new Error(data.message || 'Failed to load surveyors');
             }
@@ -198,7 +195,8 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
         try {
             setAssigning(true);
-            const token = localStorage.getItem('token');
+            // Get auth token using utility function
+            const token = getAuthToken();
 
             if (!token) {
                 throw new Error('No authentication token found');
