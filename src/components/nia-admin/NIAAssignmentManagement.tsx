@@ -51,11 +51,17 @@ interface DualAssignment {
     name: string;
     email: string;
     phone: string;
+    licenseNumber?: string;
+    experience?: number;
+    specialization?: string[];
   };
   niaSurveyorContact?: {
     name: string;
     email: string;
     phone: string;
+    licenseNumber?: string;
+    experience?: number;
+    specialization?: string[];
   };
   priority: string;
   estimatedCompletion: {
@@ -182,7 +188,8 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`/api/v1/dual-assignment/${assignment._id}/assign-nia-surveyor`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+      const response = await fetch(`${baseUrl}/dual-assignment/${assignment._id}/assign-nia`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
