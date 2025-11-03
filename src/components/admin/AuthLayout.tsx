@@ -23,10 +23,10 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
       <div className="flex flex-col items-center justify-center min-h-screen">
         <main className="grid xl:grid-cols-2 grid-cols-1 items-center justify-center xl:space-x-10 p-5 md:p-0">
           <div className="text-center xl:text-left">
-            <h2 className="text-white text-2xl md:text-5xl max-w-xl font-bold mb-4">
-              Defense Critical Infrastructure Program
+            <h2 className="text-white text-2xl md:text-5xl max-w-xl font-bold mb-4 typing-text">
+              Defense Critical <br /> Infrastructure Program
             </h2>
-            <h3 className="text-white text-base md:text-xl font-medium mb-8">
+            <h3 className="text-white text-base md:text-xl font-medium mb-8 fade-in-text">
               Protect your Property with Confidence
             </h3>
           </div>
