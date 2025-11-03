@@ -534,12 +534,12 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDropdown]);
 
-  const handlePaymentClick = () => {
-    console.log('Payment click - Policy status:', policy.status);
-    console.log('Payment click - Survey data:', surveyData);
-    console.log('Payment click - Recommended action:', surveyData?.recommendedAction);
+  const handleInsuranceClick = () => {
+    console.log('Insurance click - Policy status:', policy.status);
+    console.log('Insurance click - Survey data:', surveyData);
+    console.log('Insurance click - Recommended action:', surveyData?.recommendedAction);
 
-    // If policy is already approved (admin approved), allow payment regardless of survey recommendation
+    // If policy is already approved (admin approved), allow insurance regardless of survey recommendation
     if (policy.status === 'approved') {
       window.open('https://askniid.org/verifypolicy.aspx', '_blank');
       return;
@@ -547,16 +547,16 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
 
     // For surveyed policies, check the surveyor's recommendation
     if (surveyData?.recommendedAction === 'reject') {
-      alert('❌ Payment Disabled\n\nThis policy request has been rejected by the surveyor. Please review the survey report for details on why the policy was rejected.');
+      alert('❌ Insurance Disabled\n\nThis policy request has been rejected by the surveyor. Please review the survey report for details on why the policy was rejected.');
       return;
     }
 
     if (surveyData?.recommendedAction === 'request_more_info') {
-      alert('⚠️ Payment Disabled\n\nThe surveyor has requested additional information for this policy. Please edit and resubmit your policy request with the required information before proceeding to payment.');
+      alert('⚠️ Insurance Disabled\n\nThe surveyor has requested additional information for this policy. Please edit and resubmit your policy request with the required information before proceeding to insurance.');
       return;
     }
 
-    // If we have survey data and surveyor approved, allow payment
+    // If we have survey data and surveyor approved, allow insurance
     if (surveyData?.recommendedAction === 'approve') {
       window.open('https://niip.ng/', '_blank');
       return;
@@ -564,13 +564,13 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
 
     // Fallback: If no survey data but policy is surveyed, assume it's approved
     if (policy.status === 'surveyed' && !surveyData) {
-      console.log('No survey data found, but policy is surveyed - allowing payment');
+      console.log('No survey data found, but policy is surveyed - allowing insurance');
       window.open('https://niip.ng/', '_blank');
       return;
     }
 
     // Default case
-    alert('⚠️ Payment Not Available\n\nPayment is not available for this policy at this time. Please check the policy status.');
+    alert('⚠️ Insurance Not Available\n\nInsurance is not available for this policy at this time. Please check the policy status.');
   };
 
   return (
@@ -619,10 +619,10 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
               </div>
             ) : (
               <>
-                {/* Payment button - conditional based on recommendation */}
+                {/* Insurance button - conditional based on recommendation */}
                 <button
                   onClick={() => {
-                    handlePaymentClick();
+                    handleInsuranceClick();
                     setShowDropdown(false);
                   }}
                   className={`flex items-center px-4 py-2 text-sm w-full text-left ${
@@ -642,7 +642,7 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
                 >
                   <CreditCard className="mr-3 h-4 w-4" />
                   <div className="flex flex-col">
-                    <span>Proceed to Insurace</span>
+                    <span>Proceed to Insure</span>
                     {policy.status === 'approved' && (
                       <span className="text-xs text-green-500">Policy Approved</span>
                     )}
