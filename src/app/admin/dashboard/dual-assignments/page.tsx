@@ -74,11 +74,17 @@ const AMMCDualAssignmentsPage = () => {
     const fetchAssignments = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
+
+            // Try multiple token sources for AMMC admin
+            const token = localStorage.getItem('adminToken') ||
+                localStorage.getItem('token') ||
+                localStorage.getItem('authToken');
 
             if (!token) {
                 throw new Error('No authentication token found');
             }
+
+            console.log('Using token for dual assignments:', token ? 'Token found' : 'No token');
 
             const queryParams = new URLSearchParams();
             if (filters.assignmentStatus !== 'all') queryParams.append('assignmentStatus', filters.assignmentStatus);
