@@ -7,9 +7,14 @@ import { adminApi, withErrorHandling } from "@/services/api";
 const SurveyorsPage = () => {
   const handleCreateSurveyor = withErrorHandling(
     async (surveyorData: Partial<Surveyor>) => {
-      const result = await adminApi.createSurveyor(surveyorData);
-      console.log('Surveyor created:', result);
-      alert('Surveyor created successfully!');
+      // Ensure AMMC organization is set for surveyors created through AMMC admin
+      const ammcSurveyorData = {
+        ...surveyorData,
+        organization: 'AMMC'
+      };
+      const result = await adminApi.createSurveyor(ammcSurveyorData);
+      console.log('AMMC Surveyor created:', result);
+      alert('AMMC Surveyor created successfully!');
     },
     (error) => {
       alert(`Failed to create surveyor: ${error.message}`);

@@ -5,6 +5,7 @@ import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.ty
 
 interface SurveySubmissionFormProps {
   policy: PolicyRequest;
+  assignment?: any; // Assignment with dual-surveyor info
   onSubmit: (submission: Omit<SurveySubmission, 'surveyorId' | 'ammcId'> & { surveyDocument: File }) => Promise<void>;
   onCancel: () => void;
 }
@@ -18,6 +19,7 @@ const ErrorMessage = ({ message }: { message: string }) => (
 
 const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   policy,
+  assignment,
   onSubmit,
   onCancel
 }) => {
@@ -45,8 +47,16 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
     successful: true
   });
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
+
+  // Get surveyor organization from localStorage or assignment
+  const surveyorOrganization = assignment?.organization ||
+    (typeof window !== 'undefined' ? localStorage.getItem('surveyorOrganization') : null) || 'AMMC';
+
+  // Check if this is a dual-surveyor assignment
+  const isDualSurveyor = assignment?.dualAssignmentId || assignment?.isDualSurveyor;
+  const otherOrganization = surveyorOrganization === 'AMMC' ? 'NIA' : 'AMMC';
+  const otherSurveyorContact = assignment?.dualAssignmentInfo?.otherSurveyor;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -84,6 +94,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Enhanced validation for dual-surveyor context
     if (!uploadedDocument) {
       setError('Please upload a survey document.');
       return;
@@ -91,6 +102,18 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
 
     if (!surveyNotes.trim()) {
       setError('Please provide survey notes.');
+      return;
+    }
+
+    if (!propertyCondition.trim() || !structuralAssessment.trim() ||
+      !riskFactors.trim() || !recommendations.trim()) {
+      setError('Please complete all required survey assessment fields.');
+      return;
+    }
+
+    // Additional validation for dual-surveyor assignments
+    if (isDualSurveyor && contactLog.length === 0) {
+      setError('For dual-surveyor assignments, please record at least one contact attempt.');
       return;
     }
 
@@ -108,7 +131,10 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
           riskFactors,
           recommendations
         },
-        expenses
+        expenses,
+        organization: surveyorOrganization,
+        isDualSurveyor,
+        assignmentId: assignment?._id
       };
 
       await onSubmit(submission);
@@ -132,12 +158,58 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
                 <p className="text-sm text-gray-500 mt-1">
                   Policy #{policy._id} • {policy.propertyDetails.propertyType}
                 </p>
+                <div className="flex items-center space-x-2 mt-2">
+                  <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${surveyorOrganization === 'AMMC' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                    {surveyorOrganization} Surveyor
+                  </span>
+                  {isDualSurveyor && (
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                      Dual Survey Assignment
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-start text-gray-600 text-sm mt-4 min-w-0">
               <span className="font-medium flex-shrink-0">Property Address:</span>
               <span className="ml-2 break-words min-w-0">{policy.propertyDetails.address}</span>
             </div>
+
+            {/* Dual Surveyor Information */}
+            {isDualSurveyor && otherSurveyorContact && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">
+                  Collaborating with {otherOrganization} Surveyor
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-blue-800">
+                  <div>Name: {otherSurveyorContact.name}</div>
+                  <div>Email: {otherSurveyorContact.email}</div>
+                  <div>Phone: {otherSurveyorContact.phone}</div>
+                  <div>License: {otherSurveyorContact.licenseNumber || otherSurveyorContact.license || 'Not provided'}</div>
+                  {otherSurveyorContact.experience && (
+                    <div>Experience: {otherSurveyorContact.experience} years</div>
+                  )}
+                  {otherSurveyorContact.rating && (
+                    <div>Rating: {otherSurveyorContact.rating}/5</div>
+                  )}
+                  {otherSurveyorContact.specialization && otherSurveyorContact.specialization.length > 0 && (
+                    <div className="col-span-2">
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {otherSurveyorContact.specialization.map((spec: string, index: number) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-6 min-w-0">
@@ -506,6 +578,42 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               </div>
             </div>
 
+            {/* Dual-Surveyor Progress Information */}
+            {isDualSurveyor && (
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+                <h4 className="text-base font-medium text-indigo-900 mb-3">🤝 Dual-Surveyor Assignment</h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-indigo-800">Your Organization ({surveyorOrganization}):</span>
+                    <span className="font-medium text-indigo-900">Submitting Report</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-indigo-800">Partner Organization ({otherOrganization}):</span>
+                    <span className="font-medium text-indigo-900">
+                      {assignment?.dualAssignmentInfo?.completionStatus === 50 ? 'Report Submitted' : 'Pending'}
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-xs text-indigo-700 mb-1">
+                      <span>Overall Progress</span>
+                      <span>{assignment?.dualAssignmentInfo?.completionStatus || 0}% → 50%</span>
+                    </div>
+                    <div className="w-full bg-indigo-200 rounded-full h-2">
+                      <div
+                        className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: '50%' }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-indigo-700 mt-2">
+                    ℹ️ After submission, the {otherOrganization} surveyor will be notified of your progress.
+                    {assignment?.dualAssignmentInfo?.completionStatus === 50 &&
+                      " Both reports will be automatically merged once you submit."}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Submission Checklist */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="text-base font-medium text-blue-900 mb-3">📋 Submission Checklist</h4>
@@ -530,6 +638,12 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
                   <span className="mr-2">{recommendedAction ? '✅' : '⬜'}</span>
                   Final recommendation selected
                 </div>
+                {isDualSurveyor && (
+                  <div className={`flex items-center ${contactLog.length > 0 ? 'text-green-700' : 'text-gray-500'}`}>
+                    <span className="mr-2">{contactLog.length > 0 ? '✅' : '⬜'}</span>
+                    Contact log recorded (required for dual surveys)
+                  </div>
+                )}
               </div>
             </div>
 
@@ -544,11 +658,13 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={loading || !uploadedDocument || !surveyNotes.trim()}
+                disabled={loading || !uploadedDocument || !surveyNotes.trim() ||
+                  (isDualSurveyor && contactLog.length === 0)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {loading ? 'Submitting...' : 'Submit Survey Report'}
+                {loading ? 'Submitting...' :
+                  isDualSurveyor ? `Submit ${surveyorOrganization} Survey Report` : 'Submit Survey Report'}
               </button>
             </div>
           </form>

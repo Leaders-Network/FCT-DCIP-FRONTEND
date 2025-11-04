@@ -51,11 +51,17 @@ interface DualAssignment {
     name: string;
     email: string;
     phone: string;
+    licenseNumber?: string;
+    experience?: number;
+    specialization?: string[];
   };
   niaSurveyorContact?: {
     name: string;
     email: string;
     phone: string;
+    licenseNumber?: string;
+    experience?: number;
+    specialization?: string[];
   };
   priority: string;
   estimatedCompletion: {
@@ -182,7 +188,14 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`/api/v1/dual-assignment/${assignment._id}/assign-nia-surveyor`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+      console.log('Assigning NIA surveyor:', {
+        assignmentId: assignment._id,
+        surveyorId: selectedSurveyor._id,
+        token: token ? 'Present' : 'Missing'
+      });
+
+      const response = await fetch(`${baseUrl}/dual-assignment/${assignment._id}/assign-nia`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -195,13 +208,17 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to assign surveyor');
-      }
+      console.log('Assignment response status:', response.status);
 
       const data = await response.json();
+      console.log('Assignment response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP ${response.status}: Failed to assign surveyor`);
+      }
 
       if (data.success) {
+        console.log('Assignment successful');
         onAssignmentComplete();
         onClose();
       } else {
@@ -302,10 +319,38 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
               {assignment.ammcSurveyorContact && (
                 <div>
                   <label className="text-sm font-medium text-gray-600">AMMC Surveyor</label>
-                  <div className="text-sm text-gray-900">
-                    <p>{assignment.ammcSurveyorContact.name}</p>
-                    <p>{assignment.ammcSurveyorContact.email}</p>
-                    <p>{assignment.ammcSurveyorContact.phone}</p>
+                  <div className="text-sm text-gray-900 space-y-1">
+                    <p className="font-medium">{assignment.ammcSurveyorContact.name}</p>
+                    <p className="flex items-center">
+                      <Mail className="w-3 h-3 mr-1 text-gray-400" />
+                      {assignment.ammcSurveyorContact.email}
+                    </p>
+                    <p className="flex items-center">
+                      <Phone className="w-3 h-3 mr-1 text-gray-400" />
+                      {assignment.ammcSurveyorContact.phone}
+                    </p>
+                    {assignment.ammcSurveyorContact.licenseNumber && (
+                      <p className="text-xs text-gray-600">
+                        License: {assignment.ammcSurveyorContact.licenseNumber}
+                      </p>
+                    )}
+                    {assignment.ammcSurveyorContact.experience && (
+                      <p className="text-xs text-gray-600">
+                        Experience: {assignment.ammcSurveyorContact.experience} years
+                      </p>
+                    )}
+                    {assignment.ammcSurveyorContact.specialization && assignment.ammcSurveyorContact.specialization.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {assignment.ammcSurveyorContact.specialization.map((spec: string, index: number) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

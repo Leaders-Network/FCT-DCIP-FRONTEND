@@ -120,7 +120,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
 
             // If no dual assignment found, create a mock one for demonstration
             // In a real implementation, this would be handled by the backend
-            const policyResponse = await fetch(`/api/v1/policy-requests/${policyId}`, {
+            const policyResponse = await fetch(`/api/v1/policy/${policyId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'

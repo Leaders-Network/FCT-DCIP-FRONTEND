@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, Check
 import { Assignment } from "@/types/api.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionModal from "./SurveySubmissionModal";
+import SurveySubmissionConfirmation from "./SurveySubmissionConfirmation";
 
 interface AssignmentDetailProps {
   assignmentId: string;
@@ -13,6 +14,8 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSurveyForm, setShowSurveyForm] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<any>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -54,10 +57,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         formData.append('surveyDocument', submission.surveyDocument);
       }
 
-      await submitSurvey(formData);
-      alert("Survey submitted successfully!");
+      const result = await submitSurvey(formData);
+
+      // Store submission result for confirmation display
+      setSubmissionResult(result.data);
       setShowSurveyForm(false);
-      router.push("/surveyor/dashboard/assignments");
+      setShowConfirmation(true);
     } catch (error) {
       console.error("Failed to submit survey:", error);
       throw error;
@@ -591,9 +596,23 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       {assignment && typeof assignment.ammcId === 'object' && (
         <SurveySubmissionModal
           policy={assignment.ammcId}
+          assignment={assignment}
           isOpen={showSurveyForm}
           onSubmit={handleSurveySubmission}
           onClose={() => setShowSurveyForm(false)}
+        />
+      )}
+
+      {/* Submission Confirmation Modal */}
+      {submissionResult && showConfirmation && assignment && typeof assignment.ammcId === 'object' && (
+        <SurveySubmissionConfirmation
+          submissionResult={submissionResult}
+          policy={assignment.ammcId}
+          onClose={() => {
+            setShowConfirmation(false);
+            setSubmissionResult(null);
+            router.push("/surveyor/dashboard/assignments");
+          }}
         />
       )}
     </div>

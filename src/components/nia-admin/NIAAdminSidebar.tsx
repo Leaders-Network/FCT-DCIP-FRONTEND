@@ -8,7 +8,6 @@ import {
     Users,
     FileText,
     ClipboardList,
-    BarChart3,
     Settings,
     LogOut,
     Building2,
@@ -66,10 +65,10 @@ const NIAAdminSidebar = () => {
             description: "Monitor automatic report processing"
         },
         {
-            href: "/nia-admin/analytics",
-            label: "Analytics",
-            icon: BarChart3,
-            description: "Performance analytics"
+            href: "/nia-admin/administrators",
+            label: "Administrators",
+            icon: UserCheck,
+            description: "Manage NIA administrators"
         },
         {
             href: "/nia-admin/settings",
