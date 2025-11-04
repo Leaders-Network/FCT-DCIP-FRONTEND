@@ -3,16 +3,11 @@ import React, { useState, useEffect } from 'react';
 import {
   UserPlus,
   Search,
-  Filter,
   AlertTriangle,
   CheckCircle,
-  Clock,
   User,
   Phone,
   Mail,
-  MapPin,
-  Building,
-  Calendar,
   X
 } from 'lucide-react';
 
@@ -31,7 +26,7 @@ interface Surveyor {
   completedSurveys: number;
 }
 
-interface DualAssignment {
+interface DualAssignmentLocal {
   _id: string;
   policyId: {
     _id: string;
@@ -70,7 +65,7 @@ interface DualAssignment {
 }
 
 interface NIAAssignmentManagementProps {
-  assignment: DualAssignment;
+  assignment: DualAssignmentLocal;
   onAssignmentComplete: () => void;
   onClose: () => void;
 }

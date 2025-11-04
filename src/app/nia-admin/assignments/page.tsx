@@ -11,47 +11,10 @@ import {
     X
 } from 'lucide-react';
 import NIAAssignmentManagement from '@/components/nia-admin/NIAAssignmentManagement';
+import { DualAssignment } from '@/types/api.types';
+import { dualAssignmentAPI, tokenManager } from '@/services/api';
 
-interface DualAssignment {
-    _id: string;
-    policyId: {
-        _id: string;
-        propertyDetails: {
-            propertyType: string;
-            address: string;
-            buildingValue: number;
-        };
-        contactDetails: {
-            fullName: string;
-            email: string;
-            phoneNumber: string;
-        };
-        status: string;
-    };
-    assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
-    completionStatus: 0 | 50 | 100;
-    ammcSurveyorContact?: {
-        name: string;
-        email: string;
-        phone: string;
-        licenseNumber?: string;
-        experience?: number;
-        specialization?: string[];
-    };
-    niaSurveyorContact?: {
-        name: string;
-        email: string;
-        phone: string;
-        licenseNumber?: string;
-        experience?: number;
-        specialization?: string[];
-    };
-    priority: string;
-    estimatedCompletion: {
-        overallDeadline: string;
-    };
-    createdAt: string;
-}
+// DualAssignment interface is now imported from types
 
 const NIAAssignmentsPage = () => {
     const [assignments, setAssignments] = useState<DualAssignment[]>([]);
@@ -74,11 +37,15 @@ const NIAAssignmentsPage = () => {
     const fetchAssignments = async () => {
         try {
             setLoading(true);
+            setError(null);
+
             const token = localStorage.getItem('niaAdminToken');
 
             if (!token) {
-                throw new Error('No authentication token found');
+                throw new Error('No authentication token found. Please log in again.');
             }
+
+            console.log('NIA Admin - Fetching dual assignments with token:', token ? 'Token found' : 'No token');
 
             const queryParams = new URLSearchParams();
             if (filters.assignmentStatus !== 'all') queryParams.append('assignmentStatus', filters.assignmentStatus);
@@ -86,23 +53,34 @@ const NIAAssignmentsPage = () => {
             if (filters.priority !== 'all') queryParams.append('priority', filters.priority);
 
             const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-            const response = await fetch(`${baseUrl}/dual-assignment?${queryParams.toString()}`, {
+            const url = `${baseUrl}/dual-assignment?${queryParams.toString()}`;
+
+            console.log('NIA Admin - API URL:', url);
+
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
 
+            console.log('NIA Admin - Response status:', response.status);
+
             if (!response.ok) {
-                throw new Error('Failed to fetch assignments');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('NIA Admin - API Error:', errorData);
+                throw new Error(errorData.message || `HTTP ${response.status}: Failed to fetch assignments`);
             }
 
             const data = await response.json();
+            console.log('NIA Admin - API Response:', data);
 
             if (data.success) {
                 let filteredAssignments = data.data.dualAssignments || [];
 
-                // Debug: Log the raw data to see what's being returned (temporary)
+                console.log('NIA Admin - Raw assignments count:', filteredAssignments.length);
+
+                // Debug: Log the raw data to see what's being returned
                 console.log('🔍 NIA Assignments Debug:', filteredAssignments.map((a: any) => ({
                     id: a._id?.slice(-6),
                     status: a.assignmentStatus,
@@ -121,13 +99,20 @@ const NIAAssignmentsPage = () => {
                     );
                 }
 
+                console.log('NIA Admin - Filtered assignments count:', filteredAssignments.length);
                 setAssignments(filteredAssignments);
             } else {
                 throw new Error(data.message || 'Failed to load assignments');
             }
         } catch (error) {
-            console.error('Assignments fetch error:', error);
-            setError(error instanceof Error ? error.message : 'Failed to load assignments');
+            console.error('NIA Admin - Assignments fetch error:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to load assignments';
+            setError(errorMessage);
+
+            // If it's an authentication error, suggest re-login
+            if (errorMessage.includes('Authentication') || errorMessage.includes('401')) {
+                setError('Authentication failed. Please log out and log in again.');
+            }
         } finally {
             setLoading(false);
         }
@@ -201,6 +186,21 @@ const NIAAssignmentsPage = () => {
                     <p className="text-gray-600 mt-1">Manage dual-surveyor assignments and coordinate with AMMC</p>
                 </div>
                 <div className="flex items-center space-x-3">
+                    <button
+                        onClick={async () => {
+                            try {
+                                const result = await dualAssignmentAPI.testAuth();
+                                console.log('🔐 NIA Auth Test Result:', result);
+                                alert(`Auth Test: ${result.success ? 'SUCCESS' : 'FAILED'}\nOrg: ${result.data?.user?.organization}\nRole: ${result.data?.user?.role}`);
+                            } catch (error) {
+                                console.error('🔐 NIA Auth Test Error:', error);
+                                alert(`Auth Test FAILED: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                            }
+                        }}
+                        className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                    >
+                        <span>Test Auth</span>
+                    </button>
                     <button
                         onClick={fetchAssignments}
                         className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"

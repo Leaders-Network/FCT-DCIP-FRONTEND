@@ -27,7 +27,7 @@ interface Surveyor {
     completedSurveys: number;
 }
 
-interface DualAssignment {
+interface DualAssignmentLocal {
     _id: string;
     policyId: {
         _id: string;
@@ -66,7 +66,7 @@ interface DualAssignment {
 }
 
 interface AMMCAssignmentManagementProps {
-    assignment: DualAssignment;
+    assignment: DualAssignmentLocal;
     onAssignmentComplete: () => void;
     onClose: () => void;
 }
