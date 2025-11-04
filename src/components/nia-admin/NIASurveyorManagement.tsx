@@ -15,13 +15,10 @@ import {
     Trash2
 } from 'lucide-react';
 
-import { NIASurveyor } from '@/types/api.types';
+import { NIASurveyor, SurveyorManagementProps } from '@/types/api.types';
 
-interface NIASurveyorManagementProps {
+interface NIASurveyorManagementProps extends SurveyorManagementProps {
     surveyor?: NIASurveyor | null;
-    mode: 'add' | 'edit' | 'view';
-    onSave: (surveyor: NIASurveyor) => Promise<void>;
-    onClose: () => void;
 }
 
 const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({

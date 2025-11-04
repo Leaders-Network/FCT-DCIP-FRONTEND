@@ -16,79 +16,10 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import NIASurveyorManagement from '@/components/nia-admin/NIASurveyorManagement';
-import { NIASurveyor } from '@/types/api.types';
+import { NIASurveyor, NIASurveyorForManagement, NIAUser } from '@/types/api.types';
 
-interface NIAUser {
-    _id: string;
-    firstname: string;
-    lastname: string;
-    email: string;
-    phonenumber: string;
-}
-
-interface NIASurveyorLocal {
-    _id: string;
-    userId: NIAUser | string;
-    firstname?: string;
-    lastname?: string;
-    email?: string;
-    phoneNumber?: string;
-    address?: string;
-    licenseNumber?: string;
-    specialization?: string[];
-    experience?: number;
-    status: 'active' | 'inactive' | 'suspended';
-    availability?: 'available' | 'busy' | 'unavailable';
-    maxAssignments?: number;
-    currentAssignments: number;
-    completedAssignments: number;
-    rating: number;
-    joinedDate: string;
-    lastActive: string;
-    dateOfBirth?: string;
-    emergencyContact?: {
-        name: string;
-        phone: string;
-        relationship: string;
-    };
-    qualifications?: string[];
-    notes?: string;
-    profile?: {
-        experience?: number;
-        availability?: 'available' | 'busy' | 'unavailable';
-        specialization?: string[];
-    };
-}
-
-interface NIASurveyorForManagement {
-    _id?: string;
-    firstname: string;
-    lastname: string;
-    email: string;
-    phoneNumber: string;
-    address: string;
-    licenseNumber: string;
-    specialization: string[];
-    experience: number;
-    status: 'active' | 'inactive' | 'suspended';
-    availability: 'available' | 'busy' | 'unavailable';
-    maxAssignments: number;
-    dateOfBirth?: string;
-    emergencyContact?: {
-        name: string;
-        phone: string;
-        relationship: string;
-    };
-    qualifications?: string[];
-    notes?: string;
-    // Required fields from original interface
-    userId: NIAUser | string;
-    currentAssignments: number;
-    completedAssignments: number;
-    rating: number;
-    joinedDate: string;
-    lastActive: string;
-}
+// Use types from api.types.ts instead of local interfaces
+type NIASurveyorLocal = NIASurveyor;
 
 const NIASurveyorsPage = () => {
     const [surveyors, setSurveyors] = useState<NIASurveyorLocal[]>([]);
@@ -609,7 +540,7 @@ const NIASurveyorsPage = () => {
                                                 <button
                                                     onClick={() => {
                                                         const newStatus = surveyor.status === 'active' ? 'suspended' : 'active';
-                                                        handleUpdateStatus(surveyor._id, newStatus);
+                                                        handleUpdateStatus(surveyor._id || '', newStatus);
                                                     }}
                                                     className={`transition-colors ${surveyor.status === 'active'
                                                         ? 'text-red-600 hover:text-red-900'
@@ -623,7 +554,7 @@ const NIASurveyorsPage = () => {
                                                     onClick={() => {
                                                         const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
                                                         const name = user ? `${user.firstname} ${user.lastname}` : 'Unknown Surveyor';
-                                                        handleDeleteSurveyor(surveyor._id, name);
+                                                        handleDeleteSurveyor(surveyor._id || '', name);
                                                     }}
                                                     className="text-red-600 hover:text-red-900 transition-colors"
                                                     title="Delete Surveyor"

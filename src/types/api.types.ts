@@ -487,7 +487,7 @@ export interface NIAUser {
 }
 
 export interface NIASurveyor {
-  _id: string;
+  _id?: string;
   userId: NIAUser | string;
   firstname?: string;
   lastname?: string;
@@ -495,7 +495,7 @@ export interface NIASurveyor {
   phoneNumber?: string;
   address?: string;
   licenseNumber?: string;
-  specialization?: string[];
+  specialization: string[];
   experience?: number;
   status: 'active' | 'inactive' | 'suspended';
   availability?: 'available' | 'busy' | 'unavailable';
@@ -518,6 +518,20 @@ export interface NIASurveyor {
     availability?: 'available' | 'busy' | 'unavailable';
     specialization?: string[];
   };
+}
+
+// Enhanced NIASurveyor for management operations
+export interface NIASurveyorForManagement extends NIASurveyor {
+  firstname: string;
+  lastname: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
+  licenseNumber: string;
+  specialization: string[];
+  experience: number;
+  availability: 'available' | 'busy' | 'unavailable';
+  maxAssignments: number;
 }
 
 
@@ -732,4 +746,45 @@ export interface GetSurveyorsResponse {
 export interface GetAssignedPoliciesResponse {
   success: boolean;
   policies: PolicyRequest[];
+}
+
+// API Filter Types
+export interface DualAssignmentFilters {
+  assignmentStatus?: string;
+  completionStatus?: string;
+  priority?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface SurveyorFilters {
+  status?: string;
+  availability?: string;
+  specialization?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface AssignmentFilters {
+  status?: string;
+  priority?: string;
+  surveyorId?: string;
+  overdue?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+// Component Props Types
+export interface AssignmentManagementProps {
+  assignment: DualAssignment;
+  onAssignmentComplete: () => void;
+  onClose: () => void;
+}
+
+export interface SurveyorManagementProps {
+  surveyor?: NIASurveyor | null;
+  mode: 'add' | 'edit' | 'view';
+  onSave: (surveyor: NIASurveyor) => Promise<void>;
+  onClose: () => void;
 }

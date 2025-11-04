@@ -40,6 +40,16 @@ const SurveyorLogin = () => {
         localStorage.setItem("userRole", employee.employeeRole.role);
         localStorage.setItem("surveyorId", employee._id);
 
+        // Store organization information if available
+        if (response.data.organization) {
+          localStorage.setItem("surveyorOrganization", response.data.organization);
+        }
+
+        // Store surveyor info if available
+        if (response.data.surveyorInfo) {
+          localStorage.setItem("surveyorInfo", JSON.stringify(response.data.surveyorInfo));
+        }
+
         router.push("/surveyor/dashboard");
       } else {
         setError("Invalid response from server. Please try again.");
@@ -169,8 +179,8 @@ const SurveyorLogin = () => {
               type="submit"
               disabled={loading || !email || !password}
               className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white transition-all duration-200 ${loading || !email || !password
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#028835] hover:bg-green-700 hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]'
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-[#028835] hover:bg-green-700 hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]'
                 }`}
             >
               {loading ? (

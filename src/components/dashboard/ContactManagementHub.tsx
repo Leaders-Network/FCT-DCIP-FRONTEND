@@ -14,15 +14,17 @@ import SurveyorContactsDisplay from './SurveyorContactsDisplay';
 import AdminContactDisplay from './AdminContactDisplay';
 import ConflictRaiseInterface from './ConflictRaiseInterface';
 
+import { SurveyorContactInfo, AdminContactInfo } from '@/types/api.types';
+
 interface ContactManagementHubProps {
     // Surveyor data
-    ammcSurveyor?: any;
-    niaSurveyor?: any;
+    ammcSurveyor?: SurveyorContactInfo | null;
+    niaSurveyor?: SurveyorContactInfo | null;
     assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
 
     // Admin data
-    ammcAdmin?: any;
-    niaAdmin?: any;
+    ammcAdmin?: AdminContactInfo | null;
+    niaAdmin?: AdminContactInfo | null;
 
     // Report data for conflict raising
     policyId?: string;
@@ -34,7 +36,7 @@ interface ContactManagementHubProps {
     defaultExpandedSection?: 'surveyors' | 'admins' | 'both';
 
     // Callbacks
-    onConflictSubmit?: (conflictData: any) => void;
+    onConflictSubmit?: (conflictData: Record<string, unknown>) => void;
 }
 
 const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
@@ -64,7 +66,7 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
         }));
     };
 
-    const handleConflictSubmit = (conflictData: any) => {
+    const handleConflictSubmit = (conflictData: Record<string, unknown>) => {
         if (onConflictSubmit) {
             onConflictSubmit(conflictData);
         } else {

@@ -27,48 +27,11 @@ interface Surveyor {
     completedSurveys: number;
 }
 
-interface DualAssignmentLocal {
-    _id: string;
-    policyId: {
-        _id: string;
-        propertyDetails: {
-            propertyType: string;
-            address: string;
-            buildingValue: number;
-        };
-        contactDetails: {
-            fullName: string;
-            email: string;
-            phoneNumber: string;
-        };
-    };
-    assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
-    ammcSurveyorContact?: {
-        name: string;
-        email: string;
-        phone: string;
-        licenseNumber?: string;
-        experience?: number;
-        specialization?: string[];
-    };
-    niaSurveyorContact?: {
-        name: string;
-        email: string;
-        phone: string;
-        licenseNumber?: string;
-        experience?: number;
-        specialization?: string[];
-    };
-    priority: string;
-    estimatedCompletion: {
-        overallDeadline: string;
-    };
-}
+// Use types from api.types.ts
+import { DualAssignment, AssignmentManagementProps } from '@/types/api.types';
 
-interface AMMCAssignmentManagementProps {
-    assignment: DualAssignmentLocal;
-    onAssignmentComplete: () => void;
-    onClose: () => void;
+interface AMMCAssignmentManagementProps extends AssignmentManagementProps {
+    assignment: DualAssignment;
 }
 
 const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
@@ -83,7 +46,11 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
     const [assigning, setAssigning] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState<{
+        availability: string;
+        specialization: string;
+        experience: string;
+    }>({
         availability: 'all',
         specialization: 'all',
         experience: 'all'

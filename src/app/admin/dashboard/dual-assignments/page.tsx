@@ -13,6 +13,7 @@ import {
     Clock,
     Building
 } from 'lucide-react';
+import { dualAssignmentAPI } from '@/services/api';
 import AMMCAssignmentManagement from '@/components/admin/AMMCAssignmentManagement';
 import { DualAssignment } from '@/types/api.types';
 
@@ -39,43 +40,17 @@ const AMMCDualAssignmentsPage = () => {
             setLoading(true);
             setError(null);
 
-            // Try multiple token sources for AMMC admin
-            const token = localStorage.getItem('adminToken') ||
-                localStorage.getItem('token') ||
-                localStorage.getItem('authToken');
+            console.log('AMMC Admin - Fetching dual assignments...');
 
-            if (!token) {
-                throw new Error('No authentication token found. Please log in again.');
-            }
+            // Prepare filters for API call
+            const apiFilters = {
+                assignmentStatus: filters.assignmentStatus !== 'all' ? filters.assignmentStatus : undefined,
+                completionStatus: filters.completionStatus !== 'all' ? filters.completionStatus : undefined,
+                priority: filters.priority !== 'all' ? filters.priority : undefined,
+            };
 
-            console.log('AMMC Admin - Fetching dual assignments with token:', token ? 'Token found' : 'No token');
-
-            const queryParams = new URLSearchParams();
-            if (filters.assignmentStatus !== 'all') queryParams.append('assignmentStatus', filters.assignmentStatus);
-            if (filters.completionStatus !== 'all') queryParams.append('completionStatus', filters.completionStatus);
-            if (filters.priority !== 'all') queryParams.append('priority', filters.priority);
-
-            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-            const url = `${baseUrl}/dual-assignment?${queryParams.toString()}`;
-
-            console.log('AMMC Admin - API URL:', url);
-
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            console.log('AMMC Admin - Response status:', response.status);
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('AMMC Admin - API Error:', errorData);
-                throw new Error(errorData.message || `HTTP ${response.status}: Failed to fetch dual assignments`);
-            }
-
-            const data = await response.json();
+            // Use the API service which handles authentication properly
+            const data = await dualAssignmentAPI.getDualAssignments(apiFilters);
             console.log('AMMC Admin - API Response:', data);
 
             if (data.success) {
