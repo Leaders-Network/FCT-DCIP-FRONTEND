@@ -5,6 +5,7 @@ import { PolicyRequest, ContactLogEntry } from "@/types/api.types";
 
 interface SurveySubmissionModalProps {
     policy: PolicyRequest;
+    assignment?: any; // Assignment with dual-surveyor info
     isOpen: boolean;
     onSubmit: (submission: any) => Promise<void>;
     onClose: () => void;
@@ -19,6 +20,7 @@ const ErrorMessage = ({ message }: { message: string }) => (
 
 const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     policy,
+    assignment,
     isOpen,
     onSubmit,
     onClose
@@ -49,6 +51,15 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Get surveyor organization from localStorage or assignment
+    const surveyorOrganization = assignment?.organization ||
+        (typeof window !== 'undefined' ? localStorage.getItem('surveyorOrganization') : null) || 'AMMC';
+
+    // Check if this is a dual-surveyor assignment
+    const isDualSurveyor = assignment?.dualAssignmentId || assignment?.isDualSurveyor;
+    const otherOrganization = surveyorOrganization === 'AMMC' ? 'NIA' : 'AMMC';
+    const otherSurveyorContact = assignment?.dualAssignmentInfo?.otherSurveyor;
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {

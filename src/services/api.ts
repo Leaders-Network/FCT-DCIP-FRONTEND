@@ -389,6 +389,16 @@ export const getSurveyorAssignmentById = async (assignmentId: string) => {
   }
 };
 
+export const getDualAssignmentDetails = async (dualAssignmentId: string) => {
+  try {
+    const response = await api.get(`/dual-assignment/${dualAssignmentId}/details`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch dual assignment details:", error);
+    throw error;
+  }
+};
+
 // Admin Dashboard APIs
 export const getAdminDashboardData = async (period = '30d') => {
   try {
@@ -425,6 +435,7 @@ export const getAdminSurveyors = async (filters?: {
   search?: string;
   status?: string;
   specialization?: string;
+  organization?: string;
   page?: number;
   limit?: number;
 }) => {
@@ -1026,6 +1037,7 @@ export const adminApi = {
   getSurveyors: async (filters?: {
     status?: string;
     specialization?: string;
+    organization?: string;
     search?: string;
     page?: number;
     limit?: number;
