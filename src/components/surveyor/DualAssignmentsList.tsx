@@ -254,15 +254,28 @@ const DualAssignmentsList: React.FC = () => {
 
                                         {/* Progress Bar */}
                                         <div className="mb-4">
-                                            <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                                <span>Overall Progress</span>
-                                                <span>{assignment.completionStatus}%</span>
+                                            <div className="flex justify-between text-sm text-gray-700 mb-2">
+                                                <span className="font-medium">Overall Progress</span>
+                                                <span className="font-semibold">{assignment.completionStatus}% Complete</span>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div className="w-full bg-gray-200 rounded-full h-3">
                                                 <div
-                                                    className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(assignment.completionStatus)}`}
+                                                    className={`h-3 rounded-full transition-all duration-500 ${getProgressColor(assignment.completionStatus)}`}
                                                     style={{ width: `${assignment.completionStatus}%` }}
                                                 ></div>
+                                            </div>
+                                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                                <span>0%</span>
+                                                <span>50% (One Report)</span>
+                                                <span>100% (Both Reports)</span>
+                                            </div>
+                                            <div className="text-xs text-gray-600 mt-1">
+                                                {assignment.completionStatus === 100
+                                                    ? '✅ Both organizations have submitted their reports'
+                                                    : assignment.completionStatus === 50
+                                                        ? '⏳ One organization has submitted, waiting for partner'
+                                                        : '📋 No reports submitted yet'
+                                                }
                                             </div>
                                         </div>
 
