@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw } from "lucide-react";
 import { Assignment } from "@/types/api.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionModal from "./SurveySubmissionModal";
@@ -27,10 +27,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         if (response.success) {
           setAssignment(response.data);
           console.log('Assignment data:', response.data);
-          console.log('Dual assignment info:', response.data.dualAssignmentInfo);
-          if (response.data.dualAssignmentInfo?.otherSurveyor) {
-            console.log('Other surveyor data:', response.data.dualAssignmentInfo.otherSurveyor);
-          }
         } else {
           // Handle error
         }
@@ -67,6 +63,19 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       setSubmissionResult(result.data);
       setShowSurveyForm(false);
       setShowConfirmation(true);
+
+      // Refresh assignment data to show updated progress
+      setTimeout(async () => {
+        try {
+          const { getSurveyorAssignmentById } = await import("@/services/api");
+          const response = await getSurveyorAssignmentById(assignmentId);
+          if (response.success) {
+            setAssignment(response.data);
+          }
+        } catch (refreshError) {
+          console.error("Failed to refresh assignment data:", refreshError);
+        }
+      }, 1000); // Small delay to allow backend processing
     } catch (error) {
       console.error("Failed to submit survey:", error);
       throw error;
@@ -307,21 +316,65 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <User className="h-5 w-5 mr-2" />
                 Dual Surveyor Assignment
               </h2>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(assignment as any).dualAssignmentInfo.completionStatus === 100 ? 'bg-green-100 text-green-800' :
-                (assignment as any).dualAssignmentInfo.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                {(assignment as any).dualAssignmentInfo.completionStatus}% Complete
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(assignment as any).dualAssignmentInfo.completionStatus === 100 ? 'bg-green-100 text-green-800' :
+                  (assignment as any).dualAssignmentInfo.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                  {(assignment as any).dualAssignmentInfo.completionStatus}% Complete
+                </span>
+                <button
+                  onClick={async () => {
+                    try {
+                      const { getSurveyorAssignmentById } = await import("@/services/api");
+                      const response = await getSurveyorAssignmentById(assignmentId);
+                      if (response.success) {
+                        setAssignment(response.data);
+                      }
+                    } catch (error) {
+                      console.error("Failed to refresh:", error);
+                    }
+                  }}
+                  className="p-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded"
+                  title="Refresh progress"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
           <div className="p-6">
             <div className="mb-4 p-4 bg-white rounded-lg border border-indigo-100">
               <h3 className="text-sm font-medium text-indigo-900 mb-2">Assignment Overview</h3>
-              <p className="text-sm text-indigo-700 mb-3">
+              <p className="text-sm text-indigo-700 mb-4">
                 This property requires dual surveyor assessment from both AMMC and NIA organizations.
                 Coordinate with your partner surveyor to ensure comprehensive coverage.
               </p>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-indigo-700 mb-2">
+                  <span className="font-medium">Overall Progress</span>
+                  <span className="font-semibold">{(assignment as any).dualAssignmentInfo.completionStatus}% Complete</span>
+                </div>
+                <div className="w-full bg-indigo-200 rounded-full h-3">
+                  <div
+                    className={`h-3 rounded-full transition-all duration-500 ${(assignment as any).dualAssignmentInfo.completionStatus === 100
+                      ? 'bg-green-500'
+                      : (assignment as any).dualAssignmentInfo.completionStatus === 50
+                        ? 'bg-yellow-500'
+                        : 'bg-indigo-400'
+                      }`}
+                    style={{ width: `${(assignment as any).dualAssignmentInfo.completionStatus}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs text-indigo-600 mt-1">
+                  <span>0%</span>
+                  <span>50% (One Report)</span>
+                  <span>100% (Both Reports)</span>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-indigo-600 font-medium">Status:</span>
@@ -332,8 +385,15 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                   <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.priority.toUpperCase()}</p>
                 </div>
                 <div>
-                  <span className="text-indigo-600 font-medium">Progress:</span>
-                  <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.completionStatus}% Complete</p>
+                  <span className="text-indigo-600 font-medium">Completion:</span>
+                  <p className="text-indigo-800">
+                    {(assignment as any).dualAssignmentInfo.completionStatus === 100
+                      ? 'Both reports submitted'
+                      : (assignment as any).dualAssignmentInfo.completionStatus === 50
+                        ? 'One report submitted'
+                        : 'No reports submitted'
+                    }
+                  </p>
                 </div>
               </div>
             </div>
@@ -344,13 +404,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                   Partner Surveyor ({(assignment as any).dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'})
                 </h3>
 
-                {/* Debug info - remove this after testing */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-                    <strong>Debug - Other Surveyor Data:</strong>
-                    <pre>{JSON.stringify((assignment as any).dualAssignmentInfo.otherSurveyor, null, 2)}</pre>
-                  </div>
-                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
                     <div className="flex items-center">
