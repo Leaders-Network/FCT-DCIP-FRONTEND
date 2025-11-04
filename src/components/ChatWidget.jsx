@@ -70,7 +70,8 @@ export default function ChatWidget() {
           onClick={() => setOpen(true)}
           className="hidden md:flex bg-white shadow-md border border-gray-100 rounded-2xl px-4 py-2 text-sm text-gray-800 items-center gap-2 animate-fadeIn mb-2 cursor-pointer hover:shadow-lg transition"
         >
-          <span>Need Expert Advice? We're Here 👋</span>
+          {/* <span>Need Expert Advice? We're Here 👋</span> */}
+          <span>Need Help?👋</span>
         </div>
       )}
 
@@ -107,7 +108,7 @@ export default function ChatWidget() {
           <div className="p-4 h-56 overflow-y-auto text-sm space-y-3 bg-gray-50">
             {showTyping && (
               <div
-                className="text-gray-700 px-3 py-2 rounded-lg inline-block shadow-sm flex items-center gap-2"
+                className="text-gray-700 px-3 py-2 rounded-lg inline-block shadow-sm  items-center gap-2"
                 style={{ backgroundColor: lightBg }}
               >
                 <div className="flex space-x-1">
