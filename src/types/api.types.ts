@@ -449,8 +449,8 @@ export interface ContactData {
   assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
   ammcAdmin: AdminContactInfo | null;
   niaAdmin: AdminContactInfo | null;
-  policyId: string | null;
-  mergedReportId: string | null;
+  policyId: string | null | undefined;
+  mergedReportId: string | null | undefined;
   hasConflicts: boolean;
 }
 
@@ -520,20 +520,41 @@ export interface NIASurveyor {
   };
 }
 
-// Processing Monitor Types
+
+
+// Processing Monitor Types (moved from service file)
 export interface ProcessingOverview {
+  timeframe: string;
+  organization: string;
   overview: {
     totalDualAssignments: number;
     totalMergedReports: number;
     totalConflictFlags: number;
     totalUserInquiries: number;
+    averageProcessingTime?: number;
+  };
+  assignmentStatus?: {
+    unassigned: number;
+    partially_assigned: number;
+    fully_assigned: number;
+  };
+  completionStatus?: {
+    0: number;
+    50: number;
+    100: number;
+  };
+  releaseStatus?: {
+    pending: number;
+    withheld: number;
+    released: number;
   };
   activeConflictsBySeverity: {
-    critical: number;
-    high: number;
-    medium: number;
     low: number;
+    medium: number;
+    high: number;
+    critical: number;
   };
+  generatedAt?: string;
 }
 
 export interface ActiveProcessing {
@@ -542,6 +563,16 @@ export interface ActiveProcessing {
     policyId: string;
     assignmentStatus: string;
     completionStatus: number;
+    ammcSurveyorContact?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
+    niaSurveyorContact?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
   }>;
   pendingReports: Array<{
     _id: string;
@@ -549,16 +580,44 @@ export interface ActiveProcessing {
     releaseStatus: string;
     createdAt: string;
   }>;
+  recentSubmissions?: Array<{
+    _id: string;
+    policyId: string;
+    organization: string;
+    createdAt: string;
+  }>;
+  lastUpdated?: string;
 }
 
 export interface PerformanceMetrics {
+  timeframe?: string;
   processingPerformance: {
     avgProcessingTime: number;
+    minProcessingTime?: number;
+    maxProcessingTime?: number;
     totalReports: number;
   };
   successRates: {
+    pending?: number;
+    withheld?: number;
     released: number;
   } | number;
+  conflictDetectionRates?: {
+    low: number;
+    medium: number;
+    high: number;
+    critical: number;
+  };
+  assignmentCompletion?: {
+    avgCompletionTime: number;
+    minCompletionTime: number;
+    maxCompletionTime: number;
+  };
+  dailyVolume?: Array<{
+    _id: string;
+    count: number;
+  }>;
+  generatedAt?: string;
 }
 
 export interface SystemHealth {

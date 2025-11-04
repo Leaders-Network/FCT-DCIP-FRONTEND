@@ -5,9 +5,9 @@ import {
   UserLoginResponse,
   AvailableRolesResponse,
   GetAllEmployeesResponse,
-  PolicyRequest,
   Surveyor,
   Assignment,
+  EnhancedSurveySubmission,
 } from "../types/api.types";
 
 
@@ -261,7 +261,7 @@ export const getAvailableSurveyors = async (specialization?: string, location?: 
   }
 };
 
-export const reviewSubmission = async (submissionId: string, decision: 'approved' | 'rejected', reviewNotes: string, qualityCheck?: any) => {
+export const reviewSubmission = async (submissionId: string, decision: 'approved' | 'rejected', reviewNotes: string, qualityCheck?: Record<string, unknown>) => {
   try {
     const response = await api.post(`/policy/submissions/${submissionId}/review`, {
       decision,
@@ -369,7 +369,7 @@ export const getSurveyorProfile = async () => {
   }
 };
 
-export const updateSurveyorProfile = async (profileData: any) => {
+export const updateSurveyorProfile = async (profileData: Partial<Surveyor>) => {
   try {
     const response = await api.patch("/surveyor/profile", profileData);
     return response.data;
@@ -538,7 +538,7 @@ export const getAssignmentAnalytics = async (period = '30d') => {
   }
 };
 
-export const updateAssignmentByAdmin = async (assignmentId: string, updates: any) => {
+export const updateAssignmentByAdmin = async (assignmentId: string, updates: Partial<Assignment>) => {
   try {
     const response = await api.patch(`/admin/assignment/${assignmentId}`, updates);
     return response.data;
@@ -723,7 +723,7 @@ export const getSurveySubmissions = async (filters?: {
   }
 };
 
-export const updateSurveySubmission = async (submissionId: string, updates: any) => {
+export const updateSurveySubmission = async (submissionId: string, updates: Partial<EnhancedSurveySubmission>) => {
   try {
     const response = await api.patch(`/submission/${submissionId}`, updates);
     return response.data;
@@ -1019,7 +1019,7 @@ export const adminApi = {
     return response.data;
   },
 
-  createAdministrator: async (adminData: any) => {
+  createAdministrator: async (adminData: EmployeeRegistrationData) => {
     const response = await api.post('/admin/administrators', adminData);
     return response.data;
   },
@@ -1185,7 +1185,7 @@ export const adminApi = {
     return response.data;
   },
 
-  generateReport: async (reportType: string, filters?: any) => {
+  generateReport: async (reportType: string, filters?: Record<string, unknown>) => {
     const response = await api.post('/admin/reports', { type: reportType, filters });
     return response.data;
   },
@@ -1219,7 +1219,7 @@ export const adminApi = {
 
 };
 
-export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
+export const withErrorHandling = <T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   onError?: (error: Error) => void
 ): T => {
@@ -1240,7 +1240,7 @@ export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
 };
 
 // Additional API utility functions for new services
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -1250,7 +1250,7 @@ interface ApiResponse<T = any> {
 /**
  * Make an authenticated API request using the existing axios instance
  */
-export const apiRequest = async <T = any>(
+export const apiRequest = async <T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> => {
@@ -1286,12 +1286,12 @@ export const apiRequest = async <T = any>(
       message: response.data?.message
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Request Error:', error);
 
-    const errorMessage = error.response?.data?.message ||
-      error.response?.data?.error ||
-      error.message ||
+    const errorMessage = (error as any)?.response?.data?.message ||
+      (error as any)?.response?.data?.error ||
+      (error as Error)?.message ||
       'An unexpected error occurred';
 
     return {
@@ -1299,6 +1299,119 @@ export const apiRequest = async <T = any>(
       error: errorMessage,
       message: errorMessage
     };
+  }
+};
+
+// Dual Assignment API functions
+export const dualAssignmentAPI = {
+  // Get all dual assignments with filters
+  getDualAssignments: async (filters?: {
+    assignmentStatus?: string;
+    completionStatus?: string;
+    priority?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== 'all') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/dual-assignment${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  // Get dual assignment by ID
+  getDualAssignmentById: async (dualAssignmentId: string) => {
+    const response = await api.get(`/dual-assignment/${dualAssignmentId}`);
+    return response.data;
+  },
+
+  // Get dual assignment by policy ID
+  getDualAssignmentByPolicy: async (policyId: string) => {
+    const response = await api.get(`/dual-assignment/policy/${policyId}`);
+    return response.data;
+  },
+
+  // Assign AMMC surveyor
+  assignAMMCSurveyor: async (dualAssignmentId: string, surveyorData: {
+    surveyorId: string;
+    deadline?: string;
+    instructions?: string;
+    priority?: string;
+  }) => {
+    const response = await api.post(`/dual-assignment/${dualAssignmentId}/assign-ammc`, surveyorData);
+    return response.data;
+  },
+
+  // Assign NIA surveyor
+  assignNIASurveyor: async (dualAssignmentId: string, surveyorData: {
+    surveyorId: string;
+    deadline?: string;
+    instructions?: string;
+    priority?: string;
+  }) => {
+    const response = await api.post(`/dual-assignment/${dualAssignmentId}/assign-nia`, surveyorData);
+    return response.data;
+  },
+
+  // Get dual assignment statistics
+  getDualAssignmentStats: async () => {
+    const response = await api.get('/dual-assignment/stats');
+    return response.data;
+  },
+
+  // Create dual assignment for existing policy
+  createDualAssignmentForPolicy: async (policyId: string, data: {
+    priority?: string;
+    deadline?: string;
+  }) => {
+    const response = await api.post(`/dual-assignment/policy/${policyId}/create`, data);
+    return response.data;
+  },
+
+  // Test authentication
+  testAuth: async () => {
+    const response = await api.get('/dual-assignment/auth-test');
+    return response.data;
+  }
+};
+
+// Token management utility
+export const tokenManager = {
+  // Get the appropriate token based on user type
+  getToken: (userType?: 'ammc' | 'nia' | 'user') => {
+    if (userType === 'nia') {
+      return localStorage.getItem('niaAdminToken');
+    } else if (userType === 'ammc') {
+      return localStorage.getItem('adminToken') ||
+        localStorage.getItem('token') ||
+        localStorage.getItem('authToken');
+    } else {
+      // Try all possible token sources
+      return localStorage.getItem('niaAdminToken') ||
+        localStorage.getItem('adminToken') ||
+        localStorage.getItem('token') ||
+        localStorage.getItem('authToken');
+    }
+  },
+
+  // Check if user has valid token
+  hasValidToken: (userType?: 'ammc' | 'nia' | 'user') => {
+    const token = tokenManager.getToken(userType);
+    return !!token;
+  },
+
+  // Clear all tokens
+  clearAllTokens: () => {
+    localStorage.removeItem('niaAdminToken');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
   }
 };
 
