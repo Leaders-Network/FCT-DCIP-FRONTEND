@@ -1,12 +1,12 @@
 // User related types
 export interface User {
-    _id: string;
-    fullname: string;
-    phonenumber: string;
-    email: string;
-    role: 'user';
-    isEmailVerified: boolean;
-    deleted: boolean;
+  _id: string;
+  fullname: string;
+  phonenumber: string;
+  email: string;
+  role: 'user';
+  isEmailVerified: boolean;
+  deleted: boolean;
 }
 
 export interface Employee {
@@ -53,9 +53,9 @@ export interface EmployeeRegistrationData {
 
 // API Response types
 export interface UserLoginResponse {
-    success: boolean;
-    user: User;
-    token: string;
+  success: boolean;
+  user: User;
+  token: string;
 }
 
 export interface EmployeeLoginResponse {
@@ -371,7 +371,7 @@ export interface EnhancedSurveySubmission {
     }>;
   };
   documents: DocumentFile[];
-  surveyDocument?: any; // Legacy field
+  surveyDocument?: DocumentFile; // Legacy field with proper type
   surveyNotes: string;
   contactLog: Array<{
     date: string;
@@ -403,6 +403,182 @@ export interface EnhancedSurveySubmission {
   }>;
   createdAt: string;
   updatedAt: string;
+}
+
+// Dual Assignment Types
+export interface DualAssignment {
+  _id: string;
+  policyId: {
+    _id: string;
+    propertyDetails: {
+      propertyType: string;
+      address: string;
+      buildingValue: number;
+    };
+    contactDetails: {
+      fullName: string;
+      email: string;
+      phoneNumber: string;
+    };
+    status: string;
+  };
+  assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
+  completionStatus: 0 | 50 | 100;
+  ammcSurveyorContact?: SurveyorContact;
+  niaSurveyorContact?: SurveyorContact;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  estimatedCompletion: {
+    overallDeadline: string;
+  };
+  createdAt: string;
+}
+
+export interface SurveyorContact {
+  name: string;
+  email: string;
+  phone: string;
+  licenseNumber?: string;
+  experience?: number;
+  specialization?: string[];
+}
+
+// Contact Management Types
+export interface ContactData {
+  ammcSurveyor: SurveyorContactInfo | null;
+  niaSurveyor: SurveyorContactInfo | null;
+  assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
+  ammcAdmin: AdminContactInfo | null;
+  niaAdmin: AdminContactInfo | null;
+  policyId: string | null;
+  mergedReportId: string | null;
+  hasConflicts: boolean;
+}
+
+export interface SurveyorContactInfo {
+  name: string;
+  email: string;
+  phone: string;
+  organization: 'AMMC' | 'NIA';
+  licenseNumber?: string;
+  specialization?: string[];
+  experience?: number;
+  rating?: number;
+  lastActive?: string;
+}
+
+export interface AdminContactInfo {
+  name: string;
+  email: string;
+  phone: string;
+  organization: 'AMMC' | 'NIA';
+  title?: string;
+  department?: string;
+  officeHours?: string;
+  emergencyContact?: boolean;
+}
+
+// NIA Admin Types
+export interface NIAUser {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phonenumber: string;
+}
+
+export interface NIASurveyor {
+  _id: string;
+  userId: NIAUser | string;
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  phoneNumber?: string;
+  address?: string;
+  licenseNumber?: string;
+  specialization?: string[];
+  experience?: number;
+  status: 'active' | 'inactive' | 'suspended';
+  availability?: 'available' | 'busy' | 'unavailable';
+  maxAssignments?: number;
+  currentAssignments: number;
+  completedAssignments: number;
+  rating: number;
+  joinedDate: string;
+  lastActive: string;
+  dateOfBirth?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  qualifications?: string[];
+  notes?: string;
+  profile?: {
+    experience?: number;
+    availability?: 'available' | 'busy' | 'unavailable';
+    specialization?: string[];
+  };
+}
+
+// Processing Monitor Types
+export interface ProcessingOverview {
+  overview: {
+    totalDualAssignments: number;
+    totalMergedReports: number;
+    totalConflictFlags: number;
+    totalUserInquiries: number;
+  };
+  activeConflictsBySeverity: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+}
+
+export interface ActiveProcessing {
+  activeAssignments: Array<{
+    _id: string;
+    policyId: string;
+    assignmentStatus: string;
+    completionStatus: number;
+  }>;
+  pendingReports: Array<{
+    _id: string;
+    policyId: string;
+    releaseStatus: string;
+    createdAt: string;
+  }>;
+}
+
+export interface PerformanceMetrics {
+  processingPerformance: {
+    avgProcessingTime: number;
+    totalReports: number;
+  };
+  successRates: {
+    released: number;
+  } | number;
+}
+
+export interface SystemHealth {
+  systemStatus: 'healthy' | 'warning' | 'critical';
+  alerts?: string[];
+  metrics?: {
+    recentActivity: number;
+    stuckProcessing: number;
+  };
+  lastChecked?: string;
+}
+
+export interface RecentActivity {
+  activities: Array<{
+    type: string;
+    details: string;
+    propertyAddress: string;
+    timestamp: string;
+  }>;
+  lastUpdated?: string;
 }
 
 // Dashboard Analytics Interfaces
