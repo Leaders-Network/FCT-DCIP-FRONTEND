@@ -83,10 +83,11 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     try {
       const { adminApi } = await import("@/services/api");
 
-      // Fetch surveyors from the API
+      // Fetch AMMC surveyors from the API
       const response = await adminApi.getSurveyors({
         status: statusFilter !== "all" ? statusFilter : undefined,
         specialization: specializationFilter !== "all" ? specializationFilter : undefined,
+        organization: "AMMC", // Filter for AMMC surveyors only
         search: searchTerm || undefined
       });
 
