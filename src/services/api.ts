@@ -8,6 +8,9 @@ import {
   Surveyor,
   Assignment,
   EnhancedSurveySubmission,
+  SurveyorFilters,
+  DualAssignmentFilters,
+  AssignmentFilters,
 } from "../types/api.types";
 
 
@@ -292,6 +295,30 @@ export const getSurveyorDashboard = async () => {
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyor dashboard", error);
+    throw error;
+  }
+};
+
+export const getSurveyorDualAssignments = async (filters?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  try {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== 'all') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+
+    const url = `/surveyor/dual-assignments${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch surveyor dual assignments", error);
     throw error;
   }
 };
@@ -1034,14 +1061,7 @@ export const adminApi = {
     return response.data;
   },
 
-  getSurveyors: async (filters?: {
-    status?: string;
-    specialization?: string;
-    organization?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-  }) => {
+  getSurveyors: async (filters?: SurveyorFilters) => {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -1219,11 +1239,11 @@ export const adminApi = {
 
 };
 
-export const withErrorHandling = <T extends (...args: unknown[]) => Promise<unknown>>(
+export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
   fn: T,
   onError?: (error: Error) => void
 ): T => {
-  return (async (...args: Parameters<T>) => {
+  return (async (...args: Parameters<T>): Promise<ReturnType<T>> => {
     try {
       return await fn(...args);
     } catch (error) {
@@ -1282,16 +1302,27 @@ export const apiRequest = async <T = unknown>(
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as T,
       message: response.data?.message
     };
 
   } catch (error: unknown) {
     console.error('API Request Error:', error);
 
-    const errorMessage = (error as any)?.response?.data?.message ||
-      (error as any)?.response?.data?.error ||
-      (error as Error)?.message ||
+    interface ErrorResponse {
+      response?: {
+        data?: {
+          message?: string;
+          error?: string;
+        };
+      };
+      message?: string;
+    }
+
+    const errorObj = error as ErrorResponse;
+    const errorMessage = errorObj?.response?.data?.message ||
+      errorObj?.response?.data?.error ||
+      errorObj?.message ||
       'An unexpected error occurred';
 
     return {
@@ -1305,13 +1336,7 @@ export const apiRequest = async <T = unknown>(
 // Dual Assignment API functions
 export const dualAssignmentAPI = {
   // Get all dual assignments with filters
-  getDualAssignments: async (filters?: {
-    assignmentStatus?: string;
-    completionStatus?: string;
-    priority?: string;
-    page?: number;
-    limit?: number;
-  }) => {
+  getDualAssignments: async (filters?: DualAssignmentFilters) => {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -1384,7 +1409,9 @@ export const dualAssignmentAPI = {
 // Token management utility
 export const tokenManager = {
   // Get the appropriate token based on user type
-  getToken: (userType?: 'ammc' | 'nia' | 'user') => {
+  getToken: (userType?: 'ammc' | 'nia' | 'user'): string | null => {
+    if (typeof window === 'undefined') return null;
+
     if (userType === 'nia') {
       return localStorage.getItem('niaAdminToken');
     } else if (userType === 'ammc') {
@@ -1401,13 +1428,15 @@ export const tokenManager = {
   },
 
   // Check if user has valid token
-  hasValidToken: (userType?: 'ammc' | 'nia' | 'user') => {
+  hasValidToken: (userType?: 'ammc' | 'nia' | 'user'): boolean => {
     const token = tokenManager.getToken(userType);
     return !!token;
   },
 
   // Clear all tokens
-  clearAllTokens: () => {
+  clearAllTokens: (): void => {
+    if (typeof window === 'undefined') return;
+
     localStorage.removeItem('niaAdminToken');
     localStorage.removeItem('adminToken');
     localStorage.removeItem('token');

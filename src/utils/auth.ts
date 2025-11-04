@@ -8,10 +8,12 @@ export const getAuthToken = (preferNIA: boolean = false): string | null => {
     // For NIA admin pages, prioritize NIA admin token
     const tokenKeys = preferNIA ? [
         'niaAdminToken',
+        'surveyorToken',
         'adminToken',
         'token',
         'authToken'
     ] : [
+        'surveyorToken',
         'adminToken',
         'niaAdminToken',
         'token',
@@ -75,6 +77,7 @@ export const removeAuthToken = (): void => {
     if (typeof window === 'undefined') return;
 
     const tokenKeys = [
+        'surveyorToken',
         'niaAdminToken',
         'adminToken',
         'token',
@@ -92,10 +95,15 @@ export const clearAuthTokens = (): void => {
     if (typeof window === 'undefined') return;
 
     const tokenKeys = [
+        'surveyorToken',
         'niaAdminToken',
         'adminToken',
         'token',
         'authToken',
+        'surveyorOrganization',
+        'surveyorInfo',
+        'surveyorName',
+        'surveyorId',
         'niaAdminInfo',
         'adminInfo',
         'userInfo'

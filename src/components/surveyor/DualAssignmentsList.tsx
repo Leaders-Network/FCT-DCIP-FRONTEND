@@ -21,27 +21,41 @@ import DualAssignmentCoordination from './DualAssignmentCoordination';
 interface DualAssignment {
     _id: string;
     policyId: string;
-    ammcSurveyorId: string;
-    niaSurveyorId: string;
     ammcAssignmentId: string;
     niaAssignmentId: string;
     completionStatus: number;
+    assignmentStatus: string;
     conflictDetected: boolean;
     mergedReportId?: string;
+    currentSurveyorOrganization: 'AMMC' | 'NIA';
     policyDetails: {
         propertyType: string;
         address: string;
         buildingValue: number;
     };
-    ammcSurveyorInfo: {
-        name: string;
-        status: string;
-        completionPercentage: number;
+    currentSurveyorInfo: {
+        assignmentId: string;
+        contact: {
+            name: string;
+            email: string;
+            phone: string;
+        };
     };
-    niaSurveyorInfo: {
+    partnerSurveyorInfo: {
+        assignmentId: string;
+        organization: 'AMMC' | 'NIA';
+        contact: {
+            name: string;
+            email: string;
+            phone: string;
+            licenseNumber?: string;
+        };
+    };
+    partnerSurveyor: {
         name: string;
-        status: string;
-        completionPercentage: number;
+        email: string;
+        phone: string;
+        licenseNumber?: string;
     };
     createdAt: string;
     updatedAt: string;
@@ -66,19 +80,23 @@ const DualAssignmentsList: React.FC = () => {
     const fetchDualAssignments = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/v1/dual-assignment/surveyor/assignments', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+
+            // Import the API function
+            const { getSurveyorDualAssignments } = await import('@/services/api');
+
+            const response = await getSurveyorDualAssignments({
+                status: filter,
+                page: 1,
+                limit: 50
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch dual assignments');
+            if (response.success) {
+                setAssignments(response.data.dualAssignments || []);
+            } else {
+                throw new Error(response.message || 'Failed to fetch dual assignments');
             }
-
-            const data = await response.json();
-            setAssignments(data.data || []);
         } catch (err) {
+            console.error('Error fetching dual assignments:', err);
             setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);
@@ -191,8 +209,8 @@ const DualAssignmentsList: React.FC = () => {
                                 key={tab.key}
                                 onClick={() => setFilter(tab.key as any)}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm ${filter === tab.key
-                                        ? 'border-blue-500 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 {tab.label} ({tab.count})
@@ -250,24 +268,38 @@ const DualAssignmentsList: React.FC = () => {
 
                                         {/* Surveyor Status */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                            <div className={`flex items-center justify-between p-3 rounded-lg ${assignment.currentSurveyorOrganization === 'AMMC' ? 'bg-blue-100 border-2 border-blue-300' : 'bg-blue-50'
+                                                }`}>
                                                 <div className="flex items-center space-x-2">
                                                     <Building className="w-4 h-4 text-blue-600" />
                                                     <span className="text-sm font-medium text-blue-900">
-                                                        AMMC: {assignment.ammcSurveyorInfo.name}
+                                                        AMMC: {assignment.currentSurveyorOrganization === 'AMMC'
+                                                            ? assignment.currentSurveyorInfo.contact?.name || 'You'
+                                                            : assignment.partnerSurveyorInfo.contact?.name || 'Partner'
+                                                        }
                                                     </span>
+                                                    {assignment.currentSurveyorOrganization === 'AMMC' && (
+                                                        <span className="text-xs bg-blue-200 text-blue-800 px-1 rounded">You</span>
+                                                    )}
                                                 </div>
-                                                {getStatusBadge(assignment.ammcSurveyorInfo.status)}
+                                                {getStatusBadge(assignment.assignmentStatus)}
                                             </div>
 
-                                            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                            <div className={`flex items-center justify-between p-3 rounded-lg ${assignment.currentSurveyorOrganization === 'NIA' ? 'bg-green-100 border-2 border-green-300' : 'bg-green-50'
+                                                }`}>
                                                 <div className="flex items-center space-x-2">
                                                     <Building className="w-4 h-4 text-green-600" />
                                                     <span className="text-sm font-medium text-green-900">
-                                                        NIA: {assignment.niaSurveyorInfo.name}
+                                                        NIA: {assignment.currentSurveyorOrganization === 'NIA'
+                                                            ? assignment.currentSurveyorInfo.contact?.name || 'You'
+                                                            : assignment.partnerSurveyorInfo.contact?.name || 'Partner'
+                                                        }
                                                     </span>
+                                                    {assignment.currentSurveyorOrganization === 'NIA' && (
+                                                        <span className="text-xs bg-green-200 text-green-800 px-1 rounded">You</span>
+                                                    )}
                                                 </div>
-                                                {getStatusBadge(assignment.niaSurveyorInfo.status)}
+                                                {getStatusBadge(assignment.assignmentStatus)}
                                             </div>
                                         </div>
                                     </div>
@@ -284,8 +316,7 @@ const DualAssignmentsList: React.FC = () => {
                                         </button>
 
                                         <Link
-                                            href={`/surveyor/dashboard/assignments/${currentSurveyorOrg === 'AMMC' ? assignment.ammcAssignmentId : assignment.niaAssignmentId
-                                                }`}
+                                            href={`/surveyor/dashboard/assignments/${assignment.currentSurveyorInfo.assignmentId}`}
                                             className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm"
                                         >
                                             <Eye className="w-4 h-4" />
@@ -298,9 +329,9 @@ const DualAssignmentsList: React.FC = () => {
                                 {selectedAssignment === assignment._id && (
                                     <div className="mt-6 pt-6 border-t border-gray-200">
                                         <DualAssignmentCoordination
-                                            assignmentId={currentSurveyorOrg === 'AMMC' ? assignment.ammcAssignmentId : assignment.niaAssignmentId}
+                                            assignmentId={assignment.currentSurveyorInfo.assignmentId}
                                             dualAssignmentId={assignment._id}
-                                            currentSurveyorOrg={currentSurveyorOrg}
+                                            currentSurveyorOrg={assignment.currentSurveyorOrganization}
                                         />
                                     </div>
                                 )}
