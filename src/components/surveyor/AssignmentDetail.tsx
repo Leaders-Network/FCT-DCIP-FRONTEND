@@ -27,6 +27,10 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         if (response.success) {
           setAssignment(response.data);
           console.log('Assignment data:', response.data);
+          console.log('Dual assignment info:', response.data.dualAssignmentInfo);
+          if (response.data.dualAssignmentInfo?.otherSurveyor) {
+            console.log('Other surveyor data:', response.data.dualAssignmentInfo.otherSurveyor);
+          }
         } else {
           // Handle error
         }
@@ -293,6 +297,162 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           </div>
         </div>
       </div>
+
+      {/* Dual Assignment Information */}
+      {(assignment as any).dualAssignmentInfo && (
+        <div className="bg-indigo-50 rounded-lg border border-indigo-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-indigo-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-indigo-900 flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                Dual Surveyor Assignment
+              </h2>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(assignment as any).dualAssignmentInfo.completionStatus === 100 ? 'bg-green-100 text-green-800' :
+                (assignment as any).dualAssignmentInfo.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                {(assignment as any).dualAssignmentInfo.completionStatus}% Complete
+              </span>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="mb-4 p-4 bg-white rounded-lg border border-indigo-100">
+              <h3 className="text-sm font-medium text-indigo-900 mb-2">Assignment Overview</h3>
+              <p className="text-sm text-indigo-700 mb-3">
+                This property requires dual surveyor assessment from both AMMC and NIA organizations.
+                Coordinate with your partner surveyor to ensure comprehensive coverage.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-indigo-600 font-medium">Status:</span>
+                  <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.assignmentStatus.replace('_', ' ').toUpperCase()}</p>
+                </div>
+                <div>
+                  <span className="text-indigo-600 font-medium">Priority:</span>
+                  <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.priority.toUpperCase()}</p>
+                </div>
+                <div>
+                  <span className="text-indigo-600 font-medium">Progress:</span>
+                  <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.completionStatus}% Complete</p>
+                </div>
+              </div>
+            </div>
+
+            {(assignment as any).dualAssignmentInfo.otherSurveyor && (
+              <div className="bg-white rounded-lg border border-indigo-100 p-4">
+                <h3 className="text-sm font-medium text-indigo-900 mb-3">
+                  Partner Surveyor ({(assignment as any).dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'})
+                </h3>
+
+                {/* Debug info - remove this after testing */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+                    <strong>Debug - Other Surveyor Data:</strong>
+                    <pre>{JSON.stringify((assignment as any).dualAssignmentInfo.otherSurveyor, null, 2)}</pre>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.name ||
+                            (assignment as any).dualAssignmentInfo.otherSurveyor?.fullName ||
+                            'Name not available'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'} Surveyor
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <Phone className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-gray-900">
+                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.phone ||
+                            (assignment as any).dualAssignmentInfo.otherSurveyor?.phonenumber ||
+                            'Phone not available'}
+                        </p>
+                        <p className="text-xs text-gray-500">Primary Contact</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <Mail className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-gray-900">
+                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.email || 'Email not available'}
+                        </p>
+                        <p className="text-xs text-gray-500">Email Address</p>
+                      </div>
+                    </div>
+
+                    {(assignment as any).dualAssignmentInfo.otherSurveyor?.licenseNumber && (
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm text-gray-900">
+                            {(assignment as any).dualAssignmentInfo.otherSurveyor.licenseNumber}
+                          </p>
+                          <p className="text-xs text-gray-500">License Number</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact Actions</h4>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          const phone = (assignment as any).dualAssignmentInfo.otherSurveyor?.phone ||
+                            (assignment as any).dualAssignmentInfo.otherSurveyor?.phonenumber;
+                          if (phone) {
+                            window.open(`tel:${phone}`);
+                          } else {
+                            alert('Phone number not available');
+                          }
+                        }}
+                        className="w-full inline-flex items-center justify-center px-3 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <Phone className="h-4 w-4 mr-2" />
+                        Call Partner
+                      </button>
+                      <button
+                        onClick={() => {
+                          const email = (assignment as any).dualAssignmentInfo.otherSurveyor?.email;
+                          if (email) {
+                            window.open(`mailto:${email}`);
+                          } else {
+                            alert('Email address not available');
+                          }
+                        }}
+                        className="w-full inline-flex items-center justify-center px-3 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Email Partner
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Coordination Guidelines */}
+            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-amber-900 mb-2">Coordination Guidelines</h3>
+              <ul className="text-sm text-amber-800 space-y-1">
+                <li>• Contact your partner surveyor before site visit to coordinate timing</li>
+                <li>• Share findings and observations to ensure comprehensive assessment</li>
+                <li>• Both surveyors must submit reports for complete evaluation</li>
+                <li>• Reports will be automatically merged once both are submitted</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Contact Information */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
