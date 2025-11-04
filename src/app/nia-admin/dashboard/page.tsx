@@ -12,7 +12,8 @@ import {
     TrendingUp,
     Building2,
     UserCheck,
-    ClipboardList
+    ClipboardList,
+    X
 } from 'lucide-react';
 import NIADashboardStats from '@/components/nia-admin/NIADashboardStats';
 import NIARecentAssignments from '@/components/nia-admin/NIARecentAssignments';
@@ -42,6 +43,7 @@ const NIAAdminDashboard = () => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showNIAAdminModal, setShowNIAAdminModal] = useState(false);
 
     useEffect(() => {
         fetchDashboardData();
@@ -82,7 +84,11 @@ const NIAAdminDashboard = () => {
                 return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/nia-admin/dashboard`, {
+            const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/nia-admin/dashboard`;
+            console.log('🔍 Fetching NIA dashboard data from:', apiUrl);
+            console.log('🔍 Using token:', token ? `${token.substring(0, 20)}...` : 'No token');
+
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -90,14 +96,34 @@ const NIAAdminDashboard = () => {
                 }
             });
 
+            console.log('🔍 Response status:', response.status);
+
             if (!response.ok) {
-                throw new Error('Failed to fetch dashboard data');
+                const errorText = await response.text();
+                console.error('🔍 Response error:', errorText);
+                throw new Error(`Failed to fetch dashboard data: ${response.status} ${errorText}`);
             }
 
             const data = await response.json();
+            console.log('🔍 Dashboard data received:', data);
 
             if (data.success) {
-                setStats(data.data);
+                // Transform the backend response to match frontend expectations
+                const transformedStats = {
+                    totalNIASurveyors: data.data.overview?.totalNIASurveyors || 0,
+                    activeNIASurveyors: data.data.overview?.activeNIASurveyors || 0,
+                    niaAssignments: data.data.overview?.niaAssignments || 0,
+                    dualAssignments: data.data.overview?.dualAssignments || {
+                        totalDualAssignments: 0,
+                        niaAssigned: 0,
+                        fullyAssigned: 0,
+                        partiallyComplete: 0,
+                        fullyComplete: 0
+                    },
+                    assignmentStats: data.data.assignmentStats || {},
+                    recentAssignments: data.data.recentAssignments || []
+                };
+                setStats(transformedStats);
             } else {
                 throw new Error(data.message || 'Failed to load dashboard data');
             }
@@ -323,30 +349,32 @@ const NIAAdminDashboard = () => {
                     </div>
                 </div>
 
-                {/* Automatic Processing Status */}
+
+
+                {/* NIA Admin Management */}
                 <div className="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Automatic Processing Status</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">NIA Administrator Management</h3>
+                        <button
+                            onClick={() => setShowNIAAdminModal(true)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                        >
+                            <UserCheck className="h-4 w-4" />
+                            <span>Add NIA Admin</span>
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="text-center p-4 bg-blue-50 rounded-lg">
-                            <div className="text-2xl font-bold text-blue-600">2</div>
-                            <div className="text-sm text-gray-600">Reports Processing</div>
+                            <div className="text-2xl font-bold text-blue-600">3</div>
+                            <div className="text-sm text-gray-600">Total NIA Admins</div>
                         </div>
                         <div className="text-center p-4 bg-green-50 rounded-lg">
-                            <div className="text-2xl font-bold text-green-600">15</div>
-                            <div className="text-sm text-gray-600">Auto-Merged Today</div>
+                            <div className="text-2xl font-bold text-green-600">2</div>
+                            <div className="text-sm text-gray-600">Active Admins</div>
                         </div>
                         <div className="text-center p-4 bg-orange-50 rounded-lg">
-                            <div className="text-2xl font-bold text-orange-600">3</div>
-                            <div className="text-sm text-gray-600">User Inquiries</div>
-                        </div>
-                    </div>
-                    <div className="text-center">
-                        <p className="text-sm text-gray-600 mb-3">
-                            Reports are automatically merged when both AMMC and NIA surveyors submit their assessments
-                        </p>
-                        <div className="flex items-center justify-center space-x-2 text-sm text-green-600">
-                            <CheckCircle className="h-4 w-4" />
-                            <span>System Status: Healthy</span>
+                            <div className="text-2xl font-bold text-orange-600">1</div>
+                            <div className="text-sm text-gray-600">Pending Approval</div>
                         </div>
                     </div>
                 </div>
@@ -355,40 +383,148 @@ const NIAAdminDashboard = () => {
                 <div className="bg-white rounded-lg shadow-sm border p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <button className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                        <a href="/nia-admin/surveyors" className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                             <Users className="h-6 w-6 text-blue-600 mr-3" />
                             <div className="text-left">
                                 <div className="font-medium text-gray-900">Manage Surveyors</div>
                                 <div className="text-sm text-gray-600">Add, edit, or view NIA surveyors</div>
                             </div>
-                        </button>
+                        </a>
 
-                        <button className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                        <a href="/nia-admin/assignments" className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
                             <ClipboardList className="h-6 w-6 text-green-600 mr-3" />
                             <div className="text-left">
                                 <div className="font-medium text-gray-900">View Assignments</div>
                                 <div className="text-sm text-gray-600">Manage dual-surveyor assignments</div>
                             </div>
-                        </button>
+                        </a>
 
-                        <button className="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                        <a href="/nia-admin/user-inquiries" className="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
                             <AlertTriangle className="h-6 w-6 text-orange-600 mr-3" />
                             <div className="text-left">
                                 <div className="font-medium text-gray-900">User Inquiries</div>
                                 <div className="text-sm text-gray-600">Handle user conflict inquiries</div>
                             </div>
-                        </button>
+                        </a>
 
-                        <button className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                        <a href="/nia-admin/processing-monitor" className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
                             <FileText className="h-6 w-6 text-purple-600 mr-3" />
                             <div className="text-left">
                                 <div className="font-medium text-gray-900">Processing Monitor</div>
                                 <div className="text-sm text-gray-600">Monitor automatic processing</div>
                             </div>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
+
+            {/* NIA Admin Creation Modal */}
+            {showNIAAdminModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+                        <div className="bg-blue-600 text-white p-6 rounded-t-lg">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold">Add NIA Administrator</h2>
+                                <button
+                                    onClick={() => setShowNIAAdminModal(false)}
+                                    className="text-blue-100 hover:text-white transition-colors"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            <form className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        First Name *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Enter first name"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Last Name *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Enter last name"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Email Address *
+                                    </label>
+                                    <input
+                                        type="email"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Enter email address"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Phone Number *
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Enter phone number"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Permissions
+                                    </label>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center">
+                                            <input type="checkbox" className="mr-2" defaultChecked />
+                                            <span className="text-sm">Manage Surveyors</span>
+                                        </label>
+                                        <label className="flex items-center">
+                                            <input type="checkbox" className="mr-2" defaultChecked />
+                                            <span className="text-sm">Manage Assignments</span>
+                                        </label>
+                                        <label className="flex items-center">
+                                            <input type="checkbox" className="mr-2" />
+                                            <span className="text-sm">System Administration</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div className="border-t border-gray-200 p-6 bg-gray-50 rounded-b-lg">
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => setShowNIAAdminModal(false)}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    Create NIA Admin
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </NIATokenProvider>
     );
 };
