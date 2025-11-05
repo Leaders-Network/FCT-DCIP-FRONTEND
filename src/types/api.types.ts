@@ -788,3 +788,132 @@ export interface SurveyorManagementProps {
   onSave: (surveyor: NIASurveyor) => Promise<void>;
   onClose: () => void;
 }
+
+// Report Types
+export interface UserReport {
+  reportId: string;
+  policyId: string;
+  propertyAddress: string;
+  propertyType: string;
+  status: 'pending' | 'released' | 'withheld';
+  createdAt: string;
+  downloadCount: number;
+  canDownload: boolean;
+}
+
+export interface ReportDetails {
+  reportId: string;
+  policyId: string;
+  propertyDetails: {
+    address: string;
+    propertyType: string;
+    [key: string]: any;
+  };
+  status: 'pending' | 'released' | 'withheld';
+  finalRecommendation: 'approve' | 'reject' | 'request_more_info';
+  paymentEnabled: boolean;
+  conflictDetected: boolean;
+  conflictResolved: boolean;
+  conflictDetails?: {
+    conflictType: string;
+    conflictSeverity: 'low' | 'medium' | 'high' | 'critical';
+    ammcRecommendation: string;
+    niaRecommendation: string;
+    ammcValue?: number;
+    niaValue?: number;
+    discrepancyPercentage?: number;
+  };
+  reportSections: {
+    ammc: {
+      propertyCondition: string;
+      structuralAssessment: string;
+      riskFactors: string;
+      recommendations: string;
+      estimatedValue: number;
+      surveyorName: string;
+      surveyorLicense: string;
+      submissionDate: string;
+      photos: Array<{
+        url: string;
+        description: string;
+        timestamp: string;
+      }>;
+    };
+    nia: {
+      propertyCondition: string;
+      structuralAssessment: string;
+      riskFactors: string;
+      recommendations: string;
+      estimatedValue: number;
+      surveyorName: string;
+      surveyorLicense: string;
+      submissionDate: string;
+      photos: Array<{
+        url: string;
+        description: string;
+        timestamp: string;
+      }>;
+    };
+  };
+  mergingMetadata: {
+    mergedBy: string;
+    mergedAt: string;
+    mergingAlgorithmVersion: string;
+    processingTime: number;
+    qualityScore: number;
+  };
+  createdAt: string;
+  releasedAt: string;
+  downloadCount: number;
+  canDownload: boolean;
+}
+
+export interface ReportStatus {
+  status: 'not_started' | 'awaiting_surveys' | 'processing' | 'processing_delayed' | 'under_review' | 'completed' | 'unknown';
+  message: string;
+  progress?: number;
+  estimatedCompletion?: string;
+  processingProgress?: number;
+  conflictDetails?: any;
+  completedAt?: string;
+  reportId?: string;
+}
+
+export interface UserReportsResponse {
+  success: boolean;
+  data: {
+    reports: UserReport[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      itemsPerPage: number;
+    };
+  };
+}
+
+export interface ReportDetailsResponse {
+  success: boolean;
+  data: ReportDetails;
+}
+
+export interface ReportStatusResponse {
+  success: boolean;
+  data: ReportStatus;
+}
+
+export interface DownloadReportResponse {
+  success: boolean;
+  message: string;
+  data: {
+    reportId: string;
+    downloadCount: number;
+    propertyDetails: any;
+    finalRecommendation: string;
+    paymentEnabled: boolean;
+    conflictDetected: boolean;
+    reportSections: ReportDetails['reportSections'];
+    mergingMetadata: ReportDetails['mergingMetadata'];
+    releasedAt: string;
+  };
+}

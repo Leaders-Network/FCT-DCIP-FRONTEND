@@ -29,20 +29,16 @@ const ReportSection: React.FC<ReportSectionProps> = ({ userPolicies }) => {
             const token = localStorage.getItem('token') || localStorage.getItem('authToken');
             if (!token) return;
 
-            const response = await fetch('/api/v1/report-release/user/reports?page=1&limit=100', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const { userReportAPI } = await import('@/services/api');
+            const response = await userReportAPI.getUserReports(1, 100);
 
-            if (response.ok) {
-                const data = await response.json();
-                const reports = data.data.reports || [];
+            if (response.success) {
+                const reports = response.data.reports || [];
 
                 const stats = {
-                    processing: reports.filter((r: any) => r.releaseStatus === 'pending').length,
-                    available: reports.filter((r: any) => r.releaseStatus === 'released').length,
-                    underReview: reports.filter((r: any) => r.releaseStatus === 'withheld').length,
+                    processing: reports.filter((r: any) => r.status === 'pending').length,
+                    available: reports.filter((r: any) => r.status === 'released').length,
+                    underReview: reports.filter((r: any) => r.status === 'withheld').length,
                     total: reports.length
                 };
 
@@ -241,8 +237,8 @@ const ReportSection: React.FC<ReportSectionProps> = ({ userPolicies }) => {
                                                         </p>
                                                     </div>
                                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${policy.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                            policy.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                                'bg-blue-100 text-blue-800'
+                                                        policy.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                            'bg-blue-100 text-blue-800'
                                                         }`}>
                                                         {policy.status.toUpperCase()}
                                                     </span>

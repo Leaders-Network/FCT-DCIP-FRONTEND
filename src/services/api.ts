@@ -1444,4 +1444,37 @@ export const tokenManager = {
   }
 };
 
+// User Report API functions
+export const userReportAPI = {
+  // Get user's reports
+  getUserReports: async (page = 1, limit = 10) => {
+    const response = await api.get(`/user-reports?page=${page}&limit=${limit}`);
+    return response.data;
+  },
+
+  // Get report summary/statistics
+  getReportSummary: async () => {
+    const response = await api.get('/user-reports/summary/stats');
+    return response.data;
+  },
+
+  // Get specific report details
+  getReportDetails: async (reportId: string) => {
+    const response = await api.get(`/user-reports/${reportId}`);
+    return response.data;
+  },
+
+  // Download report
+  downloadReport: async (reportId: string) => {
+    const response = await api.post(`/user-reports/${reportId}/download`);
+    return response.data;
+  },
+
+  // Get report processing status (for backward compatibility)
+  getReportStatus: async (policyId: string) => {
+    const response = await api.get(`/report-release/status/${policyId}`);
+    return response.data;
+  }
+};
+
 export default api;
