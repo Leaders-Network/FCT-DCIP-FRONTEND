@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import ContactManagementHub from '@/components/dashboard/ContactManagementHub';
-import { ContactData, SurveyorContactInfo, AdminContactInfo } from '@/types/api.types';
+import { ContactData, SurveyorContactInfo } from '@/types/api.types';
 
 const ContactsPage: React.FC = () => {
     const [contactData, setContactData] = useState<ContactData>({
@@ -127,14 +127,15 @@ const ContactsPage: React.FC = () => {
                         }
                     } catch (assignmentError) {
                         console.log('No assignment found, showing admin contacts only');
-                        setContactData(prev => ({
-                            ...prev,
+                        setContactData({
+                            ammcSurveyor: null,
+                            niaSurveyor: null,
                             assignmentStatus: 'unassigned',
                             ammcAdmin: {
                                 name: 'Dr. Michael Okonkwo',
                                 email: 'admin@ammc.gov.ng',
                                 phone: '+234-9-234-5678',
-                                organization: 'AMMC' as const,
+                                organization: 'AMMC',
                                 title: 'Survey Department Administrator',
                                 department: 'Property Assessment Division',
                                 officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
@@ -143,24 +144,28 @@ const ContactsPage: React.FC = () => {
                                 name: 'Mrs. Fatima Abdullahi',
                                 email: 'admin@nia.org.ng',
                                 phone: '+234-9-876-5432',
-                                organization: 'NIA' as const,
+                                organization: 'NIA',
                                 title: 'Survey Operations Manager',
                                 department: 'Insurance Assessment Division',
                                 officeHours: 'Mon-Fri 9:00 AM - 6:00 PM',
                                 emergencyContact: true
                             },
-                            policyId: latestPolicy._id
-                        }));
+                            policyId: latestPolicy._id,
+                            mergedReportId: null,
+                            hasConflicts: false
+                        });
                     }
                 } else {
                     // No policies found, show default admin contacts
-                    setContactData(prev => ({
-                        ...prev,
+                    setContactData({
+                        ammcSurveyor: null,
+                        niaSurveyor: null,
+                        assignmentStatus: 'unassigned',
                         ammcAdmin: {
                             name: 'Dr. Michael Okonkwo',
                             email: 'admin@ammc.gov.ng',
                             phone: '+234-9-234-5678',
-                            organization: 'AMMC' as const,
+                            organization: 'AMMC',
                             title: 'Survey Department Administrator',
                             department: 'Property Assessment Division',
                             officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
@@ -169,24 +174,29 @@ const ContactsPage: React.FC = () => {
                             name: 'Mrs. Fatima Abdullahi',
                             email: 'admin@nia.org.ng',
                             phone: '+234-9-876-5432',
-                            organization: 'NIA' as const,
+                            organization: 'NIA',
                             title: 'Survey Operations Manager',
                             department: 'Insurance Assessment Division',
                             officeHours: 'Mon-Fri 9:00 AM - 6:00 PM',
                             emergencyContact: true
-                        }
-                    }));
+                        },
+                        policyId: null,
+                        mergedReportId: null,
+                        hasConflicts: false
+                    });
                 }
             } catch (error) {
                 console.error('Failed to fetch contact data:', error);
                 // Set default admin contacts on error
-                setContactData(prev => ({
-                    ...prev,
+                setContactData({
+                    ammcSurveyor: null,
+                    niaSurveyor: null,
+                    assignmentStatus: 'unassigned',
                     ammcAdmin: {
                         name: 'Dr. Michael Okonkwo',
                         email: 'admin@ammc.gov.ng',
                         phone: '+234-9-234-5678',
-                        organization: 'AMMC' as const,
+                        organization: 'AMMC',
                         title: 'Survey Department Administrator',
                         department: 'Property Assessment Division',
                         officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
@@ -195,13 +205,16 @@ const ContactsPage: React.FC = () => {
                         name: 'Mrs. Fatima Abdullahi',
                         email: 'admin@nia.org.ng',
                         phone: '+234-9-876-5432',
-                        organization: 'NIA' as const,
+                        organization: 'NIA',
                         title: 'Survey Operations Manager',
                         department: 'Insurance Assessment Division',
                         officeHours: 'Mon-Fri 9:00 AM - 6:00 PM',
                         emergencyContact: true
-                    }
-                }));
+                    },
+                    policyId: null,
+                    mergedReportId: null,
+                    hasConflicts: false
+                });
             } finally {
                 setLoading(false);
             }
@@ -210,7 +223,7 @@ const ContactsPage: React.FC = () => {
         fetchContactData();
     }, []);
 
-    const handleConflictSubmit = async (conflictData: any) => {
+    const handleConflictSubmit = async (conflictData: Record<string, unknown>) => {
         try {
             console.log('Conflict inquiry submitted:', conflictData);
 
@@ -252,8 +265,8 @@ const ContactsPage: React.FC = () => {
                     assignmentStatus={contactData.assignmentStatus}
                     ammcAdmin={contactData.ammcAdmin}
                     niaAdmin={contactData.niaAdmin}
-                    policyId={contactData.policyId}
-                    mergedReportId={contactData.mergedReportId}
+                    policyId={contactData.policyId || undefined}
+                    mergedReportId={contactData.mergedReportId || undefined}
                     hasConflicts={contactData.hasConflicts}
                     showContactActions={true}
                     defaultExpandedSection="both"

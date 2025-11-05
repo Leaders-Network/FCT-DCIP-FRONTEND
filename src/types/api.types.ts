@@ -449,8 +449,8 @@ export interface ContactData {
   assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
   ammcAdmin: AdminContactInfo | null;
   niaAdmin: AdminContactInfo | null;
-  policyId: string | null;
-  mergedReportId: string | null;
+  policyId: string | null | undefined;
+  mergedReportId: string | null | undefined;
   hasConflicts: boolean;
 }
 
@@ -487,7 +487,7 @@ export interface NIAUser {
 }
 
 export interface NIASurveyor {
-  _id: string;
+  _id?: string;
   userId: NIAUser | string;
   firstname?: string;
   lastname?: string;
@@ -495,7 +495,7 @@ export interface NIASurveyor {
   phoneNumber?: string;
   address?: string;
   licenseNumber?: string;
-  specialization?: string[];
+  specialization: string[];
   experience?: number;
   status: 'active' | 'inactive' | 'suspended';
   availability?: 'available' | 'busy' | 'unavailable';
@@ -520,20 +520,55 @@ export interface NIASurveyor {
   };
 }
 
-// Processing Monitor Types
+// Enhanced NIASurveyor for management operations
+export interface NIASurveyorForManagement extends NIASurveyor {
+  firstname: string;
+  lastname: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
+  licenseNumber: string;
+  specialization: string[];
+  experience: number;
+  availability: 'available' | 'busy' | 'unavailable';
+  maxAssignments: number;
+}
+
+
+
+// Processing Monitor Types (moved from service file)
 export interface ProcessingOverview {
+  timeframe: string;
+  organization: string;
   overview: {
     totalDualAssignments: number;
     totalMergedReports: number;
     totalConflictFlags: number;
     totalUserInquiries: number;
+    averageProcessingTime?: number;
+  };
+  assignmentStatus?: {
+    unassigned: number;
+    partially_assigned: number;
+    fully_assigned: number;
+  };
+  completionStatus?: {
+    0: number;
+    50: number;
+    100: number;
+  };
+  releaseStatus?: {
+    pending: number;
+    withheld: number;
+    released: number;
   };
   activeConflictsBySeverity: {
-    critical: number;
-    high: number;
-    medium: number;
     low: number;
+    medium: number;
+    high: number;
+    critical: number;
   };
+  generatedAt?: string;
 }
 
 export interface ActiveProcessing {
@@ -542,6 +577,16 @@ export interface ActiveProcessing {
     policyId: string;
     assignmentStatus: string;
     completionStatus: number;
+    ammcSurveyorContact?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
+    niaSurveyorContact?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
   }>;
   pendingReports: Array<{
     _id: string;
@@ -549,16 +594,44 @@ export interface ActiveProcessing {
     releaseStatus: string;
     createdAt: string;
   }>;
+  recentSubmissions?: Array<{
+    _id: string;
+    policyId: string;
+    organization: string;
+    createdAt: string;
+  }>;
+  lastUpdated?: string;
 }
 
 export interface PerformanceMetrics {
+  timeframe?: string;
   processingPerformance: {
     avgProcessingTime: number;
+    minProcessingTime?: number;
+    maxProcessingTime?: number;
     totalReports: number;
   };
   successRates: {
+    pending?: number;
+    withheld?: number;
     released: number;
   } | number;
+  conflictDetectionRates?: {
+    low: number;
+    medium: number;
+    high: number;
+    critical: number;
+  };
+  assignmentCompletion?: {
+    avgCompletionTime: number;
+    minCompletionTime: number;
+    maxCompletionTime: number;
+  };
+  dailyVolume?: Array<{
+    _id: string;
+    count: number;
+  }>;
+  generatedAt?: string;
 }
 
 export interface SystemHealth {
@@ -673,4 +746,45 @@ export interface GetSurveyorsResponse {
 export interface GetAssignedPoliciesResponse {
   success: boolean;
   policies: PolicyRequest[];
+}
+
+// API Filter Types
+export interface DualAssignmentFilters {
+  assignmentStatus?: string;
+  completionStatus?: string;
+  priority?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface SurveyorFilters {
+  status?: string;
+  availability?: string;
+  specialization?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface AssignmentFilters {
+  status?: string;
+  priority?: string;
+  surveyorId?: string;
+  overdue?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+// Component Props Types
+export interface AssignmentManagementProps {
+  assignment: DualAssignment;
+  onAssignmentComplete: () => void;
+  onClose: () => void;
+}
+
+export interface SurveyorManagementProps {
+  surveyor?: NIASurveyor | null;
+  mode: 'add' | 'edit' | 'view';
+  onSave: (surveyor: NIASurveyor) => Promise<void>;
+  onClose: () => void;
 }

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import {
     Plus,
     Search,
-    Filter,
     RefreshCw,
     Users,
     UserCheck,
@@ -13,61 +12,21 @@ import {
     Eye,
     Mail,
     Phone,
-    MapPin,
-    Calendar,
     Award,
     AlertTriangle
 } from 'lucide-react';
 import NIASurveyorManagement from '@/components/nia-admin/NIASurveyorManagement';
+import { NIASurveyor, NIASurveyorForManagement, NIAUser } from '@/types/api.types';
 
-interface NIAUser {
-    _id: string;
-    firstname: string;
-    lastname: string;
-    email: string;
-    phonenumber: string;
-}
-
-interface NIASurveyor {
-    _id: string;
-    userId: NIAUser | string;
-    firstname?: string;
-    lastname?: string;
-    email?: string;
-    phoneNumber?: string;
-    address?: string;
-    licenseNumber?: string;
-    specialization?: string[];
-    experience?: number;
-    status: 'active' | 'inactive' | 'suspended';
-    availability?: 'available' | 'busy' | 'unavailable';
-    maxAssignments?: number;
-    currentAssignments: number;
-    completedAssignments: number;
-    rating: number;
-    joinedDate: string;
-    lastActive: string;
-    dateOfBirth?: string;
-    emergencyContact?: {
-        name: string;
-        phone: string;
-        relationship: string;
-    };
-    qualifications?: string[];
-    notes?: string;
-    profile?: {
-        experience?: number;
-        availability?: 'available' | 'busy' | 'unavailable';
-        specialization?: string[];
-    };
-}
+// Use types from api.types.ts instead of local interfaces
+type NIASurveyorLocal = NIASurveyor;
 
 const NIASurveyorsPage = () => {
-    const [surveyors, setSurveyors] = useState<NIASurveyor[]>([]);
+    const [surveyors, setSurveyors] = useState<NIASurveyorLocal[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showManagementModal, setShowManagementModal] = useState(false);
-    const [selectedSurveyor, setSelectedSurveyor] = useState<any>(null);
+    const [selectedSurveyor, setSelectedSurveyor] = useState<NIASurveyorForManagement | null>(null);
     const [managementMode, setManagementMode] = useState<'add' | 'edit' | 'view'>('add');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [surveyorToDelete, setSurveyorToDelete] = useState<{ id: string, name: string } | null>(null);
@@ -115,7 +74,7 @@ const NIASurveyorsPage = () => {
 
                 // Apply search filter
                 if (filters.search) {
-                    filteredSurveyors = filteredSurveyors.filter((surveyor: NIASurveyor) => {
+                    filteredSurveyors = filteredSurveyors.filter((surveyor: NIASurveyorLocal) => {
                         const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
                         const fullName = user ? `${user.firstname} ${user.lastname}` : '';
                         const email = user?.email || '';
@@ -195,13 +154,13 @@ const NIASurveyorsPage = () => {
         setShowManagementModal(true);
     };
 
-    const handleEditSurveyor = (surveyor: NIASurveyor) => {
+    const handleEditSurveyor = (surveyor: NIASurveyorLocal) => {
         setSelectedSurveyor(convertSurveyorForManagement(surveyor));
         setManagementMode('edit');
         setShowManagementModal(true);
     };
 
-    const handleViewSurveyor = (surveyor: NIASurveyor) => {
+    const handleViewSurveyor = (surveyor: NIASurveyorLocal) => {
         setSelectedSurveyor(convertSurveyorForManagement(surveyor));
         setManagementMode('view');
         setShowManagementModal(true);
@@ -241,7 +200,7 @@ const NIASurveyorsPage = () => {
         }
     };
 
-    const convertSurveyorForManagement = (surveyor: NIASurveyor) => {
+    const convertSurveyorForManagement = (surveyor: NIASurveyorLocal): NIASurveyorForManagement => {
         const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
         return {
             _id: surveyor._id,
@@ -259,11 +218,18 @@ const NIASurveyorsPage = () => {
             dateOfBirth: surveyor.dateOfBirth,
             emergencyContact: surveyor.emergencyContact,
             qualifications: surveyor.qualifications,
-            notes: surveyor.notes
+            notes: surveyor.notes,
+            // Required fields for management interface
+            userId: surveyor.userId,
+            currentAssignments: surveyor.currentAssignments,
+            completedAssignments: surveyor.completedAssignments,
+            rating: surveyor.rating,
+            joinedDate: surveyor.joinedDate,
+            lastActive: surveyor.lastActive
         };
     };
 
-    const handleSaveSurveyor = async (surveyorData: any) => {
+    const handleSaveSurveyor = async (surveyorData: NIASurveyorForManagement) => {
         try {
             const token = localStorage.getItem('niaAdminToken');
             const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
@@ -574,7 +540,7 @@ const NIASurveyorsPage = () => {
                                                 <button
                                                     onClick={() => {
                                                         const newStatus = surveyor.status === 'active' ? 'suspended' : 'active';
-                                                        handleUpdateStatus(surveyor._id, newStatus);
+                                                        handleUpdateStatus(surveyor._id || '', newStatus);
                                                     }}
                                                     className={`transition-colors ${surveyor.status === 'active'
                                                         ? 'text-red-600 hover:text-red-900'
@@ -588,7 +554,7 @@ const NIASurveyorsPage = () => {
                                                     onClick={() => {
                                                         const user = typeof surveyor.userId === 'object' ? surveyor.userId : null;
                                                         const name = user ? `${user.firstname} ${user.lastname}` : 'Unknown Surveyor';
-                                                        handleDeleteSurveyor(surveyor._id, name);
+                                                        handleDeleteSurveyor(surveyor._id || '', name);
                                                     }}
                                                     className="text-red-600 hover:text-red-900 transition-colors"
                                                     title="Delete Surveyor"
@@ -625,9 +591,48 @@ const NIASurveyorsPage = () => {
             {/* Surveyor Management Modal */}
             {showManagementModal && (
                 <NIASurveyorManagement
-                    surveyor={selectedSurveyor}
+                    surveyor={selectedSurveyor ? {
+                        ...selectedSurveyor,
+                        firstname: selectedSurveyor.firstname || '',
+                        lastname: selectedSurveyor.lastname || '',
+                        email: selectedSurveyor.email || '',
+                        phoneNumber: selectedSurveyor.phoneNumber || '',
+                        address: selectedSurveyor.address || '',
+                        licenseNumber: selectedSurveyor.licenseNumber || '',
+                        specialization: selectedSurveyor.specialization || [],
+                        experience: selectedSurveyor.experience || 0,
+                        availability: selectedSurveyor.availability || 'unavailable',
+                        maxAssignments: selectedSurveyor.maxAssignments || 10
+                    } as NIASurveyor : null}
                     mode={managementMode}
-                    onSave={handleSaveSurveyor}
+                    onSave={async (surveyorData: NIASurveyor) => {
+                        // Convert NIASurveyor to NIASurveyorForManagement format
+                        const managementData: NIASurveyorForManagement = {
+                            _id: surveyorData._id,
+                            firstname: surveyorData.firstname || '',
+                            lastname: surveyorData.lastname || '',
+                            email: surveyorData.email || '',
+                            phoneNumber: surveyorData.phoneNumber || '',
+                            address: surveyorData.address || '',
+                            licenseNumber: surveyorData.licenseNumber || '',
+                            specialization: surveyorData.specialization || [],
+                            experience: surveyorData.experience || 0,
+                            status: surveyorData.status,
+                            availability: surveyorData.availability || 'unavailable',
+                            maxAssignments: surveyorData.maxAssignments || 10,
+                            dateOfBirth: surveyorData.dateOfBirth,
+                            emergencyContact: surveyorData.emergencyContact,
+                            qualifications: surveyorData.qualifications,
+                            notes: surveyorData.notes,
+                            userId: surveyorData.userId,
+                            currentAssignments: surveyorData.currentAssignments,
+                            completedAssignments: surveyorData.completedAssignments,
+                            rating: surveyorData.rating,
+                            joinedDate: surveyorData.joinedDate,
+                            lastActive: surveyorData.lastActive
+                        };
+                        await handleSaveSurveyor(managementData);
+                    }}
                     onClose={handleCloseModal}
                 />
             )}

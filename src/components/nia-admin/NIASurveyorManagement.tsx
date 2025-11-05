@@ -15,34 +15,10 @@ import {
     Trash2
 } from 'lucide-react';
 
-interface NIASurveyor {
-    _id?: string;
-    firstname: string;
-    lastname: string;
-    email: string;
-    phoneNumber: string;
-    address: string;
-    licenseNumber: string;
-    specialization: string[];
-    experience: number;
-    status: 'active' | 'inactive' | 'suspended';
-    availability: 'available' | 'busy' | 'unavailable';
-    maxAssignments: number;
-    dateOfBirth?: string;
-    emergencyContact?: {
-        name: string;
-        phone: string;
-        relationship: string;
-    };
-    qualifications?: string[];
-    notes?: string;
-}
+import { NIASurveyor, SurveyorManagementProps } from '@/types/api.types';
 
-interface NIASurveyorManagementProps {
+interface NIASurveyorManagementProps extends SurveyorManagementProps {
     surveyor?: NIASurveyor | null;
-    mode: 'add' | 'edit' | 'view';
-    onSave: (surveyor: NIASurveyor) => void;
-    onClose: () => void;
 }
 
 const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({

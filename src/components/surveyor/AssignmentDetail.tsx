@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw } from "lucide-react";
 import { Assignment } from "@/types/api.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionModal from "./SurveySubmissionModal";
@@ -63,6 +63,19 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       setSubmissionResult(result.data);
       setShowSurveyForm(false);
       setShowConfirmation(true);
+
+      // Refresh assignment data to show updated progress
+      setTimeout(async () => {
+        try {
+          const { getSurveyorAssignmentById } = await import("@/services/api");
+          const response = await getSurveyorAssignmentById(assignmentId);
+          if (response.success) {
+            setAssignment(response.data);
+          }
+        } catch (refreshError) {
+          console.error("Failed to refresh assignment data:", refreshError);
+        }
+      }, 1000); // Small delay to allow backend processing
     } catch (error) {
       console.error("Failed to submit survey:", error);
       throw error;
@@ -293,6 +306,207 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           </div>
         </div>
       </div>
+
+      {/* Dual Assignment Information */}
+      {(assignment as any).dualAssignmentInfo && (
+        <div className="bg-indigo-50 rounded-lg border border-indigo-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-indigo-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-indigo-900 flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                Dual Surveyor Assignment
+              </h2>
+              <div className="flex items-center space-x-2">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(assignment as any).dualAssignmentInfo.completionStatus === 100 ? 'bg-green-100 text-green-800' :
+                  (assignment as any).dualAssignmentInfo.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                  {(assignment as any).dualAssignmentInfo.completionStatus}% Complete
+                </span>
+                <button
+                  onClick={async () => {
+                    try {
+                      const { getSurveyorAssignmentById } = await import("@/services/api");
+                      const response = await getSurveyorAssignmentById(assignmentId);
+                      if (response.success) {
+                        setAssignment(response.data);
+                      }
+                    } catch (error) {
+                      console.error("Failed to refresh:", error);
+                    }
+                  }}
+                  className="p-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded"
+                  title="Refresh progress"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="mb-4 p-4 bg-white rounded-lg border border-indigo-100">
+              <h3 className="text-sm font-medium text-indigo-900 mb-2">Assignment Overview</h3>
+              <p className="text-sm text-indigo-700 mb-4">
+                This property requires dual surveyor assessment from both AMMC and NIA organizations.
+                Coordinate with your partner surveyor to ensure comprehensive coverage.
+              </p>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-indigo-700 mb-2">
+                  <span className="font-medium">Overall Progress</span>
+                  <span className="font-semibold">{(assignment as any).dualAssignmentInfo.completionStatus}% Complete</span>
+                </div>
+                <div className="w-full bg-indigo-200 rounded-full h-3">
+                  <div
+                    className={`h-3 rounded-full transition-all duration-500 ${(assignment as any).dualAssignmentInfo.completionStatus === 100
+                      ? 'bg-green-500'
+                      : (assignment as any).dualAssignmentInfo.completionStatus === 50
+                        ? 'bg-yellow-500'
+                        : 'bg-indigo-400'
+                      }`}
+                    style={{ width: `${(assignment as any).dualAssignmentInfo.completionStatus}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs text-indigo-600 mt-1">
+                  <span>0%</span>
+                  <span>50% (One Report)</span>
+                  <span>100% (Both Reports)</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-indigo-600 font-medium">Status:</span>
+                  <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.assignmentStatus.replace('_', ' ').toUpperCase()}</p>
+                </div>
+                <div>
+                  <span className="text-indigo-600 font-medium">Priority:</span>
+                  <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.priority.toUpperCase()}</p>
+                </div>
+                <div>
+                  <span className="text-indigo-600 font-medium">Completion:</span>
+                  <p className="text-indigo-800">
+                    {(assignment as any).dualAssignmentInfo.completionStatus === 100
+                      ? 'Both reports submitted'
+                      : (assignment as any).dualAssignmentInfo.completionStatus === 50
+                        ? 'One report submitted'
+                        : 'No reports submitted'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {(assignment as any).dualAssignmentInfo.otherSurveyor && (
+              <div className="bg-white rounded-lg border border-indigo-100 p-4">
+                <h3 className="text-sm font-medium text-indigo-900 mb-3">
+                  Partner Surveyor ({(assignment as any).dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'})
+                </h3>
+
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.name ||
+                            (assignment as any).dualAssignmentInfo.otherSurveyor?.fullName ||
+                            'Name not available'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'} Surveyor
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <Phone className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-gray-900">
+                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.phone ||
+                            (assignment as any).dualAssignmentInfo.otherSurveyor?.phonenumber ||
+                            'Phone not available'}
+                        </p>
+                        <p className="text-xs text-gray-500">Primary Contact</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <Mail className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-gray-900">
+                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.email || 'Email not available'}
+                        </p>
+                        <p className="text-xs text-gray-500">Email Address</p>
+                      </div>
+                    </div>
+
+                    {(assignment as any).dualAssignmentInfo.otherSurveyor?.licenseNumber && (
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm text-gray-900">
+                            {(assignment as any).dualAssignmentInfo.otherSurveyor.licenseNumber}
+                          </p>
+                          <p className="text-xs text-gray-500">License Number</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact Actions</h4>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          const phone = (assignment as any).dualAssignmentInfo.otherSurveyor?.phone ||
+                            (assignment as any).dualAssignmentInfo.otherSurveyor?.phonenumber;
+                          if (phone) {
+                            window.open(`tel:${phone}`);
+                          } else {
+                            alert('Phone number not available');
+                          }
+                        }}
+                        className="w-full inline-flex items-center justify-center px-3 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <Phone className="h-4 w-4 mr-2" />
+                        Call Partner
+                      </button>
+                      <button
+                        onClick={() => {
+                          const email = (assignment as any).dualAssignmentInfo.otherSurveyor?.email;
+                          if (email) {
+                            window.open(`mailto:${email}`);
+                          } else {
+                            alert('Email address not available');
+                          }
+                        }}
+                        className="w-full inline-flex items-center justify-center px-3 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Email Partner
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Coordination Guidelines */}
+            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-amber-900 mb-2">Coordination Guidelines</h3>
+              <ul className="text-sm text-amber-800 space-y-1">
+                <li>• Contact your partner surveyor before site visit to coordinate timing</li>
+                <li>• Share findings and observations to ensure comprehensive assessment</li>
+                <li>• Both surveyors must submit reports for complete evaluation</li>
+                <li>• Reports will be automatically merged once both are submitted</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Contact Information */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">

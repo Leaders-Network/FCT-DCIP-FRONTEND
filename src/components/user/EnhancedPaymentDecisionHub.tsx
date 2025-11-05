@@ -18,16 +18,14 @@ const EnhancedPaymentDecisionHub: React.FC<EnhancedPaymentDecisionHubProps> = ({
 }) => {
     const [showConflictInterface, setShowConflictInterface] = useState(false);
     const [showEditInterface, setShowEditInterface] = useState(false);
-    const [conflictContext, setConflictContext] = useState<any>(null);
-    const [editContext, setEditContext] = useState<any>(null);
+    // Context states are not currently used since handlers don't accept parameters
+    // These could be populated from PaymentDecisionDisplay if needed in the future
 
-    const handleRaiseConflict = (context?: any) => {
-        setConflictContext(context);
+    const handleRaiseConflict = () => {
         setShowConflictInterface(true);
     };
 
-    const handleEditPolicy = (context?: any) => {
-        setEditContext(context);
+    const handleEditPolicy = () => {
         setShowEditInterface(true);
     };
 
@@ -49,8 +47,8 @@ const EnhancedPaymentDecisionHub: React.FC<EnhancedPaymentDecisionHubProps> = ({
             <PaymentDecisionDisplay
                 policyId={policyId}
                 reportId={reportId}
-                onEditPolicy={() => handleEditPolicy(editContext)}
-                onRaiseConflict={() => handleRaiseConflict(conflictContext)}
+                onEditPolicy={handleEditPolicy}
+                onRaiseConflict={handleRaiseConflict}
             />
 
             <ConflictRaiseInterface
@@ -59,7 +57,7 @@ const EnhancedPaymentDecisionHub: React.FC<EnhancedPaymentDecisionHubProps> = ({
                 isOpen={showConflictInterface}
                 onClose={() => setShowConflictInterface(false)}
                 onSubmit={handleConflictSubmitted}
-                conflictContext={conflictContext}
+                conflictContext={undefined}
             />
 
             <PolicyEditInterface
@@ -67,9 +65,9 @@ const EnhancedPaymentDecisionHub: React.FC<EnhancedPaymentDecisionHubProps> = ({
                 isOpen={showEditInterface}
                 onClose={() => setShowEditInterface(false)}
                 onUpdate={handlePolicyUpdated}
-                rejectionReasons={editContext?.rejectionReasons}
-                requiredActions={editContext?.requiredActions}
-                conflictContext={editContext?.conflictContext}
+                rejectionReasons={undefined}
+                requiredActions={undefined}
+                conflictContext={undefined}
             />
         </div>
     );
