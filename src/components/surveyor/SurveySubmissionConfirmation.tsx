@@ -24,7 +24,16 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
 }) => {
     const { submission, dualAssignmentInfo, otherSurveyorNotified, organization } = submissionResult;
     const isDualSurveyor = dualAssignmentInfo?.isDualSurveyor;
-    const completionStatus = dualAssignmentInfo?.completionStatus || 0;
+    const completionStatus = dualAssignmentInfo?.completionStatus ?? 0;
+
+    // Debug logging
+    console.log('SurveySubmissionConfirmation - Debug Info:', {
+        submissionResult,
+        dualAssignmentInfo,
+        completionStatus,
+        isDualSurveyor,
+        organization
+    });
     const otherOrganization = organization === 'AMMC' ? 'NIA' : 'AMMC';
 
     const getProgressMessage = () => {
@@ -32,9 +41,13 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
             return "Your survey report has been submitted successfully.";
         }
 
-        if (completionStatus === 50) {
+        // For dual surveyor assignments, we know at least one report is submitted (this one)
+        // So if completionStatus is 0, it's likely a data issue - treat as 50%
+        const effectiveCompletionStatus = completionStatus === 0 && isDualSurveyor ? 50 : completionStatus;
+
+        if (effectiveCompletionStatus === 50) {
             return `Your ${organization} survey report has been submitted. Waiting for ${otherOrganization} surveyor to complete their assessment.`;
-        } else if (completionStatus === 100) {
+        } else if (effectiveCompletionStatus === 100) {
             return "Both survey reports have been submitted! The system will automatically merge the reports within 5 minutes.";
         }
 
@@ -50,14 +63,17 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
             ];
         }
 
-        if (completionStatus === 50) {
+        // For dual surveyor assignments, we know at least one report is submitted (this one)
+        const effectiveCompletionStatus = completionStatus === 0 && isDualSurveyor ? 50 : completionStatus;
+
+        if (effectiveCompletionStatus === 50) {
             return [
                 `${otherOrganization} surveyor has been notified of your submission`,
                 "Automatic report merging will begin once both reports are submitted",
                 "You will be notified when the merged report is ready",
                 "Monitor your dashboard for progress updates"
             ];
-        } else if (completionStatus === 100) {
+        } else if (effectiveCompletionStatus === 100) {
             return [
                 "Automatic report merging is in progress",
                 "Both surveyors will be notified when merging is complete",
@@ -74,7 +90,7 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Success Header */}
                 <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6">
                     <div className="flex items-center">
@@ -138,23 +154,37 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
                             <div className="space-y-4">
                                 {/* Progress Bar */}
                                 <div>
-                                    <div className="flex items-center justify-between text-sm text-indigo-700 mb-2">
-                                        <span className="font-medium">Overall Completion</span>
-                                        <span className="font-semibold">{completionStatus}% Complete</span>
-                                    </div>
-                                    <div className="w-full bg-indigo-200 rounded-full h-3">
-                                        <div
-                                            className={`h-3 rounded-full transition-all duration-500 ${completionStatus === 100 ? 'bg-green-500' :
-                                                    completionStatus === 50 ? 'bg-yellow-500' : 'bg-indigo-600'
-                                                }`}
-                                            style={{ width: `${completionStatus}%` }}
-                                        ></div>
-                                    </div>
-                                    <div className="flex justify-between text-xs text-indigo-600 mt-1">
-                                        <span>0%</span>
-                                        <span>50% (One Report)</span>
-                                        <span>100% (Both Reports)</span>
-                                    </div>
+                                    {(() => {
+                                        // For dual surveyor assignments, we know at least one report is submitted (this one)
+                                        const effectiveCompletionStatus = completionStatus === 0 && isDualSurveyor ? 50 : completionStatus;
+
+                                        return (
+                                            <>
+                                                <div className="flex items-center justify-between text-sm text-indigo-700 mb-2">
+                                                    <span className="font-medium">Overall Completion</span>
+                                                    <span className="font-semibold">{effectiveCompletionStatus}% Complete</span>
+                                                </div>
+                                                <div className="w-full bg-indigo-200 rounded-full h-3">
+                                                    <div
+                                                        className={`h-3 rounded-full transition-all duration-500 ${effectiveCompletionStatus >= 100 ? 'bg-green-500' :
+                                                            effectiveCompletionStatus >= 50 ? 'bg-yellow-500' :
+                                                                effectiveCompletionStatus > 0 ? 'bg-indigo-600' : 'bg-gray-400'
+                                                            }`}
+                                                        style={{ width: `${Math.max(effectiveCompletionStatus, 0)}%` }}
+                                                    ></div>
+                                                </div>
+                                                <div className="flex justify-between text-xs text-indigo-600 mt-1">
+                                                    <span>0%</span>
+                                                    <span>50% (One Report)</span>
+                                                    <span>100% (Both Reports)</span>
+                                                </div>
+                                                {/* Debug info - remove in production */}
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    Debug: raw={completionStatus}%, effective={effectiveCompletionStatus}%, isDual={isDualSurveyor ? 'true' : 'false'}
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
 
                                 {/* Organization Status */}
@@ -168,11 +198,13 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-white rounded border">
                                         <div className="flex items-center">
-                                            <div className={`w-3 h-3 ${completionStatus === 100 ? 'bg-green-500' : 'bg-yellow-400'} rounded-full mr-3`}></div>
+                                            <div className={`w-3 h-3 ${(completionStatus === 0 && isDualSurveyor ? 50 : completionStatus) === 100 ? 'bg-green-500' : 'bg-yellow-400'
+                                                } rounded-full mr-3`}></div>
                                             <span className="font-medium text-gray-900">{otherOrganization}</span>
                                         </div>
-                                        <span className={`font-medium ${completionStatus === 100 ? 'text-green-600' : 'text-yellow-600'}`}>
-                                            {completionStatus === 100 ? '✓ Submitted' : '⏳ Pending'}
+                                        <span className={`font-medium ${(completionStatus === 0 && isDualSurveyor ? 50 : completionStatus) === 100 ? 'text-green-600' : 'text-yellow-600'
+                                            }`}>
+                                            {(completionStatus === 0 && isDualSurveyor ? 50 : completionStatus) === 100 ? '✓ Submitted' : '⏳ Pending'}
                                         </span>
                                     </div>
                                 </div>
@@ -188,7 +220,7 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
                                 )}
 
                                 {/* Automatic Merging Status */}
-                                {completionStatus === 100 && (
+                                {(completionStatus === 0 && isDualSurveyor ? 50 : completionStatus) === 100 && (
                                     <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded">
                                         <Clock className="h-4 w-4 text-green-600 mr-2" />
                                         <span className="text-green-800 text-sm">

@@ -2,22 +2,28 @@
  * Authentication utility functions
  */
 
-export const getAuthToken = (preferNIA: boolean = false): string | null => {
+export const getAuthToken = (tokenType?: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor'): string | null => {
     if (typeof window === 'undefined') return null;
 
-    // For NIA admin pages, prioritize NIA admin token
-    const tokenKeys = preferNIA ? [
+    // If specific token type is requested, try to get that first
+    if (tokenType) {
+        const tokenKey = getTokenKeyForType(tokenType);
+        const token = localStorage.getItem(tokenKey);
+        if (token) {
+            console.log(`Using specific auth token from: ${tokenKey}`);
+            return token;
+        }
+    }
+
+    // Fallback to checking all token types in priority order
+    const tokenKeys = [
+        'superAdminToken',  // Super admin has highest priority
         'niaAdminToken',
-        'surveyorToken',
         'adminToken',
-        'token',
-        'authToken'
-    ] : [
         'surveyorToken',
-        'adminToken',
-        'niaAdminToken',
-        'token',
-        'authToken'
+        'userToken',
+        'token',           // Legacy token
+        'authToken'        // Legacy token
     ];
 
     for (const key of tokenKeys) {
@@ -30,6 +36,17 @@ export const getAuthToken = (preferNIA: boolean = false): string | null => {
 
     console.warn('No authentication token found in localStorage');
     return null;
+};
+
+const getTokenKeyForType = (tokenType: string): string => {
+    switch (tokenType) {
+        case 'user': return 'userToken';
+        case 'admin': return 'adminToken';
+        case 'super-admin': return 'superAdminToken';
+        case 'nia-admin': return 'niaAdminToken';
+        case 'surveyor': return 'surveyorToken';
+        default: return 'token';
+    }
 };
 
 export const getUserRole = (): string | null => {
@@ -63,41 +80,51 @@ export const isAuthenticated = (): boolean => {
     return getAuthToken() !== null;
 };
 
-export const setAuthToken = (token: string, tokenType: 'admin' | 'niaAdmin' | 'user' = 'admin'): void => {
+export const setAuthToken = (token: string, tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor' = 'admin'): void => {
     if (typeof window === 'undefined') return;
 
-    const tokenKey = tokenType === 'niaAdmin' ? 'niaAdminToken' :
-        tokenType === 'admin' ? 'adminToken' : 'token';
-
+    const tokenKey = getTokenKeyForType(tokenType);
     localStorage.setItem(tokenKey, token);
     console.log(`Auth token set for: ${tokenKey}`);
 };
 
-export const removeAuthToken = (): void => {
+export const removeAuthToken = (tokenType?: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor'): void => {
     if (typeof window === 'undefined') return;
 
-    const tokenKeys = [
-        'surveyorToken',
-        'niaAdminToken',
-        'adminToken',
-        'token',
-        'authToken'
-    ];
+    if (tokenType) {
+        // Remove specific token type
+        const tokenKey = getTokenKeyForType(tokenType);
+        localStorage.removeItem(tokenKey);
+        console.log(`Auth token removed for: ${tokenKey}`);
+    } else {
+        // Remove all tokens
+        const tokenKeys = [
+            'superAdminToken',
+            'niaAdminToken',
+            'adminToken',
+            'surveyorToken',
+            'userToken',
+            'token',
+            'authToken'
+        ];
 
-    tokenKeys.forEach(key => {
-        localStorage.removeItem(key);
-    });
+        tokenKeys.forEach(key => {
+            localStorage.removeItem(key);
+        });
 
-    console.log('Auth tokens removed');
+        console.log('All auth tokens removed');
+    }
 };
 
 export const clearAuthTokens = (): void => {
     if (typeof window === 'undefined') return;
 
     const tokenKeys = [
-        'surveyorToken',
+        'superAdminToken',
         'niaAdminToken',
         'adminToken',
+        'surveyorToken',
+        'userToken',
         'token',
         'authToken',
         'surveyorOrganization',
@@ -106,18 +133,19 @@ export const clearAuthTokens = (): void => {
         'surveyorId',
         'niaAdminInfo',
         'adminInfo',
-        'userInfo'
+        'userInfo',
+        'superAdminInfo'
     ];
 
     tokenKeys.forEach(key => {
         localStorage.removeItem(key);
     });
 
-    console.log('All auth tokens cleared');
+    console.log('All auth tokens and user info cleared');
 };
 
-export const getApiHeaders = (): Record<string, string> => {
-    const token = getAuthToken();
+export const getApiHeaders = (tokenType?: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor'): Record<string, string> => {
+    const token = getAuthToken(tokenType);
     const headers: Record<string, string> = {
         'Content-Type': 'application/json'
     };
@@ -127,4 +155,76 @@ export const getApiHeaders = (): Record<string, string> => {
     }
 
     return headers;
+};
+
+// Get current user's token type based on available tokens
+export const getCurrentTokenType = (): string | null => {
+    if (typeof window === 'undefined') return null;
+
+    const tokenTypes = [
+        { type: 'super-admin', key: 'superAdminToken' },
+        { type: 'nia-admin', key: 'niaAdminToken' },
+        { type: 'admin', key: 'adminToken' },
+        { type: 'surveyor', key: 'surveyorToken' },
+        { type: 'user', key: 'userToken' }
+    ];
+
+    for (const { type, key } of tokenTypes) {
+        if (localStorage.getItem(key)) {
+            return type;
+        }
+    }
+
+    // Check legacy tokens
+    if (localStorage.getItem('token') || localStorage.getItem('authToken')) {
+        return 'legacy';
+    }
+
+    return null;
+};
+
+// Check if user has specific access level
+export const hasAccessLevel = (requiredLevel: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor'): boolean => {
+    const currentType = getCurrentTokenType();
+    if (!currentType) return false;
+
+    // Super admin has access to everything
+    if (currentType === 'super-admin') return true;
+
+    // Check specific access levels
+    switch (requiredLevel) {
+        case 'user':
+            return ['user', 'admin', 'super-admin', 'nia-admin', 'surveyor'].includes(currentType);
+        case 'admin':
+            return ['admin', 'super-admin'].includes(currentType);
+        case 'nia-admin':
+            return ['nia-admin', 'super-admin'].includes(currentType);
+        case 'surveyor':
+            return ['surveyor', 'super-admin'].includes(currentType);
+        case 'super-admin':
+            return currentType === 'super-admin';
+        default:
+            return false;
+    }
+};
+
+// Decode JWT token to get user info (client-side only for display purposes)
+export const decodeToken = (token?: string): any => {
+    if (typeof window === 'undefined') return null;
+
+    const tokenToUse = token || getAuthToken();
+    if (!tokenToUse) return null;
+
+    try {
+        const base64Url = tokenToUse.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error('Failed to decode token:', error);
+        return null;
+    }
 };
