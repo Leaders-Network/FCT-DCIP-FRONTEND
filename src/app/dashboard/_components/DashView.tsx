@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import ReportSection from "@/components/dashboard/ReportSection";
+import MergedReportsSummary from "@/components/user/MergedReportsSummary";
 import { CreatePolicyRequestData } from "@/types/api.types";
 import Image from "next/image";
 import { MoreVertical, Download, CreditCard, Eye, FileText } from "lucide-react";
@@ -278,6 +279,9 @@ const Dashview = () => {
                     </div>
                   ))}
                 </div>
+
+                {/* Merged Reports Summary */}
+                <MergedReportsSummary />
 
                 {/* Surveyed Policies Table */}
                 <div className="w-full bg-white rounded-xl p-4 overflow-x-auto mt-6">
