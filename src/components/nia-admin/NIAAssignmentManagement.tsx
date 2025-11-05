@@ -3,16 +3,11 @@ import React, { useState, useEffect } from 'react';
 import {
   UserPlus,
   Search,
-  Filter,
   AlertTriangle,
   CheckCircle,
-  Clock,
   User,
   Phone,
   Mail,
-  MapPin,
-  Building,
-  Calendar,
   X
 } from 'lucide-react';
 
@@ -31,48 +26,11 @@ interface Surveyor {
   completedSurveys: number;
 }
 
-interface DualAssignment {
-  _id: string;
-  policyId: {
-    _id: string;
-    propertyDetails: {
-      propertyType: string;
-      address: string;
-      buildingValue: number;
-    };
-    contactDetails: {
-      fullName: string;
-      email: string;
-      phoneNumber: string;
-    };
-  };
-  assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
-  ammcSurveyorContact?: {
-    name: string;
-    email: string;
-    phone: string;
-    licenseNumber?: string;
-    experience?: number;
-    specialization?: string[];
-  };
-  niaSurveyorContact?: {
-    name: string;
-    email: string;
-    phone: string;
-    licenseNumber?: string;
-    experience?: number;
-    specialization?: string[];
-  };
-  priority: string;
-  estimatedCompletion: {
-    overallDeadline: string;
-  };
-}
+// Use types from api.types.ts
+import { DualAssignment, AssignmentManagementProps } from '@/types/api.types';
 
-interface NIAAssignmentManagementProps {
+interface NIAAssignmentManagementProps extends AssignmentManagementProps {
   assignment: DualAssignment;
-  onAssignmentComplete: () => void;
-  onClose: () => void;
 }
 
 const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
@@ -87,7 +45,11 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    availability: string;
+    specialization: string;
+    experience: string;
+  }>({
     availability: 'all',
     specialization: 'all',
     experience: 'all'

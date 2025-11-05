@@ -52,6 +52,7 @@ const NIAAdminLogin = () => {
                     // Store NIA admin token and info
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('niaAdminToken', data.token); // Add this for NIA admin pages
                     localStorage.setItem('employeeInfo', JSON.stringify(data.employee));
                     localStorage.setItem('organization', 'NIA');
 

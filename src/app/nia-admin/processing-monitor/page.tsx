@@ -72,29 +72,29 @@ const ProcessingMonitorPage = () => {
                 processingMonitorService.getRecentActivity(50, filters.organization)
             ]);
 
-            if (overviewResponse.success) {
+            if (overviewResponse.success && overviewResponse.data) {
                 console.log('Overview Response:', overviewResponse.data);
                 setOverview(overviewResponse.data);
             } else {
                 console.error('Overview Error:', overviewResponse);
             }
 
-            if (activeResponse.success) {
+            if (activeResponse.success && activeResponse.data) {
                 setActiveProcessing(activeResponse.data);
             }
 
-            if (performanceResponse.success) {
+            if (performanceResponse.success && performanceResponse.data) {
                 console.log('Performance Metrics Response:', performanceResponse.data);
                 setPerformanceMetrics(performanceResponse.data);
             } else {
                 console.error('Performance Metrics Error:', performanceResponse);
             }
 
-            if (healthResponse.success) {
+            if (healthResponse.success && healthResponse.data) {
                 setSystemHealth(healthResponse.data);
             }
 
-            if (activityResponse.success) {
+            if (activityResponse.success && activityResponse.data) {
                 setRecentActivity(activityResponse.data);
             }
 

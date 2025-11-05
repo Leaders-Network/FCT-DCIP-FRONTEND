@@ -139,14 +139,21 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
                                 {/* Progress Bar */}
                                 <div>
                                     <div className="flex items-center justify-between text-sm text-indigo-700 mb-2">
-                                        <span>Overall Completion</span>
-                                        <span className="font-medium">{completionStatus}%</span>
+                                        <span className="font-medium">Overall Completion</span>
+                                        <span className="font-semibold">{completionStatus}% Complete</span>
                                     </div>
                                     <div className="w-full bg-indigo-200 rounded-full h-3">
                                         <div
-                                            className="bg-indigo-600 h-3 rounded-full transition-all duration-500"
+                                            className={`h-3 rounded-full transition-all duration-500 ${completionStatus === 100 ? 'bg-green-500' :
+                                                    completionStatus === 50 ? 'bg-yellow-500' : 'bg-indigo-600'
+                                                }`}
                                             style={{ width: `${completionStatus}%` }}
                                         ></div>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-indigo-600 mt-1">
+                                        <span>0%</span>
+                                        <span>50% (One Report)</span>
+                                        <span>100% (Both Reports)</span>
                                     </div>
                                 </div>
 
