@@ -14,6 +14,12 @@ import {
   Shield,
   TrendingUp
 } from 'lucide-react';
+import {
+  ReportDetailsExtended,
+  ApiResponse,
+  RecommendationAction
+} from '@/types/api.types';
+import { normalizeError, getErrorMessage } from '@/utils/errorHandling';
 
 interface MergedReportDetailsModalProps {
   reportId: string;
@@ -21,33 +27,14 @@ interface MergedReportDetailsModalProps {
   onClose: () => void;
 }
 
-interface SurveyorContact {
-  name: string;
-  email: string;
-  phone: string;
-  licenseNumber: string;
-}
-
-interface ReportDetails {
+interface DownloadResponse {
+  downloadUrl?: string;
   reportId: string;
-  status: string;
   downloadCount: number;
-  canDownload: boolean;
-  finalRecommendation?: 'approve' | 'reject' | 'request_more_info';
-  conflictDetected: boolean;
-  conflictResolved: boolean;
-  propertyDetails: {
-    address: string;
-    propertyType: string;
-  };
-  surveyorContacts?: {
-    ammc?: SurveyorContact;
-    nia?: SurveyorContact;
-  };
-  individualReports?: {
-    ammcReportId?: string;
-    niaReportId?: string;
-  };
+  documents?: Array<{
+    cloudinaryUrl: string;
+    fileName: string;
+  }>;
 }
 
 const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
@@ -55,7 +42,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
   isOpen,
   onClose
 }) => {
-  const [reportDetails, setReportDetails] = useState<ReportDetails | null>(null);
+  const [reportDetails, setReportDetails] = useState<ReportDetailsExtended | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +64,8 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         setError(response.message || 'Failed to fetch report details');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      const normalizedError = normalizeError(err);
+      setError(getErrorMessage(normalizedError));
     } finally {
       setLoading(false);
     }
@@ -87,6 +75,18 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
     try {
       const response = await userReportAPI.downloadReport(reportId);
       if (response.success) {
+        // Create and trigger download
+        const dataStr = JSON.stringify(response.data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `merged-report-${reportId}-${Date.now()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
         alert('Merged report downloaded successfully');
         fetchReportDetails();
       } else {
@@ -104,8 +104,28 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         alert('AMMC report not available');
         return;
       }
-      const response = await userReportAPI.downloadAMMCReport(reportDetails.individualReports.ammcReportId);
-      if (response.success) {
+      const response: ApiResponse<DownloadResponse> = await userReportAPI.downloadAMMCReport(reportDetails.individualReports.ammcReportId);
+      if (response.success && response.data) {
+        // Check if there's a direct download URL
+        if (response.data.downloadUrl) {
+          // Open the document URL in a new tab
+          window.open(response.data.downloadUrl, '_blank');
+        } else if (response.data.documents && response.data.documents.length > 0) {
+          // Download the first available document
+          window.open(response.data.documents[0].cloudinaryUrl, '_blank');
+        } else {
+          // Fallback: download as JSON
+          const dataStr = JSON.stringify(response.data, null, 2);
+          const dataBlob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(dataBlob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `ammc-report-${reportDetails.individualReports.ammcReportId}-${Date.now()}.json`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
         alert('AMMC report downloaded successfully');
       } else {
         alert('Failed to download AMMC report');
@@ -122,8 +142,28 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         alert('NIA report not available');
         return;
       }
-      const response = await userReportAPI.downloadNIAReport(reportDetails.individualReports.niaReportId);
-      if (response.success) {
+      const response: ApiResponse<DownloadResponse> = await userReportAPI.downloadNIAReport(reportDetails.individualReports.niaReportId);
+      if (response.success && response.data) {
+        // Check if there's a direct download URL
+        if (response.data.downloadUrl) {
+          // Open the document URL in a new tab
+          window.open(response.data.downloadUrl, '_blank');
+        } else if (response.data.documents && response.data.documents.length > 0) {
+          // Download the first available document
+          window.open(response.data.documents[0].cloudinaryUrl, '_blank');
+        } else {
+          // Fallback: download as JSON
+          const dataStr = JSON.stringify(response.data, null, 2);
+          const dataBlob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(dataBlob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `nia-report-${reportDetails.individualReports.niaReportId}-${Date.now()}.json`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
         alert('NIA report downloaded successfully');
       } else {
         alert('Failed to download NIA report');
@@ -134,7 +174,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
     }
   };
 
-  const getRecommendationBadge = (recommendation: string) => {
+  const getRecommendationBadge = (recommendation: RecommendationAction | string) => {
     switch (recommendation) {
       case 'approve':
         return <Badge className="bg-green-100 text-green-800">APPROVE</Badge>;
@@ -143,7 +183,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
       case 'request_more_info':
         return <Badge className="bg-yellow-100 text-yellow-800">REQUEST MORE INFO</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800">{recommendation}</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800">{String(recommendation).toUpperCase()}</Badge>;
     }
   };
 

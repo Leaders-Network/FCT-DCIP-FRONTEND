@@ -568,125 +568,18 @@ export interface NIASurveyorForManagement extends NIASurveyor {
   maxAssignments: number;
 }
 
-
-
-// Processing Monitor Types (moved from service file)
-export interface ProcessingOverview {
-  timeframe: string;
-  organization: string;
-  overview: {
-    totalDualAssignments: number;
-    totalMergedReports: number;
-    totalConflictFlags: number;
-    totalUserInquiries: number;
-    averageProcessingTime?: number;
-  };
-  assignmentStatus?: {
-    unassigned: number;
-    partially_assigned: number;
-    fully_assigned: number;
-  };
-  completionStatus?: {
-    0: number;
-    50: number;
-    100: number;
-  };
-  releaseStatus?: {
-    pending: number;
-    withheld: number;
-    released: number;
-  };
-  activeConflictsBySeverity: {
-    low: number;
-    medium: number;
-    high: number;
-    critical: number;
-  };
-  generatedAt?: string;
+// NIA Surveyor Management Props
+export interface NIASurveyorManagementProps {
+  surveyor: NIASurveyor | null;
+  mode: 'add' | 'edit' | 'view';
+  onSave: (surveyor: NIASurveyor) => Promise<void>;
+  onClose: () => void;
 }
 
-export interface ActiveProcessing {
-  activeAssignments: Array<{
-    _id: string;
-    policyId: string;
-    assignmentStatus: string;
-    completionStatus: number;
-    ammcSurveyorContact?: {
-      name: string;
-      email: string;
-      phone: string;
-    };
-    niaSurveyorContact?: {
-      name: string;
-      email: string;
-      phone: string;
-    };
-  }>;
-  pendingReports: Array<{
-    _id: string;
-    policyId: string;
-    releaseStatus: string;
-    createdAt: string;
-  }>;
-  recentSubmissions?: Array<{
-    _id: string;
-    policyId: string;
-    organization: string;
-    createdAt: string;
-  }>;
-  lastUpdated?: string;
-}
 
-export interface PerformanceMetrics {
-  timeframe?: string;
-  processingPerformance: {
-    avgProcessingTime: number;
-    minProcessingTime?: number;
-    maxProcessingTime?: number;
-    totalReports: number;
-  };
-  successRates: {
-    pending?: number;
-    withheld?: number;
-    released: number;
-  } | number;
-  conflictDetectionRates?: {
-    low: number;
-    medium: number;
-    high: number;
-    critical: number;
-  };
-  assignmentCompletion?: {
-    avgCompletionTime: number;
-    minCompletionTime: number;
-    maxCompletionTime: number;
-  };
-  dailyVolume?: Array<{
-    _id: string;
-    count: number;
-  }>;
-  generatedAt?: string;
-}
 
-export interface SystemHealth {
-  systemStatus: 'healthy' | 'warning' | 'critical';
-  alerts?: string[];
-  metrics?: {
-    recentActivity: number;
-    stuckProcessing: number;
-  };
-  lastChecked?: string;
-}
-
-export interface RecentActivity {
-  activities: Array<{
-    type: string;
-    details: string;
-    propertyAddress: string;
-    timestamp: string;
-  }>;
-  lastUpdated?: string;
-}
+// Processing Monitor Types - imported from processingMonitor service
+// These types are defined in src/services/processingMonitor.ts to avoid duplication
 
 // Dashboard Analytics Interfaces
 export interface DashboardData {
@@ -963,12 +856,13 @@ export interface DownloadReportResponse extends ApiResponse<{
 }> { }
 
 // Additional interfaces for better type safety
+// ProcessingMonitorData uses types from processingMonitor service
 export interface ProcessingMonitorData {
-  overview: ProcessingOverview | null;
-  activeProcessing: ActiveProcessing | null;
-  performanceMetrics: PerformanceMetrics | null;
-  systemHealth: SystemHealth | null;
-  recentActivity: RecentActivity | null;
+  overview: import('@/services/processingMonitor').ProcessingOverview | null;
+  activeProcessing: import('@/services/processingMonitor').ActiveProcessing | null;
+  performanceMetrics: import('@/services/processingMonitor').PerformanceMetrics | null;
+  systemHealth: import('@/services/processingMonitor').SystemHealth | null;
+  recentActivity: import('@/services/processingMonitor').RecentActivity | null;
 }
 
 // Component Props Types
@@ -994,6 +888,29 @@ export interface EnhancedApiErrorResponse {
   timestamp?: string;
   path?: string;
 }
+
+// Error handling utility types
+export interface ValidationError {
+  field: string;
+  message: string;
+  code?: string;
+}
+
+export interface NetworkError {
+  type: 'network';
+  message: string;
+  status?: number;
+  statusText?: string;
+}
+
+export interface ServerError {
+  type: 'server';
+  message: string;
+  code?: string;
+  details?: Record<string, unknown>;
+}
+
+export type AppError = ValidationError | NetworkError | ServerError;
 
 // Form Data Types
 export interface FormFieldValue {
@@ -1130,6 +1047,124 @@ export type ApiResponseUnion<T = unknown> = ApiSuccessResponse<T> | ApiErrorResp
 // Utility type for API method return types
 export type ApiMethod<T = unknown> = Promise<ApiResponse<T>>;
 
+// Processing Monitor Types (matching processingMonitor service)
+export interface ProcessingOverview {
+  timeframe: string;
+  organization: string;
+  overview: {
+    totalDualAssignments: number;
+    totalMergedReports: number;
+    totalConflictFlags: number;
+    totalUserInquiries: number;
+    averageProcessingTime?: number;
+  };
+  assignmentStatus?: {
+    unassigned: number;
+    partially_assigned: number;
+    fully_assigned: number;
+  };
+  completionStatus?: {
+    0: number;
+    50: number;
+    100: number;
+  };
+  releaseStatus?: {
+    pending: number;
+    withheld: number;
+    released: number;
+  };
+  activeConflictsBySeverity: {
+    low: number;
+    medium: number;
+    high: number;
+    critical: number;
+  };
+  generatedAt?: string;
+}
+
+export interface ActiveProcessing {
+  activeAssignments: Array<{
+    _id: string;
+    policyId: string;
+    assignmentStatus: string;
+    completionStatus: number;
+    ammcSurveyorContact?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
+    niaSurveyorContact?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
+  }>;
+  pendingReports: Array<{
+    _id: string;
+    policyId: string;
+    releaseStatus: string;
+    createdAt: string;
+  }>;
+  recentSubmissions?: Array<{
+    _id: string;
+    policyId: string;
+    organization: string;
+    createdAt: string;
+  }>;
+  lastUpdated?: string;
+}
+
+export interface PerformanceMetrics {
+  timeframe?: string;
+  processingPerformance: {
+    avgProcessingTime: number;
+    minProcessingTime?: number;
+    maxProcessingTime?: number;
+    totalReports: number;
+  };
+  successRates: {
+    pending?: number;
+    withheld?: number;
+    released: number;
+  } | number;
+  conflictDetectionRates?: {
+    low: number;
+    medium: number;
+    high: number;
+    critical: number;
+  };
+  assignmentCompletion?: {
+    avgCompletionTime: number;
+    minCompletionTime: number;
+    maxCompletionTime: number;
+  };
+  dailyVolume?: Array<{
+    _id: string;
+    count: number;
+  }>;
+  generatedAt?: string;
+}
+
+export interface SystemHealth {
+  systemStatus: 'healthy' | 'warning' | 'critical';
+  alerts?: string[];
+  metrics?: {
+    recentActivity: number;
+    stuckProcessing: number;
+  };
+  lastChecked?: string;
+}
+
+export interface RecentActivity {
+  activities: Array<{
+    type: string;
+    details: string;
+    propertyAddress: string;
+    timestamp: string;
+  }>;
+  lastUpdated?: string;
+}
+
 // Type guards for API responses
 export const isApiSuccessResponse = <T>(response: ApiResponseUnion<T>): response is ApiSuccessResponse<T> => {
   return response.success === true;
@@ -1139,14 +1174,12 @@ export const isApiErrorResponse = <T>(response: ApiResponseUnion<T>): response i
   return response.success === false;
 };
 
-// Duplicate interface removed - using the one defined earlier
-
 export interface ReportDetailsExtended {
   reportId: string;
   status: string;
   downloadCount: number;
   canDownload: boolean;
-  finalRecommendation?: 'approve' | 'reject' | 'request_more_info';
+  finalRecommendation?: RecommendationAction;
   conflictDetected: boolean;
   conflictResolved: boolean;
   propertyDetails: {

@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 // Import token setup for development
 import '@/utils/tokenSetup';
 import { NIATokenProvider } from '@/components/nia-admin/NIATokenProvider';
+import { processingMonitorService } from '@/services/processingMonitor';
 import {
-    processingMonitorService,
     ProcessingOverview,
     ActiveProcessing,
     PerformanceMetrics,
     SystemHealth,
     RecentActivity
-} from '@/services/processingMonitor';
+} from '@/types/api.types';
 import {
     FileText,
     Clock,

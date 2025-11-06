@@ -14,73 +14,106 @@ import {
     Building
 } from 'lucide-react';
 
+interface ReportPhoto {
+    url: string;
+    description: string;
+    timestamp: string;
+}
+
+interface ReportSection {
+    propertyCondition: string;
+    structuralAssessment: string;
+    riskFactors: string;
+    recommendations: string;
+    surveyorName: string;
+    surveyorLicense: string;
+    submissionDate: string;
+    photos: ReportPhoto[];
+}
+
+interface ConflictDetails {
+    conflictType: string;
+    conflictSeverity: 'low' | 'medium' | 'high' | 'critical';
+    ammcRecommendation: string;
+    niaRecommendation: string;
+    ammcValue?: number;
+    niaValue?: number;
+    discrepancyPercentage?: number;
+}
+
+interface MergingMetadata {
+    mergedAt: string;
+    processingTime: number;
+    qualityScore: number;
+}
+
+interface IndividualReports {
+    ammcReportId?: string;
+    niaReportId?: string;
+    ammcSubmission?: {
+        submittedAt: string;
+        surveyData?: {
+            propertyCondition?: string;
+            structuralAssessment?: string;
+            riskFactors?: string;
+            photos?: Array<string | ReportPhoto>;
+        };
+        surveyorNotes?: string;
+    };
+    niaSubmission?: {
+        submittedAt: string;
+        surveyData?: {
+            propertyCondition?: string;
+            structuralAssessment?: string;
+            riskFactors?: string;
+            photos?: Array<string | ReportPhoto>;
+        };
+        surveyorNotes?: string;
+    };
+}
+
+interface SurveyorContacts {
+    ammc?: {
+        name: string;
+        licenseNumber: string;
+    };
+    nia?: {
+        name: string;
+        licenseNumber: string;
+    };
+}
+
 interface ReportData {
     reportId: string;
     policyId: string;
-    releaseStatus: string;
+    releaseStatus: 'pending' | 'withheld' | 'released';
     releasedAt: string;
-    finalRecommendation: string;
+    finalRecommendation: 'approve' | 'reject' | 'request_more_info';
     paymentEnabled: boolean;
     conflictDetected: boolean;
     conflictResolved: boolean;
-    conflictDetails?: {
-        conflictType: string;
-        conflictSeverity: string;
-        ammcRecommendation: string;
-        niaRecommendation: string;
-        ammcValue?: number;
-        niaValue?: number;
-        discrepancyPercentage?: number;
+    conflictDetails?: ConflictDetails;
+    reportSections?: {
+        ammc: ReportSection;
+        nia: ReportSection;
     };
-    reportSections: {
-        ammc: {
-            propertyCondition: string;
-            structuralAssessment: string;
-            riskFactors: string;
-            recommendations: string;
-            estimatedValue: number;
-            surveyorName: string;
-            surveyorLicense: string;
-            submissionDate: string;
-            photos: Array<{
-                url: string;
-                description: string;
-                timestamp: string;
-            }>;
-        };
-        nia: {
-            propertyCondition: string;
-            structuralAssessment: string;
-            riskFactors: string;
-            recommendations: string;
-            estimatedValue: number;
-            surveyorName: string;
-            surveyorLicense: string;
-            submissionDate: string;
-            photos: Array<{
-                url: string;
-                description: string;
-                timestamp: string;
-            }>;
-        };
-    };
-    mergingMetadata: {
-        mergedAt: string;
-        processingTime: number;
-        qualityScore: number;
-    };
+    mergingMetadata: MergingMetadata;
     isMerged: boolean;
+    individualReports?: IndividualReports;
+    surveyorContacts?: SurveyorContacts;
+}
+
+interface PropertyDetails {
+    address: string;
+    propertyType: string;
+    buildingValue: number;
+    yearBuilt: number;
+    squareFootage: number;
+    constructionMaterial: string;
 }
 
 interface IndividualReportData extends Omit<ReportData, 'reportSections' | 'mergingMetadata' | 'conflictDetails'> {
-    propertyDetails: {
-        address: string;
-        propertyType: string;
-        buildingValue: number;
-        yearBuilt: number;
-        squareFootage: number;
-        constructionMaterial: string;
-    };
+    propertyDetails: PropertyDetails;
 }
 
 interface ReportViewerProps {
@@ -118,7 +151,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
         try {
             setDownloading(true);
 
-            const response = await fetch(`/api/v1/report-release/download/${reportId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/report-release/download/${reportId}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -131,8 +164,19 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
             const data = await response.json();
 
-            // Open download URL in new tab
-            window.open(data.data.downloadUrl, '_blank');
+            // Create and trigger download
+            const dataStr = JSON.stringify(data.data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `merged-report-${reportId}-${Date.now()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            alert('Report downloaded successfully');
 
         } catch (err) {
             console.error('Download failed:', err);
@@ -308,9 +352,46 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (mergedReport.individualReports?.ammcReportId) {
-                                            window.open(`/api/v1/report-release/download/ammc/${mergedReport.individualReports.ammcReportId}`, '_blank');
+                                            try {
+                                                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/report-release/download/ammc/${mergedReport.individualReports.ammcReportId}`, {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                    }
+                                                });
+
+                                                if (response.ok) {
+                                                    const data = await response.json();
+                                                    if (data.success && data.data) {
+                                                        // Check if there's a direct download URL
+                                                        if (data.data.downloadUrl) {
+                                                            window.open(data.data.downloadUrl, '_blank');
+                                                        } else if (data.data.documents && data.data.documents.length > 0) {
+                                                            window.open(data.data.documents[0].cloudinaryUrl, '_blank');
+                                                        } else {
+                                                            // Fallback: download as JSON
+                                                            const dataStr = JSON.stringify(data.data, null, 2);
+                                                            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                                                            const url = URL.createObjectURL(dataBlob);
+                                                            const link = document.createElement('a');
+                                                            link.href = url;
+                                                            link.download = `ammc-report-${mergedReport.individualReports.ammcReportId}-${Date.now()}.json`;
+                                                            document.body.appendChild(link);
+                                                            link.click();
+                                                            document.body.removeChild(link);
+                                                            URL.revokeObjectURL(url);
+                                                        }
+                                                        alert('AMMC report downloaded successfully');
+                                                    }
+                                                } else {
+                                                    alert('Failed to download AMMC report');
+                                                }
+                                            } catch (error) {
+                                                console.error('Error downloading AMMC report:', error);
+                                                alert('Failed to download AMMC report');
+                                            }
                                         }
                                     }}
                                     disabled={!mergedReport.individualReports?.ammcReportId}
@@ -382,16 +463,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                 </p>
                             </div>
 
-                            <div className="bg-gray-50 p-4 rounded">
-                                <h4 className="font-medium mb-2">Estimated Value</h4>
-                                <p className="text-lg font-semibold text-green-600">
-                                    {formatCurrency(
-                                        mergedReport.reportSections?.ammc?.estimatedValue ||
-                                        mergedReport.individualReports?.ammcSubmission?.surveyData?.estimatedValue ||
-                                        0
-                                    )}
-                                </p>
-                            </div>
+
 
                             {(mergedReport.reportSections?.ammc?.photos?.length > 0 ||
                                 mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length > 0) && (
@@ -439,9 +511,46 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (mergedReport.individualReports?.niaReportId) {
-                                            window.open(`/api/v1/report-release/download/nia/${mergedReport.individualReports.niaReportId}`, '_blank');
+                                            try {
+                                                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/report-release/download/nia/${mergedReport.individualReports.niaReportId}`, {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                    }
+                                                });
+
+                                                if (response.ok) {
+                                                    const data = await response.json();
+                                                    if (data.success && data.data) {
+                                                        // Check if there's a direct download URL
+                                                        if (data.data.downloadUrl) {
+                                                            window.open(data.data.downloadUrl, '_blank');
+                                                        } else if (data.data.documents && data.data.documents.length > 0) {
+                                                            window.open(data.data.documents[0].cloudinaryUrl, '_blank');
+                                                        } else {
+                                                            // Fallback: download as JSON
+                                                            const dataStr = JSON.stringify(data.data, null, 2);
+                                                            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                                                            const url = URL.createObjectURL(dataBlob);
+                                                            const link = document.createElement('a');
+                                                            link.href = url;
+                                                            link.download = `nia-report-${mergedReport.individualReports.niaReportId}-${Date.now()}.json`;
+                                                            document.body.appendChild(link);
+                                                            link.click();
+                                                            document.body.removeChild(link);
+                                                            URL.revokeObjectURL(url);
+                                                        }
+                                                        alert('NIA report downloaded successfully');
+                                                    }
+                                                } else {
+                                                    alert('Failed to download NIA report');
+                                                }
+                                            } catch (error) {
+                                                console.error('Error downloading NIA report:', error);
+                                                alert('Failed to download NIA report');
+                                            }
                                         }
                                     }}
                                     disabled={!mergedReport.individualReports?.niaReportId}
@@ -513,16 +622,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                 </p>
                             </div>
 
-                            <div className="bg-gray-50 p-4 rounded">
-                                <h4 className="font-medium mb-2">Estimated Value</h4>
-                                <p className="text-lg font-semibold text-green-600">
-                                    {formatCurrency(
-                                        mergedReport.reportSections?.nia?.estimatedValue ||
-                                        mergedReport.individualReports?.niaSubmission?.surveyData?.estimatedValue ||
-                                        0
-                                    )}
-                                </p>
-                            </div>
+
 
                             {(mergedReport.reportSections?.nia?.photos?.length > 0 ||
                                 mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length > 0) && (

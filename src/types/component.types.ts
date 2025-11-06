@@ -119,13 +119,7 @@ export interface SurveySubmissionData {
     };
 }
 
-// NIA Surveyor Management Props
-export interface NIASurveyorManagementProps {
-    surveyor: NIASurveyor | null;
-    mode: 'add' | 'edit' | 'view';
-    onSave: (surveyor: NIASurveyor) => Promise<void>;
-    onClose: () => void;
-}
+// NIA Surveyor Management Props - moved to api.types.ts to avoid duplication
 
 // Modal Component Props
 export interface ModalComponentProps extends BaseComponentProps {
@@ -333,7 +327,6 @@ export type {
     AssignmentDetailProps,
     SurveySubmissionProps,
     SurveySubmissionData,
-    NIASurveyorManagementProps,
     ModalComponentProps,
     FormComponentProps,
     TableComponentProps,
