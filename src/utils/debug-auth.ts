@@ -94,8 +94,9 @@ export const setSurveyorTestToken = () => {
     localStorage.setItem('userRole', 'Surveyor');
 
     console.log('Test surveyor token set');
-};export co
-nst getCurrentAuthType = () => {
+};
+
+export const getCurrentAuthType = () => {
     if (typeof window === 'undefined') return 'server-side';
 
     const tokenTypes = [
