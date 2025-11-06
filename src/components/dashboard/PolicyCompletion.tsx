@@ -1,17 +1,21 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical, Shield } from "lucide-react";
-import { PolicyRequest } from "@/types/api.types";
-import { getUserPolicyRequests, deletePolicyRequest } from "@/services/api";
+import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical, Shield, Eye, AlertTriangle } from "lucide-react";
+import { PolicyRequest, UserReport } from "@/types/api.types";
+import { getUserPolicyRequests, deletePolicyRequest, userReportAPI } from "@/services/api";
+import MergedReportDetailsModal from "@/components/user/MergedReportDetailsModal";
 
 interface PolicyCompletionProps { }
 
 const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
+  const [mergedReports, setMergedReports] = useState<UserReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -29,28 +33,37 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   }, [showActionsDropdown]);
 
   useEffect(() => {
-    const fetchCompletedPolicies = async () => {
+    const fetchCompletedData = async () => {
       setLoading(true);
       try {
-        const [approvedResponse, surveyedResponse, rejectedResponse, completedResponse] = await Promise.all([
+        // Fetch both old completed policies and new merged reports
+        const [approvedResponse, surveyedResponse, rejectedResponse, completedResponse, reportsResponse] = await Promise.all([
           getUserPolicyRequests("approved", 1, 100),
           getUserPolicyRequests("surveyed", 1, 100),
           getUserPolicyRequests("rejected", 1, 100),
           getUserPolicyRequests("completed", 1, 100),
+          userReportAPI.getUserReports(1, 100)
         ]);
+
         const approved = approvedResponse.data.policyRequests || [];
         const surveyed = surveyedResponse.data.policyRequests || [];
         const rejected = rejectedResponse.data.policyRequests || [];
         const completed = completedResponse.data.policyRequests || [];
+
         setCompletedPolicies([...approved, ...surveyed, ...rejected, ...completed]);
+
+        // Set merged reports (these are the new dual surveyor reports)
+        if (reportsResponse.success) {
+          setMergedReports(reportsResponse.data.reports || []);
+        }
       } catch (error) {
-        console.error("Failed to fetch completed policies:", error);
+        console.error("Failed to fetch completed data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCompletedPolicies();
+    fetchCompletedData();
   }, []);
 
   const handleDownloadSurvey = (documentUrl: string) => {
@@ -68,6 +81,16 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       console.error('Delete policy error:', error);
       alert('Failed to delete policy');
     }
+  };
+
+  const handleViewDetails = (reportId: string) => {
+    setSelectedReportId(reportId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedReportId(null);
   };
 
   // const handleProceedToPayment = (policy: PolicyRequest) => {
@@ -107,8 +130,130 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
         </button>
       </div>
 
-      {completedPolicies.length > 0 ? (
+      {/* Merged Reports Section (New Dual Surveyor System) */}
+      {mergedReports.length > 0 && (
+        <div className="space-y-4 mb-8">
+          <div className="border-b border-gray-200 pb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-blue-600" />
+              Dual Surveyor Assessment Reports
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Comprehensive reports combining assessments from both AMMC and NIA surveyors
+            </p>
+          </div>
+
+          {mergedReports.map((report) => (
+            <div key={report.reportId} className="bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {report.propertyAddress}
+                      </h3>
+                      {report.isMerged && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <FileText className="w-3 h-3 mr-1" />
+                          Merged Report
+                        </span>
+                      )}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${report.status === 'released' ? 'bg-green-100 text-green-800' :
+                        report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                        {report.status === 'released' ? <CheckCircle className="w-3 h-3 mr-1" /> :
+                          report.status === 'pending' ? <Clock className="w-3 h-3 mr-1" /> :
+                            <XCircle className="w-3 h-3 mr-1" />}
+                        {report.status === 'released' ? 'Released' :
+                          report.status === 'pending' ? 'Processing' : 'Under Review'}
+                      </span>
+                      {report.conflictDetected && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                          <AlertTriangle className="w-3 h-3 mr-1" />
+                          Conflict Detected
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mb-2">{report.propertyType}</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                      <div>
+                        <span className="font-medium">Policy ID:</span>
+                        <br />
+                        {report.policyId.substring(0, 8)}...
+                      </div>
+                      <div>
+                        <span className="font-medium">Created:</span>
+                        <br />
+                        {new Date(report.createdAt).toLocaleDateString()}
+                      </div>
+                      <div>
+                        <span className="font-medium">Downloads:</span>
+                        <br />
+                        {report.downloadCount}
+                      </div>
+                      <div>
+                        <span className="font-medium">Status:</span>
+                        <br />
+                        Dual Assessment Complete
+                      </div>
+                    </div>
+
+                    {report.isMerged && (
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                        <h4 className="font-medium text-blue-900 mb-1">Dual Surveyor Assessment</h4>
+                        <p className="text-sm text-blue-800">
+                          This report combines assessments from both AMMC and NIA surveyors,
+                          including risk factors, property conditions, and recommendations.
+                        </p>
+                        {report.finalRecommendation && (
+                          <div className="mt-2">
+                            <span className="text-sm font-medium text-blue-900">Final Recommendation: </span>
+                            <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${report.finalRecommendation === 'approve' ? 'bg-green-100 text-green-800' :
+                              report.finalRecommendation === 'reject' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                              {report.finalRecommendation.replace('_', ' ').toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => handleViewDetails(report.reportId)}
+                      className="flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </button>
+                    <button
+                      onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
+                      className="flex items-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Verify Policy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Legacy Completed Policies Section */}
+      {completedPolicies.length > 0 && (
         <div className="space-y-4">
+          <div className="border-b border-gray-200 pb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Legacy Single Surveyor Reports</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Older reports from the single surveyor system
+            </p>
+          </div>
+
           {completedPolicies.map((policy) => (
             <div key={policy._id} className="bg-white rounded-lg border border-gray-200 shadow-sm">
               <div className="p-6">
@@ -254,14 +399,17 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
             </div>
           ))}
         </div>
-      ) : (
+      )}
+
+      {/* Empty State */}
+      {mergedReports.length === 0 && completedPolicies.length === 0 && (
         <div className="text-center py-12">
           <div className="mx-auto h-12 w-12 text-gray-400">
             <FileText className="h-full w-full" />
           </div>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No completed policies</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No completed reports</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Your approved permits will appear here once the survey and admin review process is complete.
+            Your completed assessment reports will appear here once the dual surveyor process is complete.
           </p>
           <div className="mt-4">
             <button
@@ -309,6 +457,15 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Merged Report Details Modal */}
+      {selectedReportId && (
+        <MergedReportDetailsModal
+          reportId={selectedReportId}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
       )}
     </div>
   );

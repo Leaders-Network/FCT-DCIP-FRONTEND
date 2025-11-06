@@ -20,6 +20,8 @@ const SurveyorHeader = () => {
     localStorage.removeItem("surveyorToken");
     localStorage.removeItem("surveyorName");
     localStorage.removeItem("surveyorRole");
+    localStorage.removeItem("surveyorOrganization");
+    localStorage.removeItem("surveyorInfo");
     window.location.href = "/surveyor";
   };
 

@@ -8,50 +8,14 @@ import {
     CheckCircle,
     Eye,
     UserPlus,
-    X
+    X,
+    Users,
+    Clock,
+    Building
 } from 'lucide-react';
+import { dualAssignmentAPI } from '@/services/api';
 import AMMCAssignmentManagement from '@/components/admin/AMMCAssignmentManagement';
-
-interface DualAssignment {
-    _id: string;
-    policyId: {
-        _id: string;
-        propertyDetails: {
-            propertyType: string;
-            address: string;
-            buildingValue: number;
-        };
-        contactDetails: {
-            fullName: string;
-            email: string;
-            phoneNumber: string;
-        };
-        status: string;
-    };
-    assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
-    completionStatus: 0 | 50 | 100;
-    ammcSurveyorContact?: {
-        name: string;
-        email: string;
-        phone: string;
-        licenseNumber?: string;
-        experience?: number;
-        specialization?: string[];
-    };
-    niaSurveyorContact?: {
-        name: string;
-        email: string;
-        phone: string;
-        licenseNumber?: string;
-        experience?: number;
-        specialization?: string[];
-    };
-    priority: string;
-    estimatedCompletion: {
-        overallDeadline: string;
-    };
-    createdAt: string;
-}
+import { DualAssignment } from '@/types/api.types';
 
 const AMMCDualAssignmentsPage = () => {
     const [assignments, setAssignments] = useState<DualAssignment[]>([]);
@@ -74,33 +38,25 @@ const AMMCDualAssignmentsPage = () => {
     const fetchAssignments = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
+            setError(null);
 
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
+            console.log('AMMC Admin - Fetching dual assignments...');
 
-            const queryParams = new URLSearchParams();
-            if (filters.assignmentStatus !== 'all') queryParams.append('assignmentStatus', filters.assignmentStatus);
-            if (filters.completionStatus !== 'all') queryParams.append('completionStatus', filters.completionStatus);
-            if (filters.priority !== 'all') queryParams.append('priority', filters.priority);
+            // Prepare filters for API call
+            const apiFilters = {
+                assignmentStatus: filters.assignmentStatus !== 'all' ? filters.assignmentStatus : undefined,
+                completionStatus: filters.completionStatus !== 'all' ? filters.completionStatus : undefined,
+                priority: filters.priority !== 'all' ? filters.priority : undefined,
+            };
 
-            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-            const response = await fetch(`${baseUrl}/dual-assignment?${queryParams.toString()}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch dual assignments');
-            }
-
-            const data = await response.json();
+            // Use the API service which handles authentication properly
+            const data = await dualAssignmentAPI.getDualAssignments(apiFilters);
+            console.log('AMMC Admin - API Response:', data);
 
             if (data.success) {
                 let filteredAssignments = data.data.dualAssignments || [];
+
+                console.log('AMMC Admin - Raw assignments count:', filteredAssignments.length);
 
                 // Apply search filter
                 if (filters.search) {
@@ -111,12 +67,13 @@ const AMMCDualAssignmentsPage = () => {
                     );
                 }
 
+                console.log('AMMC Admin - Filtered assignments count:', filteredAssignments.length);
                 setAssignments(filteredAssignments);
             } else {
                 throw new Error(data.message || 'Failed to load dual assignments');
             }
         } catch (error) {
-            console.error('Dual assignments fetch error:', error);
+            console.error('AMMC Admin - Assignments fetch error:', error);
             setError(error instanceof Error ? error.message : 'Failed to load dual assignments');
         } finally {
             setLoading(false);
@@ -150,7 +107,9 @@ const AMMCDualAssignmentsPage = () => {
     };
 
     const canAssignAMMCSurveyor = (assignment: DualAssignment) => {
-        return !assignment.ammcSurveyorContact;
+        return !assignment.ammcSurveyorContact ||
+            (typeof assignment.ammcSurveyorContact === 'object' &&
+                Object.keys(assignment.ammcSurveyorContact).length === 0);
     };
 
     const handleAssignSurveyor = (assignment: DualAssignment) => {
@@ -159,7 +118,7 @@ const AMMCDualAssignmentsPage = () => {
     };
 
     const handleAssignmentComplete = () => {
-        fetchAssignments(); // Refresh the assignments list
+        fetchAssignments();
         setShowAssignmentModal(false);
         setSelectedAssignment(null);
     };
@@ -208,14 +167,14 @@ const AMMCDualAssignmentsPage = () => {
                             placeholder="Search assignments..."
                             value={filters.search}
                             onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         />
                     </div>
 
                     <select
                         value={filters.assignmentStatus}
                         onChange={(e) => setFilters(prev => ({ ...prev, assignmentStatus: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     >
                         <option value="all">All Assignment Status</option>
                         <option value="unassigned">Unassigned</option>
@@ -226,7 +185,7 @@ const AMMCDualAssignmentsPage = () => {
                     <select
                         value={filters.completionStatus}
                         onChange={(e) => setFilters(prev => ({ ...prev, completionStatus: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     >
                         <option value="all">All Completion</option>
                         <option value="0">Not Started (0%)</option>
@@ -237,7 +196,7 @@ const AMMCDualAssignmentsPage = () => {
                     <select
                         value={filters.priority}
                         onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     >
                         <option value="all">All Priority</option>
                         <option value="urgent">Urgent</option>
@@ -361,7 +320,7 @@ const AMMCDualAssignmentsPage = () => {
 
                                     <button
                                         onClick={() => handleViewDetails(assignment)}
-                                        className="text-[#028835] hover:text-green-700 text-sm font-medium transition-colors"
+                                        className="text-[#028835] hover:text-green-800 text-sm font-medium transition-colors"
                                     >
                                         View Details
                                     </button>
@@ -373,7 +332,7 @@ const AMMCDualAssignmentsPage = () => {
             ) : (
                 <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
                     <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No dual assignments found</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
                     <p className="text-gray-600">
                         {filters.search || filters.assignmentStatus !== 'all' || filters.completionStatus !== 'all' || filters.priority !== 'all'
                             ? 'Try adjusting your filters to see more assignments.'
@@ -490,28 +449,14 @@ const AMMCDualAssignmentsPage = () => {
                                         <div>
                                             <label className="text-sm font-medium text-gray-600">Overall Status</label>
                                             <div className="mt-1">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedAssignment.assignmentStatus === 'unassigned' ? 'bg-gray-100 text-gray-800' :
-                                                    selectedAssignment.assignmentStatus === 'partially_assigned' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-green-100 text-green-800'
-                                                    }`}>
-                                                    {selectedAssignment.assignmentStatus === 'unassigned' ? 'Unassigned' :
-                                                        selectedAssignment.assignmentStatus === 'partially_assigned' ? 'Partially Assigned' :
-                                                            'Fully Assigned'}
-                                                </span>
+                                                {getStatusBadge(selectedAssignment.assignmentStatus)}
                                             </div>
                                         </div>
 
                                         <div>
                                             <label className="text-sm font-medium text-gray-600">Completion Status</label>
                                             <div className="mt-1">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedAssignment.completionStatus === 0 ? 'bg-gray-100 text-gray-800' :
-                                                    selectedAssignment.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-green-100 text-green-800'
-                                                    }`}>
-                                                    {selectedAssignment.completionStatus === 0 ? 'Not Started (0%)' :
-                                                        selectedAssignment.completionStatus === 50 ? 'Partially Complete (50%)' :
-                                                            'Fully Complete (100%)'}
-                                                </span>
+                                                {getCompletionBadge(selectedAssignment.completionStatus)}
                                             </div>
                                         </div>
                                     </div>
