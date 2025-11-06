@@ -16,7 +16,7 @@ const ReportPage: React.FC = () => {
             <div className="bg-white border-b">
                 <div className="max-w-6xl mx-auto px-6 py-4">
                     <Link
-                        href="/user/dashboard"
+                        href="/dashboard"
                         className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800"
                     >
                         <ArrowLeft className="w-4 h-4" />
