@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { getAuthToken } from '@/utils/auth';
 
-interface Surveyor {
+interface AMMCSurveyorForAssignment {
     _id: string;
     firstname: string;
     lastname: string;
@@ -39,9 +39,9 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
     onAssignmentComplete,
     onClose
 }) => {
-    const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
-    const [filteredSurveyors, setFilteredSurveyors] = useState<Surveyor[]>([]);
-    const [selectedSurveyor, setSelectedSurveyor] = useState<Surveyor | null>(null);
+    const [surveyors, setSurveyors] = useState<AMMCSurveyorForAssignment[]>([]);
+    const [filteredSurveyors, setFilteredSurveyors] = useState<AMMCSurveyorForAssignment[]>([]);
+    const [selectedSurveyor, setSelectedSurveyor] = useState<AMMCSurveyorForAssignment | null>(null);
     const [loading, setLoading] = useState(true);
     const [assigning, setAssigning] = useState(false);
     const [error, setError] = useState<string | null>(null);

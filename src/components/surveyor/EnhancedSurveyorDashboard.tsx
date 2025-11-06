@@ -21,7 +21,7 @@ import {
 import { Assignment } from "@/types/api.types";
 import Link from "next/link";
 import { getSurveyorDashboard, getSurveyorAssignments, getSurveyorDualAssignments } from "@/services/api";
-import { debugAuthState, clearAllAuthData } from "@/utils/debug-auth";
+import { debugAuthState, clearAllAuthData, getCurrentAuthType } from "@/utils/debug-auth";
 
 interface DualAssignmentInfo {
     _id: string;
@@ -379,8 +379,10 @@ const EnhancedSurveyorDashboard = () => {
             {/* Debug Panel - Only in development */}
             {process.env.NODE_ENV === 'development' && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-yellow-800 mb-2">Debug Panel</h3>
-                    <div className="flex space-x-2">
+                    <h3 className="text-sm font-medium text-yellow-800 mb-2">
+                        Debug Panel - Current Auth: {getCurrentAuthType()}
+                    </h3>
+                    <div className="flex space-x-2 mb-2">
                         <button
                             onClick={debugAuthState}
                             className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs"
@@ -399,6 +401,9 @@ const EnhancedSurveyorDashboard = () => {
                         >
                             Go to Surveyor Login
                         </button>
+                    </div>
+                    <div className="text-xs text-yellow-700">
+                        Expected: 'surveyor' | Current: {getCurrentAuthType()}
                     </div>
                 </div>
             )}

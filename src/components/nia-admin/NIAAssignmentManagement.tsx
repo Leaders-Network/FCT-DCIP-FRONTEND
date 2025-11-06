@@ -38,9 +38,9 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
   onAssignmentComplete,
   onClose
 }) => {
-  const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
-  const [filteredSurveyors, setFilteredSurveyors] = useState<Surveyor[]>([]);
-  const [selectedSurveyor, setSelectedSurveyor] = useState<Surveyor | null>(null);
+  const [surveyors, setSurveyors] = useState<NIASurveyorForAssignment[]>([]);
+  const [filteredSurveyors, setFilteredSurveyors] = useState<NIASurveyorForAssignment[]>([]);
+  const [selectedSurveyor, setSelectedSurveyor] = useState<NIASurveyorForAssignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState<string | null>(null);

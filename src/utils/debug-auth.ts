@@ -94,4 +94,28 @@ export const setSurveyorTestToken = () => {
     localStorage.setItem('userRole', 'Surveyor');
 
     console.log('Test surveyor token set');
+};export co
+nst getCurrentAuthType = () => {
+    if (typeof window === 'undefined') return 'server-side';
+
+    const tokenTypes = [
+        { type: 'super-admin', key: 'superAdminToken' },
+        { type: 'nia-admin', key: 'niaAdminToken' },
+        { type: 'admin', key: 'adminToken' },
+        { type: 'surveyor', key: 'surveyorToken' },
+        { type: 'user', key: 'userToken' }
+    ];
+
+    for (const { type, key } of tokenTypes) {
+        if (localStorage.getItem(key)) {
+            return type;
+        }
+    }
+
+    // Check legacy tokens
+    if (localStorage.getItem('token') || localStorage.getItem('authToken')) {
+        return 'legacy';
+    }
+
+    return 'none';
 };
