@@ -393,27 +393,7 @@ export interface RevisionHistoryEntry {
   revisedAt: string;
 }
 
-export interface SurveySubmissionData {
-  surveyNotes: string;
-  recommendedAction: 'approve' | 'reject' | 'request_more_info';
-  contactLog: ContactLogEntry[];
-  surveyDetails: SurveyDetails;
-  expenses?: {
-    transportation: number;
-    accommodation: number;
-    meals: number;
-    equipment: number;
-    other: number;
-    receipts: Array<{
-      description: string;
-      amount: number;
-      receiptUrl: string;
-      category: string;
-    }>;
-    totalExpenses: number;
-  };
-  surveyDocument?: File;
-}
+// SurveySubmissionData is defined in component.types.ts to avoid duplication
 
 export interface SurveySubmissionResult {
   submission: EnhancedSurveySubmission;
@@ -746,8 +726,8 @@ export interface DashboardData {
       _id: string;
       completedAssignments: number;
       avgCompletionTime: number;
-      surveyor: any;
-      employee: any;
+      surveyor: Surveyor;
+      employee: Employee;
     }>;
     statusDistribution: Array<{
       _id: string;
@@ -779,7 +759,7 @@ export interface AdminAlert {
   severity: 'high' | 'medium' | 'low';
   title: string;
   message: string;
-  data: any;
+  data: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -829,19 +809,18 @@ export interface AssignmentFilters {
   limit?: number;
 }
 
-// Component Props Types
-export interface AssignmentManagementProps {
-  assignment: DualAssignment;
-  onAssignmentComplete: () => void;
-  onClose: () => void;
-}
-
-export interface SurveyorManagementProps {
-  surveyor?: NIASurveyor | null;
-  mode: 'add' | 'edit' | 'view';
-  onSave: (surveyor: NIASurveyor) => Promise<void>;
-  onClose: () => void;
-}
+// Re-export component props from component.types.ts
+export type {
+  AssignmentManagementProps,
+  SurveyorManagementProps,
+  PolicyDetailsProps,
+  ContactManagementProps,
+  ReportListProps,
+  ReportDetailsProps,
+  AssignmentDetailProps,
+  SurveySubmissionProps,
+  SurveySubmissionData
+} from './component.types';
 
 // Report Types
 export interface UserReport {
@@ -924,7 +903,7 @@ export interface ReportStatus {
   progress?: number;
   estimatedCompletion?: string;
   processingProgress?: number;
-  conflictDetails?: any;
+  conflictDetails?: ConflictDetails;
   completedAt?: string;
   reportId?: string;
 }
@@ -973,6 +952,24 @@ export interface ProcessingMonitorData {
   systemHealth: SystemHealth | null;
   recentActivity: RecentActivity | null;
 }
+
+// Enhanced API Response types with better error handling
+export interface ApiErrorResponse {
+  success: false;
+  error: string;
+  message: string;
+  code?: string;
+  details?: Record<string, unknown>;
+}
+
+export interface ApiSuccessResponse<T = unknown> {
+  success: true;
+  data: T;
+  message?: string;
+  pagination?: PaginationData;
+}
+
+export type ApiResponseUnion<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 // Duplicate interface removed - using the one defined earlier
 

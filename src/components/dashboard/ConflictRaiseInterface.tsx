@@ -70,7 +70,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
         { value: 'high', label: 'High - Urgent issue', color: 'red' }
     ];
 
-    const handleInputChange = (field: string, value: any) => {
+    const handleInputChange = (field: string, value: string) => {
         if (field.startsWith('userContact.')) {
             const contactField = field.split('.')[1];
             setFormData(prev => ({

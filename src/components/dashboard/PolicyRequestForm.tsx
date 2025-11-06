@@ -14,7 +14,15 @@ interface PolicyRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePolicyRequestData) => Promise<void>;
-  property?: any;
+  property?: {
+    _id: string;
+    address: string;
+    propertyType: string;
+    buildingValue: number;
+    yearBuilt: number;
+    squareFootage: number;
+    constructionMaterial: string;
+  };
 }
 
 const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
@@ -147,7 +155,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   const handleInputChange = (
     section: keyof CreatePolicyRequestData,
     field: string,
-    value: any
+    value: string | number | string[]
   ) => {
     setFormData((prev) => ({
       ...prev,

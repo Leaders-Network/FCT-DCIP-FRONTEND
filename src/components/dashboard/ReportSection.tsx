@@ -7,7 +7,14 @@ import EnhancedPaymentDecisionHub from '@/components/user/EnhancedPaymentDecisio
 import { FileText, Clock, CheckCircle, AlertTriangle, CreditCard } from 'lucide-react';
 
 interface ReportSectionProps {
-    userPolicies: any[];
+    userPolicies: Array<{
+        _id: string;
+        status: string;
+        propertyDetails: {
+            address: string;
+            propertyType: string;
+        };
+    }>;
 }
 
 const ReportSection: React.FC<ReportSectionProps> = ({ userPolicies }) => {
@@ -36,9 +43,9 @@ const ReportSection: React.FC<ReportSectionProps> = ({ userPolicies }) => {
                 const reports = response.data.reports || [];
 
                 const stats = {
-                    processing: reports.filter((r: any) => r.status === 'pending').length,
-                    available: reports.filter((r: any) => r.status === 'released').length,
-                    underReview: reports.filter((r: any) => r.status === 'withheld').length,
+                    processing: reports.filter((r) => r.status === 'pending').length,
+                    available: reports.filter((r) => r.status === 'released').length,
+                    underReview: reports.filter((r) => r.status === 'withheld').length,
                     total: reports.length
                 };
 
