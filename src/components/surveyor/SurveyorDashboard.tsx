@@ -3,9 +3,16 @@ import React, { useState, useEffect } from "react";
 import { FileText, Clock, CheckCircle, Users, Calendar, MapPin, ClipboardList, AlertCircle } from "lucide-react";
 import { Assignment } from "@/types/api.types";
 import Link from "next/link";
-import { getSurveyorDashboard, getSurveyorAssignments } from "@/services/api";
+import { getSurveyorDashboard, getSurveyorAssignments, getSurveyorDualAssignments } from "@/services/api";
 
-const StatCard = ({ icon, label, value, color }: { icon: any, label: string, value: string | number, color: string }) => (
+interface StatCardProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string | number;
+  color: string;
+}
+
+const StatCard = ({ icon, label, value, color }: StatCardProps) => (
   <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-w-0 overflow-hidden">
     <div className="flex items-center min-w-0">
       <div className={`p-2 bg-${color}-100 rounded-lg flex-shrink-0`}>
@@ -35,9 +42,10 @@ const SurveyorDashboard = () => {
       setLoading(true);
       setError(null);
       try {
-        const [dashboardResponse, assignmentsResponse] = await Promise.allSettled([
+        const [dashboardResponse, assignmentsResponse, dualAssignmentsResponse] = await Promise.allSettled([
           getSurveyorDashboard(),
-          getSurveyorAssignments("all", 1, 10)
+          getSurveyorAssignments("all", 1, 10),
+          getSurveyorDualAssignments({ status: "all", page: 1, limit: 10 })
         ]);
 
         let fetchedAssignments: Assignment[] = [];
@@ -58,6 +66,38 @@ const SurveyorDashboard = () => {
           }
         }
 
+        // Process dual assignments response (prioritize these)
+        if (dualAssignmentsResponse.status === 'fulfilled' && dualAssignmentsResponse.value?.data?.dualAssignments) {
+          const dualAssignments = dualAssignmentsResponse.value.data.dualAssignments;
+          console.log('Dual assignments fetched:', dualAssignments.length);
+
+          // Convert dual assignments to assignment format
+          fetchedAssignments = dualAssignments.map((dualAssignment: any) => {
+            const currentAssignment = dualAssignment.currentSurveyorInfo?.assignmentId || {};
+
+            return {
+              _id: currentAssignment._id || dualAssignment._id,
+              status: currentAssignment.status || 'assigned',
+              assignedAt: dualAssignment.createdAt,
+              deadline: currentAssignment.deadline,
+              priority: dualAssignment.priority,
+              ammcId: dualAssignment.policyId,
+              location: {
+                address: dualAssignment.policyDetails?.address || 'Address not available',
+                contactPerson: {
+                  name: dualAssignment.policyId?.contactDetails?.fullName || 'Contact not available',
+                  phone: dualAssignment.policyId?.contactDetails?.phoneNumber,
+                  email: dualAssignment.policyId?.contactDetails?.email
+                }
+              },
+              organization: dualAssignment.currentSurveyorOrganization,
+              isDualSurveyor: true,
+              dualAssignmentId: dualAssignment._id
+            };
+          });
+        }
+
+        // Fallback to regular assignments if no dual assignments
         if (fetchedAssignments.length === 0 && assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value?.data?.assignments) {
           console.log("Assignments Response:", assignmentsResponse.value.data);
           fetchedAssignments = assignmentsResponse.value.data.assignments;

@@ -126,7 +126,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
         }
     };
 
-    const handleInputChange = (section: keyof PolicyData, field: string, value: any) => {
+    const handleInputChange = (section: keyof PolicyData, field: string, value: string | number | string[]) => {
         if (!policyData) return;
 
         setPolicyData(prev => ({

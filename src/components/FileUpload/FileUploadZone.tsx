@@ -66,7 +66,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     // Upload files
     acceptedFiles.forEach((file) => {
       const fileId = `${file.name}-${Date.now()}-${fileIdCounter.current++}`;
-      
+
       const uploadPromise = uploadSingleFile(file, fileId);
       uploadPromises.push(uploadPromise);
     });
@@ -133,7 +133,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       } else {
         throw new Error(response.message || 'Upload failed');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setUploadProgress(prev => ({
         ...prev,
         [fileId]: {
@@ -175,7 +175,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
 
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
-    
+
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(extension || '')) {
       return <Image className="w-4 h-4" />;
     } else if (['pdf'].includes(extension || '')) {
@@ -207,10 +207,10 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
         `}
       >
         <input {...getInputProps()} />
-        
+
         <div className="space-y-2">
           <Upload className="w-8 h-8 mx-auto text-gray-400" />
-          
+
           {isDragActive ? (
             <p className="text-blue-600 font-medium">Drop files here...</p>
           ) : (
@@ -246,7 +246,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                     {fileId.split('-')[0]} {/* Extract filename part */}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   {progress.status === 'uploading' && (
                     <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -262,21 +262,20 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                   </span>
                 </div>
               </div>
-              
+
               {/* Progress Bar */}
               <div className="w-full bg-gray-200 rounded-full h-1.5">
                 <div
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    progress.status === 'error' 
-                      ? 'bg-red-500' 
-                      : progress.status === 'success' 
-                      ? 'bg-green-500' 
-                      : 'bg-blue-500'
-                  }`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${progress.status === 'error'
+                      ? 'bg-red-500'
+                      : progress.status === 'success'
+                        ? 'bg-green-500'
+                        : 'bg-blue-500'
+                    }`}
                   style={{ width: `${progress.progress}%` }}
                 />
               </div>
-              
+
               {progress.error && (
                 <p className="text-xs text-red-500 mt-1">{progress.error}</p>
               )}
@@ -291,7 +290,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
           <h4 className="text-sm font-medium text-gray-700">
             Uploaded Files ({uploadedFiles.length})
           </h4>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {uploadedFiles.map((file) => (
               <div
@@ -309,7 +308,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
                   <button

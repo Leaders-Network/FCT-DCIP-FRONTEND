@@ -90,8 +90,8 @@ const DualAssignmentsList: React.FC = () => {
                 limit: 50
             });
 
-            if (response.success) {
-                setAssignments(response.data.dualAssignments || []);
+            if (response.success || response.data) {
+                setAssignments(response.data?.dualAssignments || []);
             } else {
                 throw new Error(response.message || 'Failed to fetch dual assignments');
             }

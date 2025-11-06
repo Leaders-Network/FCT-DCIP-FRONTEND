@@ -52,7 +52,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
             const response = await userReportAPI.getUserReports(pageNum, 10);
 
             if (response.success) {
-                const formattedReports = response.data.reports.map((report: any) => ({
+                const formattedReports = response.data.reports.map((report: UserReport) => ({
                     reportId: report.reportId,
                     policyId: report.policyId,
                     propertyAddress: report.propertyAddress,
@@ -258,7 +258,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                             </div>
                         </div>
 
-                        {/* Conflict indicator */} 
+                        {/* Conflict indicator */}
                         {report.conflictDetected && (
                             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <div className="flex items-center space-x-2">
@@ -276,7 +276,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                             </div>
                         )}
 
-                        {/* Actions */} 
+                        {/* Actions */}
                         <div className="flex items-center justify-between pt-4 border-t">
                             <div className="text-sm text-gray-500">
                                 Report ID: {report.reportId}
@@ -338,7 +338,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                 ))}
             </div>
 
-            {/* Load more button */} 
+            {/* Load more button */}
             {hasMore && (
                 <div className="text-center pt-4">
                     <button

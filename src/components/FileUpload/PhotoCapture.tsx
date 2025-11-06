@@ -40,7 +40,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +60,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
         setCurrentStream(stream);
         setIsCapturing(true);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error accessing camera:', error);
       onError('Unable to access camera. Please check permissions or use file upload instead.');
     }
@@ -161,15 +161,16 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
 
       if (response.success && response.document) {
         onPhotoUploaded(response.document);
-        
+
         // Remove from captured photos
         setCapturedPhotos(prev => prev.filter(p => p.id !== photo.id));
       } else {
         throw new Error(response.message || 'Upload failed');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
-      onError(`Failed to upload photo: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      onError(`Failed to upload photo: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }
@@ -188,10 +189,10 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
         const reader = new FileReader();
         reader.onload = (e) => {
           const dataUrl = e.target?.result as string;
-          
+
           // Create blob from file
           const photoId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          
+
           const newPhoto: CapturedPhoto = {
             id: photoId,
             blob: file,
@@ -233,7 +234,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
                 <Camera className="w-4 h-4" />
                 <span>Start Camera</span>
               </button>
-              
+
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -253,7 +254,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
                 <Camera className="w-5 h-5" />
                 <span>Capture</span>
               </button>
-              
+
               <button
                 onClick={stopCamera}
                 className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
@@ -280,7 +281,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
             playsInline
             className="w-full h-auto max-h-96"
           />
-          
+
           {/* Camera overlay */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-4 border-2 border-white opacity-30 rounded-lg"></div>
@@ -315,7 +316,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
           <h5 className="text-md font-medium text-gray-700">
             Captured Photos ({capturedPhotos.length})
           </h5>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {capturedPhotos.map((photo) => (
               <div key={photo.id} className="relative group">
@@ -327,7 +328,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
                     onClick={() => setSelectedPhoto(photo.id)}
                   />
                 </div>
-                
+
                 {/* Photo Actions */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <div className="flex items-center space-x-2">
@@ -338,7 +339,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
                     >
                       <ZoomIn className="w-4 h-4" />
                     </button>
-                    
+
                     <button
                       onClick={() => uploadPhoto(photo)}
                       disabled={isUploading}
@@ -347,7 +348,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
                     >
                       <Upload className="w-4 h-4" />
                     </button>
-                    
+
                     <button
                       onClick={() => deletePhoto(photo.id)}
                       className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700"
@@ -384,14 +385,14 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
               alt="Photo preview"
               className="max-w-full max-h-full object-contain"
             />
-            
+
             <button
               onClick={() => setSelectedPhoto(null)}
               className="absolute top-4 right-4 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-70"
             >
               <X className="w-6 h-6" />
             </button>
-            
+
             {/* Photo actions in modal */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-4">
               <button
@@ -405,7 +406,7 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
                 <Upload className="w-4 h-4" />
                 <span>Upload</span>
               </button>
-              
+
               <button
                 onClick={() => {
                   deletePhoto(selectedPhoto);
