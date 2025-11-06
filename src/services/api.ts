@@ -14,6 +14,7 @@ import {
   PolicyRequest,
   ApiResponse,
   UserReportsResponse,
+  ReportSummaryResponse,
   ReportDetailsResponse,
   ReportStatusResponse,
   DownloadReportResponse
@@ -1479,12 +1480,7 @@ export const userReportAPI = {
   },
 
   // Get report summary/statistics
-  getReportSummary: async (): Promise<ApiResponse<{
-    totalReports: number;
-    completedReports: number;
-    pendingReports: number;
-    withheldReports: number;
-  }>> => {
+  getReportSummary: async (): Promise<ReportSummaryResponse> => {
     const response = await api.get('/report-release/user/reports/summary');
     return response.data;
   },

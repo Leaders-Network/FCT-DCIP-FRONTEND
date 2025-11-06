@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import ReportSection from "@/components/dashboard/ReportSection";
 import MergedReportsSummary from "@/components/user/MergedReportsSummary";
-import { CreatePolicyRequestData } from "@/types/api.types";
+import { CreatePolicyRequestData, PolicyRequest } from "@/types/api.types";
 import Image from "next/image";
 import { MoreVertical, Download, CreditCard, Eye, FileText } from "lucide-react";
 import {
@@ -60,7 +60,7 @@ const Dashview = () => {
 
         // Calculate collaborators from all policies
         const allPolicyData = allPolicies?.data?.policyRequests || [];
-        const assignedPolicies = allPolicyData.filter((p: any) => p.status === 'assigned' || p.status === 'surveyed');
+        const assignedPolicies = allPolicyData.filter((p: PolicyRequest) => p.status === 'assigned' || p.status === 'surveyed');
         const collaborators = assignedPolicies.length; // Simple count of policies with surveyors
 
         // Update stats
@@ -474,7 +474,7 @@ const Dashview = () => {
 
 // Policy Actions Dropdown Component
 interface PolicyActionsDropdownProps {
-  policy: any;
+  policy: PolicyRequest;
 }
 
 const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy }) => {
@@ -735,7 +735,7 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
 
 // Survey Details Modal Component
 interface SurveyDetailsModalProps {
-  policy: any;
+  policy: PolicyRequest;
   onClose: () => void;
 }
 
@@ -958,10 +958,22 @@ const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose
 
 // Edit Policy Modal Component
 interface EditPolicyModalProps {
-  policy: any;
-  surveyData: any;
+  policy: PolicyRequest;
+  surveyData: SurveyData | null;
   onClose: () => void;
   onUpdate: () => void;
+}
+
+interface SurveyData {
+  surveyDetails?: {
+    propertyCondition?: string;
+    structuralAssessment?: string;
+    riskFactors?: string;
+    recommendations?: string;
+    estimatedValue?: number;
+  };
+  surveyNotes?: string;
+  recommendedAction?: string;
 }
 
 const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, onClose, onUpdate }) => {
@@ -1007,7 +1019,7 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
     }
   };
 
-  const handleInputChange = (section: string, field: string, value: any) => {
+  const handleInputChange = (section: string, field: string, value: string | number | string[]) => {
     setFormData(prev => ({
       ...prev,
       [section]: {
