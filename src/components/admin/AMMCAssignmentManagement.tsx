@@ -27,8 +27,29 @@ interface AMMCSurveyorForAssignment {
     completedSurveys: number;
 }
 
+interface AMMCSurveyorApiResponse {
+    _id: string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    phonenumber?: string;
+    specializations?: string[];
+    experience?: number;
+    rating?: number;
+    completedSurveys?: number;
+    profile?: {
+        availability?: 'available' | 'busy' | 'unavailable';
+        specialization?: string[];
+        experience?: number;
+    };
+    statistics?: {
+        completedSurveys?: number;
+        currentWorkload?: number;
+    };
+}
+
 // Use types from api.types.ts
-import { DualAssignment, AssignmentManagementProps } from '@/types/api.types';
+import { DualAssignment, AssignmentManagementProps, Surveyor } from '@/types/api.types';
 
 interface AMMCAssignmentManagementProps extends AssignmentManagementProps {
     assignment: DualAssignment;
@@ -90,20 +111,22 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
             if (data.success) {
                 // Transform the data to match our interface
-                const ammcSurveyors = (data.data || []).map((surveyor: Surveyor): AMMCSurveyorForAssignment => ({
-                    _id: surveyor.userId._id,
-                    firstname: surveyor.userId.firstname,
-                    lastname: surveyor.userId.lastname,
-                    email: surveyor.userId.email,
-                    phoneNumber: surveyor.userId.phonenumber,
-                    specialization: surveyor.profile?.specialization || ['residential'],
-                    experience: surveyor.profile?.experience || 0,
-                    availability: surveyor.profile?.availability || 'available',
-                    currentAssignments: 0, // This would need to be calculated
-                    maxAssignments: 3,
-                    rating: surveyor.rating || 4.0,
-                    completedSurveys: surveyor.statistics?.completedSurveys || 0
-                }));
+                const ammcSurveyors = (data.data || []).map((surveyor: AMMCSurveyorApiResponse): AMMCSurveyorForAssignment => {
+                    return {
+                        _id: surveyor._id,
+                        firstname: surveyor.firstname || '',
+                        lastname: surveyor.lastname || '',
+                        email: surveyor.email || '',
+                        phoneNumber: surveyor.phonenumber || '',
+                        specialization: surveyor.profile?.specialization || surveyor.specializations || ['residential'],
+                        experience: surveyor.profile?.experience || surveyor.experience || 0,
+                        availability: surveyor.profile?.availability || 'available',
+                        currentAssignments: surveyor.statistics?.currentWorkload || 0,
+                        maxAssignments: 3,
+                        rating: surveyor.rating || 4.0,
+                        completedSurveys: surveyor.statistics?.completedSurveys || surveyor.completedSurveys || 0
+                    };
+                });
 
                 setSurveyors(ammcSurveyors);
             } else {

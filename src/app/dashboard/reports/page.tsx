@@ -39,7 +39,7 @@ export default function UserReportsPage() {
             setLoading(true);
             const response = await userReportAPI.getUserReports(currentPage, 10);
 
-            if (response.success) {
+            if (response.success && response.data) {
                 setReports(response.data.reports);
                 setTotalPages(response.data.pagination.totalPages);
             } else {

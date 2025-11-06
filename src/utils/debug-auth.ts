@@ -96,10 +96,12 @@ export const setSurveyorTestToken = () => {
     console.log('Test surveyor token set');
 };
 
-export const getCurrentAuthType = () => {
+export type AuthType = 'super-admin' | 'nia-admin' | 'admin' | 'surveyor' | 'user' | 'legacy' | 'none' | 'server-side';
+
+export const getCurrentAuthType = (): AuthType => {
     if (typeof window === 'undefined') return 'server-side';
 
-    const tokenTypes = [
+    const tokenTypes: Array<{ type: Exclude<AuthType, 'legacy' | 'none' | 'server-side'>; key: string }> = [
         { type: 'super-admin', key: 'superAdminToken' },
         { type: 'nia-admin', key: 'niaAdminToken' },
         { type: 'admin', key: 'adminToken' },
