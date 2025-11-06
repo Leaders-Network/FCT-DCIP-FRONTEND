@@ -16,7 +16,7 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import NIASurveyorManagement from '@/components/nia-admin/NIASurveyorManagement';
-import { NIASurveyor, NIASurveyorForManagement, NIAUser } from '@/types/api.types';
+import { NIASurveyor, NIASurveyorForManagement } from '@/types/api.types';
 
 // Use types from api.types.ts instead of local interfaces
 type NIASurveyorLocal = NIASurveyor;
