@@ -1,19 +1,21 @@
-import React from "react";
-import DualAssignmentsList from "@/components/surveyor/DualAssignmentsList";
+'use client';
 
-export default function DualAssignmentsPage() {
+import React from 'react';
+import DualAssignmentsList from '@/components/surveyor/DualAssignmentsList';
+
+const DualAssignmentsPage: React.FC = () => {
     return (
-        <div className="h-full overflow-y-auto p-6">
-            <div className="max-w-7xl mx-auto">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Dual Surveyor Assignments</h1>
-                    <p className="text-gray-600 mt-1">
-                        Collaborative assignments with partner surveyors from other organizations
-                    </p>
-                </div>
-
-                <DualAssignmentsList />
+        <div className="container mx-auto px-4 py-8">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Dual Surveyor Assignments</h1>
+                <p className="text-gray-600 mt-2">
+                    Collaborative assignments between AMMC and NIA surveyors
+                </p>
             </div>
+
+            <DualAssignmentsList />
         </div>
     );
-}
+};
+
+export default DualAssignmentsPage;
