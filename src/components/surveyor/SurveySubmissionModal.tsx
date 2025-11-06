@@ -1,22 +1,14 @@
-"use client";
-import React, { useState } from "react";
-import { Upload, FileText, Phone, Calendar, X, Loader2, AlertCircle } from "lucide-react";
-import { PolicyRequest, ContactLogEntry } from "@/types/api.types";
+import React, { useState } from 'react';
+import { X, Upload, Save, FileText, Camera, Phone, Mail, MessageSquare } from 'lucide-react';
+import { SurveySubmissionData, Assignment, PolicyRequest } from '@/types/api.types';
 
 interface SurveySubmissionModalProps {
     policy: PolicyRequest;
-    assignment?: any; // Assignment with dual-surveyor info
+    assignment: Assignment;
     isOpen: boolean;
-    onSubmit: (submission: any) => Promise<void>;
+    onSubmit: (submission: SurveySubmissionData) => Promise<void>;
     onClose: () => void;
 }
-
-const ErrorMessage = ({ message }: { message: string }) => (
-    <div className="bg-red-50 text-red-700 p-3 rounded-md flex items-center">
-        <AlertCircle className="h-5 w-5 mr-2" />
-        <span>{message}</span>
-    </div>
-);
 
 const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     policy,
@@ -25,311 +17,384 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     onSubmit,
     onClose
 }) => {
-    const [surveyNotes, setSurveyNotes] = useState("");
-    const [propertyCondition, setPropertyCondition] = useState("");
-    const [structuralAssessment, setStructuralAssessment] = useState("");
-    const [riskFactors, setRiskFactors] = useState("");
-    const [recommendations, setRecommendations] = useState("");
-    const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
-    const [contactLog, setContactLog] = useState<ContactLogEntry[]>([]);
-    const [recommendedAction, setRecommendedAction] = useState<'approve' | 'reject' | 'request_more_info'>('approve');
-
-    // Expense tracking
-    const [expenses, setExpenses] = useState({
-        transportation: 0,
-        accommodation: 0,
-        meals: 0,
-        equipment: 0,
-        other: 0
+    const [formData, setFormData] = useState<SurveySubmissionData>({
+        surveyNotes: '',
+        recommendedAction: 'approve',
+        contactLog: [],
+        surveyDetails: {
+            propertyCondition: '',
+            structuralAssessment: '',
+            riskFactors: '',
+            recommendations: '',
+            estimatedValue: 0,
+            photos: []
+        }
     });
 
-    const [newContact, setNewContact] = useState<ContactLogEntry>({
-        date: new Date().toISOString().split('T')[0],
-        method: 'phone',
-        notes: '',
-        successful: true
-    });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Get surveyor organization from localStorage or assignment
-    const surveyorOrganization = assignment?.organization ||
-        (typeof window !== 'undefined' ? localStorage.getItem('surveyorOrganization') : null) || 'AMMC';
-
-    // Check if this is a dual-surveyor assignment
-    const isDualSurveyor = assignment?.dualAssignmentId || assignment?.isDualSurveyor;
-    const otherOrganization = surveyorOrganization === 'AMMC' ? 'NIA' : 'AMMC';
-    const otherSurveyorContact = assignment?.dualAssignmentInfo?.otherSurveyor;
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.type !== 'application/pdf') {
-                setError('Please upload a PDF file only.');
-                return;
-            }
-            if (file.size > 10 * 1024 * 1024) { // 10MB
-                setError('File size cannot exceed 10MB.');
-                return;
-            }
-
-            setError(null);
-            setUploadedDocument(file);
-        }
-    };
-
-    const addContactEntry = () => {
-        if (newContact.notes.trim()) {
-            setContactLog([...contactLog, { ...newContact }]);
-            setNewContact({
-                date: new Date().toISOString().split('T')[0],
-                method: 'phone',
-                notes: '',
-                successful: true
-            });
-        }
-    };
-
-    const removeContactEntry = (index: number) => {
-        setContactLog(contactLog.filter((_, i) => i !== index));
-    };
+    const [activeTab, setActiveTab] = useState<'details' | 'contact' | 'photos'>('details');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!uploadedDocument) {
-            setError('Please upload a survey document.');
-            return;
-        }
-
-        if (!surveyNotes.trim()) {
-            setError('Please provide survey notes.');
-            return;
-        }
-
-        if (!propertyCondition.trim()) {
-            setError('Please provide property condition assessment.');
-            return;
-        }
-
-        if (!structuralAssessment.trim()) {
-            setError('Please provide structural assessment.');
-            return;
-        }
-
-        if (!riskFactors.trim()) {
-            setError('Please provide risk factors assessment.');
-            return;
-        }
-
-        if (!recommendations.trim()) {
-            setError('Please provide recommendations.');
-            return;
-        }
-
-        setError(null);
-        setLoading(true);
         try {
-            const submission = {
-                surveyDocument: uploadedDocument,
-                surveyNotes,
-                contactLog,
-                recommendedAction,
-                surveyDetails: {
-                    propertyCondition,
-                    structuralAssessment,
-                    riskFactors,
-                    recommendations
-                },
-                expenses
-            };
-
-            await onSubmit(submission);
+            setLoading(true);
+            await onSubmit(formData);
         } catch (error) {
-            console.error('Failed to submit survey:', error);
-            setError('Failed to submit survey. Please try again.');
+            console.error('Error submitting survey:', error);
+            alert('Failed to submit survey. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
+    const addContactLogEntry = () => {
+        const newEntry = {
+            date: new Date().toISOString().split('T')[0],
+            method: 'phone' as const,
+            notes: '',
+            successful: true
+        };
+
+        setFormData(prev => ({
+            ...prev,
+            contactLog: [...prev.contactLog, newEntry]
+        }));
+    };
+
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full min-h-[50vh] max-h-[95vh] my-4 overflow-hidden flex flex-col">
-                {/* Header Section */}
-                <div className="p-6 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-                    <div className="flex items-start justify-between">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                {/* Header */}
+                <div className="bg-[#028835] text-white p-6">
+                    <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-xl font-semibold text-gray-900">Submit Survey Report</h1>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Policy #{policy._id} • {policy.propertyDetails.propertyType}
+                            <h2 className="text-xl font-bold">Submit Survey Report</h2>
+                            <p className="text-green-100 mt-1">
+                                {policy.propertyDetails.propertyType} - {policy.propertyDetails.address}
                             </p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            className="text-green-100 hover:text-white transition-colors"
                         >
                             <X className="w-6 h-6" />
                         </button>
                     </div>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="flex-1 overflow-y-auto p-6">
-                    {error && <ErrorMessage message={error} />}
+                {/* Tabs */}
+                <div className="border-b border-gray-200">
+                    <nav className="flex space-x-8 px-6">
+                        <button
+                            onClick={() => setActiveTab('details')}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'details'
+                                    ? 'border-[#028835] text-[#028835]'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            <FileText className="w-4 h-4 inline mr-2" />
+                            Survey Details
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('contact')}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'contact'
+                                    ? 'border-[#028835] text-[#028835]'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            <Phone className="w-4 h-4 inline mr-2" />
+                            Contact Log
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('photos')}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'photos'
+                                    ? 'border-[#028835] text-[#028835]'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            <Camera className="w-4 h-4 inline mr-2" />
+                            Photos & Documents
+                        </button>
+                    </nav>
+                </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Survey Document Upload */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-                                <Upload className="w-5 h-5 mr-2" />
-                                Survey Document Upload
-                            </h3>
-                            <div className="space-y-3">
+                {/* Form Content */}
+                <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                    {activeTab === 'details' && (
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Property Condition Assessment *
+                                </label>
+                                <textarea
+                                    value={formData.surveyDetails.propertyCondition}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        surveyDetails: { ...prev.surveyDetails, propertyCondition: e.target.value }
+                                    }))}
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                    placeholder="Describe the overall condition of the property..."
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Structural Assessment *
+                                </label>
+                                <textarea
+                                    value={formData.surveyDetails.structuralAssessment}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        surveyDetails: { ...prev.surveyDetails, structuralAssessment: e.target.value }
+                                    }))}
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                    placeholder="Assess the structural integrity of the building..."
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Risk Factors *
+                                </label>
+                                <textarea
+                                    value={formData.surveyDetails.riskFactors}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        surveyDetails: { ...prev.surveyDetails, riskFactors: e.target.value }
+                                    }))}
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                    placeholder="Identify any risk factors or potential hazards..."
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Recommendations *
+                                </label>
+                                <textarea
+                                    value={formData.surveyDetails.recommendations}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        surveyDetails: { ...prev.surveyDetails, recommendations: e.target.value }
+                                    }))}
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                    placeholder="Provide your professional recommendations..."
+                                    required
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-blue-800 mb-2">
-                                        Upload Survey Report (PDF only)
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Estimated Property Value (₦)
                                     </label>
                                     <input
+                                        type="number"
+                                        min="0"
+                                        value={formData.surveyDetails.estimatedValue || ''}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            surveyDetails: { ...prev.surveyDetails, estimatedValue: parseInt(e.target.value) || 0 }
+                                        }))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                        placeholder="0"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Final Recommendation *
+                                    </label>
+                                    <select
+                                        value={formData.recommendedAction}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            recommendedAction: e.target.value as 'approve' | 'reject' | 'request_more_info'
+                                        }))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                        required
+                                    >
+                                        <option value="approve">Approve Policy</option>
+                                        <option value="reject">Reject Policy</option>
+                                        <option value="request_more_info">Request More Information</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Additional Survey Notes
+                                </label>
+                                <textarea
+                                    value={formData.surveyNotes}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, surveyNotes: e.target.value }))}
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                    placeholder="Any additional notes or observations..."
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'contact' && (
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-lg font-semibold text-gray-900">Contact Log</h3>
+                                <button
+                                    type="button"
+                                    onClick={addContactLogEntry}
+                                    className="px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                    Add Contact Entry
+                                </button>
+                            </div>
+
+                            {formData.contactLog.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">
+                                    <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                                    <p>No contact entries yet. Add your first contact log entry.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {formData.contactLog.map((entry, index) => (
+                                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Date
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        value={entry.date}
+                                                        onChange={(e) => {
+                                                            const updatedLog = [...formData.contactLog];
+                                                            updatedLog[index] = { ...entry, date: e.target.value };
+                                                            setFormData(prev => ({ ...prev, contactLog: updatedLog }));
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Method
+                                                    </label>
+                                                    <select
+                                                        value={entry.method}
+                                                        onChange={(e) => {
+                                                            const updatedLog = [...formData.contactLog];
+                                                            updatedLog[index] = { ...entry, method: e.target.value as 'phone' | 'email' | 'sms' | 'visit' };
+                                                            setFormData(prev => ({ ...prev, contactLog: updatedLog }));
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                                    >
+                                                        <option value="phone">Phone Call</option>
+                                                        <option value="email">Email</option>
+                                                        <option value="sms">SMS</option>
+                                                        <option value="visit">Site Visit</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Successful
+                                                    </label>
+                                                    <select
+                                                        value={entry.successful ? 'yes' : 'no'}
+                                                        onChange={(e) => {
+                                                            const updatedLog = [...formData.contactLog];
+                                                            updatedLog[index] = { ...entry, successful: e.target.value === 'yes' };
+                                                            setFormData(prev => ({ ...prev, contactLog: updatedLog }));
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                                    >
+                                                        <option value="yes">Yes</option>
+                                                        <option value="no">No</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Notes
+                                                </label>
+                                                <textarea
+                                                    value={entry.notes}
+                                                    onChange={(e) => {
+                                                        const updatedLog = [...formData.contactLog];
+                                                        updatedLog[index] = { ...entry, notes: e.target.value };
+                                                        setFormData(prev => ({ ...prev, contactLog: updatedLog }));
+                                                    }}
+                                                    rows={2}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                                                    placeholder="Contact notes..."
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'photos' && (
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Survey Documentation</h3>
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                                    <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                                    <p className="text-gray-600 mb-2">Upload survey photos and documents</p>
+                                    <p className="text-sm text-gray-500">Drag and drop files here, or click to select</p>
+                                    <input
                                         type="file"
-                                        accept=".pdf"
-                                        onChange={handleFileChange}
-                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        required
-                                    />
-                                    {uploadedDocument && (
-                                        <p className="text-sm text-green-600 mt-2 flex items-center">
-                                            <FileText className="w-4 h-4 mr-1" />
-                                            {uploadedDocument.name} ({(uploadedDocument.size / 1024 / 1024).toFixed(2)} MB)
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Survey Notes */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Survey Notes
-                            </label>
-                            <textarea
-                                value={surveyNotes}
-                                onChange={(e) => setSurveyNotes(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                rows={4}
-                                placeholder="Additional notes, observations, or comments about the survey..."
-                                required
-                            />
-                        </div>
-
-                        {/* Survey Details */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Survey Assessment Details</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Property Condition Assessment
-                                    </label>
-                                    <textarea
-                                        value={propertyCondition}
-                                        onChange={(e) => setPropertyCondition(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        rows={3}
-                                        placeholder="Describe the overall condition of the property..."
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Structural Assessment
-                                    </label>
-                                    <textarea
-                                        value={structuralAssessment}
-                                        onChange={(e) => setStructuralAssessment(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        rows={3}
-                                        placeholder="Assess structural integrity, foundation, walls, roof..."
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Risk Factors
-                                    </label>
-                                    <textarea
-                                        value={riskFactors}
-                                        onChange={(e) => setRiskFactors(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        rows={3}
-                                        placeholder="Identify potential risks, hazards, security concerns..."
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Recommendations
-                                    </label>
-                                    <textarea
-                                        value={recommendations}
-                                        onChange={(e) => setRecommendations(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        rows={3}
-                                        placeholder="Provide recommendations for improvements, repairs, or actions..."
-                                        required
+                                        multiple
+                                        accept="image/*,.pdf,.doc,.docx"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            // Handle file upload
+                                            console.log('Files selected:', e.target.files);
+                                        }}
                                     />
                                 </div>
                             </div>
                         </div>
+                    )}
 
-                        {/* Recommended Action */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Recommended Action
-                            </label>
-                            <select
-                                value={recommendedAction}
-                                onChange={(e) => setRecommendedAction(e.target.value as 'approve' | 'reject' | 'request_more_info')}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="approve">Approve Policy</option>
-                                <option value="reject">Reject Policy</option>
-                                <option value="request_more_info">Request More Information</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-
-                {/* Form Actions */}
-                <div className="flex justify-between items-center p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                        Cancel
-                    </button>
-
-                    <button
-                        type="submit"
-                        onClick={handleSubmit}
-                        disabled={loading || !uploadedDocument}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-                    >
-                        {loading ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Submitting...
-                            </>
-                        ) : (
-                            'Submit Survey'
-                        )}
-                    </button>
-                </div>
+                    {/* Footer */}
+                    <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                        >
+                            {loading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <span>Submitting...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    <span>Submit Survey</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );

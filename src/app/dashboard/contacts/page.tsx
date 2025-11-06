@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import ContactManagementHub from '@/components/dashboard/ContactManagementHub';
-import { ContactData, SurveyorContactInfo } from '@/types/api.types';
+import { ContactData, SurveyorContactInfo, ConflictInquiryData } from '@/types/api.types';
 
 const ContactsPage: React.FC = () => {
     const [contactData, setContactData] = useState<ContactData>({
@@ -223,7 +223,7 @@ const ContactsPage: React.FC = () => {
         fetchContactData();
     }, []);
 
-    const handleConflictSubmit = async (conflictData: Record<string, unknown>) => {
+    const handleConflictSubmit = async (conflictData: ConflictInquiryData): Promise<void> => {
         try {
             console.log('Conflict inquiry submitted:', conflictData);
 

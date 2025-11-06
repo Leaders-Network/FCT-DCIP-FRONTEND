@@ -14,7 +14,7 @@ import SurveyorContactsDisplay from './SurveyorContactsDisplay';
 import AdminContactDisplay from './AdminContactDisplay';
 import ConflictRaiseInterface from './ConflictRaiseInterface';
 
-import { SurveyorContactInfo, AdminContactInfo } from '@/types/api.types';
+import { SurveyorContactInfo, AdminContactInfo, ConflictInquiryData } from '@/types/api.types';
 
 interface ContactManagementHubProps {
     // Surveyor data
@@ -36,7 +36,7 @@ interface ContactManagementHubProps {
     defaultExpandedSection?: 'surveyors' | 'admins' | 'both';
 
     // Callbacks
-    onConflictSubmit?: (conflictData: Record<string, unknown>) => void;
+    onConflictSubmit?: (conflictData: ConflictInquiryData) => void;
 }
 
 const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
@@ -66,7 +66,7 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
         }));
     };
 
-    const handleConflictSubmit = (conflictData: Record<string, unknown>) => {
+    const handleConflictSubmit = (conflictData: ConflictInquiryData) => {
         if (onConflictSubmit) {
             onConflictSubmit(conflictData);
         } else {

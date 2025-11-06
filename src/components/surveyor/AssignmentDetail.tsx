@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw } from "lucide-react";
-import { Assignment } from "@/types/api.types";
+import { Assignment, SurveySubmissionData, SurveySubmissionResult } from "@/types/api.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionModal from "./SurveySubmissionModal";
 import SurveySubmissionConfirmation from "./SurveySubmissionConfirmation";
@@ -10,11 +10,54 @@ interface AssignmentDetailProps {
   assignmentId: string;
 }
 
+interface PolicyDetails extends Omit<import('@/types/api.types').PolicyRequest, 'propertyDetails' | 'contactDetails' | 'requestDetails'> {
+  propertyDetails: {
+    propertyType: string;
+    address: string;
+    buildingValue: number;
+    yearBuilt: number;
+    squareFootage: number;
+    constructionMaterial: string;
+  };
+  contactDetails: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    alternatePhone?: string;
+  };
+  requestDetails: {
+    coverageType: string;
+    policyDuration: string;
+    additionalCoverage?: string[];
+    specialRequests?: string;
+  };
+}
+
+interface DualAssignmentInfo {
+  completionStatus: number;
+  assignmentStatus: string;
+  priority: string;
+  otherSurveyor?: {
+    name?: string;
+    fullName?: string;
+    phone?: string;
+    phonenumber?: string;
+    email?: string;
+    licenseNumber?: string;
+    organization?: string;
+  };
+}
+
+interface EnhancedAssignment extends Omit<Assignment, 'ammcId'> {
+  ammcId: PolicyDetails | string;
+  dualAssignmentInfo?: DualAssignmentInfo;
+}
+
 const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => {
-  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [assignment, setAssignment] = useState<EnhancedAssignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSurveyForm, setShowSurveyForm] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState<any>(null);
+  const [submissionResult, setSubmissionResult] = useState<SurveySubmissionResult | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const router = useRouter();
 
@@ -39,7 +82,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     fetchAssignment();
   }, [assignmentId]);
 
-  const handleSurveySubmission = async (submission: any) => {
+  const handleSurveySubmission = async (submission: SurveySubmissionData) => {
     try {
       const { submitSurvey } = await import("@/services/api");
 
@@ -83,12 +126,13 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
   };
 
   const handleContactUser = (method: 'phone' | 'email') => {
-    if (!assignment) return;
+    if (!assignment || typeof assignment.ammcId === 'string') return;
 
+    const policy = assignment.ammcId as PolicyDetails;
     if (method === 'phone') {
-      window.open(`tel:${(assignment.ammcId as any).contactDetails.phoneNumber}`);
+      window.open(`tel:${policy.contactDetails.phoneNumber}`);
     } else if (method === 'email') {
-      window.open(`mailto:${(assignment.ammcId as any).contactDetails.email}`);
+      window.open(`mailto:${policy.contactDetails.email}`);
     }
   };
 
@@ -134,7 +178,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">AMMC Survey Assignment Details</h1>
                 <p className="text-gray-600 mt-1">
-                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.propertyType || 'AMMC Property Survey'}
+                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.propertyType || 'AMMC Property Survey'}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Assignment ID: {assignment._id}
@@ -199,22 +243,22 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.propertyType || 'Property'}
+                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.propertyType || 'Property'}
                 </h3>
                 <p className="text-gray-600 mt-1 flex items-start">
                   <MapPin className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
-                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.address || assignment.location?.address || 'Address not available'}
+                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.address || assignment.location?.address || 'Address not available'}
                 </p>
                 <div className="flex items-center text-sm text-gray-500 mt-2">
                   <Calendar className="h-4 w-4 mr-1" />
-                  Policy Request: {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.createdAt
-                    ? new Date((assignment.ammcId as any).createdAt).toLocaleDateString()
+                  Policy Request: {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.createdAt
+                    ? new Date((assignment.ammcId as PolicyDetails).createdAt).toLocaleDateString()
                     : 'N/A'}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-gray-900">
-                  ₦{typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
+                  ₦{typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
                 </div>
                 <div className="text-sm text-gray-500">Property Value</div>
               </div>
@@ -229,19 +273,19 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Material:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.constructionMaterial || 'N/A'}
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.constructionMaterial || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Year Built:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.yearBuilt || 'N/A'}
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.yearBuilt || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Square Footage:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.squareFootage?.toLocaleString() || 'N/A'} sq ft
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.squareFootage?.toLocaleString() || 'N/A'} sq ft
                   </span>
                 </div>
               </div>
@@ -308,7 +352,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       </div>
 
       {/* Dual Assignment Information */}
-      {(assignment as any).dualAssignmentInfo && (
+      {assignment.dualAssignmentInfo && (
         <div className="bg-indigo-50 rounded-lg border border-indigo-200 shadow-sm">
           <div className="px-6 py-4 border-b border-indigo-200">
             <div className="flex items-center justify-between">
@@ -317,11 +361,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 Dual Surveyor Assignment
               </h2>
               <div className="flex items-center space-x-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(assignment as any).dualAssignmentInfo.completionStatus === 100 ? 'bg-green-100 text-green-800' :
-                  (assignment as any).dualAssignmentInfo.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.dualAssignmentInfo.completionStatus === 100 ? 'bg-green-100 text-green-800' :
+                  assignment.dualAssignmentInfo.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                  {(assignment as any).dualAssignmentInfo.completionStatus}% Complete
+                  {assignment.dualAssignmentInfo.completionStatus}% Complete
                 </span>
                 <button
                   onClick={async () => {
@@ -355,17 +399,17 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               <div className="mb-4">
                 <div className="flex justify-between text-sm text-indigo-700 mb-2">
                   <span className="font-medium">Overall Progress</span>
-                  <span className="font-semibold">{(assignment as any).dualAssignmentInfo.completionStatus}% Complete</span>
+                  <span className="font-semibold">{assignment.dualAssignmentInfo.completionStatus}% Complete</span>
                 </div>
                 <div className="w-full bg-indigo-200 rounded-full h-3">
                   <div
-                    className={`h-3 rounded-full transition-all duration-500 ${(assignment as any).dualAssignmentInfo.completionStatus === 100
+                    className={`h-3 rounded-full transition-all duration-500 ${assignment.dualAssignmentInfo.completionStatus === 100
                       ? 'bg-green-500'
-                      : (assignment as any).dualAssignmentInfo.completionStatus === 50
+                      : assignment.dualAssignmentInfo.completionStatus === 50
                         ? 'bg-yellow-500'
                         : 'bg-indigo-400'
                       }`}
-                    style={{ width: `${(assignment as any).dualAssignmentInfo.completionStatus}%` }}
+                    style={{ width: `${assignment.dualAssignmentInfo.completionStatus}%` }}
                   ></div>
                 </div>
                 <div className="flex justify-between text-xs text-indigo-600 mt-1">
@@ -378,18 +422,18 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-indigo-600 font-medium">Status:</span>
-                  <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.assignmentStatus.replace('_', ' ').toUpperCase()}</p>
+                  <p className="text-indigo-800">{assignment.dualAssignmentInfo.assignmentStatus.replace('_', ' ').toUpperCase()}</p>
                 </div>
                 <div>
                   <span className="text-indigo-600 font-medium">Priority:</span>
-                  <p className="text-indigo-800">{(assignment as any).dualAssignmentInfo.priority.toUpperCase()}</p>
+                  <p className="text-indigo-800">{assignment.dualAssignmentInfo.priority.toUpperCase()}</p>
                 </div>
                 <div>
                   <span className="text-indigo-600 font-medium">Completion:</span>
                   <p className="text-indigo-800">
-                    {(assignment as any).dualAssignmentInfo.completionStatus === 100
+                    {assignment.dualAssignmentInfo.completionStatus === 100
                       ? 'Both reports submitted'
-                      : (assignment as any).dualAssignmentInfo.completionStatus === 50
+                      : assignment.dualAssignmentInfo.completionStatus === 50
                         ? 'One report submitted'
                         : 'No reports submitted'
                     }
@@ -398,10 +442,10 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
             </div>
 
-            {(assignment as any).dualAssignmentInfo.otherSurveyor && (
+            {assignment.dualAssignmentInfo.otherSurveyor && (
               <div className="bg-white rounded-lg border border-indigo-100 p-4">
                 <h3 className="text-sm font-medium text-indigo-900 mb-3">
-                  Partner Surveyor ({(assignment as any).dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'})
+                  Partner Surveyor ({assignment.dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'})
                 </h3>
 
 
@@ -411,12 +455,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       <User className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.name ||
-                            (assignment as any).dualAssignmentInfo.otherSurveyor?.fullName ||
+                          {assignment.dualAssignmentInfo.otherSurveyor?.name ||
+                            assignment.dualAssignmentInfo.otherSurveyor?.fullName ||
                             'Name not available'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'} Surveyor
+                          {assignment.dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'} Surveyor
                         </p>
                       </div>
                     </div>
@@ -425,8 +469,8 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       <Phone className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-gray-900">
-                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.phone ||
-                            (assignment as any).dualAssignmentInfo.otherSurveyor?.phonenumber ||
+                          {assignment.dualAssignmentInfo.otherSurveyor?.phone ||
+                            assignment.dualAssignmentInfo.otherSurveyor?.phonenumber ||
                             'Phone not available'}
                         </p>
                         <p className="text-xs text-gray-500">Primary Contact</p>
@@ -437,18 +481,18 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       <Mail className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-gray-900">
-                          {(assignment as any).dualAssignmentInfo.otherSurveyor?.email || 'Email not available'}
+                          {assignment.dualAssignmentInfo.otherSurveyor?.email || 'Email not available'}
                         </p>
                         <p className="text-xs text-gray-500">Email Address</p>
                       </div>
                     </div>
 
-                    {(assignment as any).dualAssignmentInfo.otherSurveyor?.licenseNumber && (
+                    {assignment.dualAssignmentInfo.otherSurveyor?.licenseNumber && (
                       <div className="flex items-center">
                         <FileText className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
                         <div>
                           <p className="text-sm text-gray-900">
-                            {(assignment as any).dualAssignmentInfo.otherSurveyor.licenseNumber}
+                            {assignment.dualAssignmentInfo.otherSurveyor.licenseNumber}
                           </p>
                           <p className="text-xs text-gray-500">License Number</p>
                         </div>
@@ -461,8 +505,8 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                     <div className="space-y-2">
                       <button
                         onClick={() => {
-                          const phone = (assignment as any).dualAssignmentInfo.otherSurveyor?.phone ||
-                            (assignment as any).dualAssignmentInfo.otherSurveyor?.phonenumber;
+                          const phone = assignment.dualAssignmentInfo?.otherSurveyor?.phone ||
+                            assignment.dualAssignmentInfo?.otherSurveyor?.phonenumber;
                           if (phone) {
                             window.open(`tel:${phone}`);
                           } else {
@@ -476,7 +520,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       </button>
                       <button
                         onClick={() => {
-                          const email = (assignment as any).dualAssignmentInfo.otherSurveyor?.email;
+                          const email = assignment.dualAssignmentInfo?.otherSurveyor?.email;
                           if (email) {
                             window.open(`mailto:${email}`);
                           } else {
@@ -523,7 +567,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                   <User className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                   <div>
                     <p className="text-base font-medium text-gray-900">
-                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.fullName || 'N/A'}
+                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.contactDetails?.fullName || 'N/A'}
                     </p>
                     <p className="text-sm text-gray-500">Property Builder/Contractor</p>
                   </div>
@@ -533,11 +577,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                   <Phone className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-base text-gray-900">
-                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.phoneNumber || 'N/A'}
+                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.contactDetails?.phoneNumber || 'N/A'}
                     </p>
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.alternatePhone && (
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.contactDetails?.alternatePhone && (
                       <p className="text-sm text-gray-600">
-                        Alt: {(assignment.ammcId as any).contactDetails.alternatePhone}
+                        Alt: {(assignment.ammcId as PolicyDetails).contactDetails.alternatePhone}
                       </p>
                     )}
                   </div>
@@ -547,7 +591,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                   <Mail className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                   <div>
                     <p className="text-base text-gray-900">
-                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.contactDetails?.email || 'N/A'}
+                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.contactDetails?.email || 'N/A'}
                     </p>
                     <p className="text-sm text-gray-500">Primary Email</p>
                   </div>
@@ -627,19 +671,19 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Coverage Type:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.requestDetails?.coverageType || 'N/A'}
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.coverageType || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Policy Duration:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.requestDetails?.policyDuration || 'N/A'}
+                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.policyDuration || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Property Value:</span>
                   <span className="font-medium text-gray-900">
-                    ₦{typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
+                    ₦{typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
                   </span>
                 </div>
               </div>
@@ -657,11 +701,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             </div>
           </div>
 
-          {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.requestDetails?.additionalCoverage && (assignment.ammcId as any).requestDetails.additionalCoverage.length > 0 && (
+          {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.additionalCoverage && (assignment.ammcId as PolicyDetails).requestDetails.additionalCoverage!.length > 0 && (
             <div className="mb-4">
               <h4 className="text-sm font-medium text-gray-500 mb-2">Additional Coverage Requested</h4>
               <div className="flex flex-wrap gap-2">
-                {(assignment.ammcId as any).requestDetails.additionalCoverage.map((coverage: any, index: number) => (
+                {(assignment.ammcId as PolicyDetails).requestDetails.additionalCoverage!.map((coverage: string, index: number) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
@@ -673,12 +717,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             </div>
           )}
 
-          {typeof assignment.ammcId === 'object' && (assignment.ammcId as any)?.requestDetails?.specialRequests && (
+          {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.specialRequests && (
             <div className="mb-4">
               <h4 className="text-sm font-medium text-gray-500 mb-2">Special Requests from Client</h4>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm text-amber-800">
-                  {(assignment.ammcId as any).requestDetails.specialRequests}
+                  {(assignment.ammcId as PolicyDetails).requestDetails.specialRequests}
                 </p>
               </div>
             </div>
@@ -809,8 +853,8 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       {/* Survey Submission Modal */}
       {assignment && typeof assignment.ammcId === 'object' && (
         <SurveySubmissionModal
-          policy={assignment.ammcId}
-          assignment={assignment}
+          policy={assignment.ammcId as PolicyDetails}
+          assignment={assignment as Assignment}
           isOpen={showSurveyForm}
           onSubmit={handleSurveySubmission}
           onClose={() => setShowSurveyForm(false)}
@@ -821,7 +865,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       {submissionResult && showConfirmation && assignment && typeof assignment.ammcId === 'object' && (
         <SurveySubmissionConfirmation
           submissionResult={submissionResult}
-          policy={assignment.ammcId}
+          policy={assignment.ammcId as PolicyDetails}
           onClose={() => {
             setShowConfirmation(false);
             setSubmissionResult(null);
