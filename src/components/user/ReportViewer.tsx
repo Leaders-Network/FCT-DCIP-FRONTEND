@@ -307,7 +307,15 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                         <p className="text-sm text-blue-700">Abuja Municipal Area Council</p>
                                     </div>
                                 </div>
-                                <button className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200">
+                                <button
+                                    onClick={() => {
+                                        if (mergedReport.individualReports?.ammcReportId) {
+                                            window.open(`/api/v1/report-release/download/ammc/${mergedReport.individualReports.ammcReportId}`, '_blank');
+                                        }
+                                    }}
+                                    disabled={!mergedReport.individualReports?.ammcReportId}
+                                    className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 disabled:opacity-50"
+                                >
                                     <Download className="w-4 h-4" />
                                     <span>Download</span>
                                 </button>
@@ -318,64 +326,104 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                             <div>
                                 <div className="flex items-center space-x-2 mb-2">
                                     <User className="w-4 h-4 text-gray-500" />
-                                    <span className="font-medium">{mergedReport.reportSections.ammc.surveyorName}</span>
+                                    <span className="font-medium">
+                                        {mergedReport.reportSections?.ammc?.surveyorName ||
+                                            mergedReport.surveyorContacts?.ammc?.name ||
+                                            'AMMC Surveyor'}
+                                    </span>
                                 </div>
-                                <p className="text-sm text-gray-600">License: {mergedReport.reportSections.ammc.surveyorLicense}</p>
                                 <p className="text-sm text-gray-600">
-                                    Submitted: {new Date(mergedReport.reportSections.ammc.submissionDate).toLocaleDateString()}
+                                    License: {mergedReport.reportSections?.ammc?.surveyorLicense ||
+                                        mergedReport.surveyorContacts?.ammc?.licenseNumber ||
+                                        'N/A'}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    Submitted: {mergedReport.reportSections?.ammc?.submissionDate ?
+                                        new Date(mergedReport.reportSections.ammc.submissionDate).toLocaleDateString() :
+                                        mergedReport.individualReports?.ammcSubmission?.submittedAt ?
+                                            new Date(mergedReport.individualReports.ammcSubmission.submittedAt).toLocaleDateString() :
+                                            'N/A'}
                                 </p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium mb-2">Property Condition</h4>
-                                <p className="text-sm text-gray-700">{mergedReport.reportSections.ammc.propertyCondition}</p>
+                                <p className="text-sm text-gray-700">
+                                    {mergedReport.reportSections?.ammc?.propertyCondition ||
+                                        mergedReport.individualReports?.ammcSubmission?.surveyData?.propertyCondition ||
+                                        'Assessment data not available'}
+                                </p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium mb-2">Structural Assessment</h4>
-                                <p className="text-sm text-gray-700">{mergedReport.reportSections.ammc.structuralAssessment}</p>
+                                <p className="text-sm text-gray-700">
+                                    {mergedReport.reportSections?.ammc?.structuralAssessment ||
+                                        mergedReport.individualReports?.ammcSubmission?.surveyData?.structuralAssessment ||
+                                        'Assessment data not available'}
+                                </p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium mb-2">Risk Factors</h4>
-                                <p className="text-sm text-gray-700">{mergedReport.reportSections.ammc.riskFactors}</p>
+                                <p className="text-sm text-gray-700">
+                                    {mergedReport.reportSections?.ammc?.riskFactors ||
+                                        mergedReport.individualReports?.ammcSubmission?.surveyData?.riskFactors ||
+                                        'Assessment data not available'}
+                                </p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium mb-2">Recommendations</h4>
-                                <p className="text-sm text-gray-700">{mergedReport.reportSections.ammc.recommendations}</p>
+                                <p className="text-sm text-gray-700">
+                                    {mergedReport.reportSections?.ammc?.recommendations ||
+                                        mergedReport.individualReports?.ammcSubmission?.surveyorNotes ||
+                                        'Recommendations not available'}
+                                </p>
                             </div>
 
                             <div className="bg-gray-50 p-4 rounded">
                                 <h4 className="font-medium mb-2">Estimated Value</h4>
                                 <p className="text-lg font-semibold text-green-600">
-                                    {formatCurrency(mergedReport.reportSections.ammc.estimatedValue)}
+                                    {formatCurrency(
+                                        mergedReport.reportSections?.ammc?.estimatedValue ||
+                                        mergedReport.individualReports?.ammcSubmission?.surveyData?.estimatedValue ||
+                                        0
+                                    )}
                                 </p>
                             </div>
 
-                            {mergedReport.reportSections.ammc.photos.length > 0 && (
-                                <div>
-                                    <h4 className="font-medium mb-2">Photos ({mergedReport.reportSections.ammc.photos.length})</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {mergedReport.reportSections.ammc.photos.slice(0, 4).map((photo, index) => (
-                                            <div key={index} className="relative">
-                                                <img
-                                                    src={photo.url}
-                                                    alt={photo.description}
-                                                    className="w-full h-24 object-cover rounded"
-                                                />
-                                                {index === 3 && mergedReport.reportSections.ammc.photos.length > 4 && (
-                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
-                                                        <span className="text-white text-sm">
-                                                            +{mergedReport.reportSections.ammc.photos.length - 4} more
-                                                        </span>
+                            {(mergedReport.reportSections?.ammc?.photos?.length > 0 ||
+                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length > 0) && (
+                                    <div>
+                                        <h4 className="font-medium mb-2">
+                                            Photos ({mergedReport.reportSections?.ammc?.photos?.length ||
+                                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0})
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {(mergedReport.reportSections?.ammc?.photos ||
+                                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos || [])
+                                                .slice(0, 4).map((photo, index) => (
+                                                    <div key={index} className="relative">
+                                                        <img
+                                                            src={photo.url || photo}
+                                                            alt={photo.description || `AMMC Photo ${index + 1}`}
+                                                            className="w-full h-24 object-cover rounded"
+                                                        />
+                                                        {index === 3 && (mergedReport.reportSections?.ammc?.photos?.length ||
+                                                            mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 4 && (
+                                                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
+                                                                    <span className="text-white text-sm">
+                                                                        +{(mergedReport.reportSections?.ammc?.photos?.length ||
+                                                                            mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) - 4} more
+                                                                    </span>
+                                                                </div>
+                                                            )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                                ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
                         </div>
                     </div>
 
@@ -390,7 +438,15 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                         <p className="text-sm text-green-700">Nigerian Institution of Architects</p>
                                     </div>
                                 </div>
-                                <button className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200">
+                                <button
+                                    onClick={() => {
+                                        if (mergedReport.individualReports?.niaReportId) {
+                                            window.open(`/api/v1/report-release/download/nia/${mergedReport.individualReports.niaReportId}`, '_blank');
+                                        }
+                                    }}
+                                    disabled={!mergedReport.individualReports?.niaReportId}
+                                    className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 disabled:opacity-50"
+                                >
                                     <Download className="w-4 h-4" />
                                     <span>Download</span>
                                 </button>
@@ -401,64 +457,104 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                             <div>
                                 <div className="flex items-center space-x-2 mb-2">
                                     <User className="w-4 h-4 text-gray-500" />
-                                    <span className="font-medium">{mergedReport.reportSections.nia.surveyorName}</span>
+                                    <span className="font-medium">
+                                        {mergedReport.reportSections?.nia?.surveyorName ||
+                                            mergedReport.surveyorContacts?.nia?.name ||
+                                            'NIA Surveyor'}
+                                    </span>
                                 </div>
-                                <p className="text-sm text-gray-600">License: {mergedReport.reportSections.nia.surveyorLicense}</p>
                                 <p className="text-sm text-gray-600">
-                                    Submitted: {new Date(mergedReport.reportSections.nia.submissionDate).toLocaleDateString()}
+                                    License: {mergedReport.reportSections?.nia?.surveyorLicense ||
+                                        mergedReport.surveyorContacts?.nia?.licenseNumber ||
+                                        'N/A'}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    Submitted: {mergedReport.reportSections?.nia?.submissionDate ?
+                                        new Date(mergedReport.reportSections.nia.submissionDate).toLocaleDateString() :
+                                        mergedReport.individualReports?.niaSubmission?.submittedAt ?
+                                            new Date(mergedReport.individualReports.niaSubmission.submittedAt).toLocaleDateString() :
+                                            'N/A'}
                                 </p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium mb-2">Property Condition</h4>
-                                <p className="text-sm text-gray-700">{mergedReport.reportSections.nia.propertyCondition}</p>
+                                <p className="text-sm text-gray-700">
+                                    {mergedReport.reportSections?.nia?.propertyCondition ||
+                                        mergedReport.individualReports?.niaSubmission?.surveyData?.propertyCondition ||
+                                        'Assessment data not available'}
+                                </p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium mb-2">Structural Assessment</h4>
-                                <p className="text-sm text-gray-700">{mergedReport.reportSections.nia.structuralAssessment}</p>
+                                <p className="text-sm text-gray-700">
+                                    {mergedReport.reportSections?.nia?.structuralAssessment ||
+                                        mergedReport.individualReports?.niaSubmission?.surveyData?.structuralAssessment ||
+                                        'Assessment data not available'}
+                                </p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium mb-2">Risk Factors</h4>
-                                <p className="text-sm text-gray-700">{mergedReport.reportSections.nia.riskFactors}</p>
+                                <p className="text-sm text-gray-700">
+                                    {mergedReport.reportSections?.nia?.riskFactors ||
+                                        mergedReport.individualReports?.niaSubmission?.surveyData?.riskFactors ||
+                                        'Assessment data not available'}
+                                </p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium mb-2">Recommendations</h4>
-                                <p className="text-sm text-gray-700">{mergedReport.reportSections.nia.recommendations}</p>
+                                <p className="text-sm text-gray-700">
+                                    {mergedReport.reportSections?.nia?.recommendations ||
+                                        mergedReport.individualReports?.niaSubmission?.surveyorNotes ||
+                                        'Recommendations not available'}
+                                </p>
                             </div>
 
                             <div className="bg-gray-50 p-4 rounded">
                                 <h4 className="font-medium mb-2">Estimated Value</h4>
                                 <p className="text-lg font-semibold text-green-600">
-                                    {formatCurrency(mergedReport.reportSections.nia.estimatedValue)}
+                                    {formatCurrency(
+                                        mergedReport.reportSections?.nia?.estimatedValue ||
+                                        mergedReport.individualReports?.niaSubmission?.surveyData?.estimatedValue ||
+                                        0
+                                    )}
                                 </p>
                             </div>
 
-                            {mergedReport.reportSections.nia.photos.length > 0 && (
-                                <div>
-                                    <h4 className="font-medium mb-2">Photos ({mergedReport.reportSections.nia.photos.length})</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {mergedReport.reportSections.nia.photos.slice(0, 4).map((photo, index) => (
-                                            <div key={index} className="relative">
-                                                <img
-                                                    src={photo.url}
-                                                    alt={photo.description}
-                                                    className="w-full h-24 object-cover rounded"
-                                                />
-                                                {index === 3 && mergedReport.reportSections.nia.photos.length > 4 && (
-                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
-                                                        <span className="text-white text-sm">
-                                                            +{mergedReport.reportSections.nia.photos.length - 4} more
-                                                        </span>
+                            {(mergedReport.reportSections?.nia?.photos?.length > 0 ||
+                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length > 0) && (
+                                    <div>
+                                        <h4 className="font-medium mb-2">
+                                            Photos ({mergedReport.reportSections?.nia?.photos?.length ||
+                                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0})
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {(mergedReport.reportSections?.nia?.photos ||
+                                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos || [])
+                                                .slice(0, 4).map((photo, index) => (
+                                                    <div key={index} className="relative">
+                                                        <img
+                                                            src={photo.url || photo}
+                                                            alt={photo.description || `NIA Photo ${index + 1}`}
+                                                            className="w-full h-24 object-cover rounded"
+                                                        />
+                                                        {index === 3 && (mergedReport.reportSections?.nia?.photos?.length ||
+                                                            mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 4 && (
+                                                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
+                                                                    <span className="text-white text-sm">
+                                                                        +{(mergedReport.reportSections?.nia?.photos?.length ||
+                                                                            mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) - 4} more
+                                                                    </span>
+                                                                </div>
+                                                            )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                                ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
                         </div>
                     </div>
                 </div>
