@@ -209,7 +209,7 @@ export const hasAccessLevel = (requiredLevel: 'user' | 'admin' | 'super-admin' |
 };
 
 // Decode JWT token to get user info (client-side only for display purposes)
-export const decodeToken = (token?: string): any => {
+export const decodeToken = (token?: string): Record<string, unknown> | null => {
     if (typeof window === 'undefined') return null;
 
     const tokenToUse = token || getAuthToken();

@@ -10,6 +10,10 @@ import {
   EnhancedSurveySubmission,
   SurveyorFilters,
   DualAssignmentFilters,
+  ContactLogEntry,
+  PolicyRequest,
+  ApiResponse,
+  PaginationData
 } from "../types/api.types";
 
 
@@ -36,10 +40,32 @@ api.interceptors.request.use(
     // Ensure API key is always present (lowercase to match validation middleware)
     config.headers['apikey'] = API_KEY;
 
-    // Check if this is a NIA admin request
-    const isNIAAdminRequest = config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor');
-    const token = getAuthToken(isNIAAdminRequest ? 'nia-admin' : undefined);
+    // Determine the appropriate token type based on the request URL
+    let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor' | undefined;
+
+    if (config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor')) {
+      tokenType = 'nia-admin';
+    } else if (config.url?.includes('/surveyor') || config.url?.includes('/dual-assignment')) {
+      tokenType = 'surveyor';
+    } else if (config.url?.includes('/admin') && !config.url?.includes('/nia-admin')) {
+      // AMMC admin endpoints (exclude nia-admin)
+      tokenType = 'admin';
+    } else if (config.url?.includes('/super-admin')) {
+      tokenType = 'super-admin';
+    } else if (config.url?.includes('/user') ||
+      config.url?.includes('/policy') ||
+      config.url?.includes('/payment') ||
+      config.url?.includes('/auth/login') ||
+      config.url?.includes('/auth/register')) {
+      // User-specific endpoints
+      tokenType = 'user';
+    }
+    // If no specific type detected, getAuthToken will use fallback priority
+
+    const token = getAuthToken(tokenType);
     console.log("Auth Token:", token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
+    console.log("Token Type:", tokenType || 'auto-detect');
+
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -504,7 +530,7 @@ export const createSurveyorByAdmin = async (surveyorData: {
   }
 };
 
-export const updateSurveyorByAdmin = async (surveyorId: string, surveyorData: any) => {
+export const updateSurveyorByAdmin = async (surveyorId: string, surveyorData: Partial<Surveyor>) => {
   try {
     const response = await api.patch(`/admin/surveyor/${surveyorId}`, surveyorData);
     return response.data;
@@ -712,7 +738,7 @@ export const createSurveySubmission = async (submissionData: {
     estimatedValue?: number;
   };
   surveyNotes: string;
-  contactLog: any[];
+  contactLog: ContactLogEntry[];
   recommendedAction: 'approve' | 'reject' | 'request_more_info';
 }) => {
   try {
@@ -917,7 +943,7 @@ export const deleteProperty = async (propertyId: string) => {
   }
 };
 
-export const updatePolicyRequest = async (ammcId: string, policyData: any) => {
+export const updatePolicyRequest = async (ammcId: string, policyData: Partial<PolicyRequest>) => {
   try {
     const response = await api.patch(`/policy/${ammcId}`, policyData);
     return response.data;
@@ -1238,11 +1264,11 @@ export const adminApi = {
 
 };
 
-export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
+export const withErrorHandling = <T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   onError?: (error: Error) => void
 ): T => {
-  return (async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+  return (async (...args: Parameters<T>) => {
     try {
       return await fn(...args);
     } catch (error) {
@@ -1259,12 +1285,7 @@ export const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(
 };
 
 // Additional API utility functions for new services
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
+// ApiResponse interface is now imported from api.types.ts
 
 /**
  * Make an authenticated API request using the existing axios instance
@@ -1314,8 +1335,11 @@ export const apiRequest = async <T = unknown>(
           message?: string;
           error?: string;
         };
+        status?: number;
+        statusText?: string;
       };
       message?: string;
+      code?: string;
     }
 
     const errorObj = error as ErrorResponse;

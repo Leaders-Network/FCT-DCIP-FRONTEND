@@ -77,7 +77,7 @@ const SubmissionsList = () => {
     }
   };
 
-  const handleDownloadReport = async (documentInfo: any) => {
+  const handleDownloadReport = async (documentInfo: string | { publicId: string; name: string }) => {
     try {
       // If documentInfo contains publicId (from Cloudinary), use backend download service
       if (typeof documentInfo === 'object' && documentInfo.publicId) {

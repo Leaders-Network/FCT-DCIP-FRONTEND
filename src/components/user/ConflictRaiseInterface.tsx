@@ -114,7 +114,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
         }
     };
 
-    const handleInputChange = (field: keyof ConflictInquiry, value: any) => {
+    const handleInputChange = (field: keyof ConflictInquiry, value: string) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
