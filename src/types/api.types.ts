@@ -351,56 +351,100 @@ export interface DocumentFile {
   };
 }
 
+// Survey Submission Types
+export interface SurveyPhoto {
+  url: string;
+  publicId: string;
+  description: string;
+  timestamp: string;
+}
+
+export interface SurveyDetails {
+  propertyCondition: string;
+  structuralAssessment: string;
+  riskFactors: string;
+  recommendations: string;
+  estimatedValue?: number;
+  photos: SurveyPhoto[];
+}
+
+export interface ContactLogEntry {
+  date: string;
+  method: 'phone' | 'email' | 'sms' | 'visit';
+  notes: string;
+  successful: boolean;
+  duration?: number;
+}
+
+export interface QualityCheck {
+  completeness: number;
+  accuracy: number;
+  timeliness: number;
+  overallScore: number;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  comments?: string;
+}
+
+export interface RevisionHistoryEntry {
+  version: number;
+  changes: string;
+  revisedBy: string;
+  revisedAt: string;
+}
+
+export interface SurveySubmissionData {
+  surveyNotes: string;
+  recommendedAction: 'approve' | 'reject' | 'request_more_info';
+  contactLog: ContactLogEntry[];
+  surveyDetails: SurveyDetails;
+  expenses?: {
+    transportation: number;
+    accommodation: number;
+    meals: number;
+    equipment: number;
+    other: number;
+    receipts: Array<{
+      description: string;
+      amount: number;
+      receiptUrl: string;
+      category: string;
+    }>;
+    totalExpenses: number;
+  };
+  surveyDocument?: File;
+}
+
+export interface SurveySubmissionResult {
+  submission: EnhancedSurveySubmission;
+  dualAssignmentInfo?: {
+    completionStatus: number;
+    assignmentStatus: string;
+    isDualSurveyor: boolean;
+  };
+  otherSurveyorNotified?: boolean;
+  organization: string;
+}
+
 // Enhanced Survey Submission Interface
 export interface EnhancedSurveySubmission {
   _id: string;
   ammcId: string;
   surveyorId: string;
   assignmentId?: string;
-  surveyDetails: {
-    propertyCondition: string;
-    structuralAssessment: string;
-    riskFactors: string;
-    recommendations: string;
-    estimatedValue?: number;
-    photos: Array<{
-      url: string;
-      publicId: string;
-      description: string;
-      timestamp: string;
-    }>;
-  };
+  surveyDetails: SurveyDetails;
   documents: DocumentFile[];
   surveyDocument?: DocumentFile; // Legacy field with proper type
   surveyNotes: string;
-  contactLog: Array<{
-    date: string;
-    method: 'phone' | 'email' | 'sms' | 'visit';
-    notes: string;
-    successful: boolean;
-    duration?: number;
-  }>;
+  contactLog: ContactLogEntry[];
   recommendedAction: 'approve' | 'reject' | 'request_more_info';
-  qualityCheck?: {
-    completeness: number;
-    accuracy: number;
-    timeliness: number;
-    overallScore: number;
-    reviewedBy?: string;
-    reviewedAt?: string;
-    comments?: string;
-  };
+  qualityCheck?: QualityCheck;
   status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'revision_required';
   submissionTime: string;
   reviewedBy?: string;
   reviewedAt?: string;
   reviewNotes?: string;
-  revisionHistory: Array<{
-    version: number;
-    changes: string;
-    revisedBy: string;
-    revisedAt: string;
-  }>;
+  revisionHistory: RevisionHistoryEntry[];
   createdAt: string;
   updatedAt: string;
 }
@@ -454,11 +498,21 @@ export interface ContactData {
   hasConflicts: boolean;
 }
 
+export interface ConflictInquiryData {
+  policyId?: string;
+  mergedReportId?: string;
+  conflictType: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  contactPreference: 'email' | 'phone';
+  additionalInfo?: string;
+}
+
 export interface SurveyorContactInfo {
   name: string;
   email: string;
   phone: string;
-  organization: 'AMMC' | 'NIA';
+  organization?: 'AMMC' | 'NIA';
   licenseNumber?: string;
   specialization?: string[];
   experience?: number;
@@ -470,7 +524,7 @@ export interface AdminContactInfo {
   name: string;
   email: string;
   phone: string;
-  organization: 'AMMC' | 'NIA';
+  organization?: 'AMMC' | 'NIA';
   title?: string;
   department?: string;
   officeHours?: string;
@@ -799,6 +853,44 @@ export interface UserReport {
   createdAt: string;
   downloadCount: number;
   canDownload: boolean;
+  isMerged?: boolean;
+  finalRecommendation?: 'approve' | 'reject' | 'request_more_info';
+  paymentEnabled?: boolean;
+  conflictDetected?: boolean;
+}
+
+export interface ReportSectionData {
+  propertyCondition: string;
+  structuralAssessment: string;
+  riskFactors: string;
+  recommendations: string;
+  estimatedValue: number;
+  surveyorName: string;
+  surveyorLicense: string;
+  submissionDate: string;
+  photos: Array<{
+    url: string;
+    description: string;
+    timestamp: string;
+  }>;
+}
+
+export interface ConflictDetails {
+  conflictType: string;
+  conflictSeverity: 'low' | 'medium' | 'high' | 'critical';
+  ammcRecommendation: string;
+  niaRecommendation: string;
+  ammcValue?: number;
+  niaValue?: number;
+  discrepancyPercentage?: number;
+}
+
+export interface MergingMetadata {
+  mergedBy: string;
+  mergedAt: string;
+  mergingAlgorithmVersion: string;
+  processingTime: number;
+  qualityScore: number;
 }
 
 export interface ReportDetails {
@@ -807,61 +899,19 @@ export interface ReportDetails {
   propertyDetails: {
     address: string;
     propertyType: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   status: 'pending' | 'released' | 'withheld';
   finalRecommendation: 'approve' | 'reject' | 'request_more_info';
   paymentEnabled: boolean;
   conflictDetected: boolean;
   conflictResolved: boolean;
-  conflictDetails?: {
-    conflictType: string;
-    conflictSeverity: 'low' | 'medium' | 'high' | 'critical';
-    ammcRecommendation: string;
-    niaRecommendation: string;
-    ammcValue?: number;
-    niaValue?: number;
-    discrepancyPercentage?: number;
-  };
+  conflictDetails?: ConflictDetails;
   reportSections: {
-    ammc: {
-      propertyCondition: string;
-      structuralAssessment: string;
-      riskFactors: string;
-      recommendations: string;
-      estimatedValue: number;
-      surveyorName: string;
-      surveyorLicense: string;
-      submissionDate: string;
-      photos: Array<{
-        url: string;
-        description: string;
-        timestamp: string;
-      }>;
-    };
-    nia: {
-      propertyCondition: string;
-      structuralAssessment: string;
-      riskFactors: string;
-      recommendations: string;
-      estimatedValue: number;
-      surveyorName: string;
-      surveyorLicense: string;
-      submissionDate: string;
-      photos: Array<{
-        url: string;
-        description: string;
-        timestamp: string;
-      }>;
-    };
+    ammc: ReportSectionData;
+    nia: ReportSectionData;
   };
-  mergingMetadata: {
-    mergedBy: string;
-    mergedAt: string;
-    mergingAlgorithmVersion: string;
-    processingTime: number;
-    qualityScore: number;
-  };
+  mergingMetadata: MergingMetadata;
   createdAt: string;
   releasedAt: string;
   downloadCount: number;
@@ -879,41 +929,71 @@ export interface ReportStatus {
   reportId?: string;
 }
 
-export interface UserReportsResponse {
+// API Response Types
+export interface ApiResponse<T = unknown> {
   success: boolean;
-  data: {
-    reports: UserReport[];
-    pagination: {
-      currentPage: number;
-      totalPages: number;
-      totalItems: number;
-      itemsPerPage: number;
-    };
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
+export interface UserReportsResponse extends ApiResponse<{
+  reports: UserReport[];
+  pagination: PaginationData;
+}> { }
+
+export interface ReportDetailsResponse extends ApiResponse<ReportDetails> { }
+
+export interface ReportStatusResponse extends ApiResponse<ReportStatus> { }
+
+export interface DownloadReportResponse extends ApiResponse<{
+  reportId: string;
+  downloadCount: number;
+  propertyDetails: ReportDetails['propertyDetails'];
+  finalRecommendation: string;
+  paymentEnabled: boolean;
+  conflictDetected: boolean;
+  reportSections: ReportDetails['reportSections'];
+  mergingMetadata: ReportDetails['mergingMetadata'];
+  releasedAt: string;
+}> { }
+
+// Additional interfaces for better type safety
+export interface ProcessingMonitorData {
+  overview: ProcessingOverview | null;
+  activeProcessing: ActiveProcessing | null;
+  performanceMetrics: PerformanceMetrics | null;
+  systemHealth: SystemHealth | null;
+  recentActivity: RecentActivity | null;
+}
+
+// Duplicate interface removed - using the one defined earlier
+
+export interface ReportDetailsExtended {
+  reportId: string;
+  status: string;
+  downloadCount: number;
+  canDownload: boolean;
+  finalRecommendation?: 'approve' | 'reject' | 'request_more_info';
+  conflictDetected: boolean;
+  conflictResolved: boolean;
+  propertyDetails: {
+    address: string;
+    propertyType: string;
   };
-}
-
-export interface ReportDetailsResponse {
-  success: boolean;
-  data: ReportDetails;
-}
-
-export interface ReportStatusResponse {
-  success: boolean;
-  data: ReportStatus;
-}
-
-export interface DownloadReportResponse {
-  success: boolean;
-  message: string;
-  data: {
-    reportId: string;
-    downloadCount: number;
-    propertyDetails: any;
-    finalRecommendation: string;
-    paymentEnabled: boolean;
-    conflictDetected: boolean;
-    reportSections: ReportDetails['reportSections'];
-    mergingMetadata: ReportDetails['mergingMetadata'];
-    releasedAt: string;
+  surveyorContacts?: {
+    ammc?: SurveyorContactInfo;
+    nia?: SurveyorContactInfo;
+  };
+  individualReports?: {
+    ammcReportId?: string;
+    niaReportId?: string;
   };
 }

@@ -26,6 +26,7 @@ interface UserReport {
     conflictResolved: boolean;
     createdAt: string;
     canDownload: boolean;
+    isMerged: boolean;
 }
 
 interface UserReportsListProps {
@@ -62,7 +63,8 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                     conflictDetected: report.conflictDetected,
                     conflictResolved: report.conflictResolved || false,
                     createdAt: report.createdAt,
-                    canDownload: report.canDownload
+                    canDownload: report.canDownload,
+                    isMerged: report.isMerged
                 }));
 
                 if (pageNum === 1) {
@@ -211,9 +213,10 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                             <div className="flex items-center space-x-3">
                                 {getStatusIcon(report.releaseStatus, report.conflictDetected)}
                                 <div>
-                                    <h3 className="font-medium text-gray-900">
-                                        Policy {report.policyId}
-                                    </h3>
+                                    <div className="flex items-center">
+                                        <h3 className="font-medium text-gray-900">Policy {report.policyId}</h3>
+                                        {report.isMerged && <Badge className="ml-2 bg-blue-100 text-blue-800">Merged</Badge>}
+                                    </div>
                                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                                         <MapPin className="w-4 h-4" />
                                         <span>{report.propertyAddress}</span>
@@ -255,7 +258,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                             </div>
                         </div>
 
-                        {/* Conflict indicator */}
+                        {/* Conflict indicator */} 
                         {report.conflictDetected && (
                             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <div className="flex items-center space-x-2">
@@ -273,7 +276,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                             </div>
                         )}
 
-                        {/* Actions */}
+                        {/* Actions */} 
                         <div className="flex items-center justify-between pt-4 border-t">
                             <div className="text-sm text-gray-500">
                                 Report ID: {report.reportId}
@@ -335,7 +338,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                 ))}
             </div>
 
-            {/* Load more button */}
+            {/* Load more button */} 
             {hasMore && (
                 <div className="text-center pt-4">
                     <button
