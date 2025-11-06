@@ -11,7 +11,7 @@ import {
   X
 } from 'lucide-react';
 
-interface Surveyor {
+interface NIASurveyorForAssignment {
   _id: string;
   firstname: string;
   lastname: string;
