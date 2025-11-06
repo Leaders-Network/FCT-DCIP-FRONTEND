@@ -5,7 +5,15 @@ import Image from "next/image";
 interface PropertyDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  property: any;
+  property: {
+    _id: string;
+    address: string;
+    propertyType: string;
+    buildingValue: number;
+    yearBuilt: number;
+    squareFootage: number;
+    constructionMaterial: string;
+  };
 }
 
 const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({

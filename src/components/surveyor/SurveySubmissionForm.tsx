@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import { Upload, FileText, Phone, Calendar, X, Loader2, AlertCircle } from "lucide-react";
-import { PolicyRequest, SurveySubmission, ContactLogEntry } from "@/types/api.types";
+import { PolicyRequest, SurveySubmission, ContactLogEntry, Assignment } from "@/types/api.types";
 
 interface SurveySubmissionFormProps {
   policy: PolicyRequest;
-  assignment?: any; // Assignment with dual-surveyor info
+  assignment?: Assignment; // Assignment with dual-surveyor info
   onSubmit: (submission: Omit<SurveySubmission, 'surveyorId' | 'ammcId'> & { surveyDocument: File }) => Promise<void>;
   onCancel: () => void;
 }

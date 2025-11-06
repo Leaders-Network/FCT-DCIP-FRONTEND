@@ -4,7 +4,7 @@ import { Phone, Mail, MapPin, Calendar, Eye, Clock, CheckCircle, Search } from "
 import { Assignment } from "@/types/api.types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getSurveyorAssignments } from "@/services/api";
+import { getSurveyorAssignments, getSurveyorDualAssignments } from "@/services/api";
 import SurveySubmissionModal from "./SurveySubmissionModal";
 
 const AssignmentsList = () => {
@@ -20,22 +20,66 @@ const AssignmentsList = () => {
     const fetchAssignments = async () => {
       setLoading(true);
       try {
-        const response = await getSurveyorAssignments(filter, 1, 10);
-        console.log("Assignments List Response:", response);
-        console.log("Response data:", response.data);
+        // Try to fetch dual assignments first
+        let response;
+        let fetchedAssignments: Assignment[] = [];
 
-        if (response.data && response.data.assignments) {
-          const data = response.data.assignments;
-          console.log("Assignments data:", data);
-          console.log("Number of assignments:", data.length);
-          if (data.length > 0) {
-            console.log("First assignment:", data[0]);
+        try {
+          response = await getSurveyorDualAssignments({
+            status: filter === 'all' ? undefined : filter,
+            page: 1,
+            limit: 50
+          });
+          console.log("Dual assignments response:", response);
+
+          if (response.data && response.data.dualAssignments) {
+            // Convert dual assignments to assignment format
+            fetchedAssignments = response.data.dualAssignments.map((dualAssignment: any) => {
+              const currentAssignment = dualAssignment.currentSurveyorInfo?.assignmentId || {};
+
+              return {
+                _id: currentAssignment._id || dualAssignment._id,
+                status: currentAssignment.status || 'assigned',
+                assignedAt: dualAssignment.createdAt,
+                deadline: currentAssignment.deadline,
+                priority: dualAssignment.priority,
+                ammcId: dualAssignment.policyId,
+                location: {
+                  address: dualAssignment.policyDetails?.address || 'Address not available',
+                  contactPerson: {
+                    name: dualAssignment.policyId?.contactDetails?.fullName || 'Contact not available',
+                    phone: dualAssignment.policyId?.contactDetails?.phoneNumber,
+                    email: dualAssignment.policyId?.contactDetails?.email
+                  }
+                },
+                organization: dualAssignment.currentSurveyorOrganization,
+                isDualSurveyor: true,
+                dualAssignmentId: dualAssignment._id,
+                dualAssignmentInfo: dualAssignment
+              };
+            });
+            console.log("Converted dual assignments:", fetchedAssignments.length);
           }
-          setAssignments(Array.isArray(data) ? data : []);
-        } else {
-          console.log("No assignments data in response");
-          setAssignments([]);
+        } catch (dualError) {
+          console.log("Dual assignments not available, falling back to regular assignments");
         }
+
+        // Fallback to regular assignments if no dual assignments
+        if (fetchedAssignments.length === 0) {
+          response = await getSurveyorAssignments(filter, 1, 50);
+          console.log("Regular assignments response:", response);
+
+          if (response.data && response.data.assignments) {
+            fetchedAssignments = response.data.assignments.map((assignment: Assignment) => ({
+              ...assignment,
+              isDualSurveyor: !!assignment.dualAssignmentId,
+              organization: assignment.organization || 'AMMC'
+            }));
+            console.log("Regular assignments:", fetchedAssignments.length);
+          }
+        }
+
+        setAssignments(Array.isArray(fetchedAssignments) ? fetchedAssignments : []);
       } catch (error) {
         console.error("Error fetching assignments:", error);
         setAssignments([]);
@@ -53,7 +97,7 @@ const AssignmentsList = () => {
     setShowSurveyModal(true);
   };
 
-  const handleSurveySubmission = async (submission: any) => {
+  const handleSurveySubmission = async (submission: FormData) => {
     try {
       const { submitSurvey } = await import("@/services/api");
 

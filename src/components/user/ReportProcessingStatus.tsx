@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, AlertCircle, Download, RefreshCw, Eye } from 'lucide-react';
+import { ConflictDetails } from '@/types/api.types';
 
 interface ProcessingStatus {
     status: 'not_started' | 'awaiting_surveys' | 'processing' | 'processing_delayed' | 'under_review' | 'completed' | 'unknown';
@@ -9,7 +10,7 @@ interface ProcessingStatus {
     progress?: number;
     estimatedCompletion?: string;
     processingProgress?: number;
-    conflictDetails?: any;
+    conflictDetails?: ConflictDetails;
     completedAt?: string;
     reportId?: string;
 }

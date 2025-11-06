@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 import { Assignment } from "@/types/api.types";
 import Link from "next/link";
-import { getSurveyorDashboard, getSurveyorAssignments } from "@/services/api";
+import { getSurveyorDashboard, getSurveyorAssignments, getSurveyorDualAssignments } from "@/services/api";
+import { debugAuthState, clearAllAuthData } from "@/utils/debug-auth";
 
 interface DualAssignmentInfo {
     _id: string;
@@ -53,19 +54,21 @@ interface EnhancedAssignment extends Assignment {
     isDualSurveyor: boolean;
 }
 
+interface StatCardProps {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    value: string | number;
+    color: string;
+    subtitle?: string;
+}
+
 const StatCard = ({
     icon,
     label,
     value,
     color,
     subtitle
-}: {
-    icon: any,
-    label: string,
-    value: string | number,
-    color: string,
-    subtitle?: string
-}) => (
+}: StatCardProps) => (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 min-w-0 overflow-hidden">
         <div className="flex items-center min-w-0">
             <div className={`p-2 bg-${color}-100 rounded-lg flex-shrink-0`}>
@@ -98,18 +101,25 @@ const EnhancedSurveyorDashboard = () => {
         const fetchSurveyorData = async () => {
             setLoading(true);
             setError(null);
+
+            // Debug authentication state
+            debugAuthState();
+
             try {
                 // Get surveyor organization from localStorage or API
                 const organization = localStorage.getItem('surveyorOrganization') as 'AMMC' | 'NIA' || 'AMMC';
                 setSurveyorOrganization(organization);
 
-                const [dashboardResponse, assignmentsResponse] = await Promise.allSettled([
+                const [dashboardResponse, assignmentsResponse, dualAssignmentsResponse] = await Promise.allSettled([
                     getSurveyorDashboard(),
-                    getSurveyorAssignments("all", 1, 10)
+                    getSurveyorAssignments("all", 1, 10),
+                    getSurveyorDualAssignments({ status: "all", page: 1, limit: 10 })
                 ]);
 
                 let fetchedAssignments: Assignment[] = [];
+                let dualAssignments: DualAssignmentInfo[] = [];
 
+                // Process dashboard response
                 if (dashboardResponse.status === 'fulfilled' && dashboardResponse.value?.data) {
                     const dashboardData = dashboardResponse.value.data;
                     if (dashboardData.recentAssignments) {
@@ -128,41 +138,107 @@ const EnhancedSurveyorDashboard = () => {
                     }
                 }
 
-                if (fetchedAssignments.length === 0 && assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value?.data?.assignments) {
-                    fetchedAssignments = assignmentsResponse.value.data.assignments;
+                // Process dual assignments response (prioritize these)
+                if (dualAssignmentsResponse.status === 'fulfilled' && dualAssignmentsResponse.value?.data?.dualAssignments) {
+                    dualAssignments = dualAssignmentsResponse.value.data.dualAssignments;
+                    console.log('Dual assignments fetched:', dualAssignments.length);
                 }
 
-                // Enhance assignments with dual-surveyor information
-                const enhancedAssignments = await Promise.all(
-                    fetchedAssignments.map(async (assignment) => {
-                        const enhanced: EnhancedAssignment = {
-                            ...assignment,
-                            organization: assignment.organization || organization,
-                            isDualSurveyor: !!assignment.dualAssignmentId
-                        };
+                // Fallback to regular assignments if no dual assignments
+                if (dualAssignments.length === 0 && fetchedAssignments.length === 0 && assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value?.data?.assignments) {
+                    fetchedAssignments = assignmentsResponse.value.data.assignments;
+                    console.log('Regular assignments fetched:', fetchedAssignments.length);
+                }
 
-                        // Fetch dual assignment info if it exists
-                        if (assignment.dualAssignmentId) {
-                            try {
-                                const dualResponse = await fetch(`/api/v1/dual-assignment/${assignment.dualAssignmentId}`, {
-                                    headers: {
-                                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                                    }
-                                });
+                // Process dual assignments first (these are the new system)
+                let enhancedAssignments: EnhancedAssignment[] = [];
 
-                                if (dualResponse.ok) {
-                                    const dualData = await dualResponse.json();
-                                    enhanced.dualAssignmentInfo = dualData.data;
+                if (dualAssignments.length > 0) {
+                    // Convert dual assignments to enhanced assignments
+                    enhancedAssignments = dualAssignments.map((dualAssignment) => {
+                        // Use the current surveyor's assignment from the dual assignment
+                        const currentAssignment = dualAssignment.currentSurveyorInfo?.assignmentId || {};
+                        const partnerInfo = dualAssignment.partnerSurveyorInfo || {};
+
+                        return {
+                            _id: currentAssignment._id || dualAssignment._id,
+                            status: currentAssignment.status || 'assigned',
+                            assignedAt: dualAssignment.createdAt,
+                            deadline: currentAssignment.deadline,
+                            priority: dualAssignment.priority,
+                            ammcId: dualAssignment.policyId,
+                            location: {
+                                address: dualAssignment.policyDetails?.address || 'Address not available',
+                                contactPerson: {
+                                    name: dualAssignment.policyId?.contactDetails?.fullName || 'Contact not available',
+                                    phone: dualAssignment.policyId?.contactDetails?.phoneNumber,
+                                    email: dualAssignment.policyId?.contactDetails?.email
                                 }
-                            } catch (err) {
-                                console.error('Failed to fetch dual assignment info:', err);
+                            },
+                            organization: dualAssignment.currentSurveyorOrganization,
+                            isDualSurveyor: true,
+                            dualAssignmentId: dualAssignment._id,
+                            dualAssignmentInfo: {
+                                _id: dualAssignment._id,
+                                policyId: dualAssignment.policyId?._id,
+                                ammcSurveyorId: dualAssignment.ammcSurveyorId,
+                                niaSurveyorId: dualAssignment.niaSurveyorId,
+                                ammcAssignmentId: dualAssignment.ammcAssignmentId,
+                                niaAssignmentId: dualAssignment.niaAssignmentId,
+                                completionStatus: dualAssignment.completionStatus,
+                                conflictDetected: dualAssignment.conflictDetected,
+                                mergedReportId: dualAssignment.mergedReportId,
+                                otherSurveyor: {
+                                    name: partnerInfo.contact?.name || 'Partner Surveyor',
+                                    organization: partnerInfo.organization,
+                                    email: partnerInfo.contact?.email,
+                                    phone: partnerInfo.contact?.phone,
+                                    license: partnerInfo.contact?.license,
+                                    licenseNumber: partnerInfo.contact?.licenseNumber,
+                                    address: partnerInfo.contact?.address,
+                                    emergencyContact: partnerInfo.contact?.emergencyContact,
+                                    specialization: partnerInfo.contact?.specialization,
+                                    experience: partnerInfo.contact?.experience,
+                                    rating: partnerInfo.contact?.rating
+                                }
                             }
-                        }
+                        };
+                    });
+                } else {
+                    // Fallback to regular assignments with dual-surveyor enhancement
+                    enhancedAssignments = await Promise.all(
+                        fetchedAssignments.map(async (assignment) => {
+                            const enhanced: EnhancedAssignment = {
+                                ...assignment,
+                                organization: assignment.organization || organization,
+                                isDualSurveyor: !!assignment.dualAssignmentId
+                            };
 
-                        return enhanced;
-                    })
-                );
+                            // Fetch dual assignment info if it exists
+                            if (assignment.dualAssignmentId) {
+                                try {
+                                    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+                                    const dualResponse = await fetch(`${API_BASE_URL}/dual-assignment/${assignment.dualAssignmentId}`, {
+                                        headers: {
+                                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                        }
+                                    });
 
+                                    if (dualResponse.ok) {
+                                        const dualData = await dualResponse.json();
+                                        enhanced.dualAssignmentInfo = dualData.data;
+                                    }
+                                } catch (err) {
+                                    console.error('Failed to fetch dual assignment info:', err);
+                                }
+                            }
+
+                            return enhanced;
+                        })
+                    );
+                }
+
+                // Set the enhanced assignments
                 setAssignments(enhancedAssignments);
 
                 // Update stats if not already set from dashboard
@@ -178,7 +254,7 @@ const EnhancedSurveyorDashboard = () => {
                         conflictsDetected,
                         total: enhancedAssignments.length,
                         pending: enhancedAssignments.filter(a => a.status === 'assigned' || a.status === 'accepted').length,
-                        inProgress: enhancedAssignments.filter(a => (a.status as any) === 'in-progress').length,
+                        inProgress: enhancedAssignments.filter(a => a.status === 'in_progress').length,
                         completed: enhancedAssignments.filter(a => a.status === 'completed').length
                     }));
                 }
@@ -300,6 +376,33 @@ const EnhancedSurveyorDashboard = () => {
 
     return (
         <div className="space-y-8">
+            {/* Debug Panel - Only in development */}
+            {process.env.NODE_ENV === 'development' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-yellow-800 mb-2">Debug Panel</h3>
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={debugAuthState}
+                            className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs"
+                        >
+                            Check Auth State
+                        </button>
+                        <button
+                            onClick={clearAllAuthData}
+                            className="px-3 py-1 bg-red-200 text-red-800 rounded text-xs"
+                        >
+                            Clear All Auth Data
+                        </button>
+                        <button
+                            onClick={() => window.location.href = '/surveyor'}
+                            className="px-3 py-1 bg-blue-200 text-blue-800 rounded text-xs"
+                        >
+                            Go to Surveyor Login
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Header with Organization Context */}
             <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-lg p-6 text-white">
                 <div className="flex items-center justify-between">
@@ -382,7 +485,7 @@ const EnhancedSurveyorDashboard = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-center space-x-2">
                                                     <h3 className="text-md font-semibold text-gray-900">
-                                                        {(assignment.ammcId as any)?.propertyDetails?.propertyType || 'Assignment'}
+                                                        {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.propertyType || 'Assignment'}
                                                     </h3>
                                                     {assignment.isDualSurveyor && (
                                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -392,7 +495,7 @@ const EnhancedSurveyorDashboard = () => {
                                                     )}
                                                 </div>
                                                 <p className="text-sm text-gray-500">
-                                                    {(assignment.ammcId as any)?.propertyDetails?.address || assignment.location?.address || 'Location not specified'}
+                                                    {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.address || assignment.location?.address || 'Location not specified'}
                                                 </p>
                                             </div>
                                         </div>
@@ -450,7 +553,7 @@ const EnhancedSurveyorDashboard = () => {
                                         <div className="flex items-center space-x-6 text-sm text-gray-500">
                                             <div className="flex items-center">
                                                 <Users className="h-4 w-4 mr-1.5" />
-                                                {(assignment.ammcId as any)?.contactDetails?.fullName || assignment.location?.contactPerson?.name || 'Contact not available'}
+                                                {typeof assignment.ammcId === 'object' && assignment.ammcId?.contactDetails?.fullName || assignment.location?.contactPerson?.name || 'Contact not available'}
                                             </div>
                                             <div className="flex items-center">
                                                 <Calendar className="h-4 w-4 mr-1.5" />

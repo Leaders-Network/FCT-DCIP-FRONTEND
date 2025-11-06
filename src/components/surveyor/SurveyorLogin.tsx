@@ -54,7 +54,7 @@ const SurveyorLogin = () => {
       } else {
         setError("Invalid response from server. Please try again.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login failed:", error);
 
       // Handle different error types
