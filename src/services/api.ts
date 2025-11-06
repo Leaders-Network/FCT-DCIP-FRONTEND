@@ -10,7 +10,6 @@ import {
   EnhancedSurveySubmission,
   SurveyorFilters,
   DualAssignmentFilters,
-  AssignmentFilters,
 } from "../types/api.types";
 
 
@@ -39,7 +38,7 @@ api.interceptors.request.use(
 
     // Check if this is a NIA admin request
     const isNIAAdminRequest = config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor');
-    const token = getAuthToken(isNIAAdminRequest);
+    const token = getAuthToken(isNIAAdminRequest ? 'nia-admin' : undefined);
     console.log("Auth Token:", token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
@@ -1448,29 +1447,41 @@ export const tokenManager = {
 export const userReportAPI = {
   // Get user's reports
   getUserReports: async (page = 1, limit = 10) => {
-    const response = await api.get(`/user-reports?page=${page}&limit=${limit}`);
+    const response = await api.get(`/report-release/user/reports?page=${page}&limit=${limit}`);
     return response.data;
   },
 
   // Get report summary/statistics
   getReportSummary: async () => {
-    const response = await api.get('/user-reports/summary/stats');
+    const response = await api.get('/report-release/user/reports/summary');
     return response.data;
   },
 
   // Get specific report details
   getReportDetails: async (reportId: string) => {
-    const response = await api.get(`/user-reports/${reportId}`);
+    const response = await api.get(`/report-release/report/${reportId}`);
     return response.data;
   },
 
-  // Download report
+  // Download merged report
   downloadReport: async (reportId: string) => {
-    const response = await api.post(`/user-reports/${reportId}/download`);
+    const response = await api.post(`/report-release/download/${reportId}`);
     return response.data;
   },
 
-  // Get report processing status (for backward compatibility)
+  // Download individual AMMC report
+  downloadAMMCReport: async (assignmentId: string) => {
+    const response = await api.post(`/report-release/download/ammc/${assignmentId}`);
+    return response.data;
+  },
+
+  // Download individual NIA report
+  downloadNIAReport: async (assignmentId: string) => {
+    const response = await api.post(`/report-release/download/nia/${assignmentId}`);
+    return response.data;
+  },
+
+  // Get report processing status
   getReportStatus: async (policyId: string) => {
     const response = await api.get(`/report-release/status/${policyId}`);
     return response.data;
