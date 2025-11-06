@@ -24,6 +24,7 @@ interface PolicyDetails extends Omit<import('@/types/api.types').PolicyRequest, 
     email: string;
     phoneNumber: string;
     alternatePhone?: string;
+    rcNumber: string;
   };
   requestDetails: {
     coverageType: string;

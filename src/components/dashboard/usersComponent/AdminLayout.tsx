@@ -57,7 +57,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
       name: "Dashboard",
       path: "/admin/dashboard",
       icon: (
-        <svg  
+        <svg
           className="w-6 h-6"
           fill="none"
           stroke="currentColor"
@@ -225,9 +225,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <aside
-        className={`bg-white h-full transition-all duration-300 ease-in-out fixed md:relative z-30 border-gray-200 ${
-          sidebarOpen ? "w-64" : "w-20"
-        }`}
+        className={`bg-white h-full transition-all duration-300 ease-in-out fixed md:relative z-30 border-gray-200 ${sidebarOpen ? "w-64" : "w-20"
+          }`}
       >
         {/* Logo */}
         <div
@@ -291,9 +290,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
                     <div className="flex items-center">
                       <Link
                         href={item.path}
-                        className={`flex items-center flex-grow px-4 py-3 rounded-lg transition-colors ${
-                          pathname === item.path ? "bg-[#028835] text-white" : "text-gray-700 hover:bg-gray-100"
-                        }`}
+                        className={`flex items-center flex-grow px-4 py-3 rounded-lg transition-colors ${pathname === item.path ? "bg-[#028835] text-white" : "text-gray-700 hover:bg-gray-100"
+                          }`}
                       >
                         {item.icon}
                         {sidebarOpen && <span className="ml-3 flex-1 whitespace-nowrap">{item.name}</span>}
@@ -312,13 +310,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
                     </div>
                     {sidebarOpen && propertiesOpen && (
                       <ul className="pl-10 mt-1 space-y-1">
-                        {('subItems' in item && Array.isArray(item.subItems) ? item.subItems : []).map((subItem: any) => (
+                        {('subItems' in item && Array.isArray(item.subItems) ? item.subItems : []).map((subItem: { name: string; href: string; icon?: React.ComponentType }) => (
                           <li key={subItem.name}>
                             <Link
                               href={subItem.path}
-                              className={`block px-3 py-2 rounded-md ${
-                                pathname === subItem.path ? "bg-gray-100 font-medium" : "text-gray-600 hover:bg-gray-50"
-                              }`}
+                              className={`block px-3 py-2 rounded-md ${pathname === subItem.path ? "bg-gray-100 font-medium" : "text-gray-600 hover:bg-gray-50"
+                                }`}
                             >
                               {subItem.name}
                             </Link>
@@ -330,9 +327,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
                 ) : (
                   <Link
                     href={item.path}
-                    className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-                      pathname === item.path ? "bg-[#028835] text-white" : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                    className={`flex items-center px-4 py-3 rounded-lg transition-colors ${pathname === item.path ? "bg-[#028835] text-white" : "text-gray-700 hover:bg-gray-100"
+                      }`}
                   >
                     {item.icon}
                     {sidebarOpen && <span className="ml-3 whitespace-nowrap">{item.name}</span>}

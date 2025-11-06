@@ -62,7 +62,7 @@ class PolicyStatusService {
         try {
             const response = await api.get(`${this.baseUrl}/${policyId}/enhanced`);
             return { success: true, data: response.data };
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to fetch enhanced policy status:', error);
 
             // Return mock data for development

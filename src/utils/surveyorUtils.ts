@@ -110,10 +110,40 @@ export const getPriorityBadge = (priority: string) => {
     return priorityClasses[priority as keyof typeof priorityClasses] || priorityClasses.default;
 };
 
+interface ApiSurveyorData {
+    _id?: string;
+    userId?: {
+        _id: string;
+        firstname: string;
+        lastname: string;
+        email: string;
+        phonenumber: string;
+    };
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    phoneNumber?: string;
+    profile?: {
+        specialization?: string[];
+        experience?: number;
+        availability?: 'available' | 'busy' | 'unavailable';
+    };
+    specialization?: string[];
+    experience?: number;
+    availability?: 'available' | 'busy' | 'unavailable';
+    currentAssignments?: number;
+    maxAssignments?: number;
+    rating?: number;
+    statistics?: {
+        completedSurveys?: number;
+    };
+    completedSurveys?: number;
+}
+
 /**
  * Transform API surveyor data to component format
  */
-export const transformSurveyorData = (apiSurveyor: any): Surveyor => {
+export const transformSurveyorData = (apiSurveyor: ApiSurveyorData): Surveyor => {
     return {
         _id: apiSurveyor.userId?._id || apiSurveyor._id,
         firstname: apiSurveyor.userId?.firstname || apiSurveyor.firstname,

@@ -32,7 +32,7 @@ import {
   completeAssignment,
 } from '@/services/api';
 import { adminApi } from '@/services/api';
-import { Assignment, Surveyor } from '@/types/api.types';
+import { Assignment, Surveyor, ContactLogEntry } from '@/types/api.types';
 import { useAuth } from '../context/useAuth';
 import DocumentManager from './FileUpload/DocumentManager';
 import AssignSurveyorModal from './admin/AssignSurveyorModal';
@@ -161,7 +161,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
         }
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to load assignments. Please try again.');
       console.error('Error fetching assignments:', error);
     } finally {
@@ -169,7 +169,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     }
   };
 
-  const handleStatusUpdate = async (assignmentId: string, action: 'accept' | 'start' | 'complete', data?: any) => {
+  const handleStatusUpdate = async (assignmentId: string, action: 'accept' | 'start' | 'complete', data?: Record<string, unknown>) => {
     try {
       let response;
 
@@ -191,12 +191,12 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       } else {
         setError(response.message || 'Failed to update assignment');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to update assignment. Please try again.');
     }
   };
 
-  const updateProgress = async (assignmentId: string, progressData: any) => {
+  const updateProgress = async (assignmentId: string, progressData: Record<string, unknown>) => {
     try {
       const response = await updateAssignmentProgress(assignmentId, progressData);
 
@@ -205,7 +205,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
       } else {
         setError(response.message || 'Failed to update progress');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError('Failed to update progress. Please try again.');
     }
   };
@@ -531,7 +531,7 @@ interface AssignmentCardProps {
   assignment: Assignment;
   viewMode: 'admin' | 'surveyor';
   onView: () => void;
-  onStatusUpdate: (id: string, action: 'accept' | 'start' | 'complete', data?: any) => void;
+  onStatusUpdate: (id: string, action: 'accept' | 'start' | 'complete', data?: Record<string, unknown>) => void;
   getStatusColor: (status: string) => string;
   getPriorityColor: (priority: string) => string;
   formatDate: (date: string) => string;
@@ -709,8 +709,8 @@ interface AssignmentDetailModalProps {
   assignment: Assignment;
   viewMode: 'admin' | 'surveyor';
   onClose: () => void;
-  onStatusUpdate: (id: string, action: 'accept' | 'start' | 'complete', data?: any) => void;
-  onProgressUpdate: (id: string, data: any) => void;
+  onStatusUpdate: (id: string, action: 'accept' | 'start' | 'complete', data?: Record<string, unknown>) => void;
+  onProgressUpdate: (id: string, data: Record<string, unknown>) => void;
   getStatusColor: (status: string) => string;
   getPriorityColor: (priority: string) => string;
   formatDate: (date: string) => string;
@@ -1151,7 +1151,7 @@ const AssignmentSurveyTab: React.FC<{ assignment: Assignment }> = ({ assignment 
         <div>
           <h4 className="font-medium text-gray-900 mb-3">Contact Log</h4>
           <div className="space-y-3">
-            {surveyData.contactLog.map((entry: any, index: number) => (
+            {surveyData.contactLog.map((entry: ContactLogEntry, index: number) => (
               <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
                 <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
                   <Calendar className="h-4 w-4" />
@@ -1201,7 +1201,7 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
     fetchSurveyData();
   }, [assignment._id, assignment.status]);
 
-  const handleDocumentsChange = (documents: any) => {
+  const handleDocumentsChange = (documents: File[]) => {
     console.log('Documents updated:', documents);
     // Handle document updates
   }
@@ -1354,7 +1354,7 @@ const AssignmentCommunicationTab: React.FC<{
         <div className="space-y-4">
           <h5 className="text-sm font-medium text-gray-700">Survey Contact Attempts</h5>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {surveyData.contactLog.map((entry: any, index: number) => (
+            {surveyData.contactLog.map((entry: ContactLogEntry, index: number) => (
               <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">

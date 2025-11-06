@@ -18,8 +18,10 @@ import {
 import NIASurveyorManagement from '@/components/nia-admin/NIASurveyorManagement';
 import { NIASurveyor, NIASurveyorForManagement } from '@/types/api.types';
 
-// Use types from api.types.ts instead of local interfaces
-type NIASurveyorLocal = NIASurveyor;
+// Use types from api.types.ts
+interface NIASurveyorLocal extends NIASurveyor {
+    // Local extensions if needed
+}
 
 const NIASurveyorsPage = () => {
     const [surveyors, setSurveyors] = useState<NIASurveyorLocal[]>([]);

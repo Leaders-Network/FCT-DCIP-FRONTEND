@@ -73,7 +73,14 @@ interface ReportData {
 }
 
 interface IndividualReportData extends Omit<ReportData, 'reportSections' | 'mergingMetadata' | 'conflictDetails'> {
-    propertyDetails: any;
+    propertyDetails: {
+        address: string;
+        propertyType: string;
+        buildingValue: number;
+        yearBuilt: number;
+        squareFootage: number;
+        constructionMaterial: string;
+    };
 }
 
 interface ReportViewerProps {

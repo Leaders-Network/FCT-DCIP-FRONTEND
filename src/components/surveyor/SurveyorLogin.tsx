@@ -53,7 +53,7 @@ const SurveyorLogin = () => {
       } else {
         toast.error("Invalid response from server. Please try again.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login failed:", error);
       if (error.response?.status === 401) {
         toast.error("Invalid email or password.");
