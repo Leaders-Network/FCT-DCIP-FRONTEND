@@ -900,12 +900,22 @@ export interface ReportDetails {
 export interface ReportStatus {
   status: 'not_started' | 'awaiting_surveys' | 'processing' | 'processing_delayed' | 'under_review' | 'completed' | 'unknown';
   message: string;
+  stage: string;
   progress?: number;
   estimatedCompletion?: string;
   processingProgress?: number;
   conflictDetails?: ConflictDetails;
   completedAt?: string;
   reportId?: string;
+  createdAt?: string;
+  releasedAt?: string;
+  conflictDetected?: boolean;
+  conflictResolved?: boolean;
+  dualAssignmentId?: string;
+  surveyStatus?: {
+    ammc: string;
+    nia: string;
+  };
 }
 
 // API Response Types
@@ -953,6 +963,14 @@ export interface ProcessingMonitorData {
   recentActivity: RecentActivity | null;
 }
 
+// Strict typing for status values
+export type AssignmentStatus = 'unassigned' | 'partially_assigned' | 'fully_assigned';
+export type CompletionStatus = 0 | 50 | 100;
+export type ReleaseStatus = 'pending' | 'withheld' | 'released';
+export type ConflictSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type SystemHealthStatus = 'healthy' | 'warning' | 'critical';
+export type RecommendationAction = 'approve' | 'reject' | 'request_more_info';
+
 // Enhanced API Response types with better error handling
 export interface ApiErrorResponse {
   success: false;
@@ -970,6 +988,18 @@ export interface ApiSuccessResponse<T = unknown> {
 }
 
 export type ApiResponseUnion<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
+
+// Utility type for API method return types
+export type ApiMethod<T = unknown> = Promise<ApiResponse<T>>;
+
+// Type guards for API responses
+export const isApiSuccessResponse = <T>(response: ApiResponseUnion<T>): response is ApiSuccessResponse<T> => {
+  return response.success === true;
+};
+
+export const isApiErrorResponse = <T>(response: ApiResponseUnion<T>): response is ApiErrorResponse => {
+  return response.success === false;
+};
 
 // Duplicate interface removed - using the one defined earlier
 
@@ -994,3 +1024,4 @@ export interface ReportDetailsExtended {
     niaReportId?: string;
   };
 }
+
