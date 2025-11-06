@@ -1,5 +1,6 @@
-import { apiRequest } from '@/services/api';
+import { apiRequest } from './api';
 
+// Processing Monitor Types
 export interface ProcessingOverview {
     timeframe: string;
     organization: string;
@@ -8,19 +9,19 @@ export interface ProcessingOverview {
         totalMergedReports: number;
         totalConflictFlags: number;
         totalUserInquiries: number;
-        averageProcessingTime: number;
+        averageProcessingTime?: number;
     };
-    assignmentStatus: {
+    assignmentStatus?: {
         unassigned: number;
         partially_assigned: number;
         fully_assigned: number;
     };
-    completionStatus: {
+    completionStatus?: {
         0: number;
         50: number;
         100: number;
     };
-    releaseStatus: {
+    releaseStatus?: {
         pending: number;
         withheld: number;
         released: number;
@@ -31,7 +32,7 @@ export interface ProcessingOverview {
         high: number;
         critical: number;
     };
-    generatedAt: string;
+    generatedAt?: string;
 }
 
 export interface ActiveProcessing {
@@ -57,107 +58,124 @@ export interface ActiveProcessing {
         releaseStatus: string;
         createdAt: string;
     }>;
-    recentSubmissions: Array<{
+    recentSubmissions?: Array<{
         _id: string;
         policyId: string;
         organization: string;
         createdAt: string;
     }>;
-    lastUpdated: string;
+    lastUpdated?: string;
 }
 
 export interface PerformanceMetrics {
-    timeframe: string;
+    timeframe?: string;
     processingPerformance: {
         avgProcessingTime: number;
-        minProcessingTime: number;
-        maxProcessingTime: number;
+        minProcessingTime?: number;
+        maxProcessingTime?: number;
         totalReports: number;
     };
     successRates: {
-        pending: number;
-        withheld: number;
+        pending?: number;
+        withheld?: number;
         released: number;
-    };
-    conflictDetectionRates: {
+    } | number;
+    conflictDetectionRates?: {
         low: number;
         medium: number;
         high: number;
         critical: number;
     };
-    assignmentCompletion: {
+    assignmentCompletion?: {
         avgCompletionTime: number;
         minCompletionTime: number;
         maxCompletionTime: number;
     };
-    dailyVolume: Array<{
+    dailyVolume?: Array<{
         _id: string;
         count: number;
     }>;
-    generatedAt: string;
+    generatedAt?: string;
 }
 
 export interface SystemHealth {
     systemStatus: 'healthy' | 'warning' | 'critical';
-    alerts: string[];
-    metrics: {
+    alerts?: string[];
+    metrics?: {
         recentActivity: number;
         stuckProcessing: number;
-        unresolvedHighPriorityConflicts: number;
-        unansweredInquiries: number;
-        failedProcessing: number;
     };
-    lastChecked: string;
+    lastChecked?: string;
 }
 
 export interface RecentActivity {
     activities: Array<{
-        type: 'report_merged' | 'conflict_detected' | 'user_inquiry';
-        timestamp: string;
-        policyId: string;
-        propertyAddress: string;
-        status?: string;
-        severity?: string;
-        conflictType?: string;
+        type: string;
         details: string;
+        propertyAddress: string;
+        timestamp: string;
     }>;
-    totalCount: number;
-    timeframe: string;
-    lastUpdated: string;
+    lastUpdated?: string;
 }
 
-class ProcessingMonitorService {
-    private baseUrl = '/processing-monitor';
+// Processing Monitor Service
+export const processingMonitorService = {
+    // Get processing overview
+    getOverview: async (organization: string = 'NIA', timeframe: string = '24h') => {
+        return await apiRequest<ProcessingOverview>(
+            `/processing-monitor/overview?organization=${organization}&timeframe=${timeframe}`,
+            { method: 'GET' }
+        );
+    },
 
-    async getOverview(organization = 'all', timeframe = '24h'): Promise<{ success: boolean; data: ProcessingOverview }> {
-        return apiRequest(`${this.baseUrl}/overview?organization=${organization}&timeframe=${timeframe}`, {
-            method: 'GET',
-        });
+    // Get active processing jobs
+    getActiveProcessing: async (organization: string = 'NIA') => {
+        return await apiRequest<ActiveProcessing>(
+            `/processing-monitor/active?organization=${organization}`,
+            { method: 'GET' }
+        );
+    },
+
+    // Get performance metrics
+    getPerformanceMetrics: async (timeframe: string = '24h', organization: string = 'NIA') => {
+        return await apiRequest<PerformanceMetrics>(
+            `/processing-monitor/performance?timeframe=${timeframe}&organization=${organization}`,
+            { method: 'GET' }
+        );
+    },
+
+    // Get system health
+    getSystemHealth: async () => {
+        return await apiRequest<SystemHealth>(
+            '/processing-monitor/health',
+            { method: 'GET' }
+        );
+    },
+
+    // Get recent activity
+    getRecentActivity: async (limit: number = 50, organization: string = 'NIA') => {
+        return await apiRequest<RecentActivity>(
+            `/processing-monitor/activity?limit=${limit}&organization=${organization}`,
+            { method: 'GET' }
+        );
+    },
+
+    // Trigger manual processing
+    triggerProcessing: async (policyId?: string) => {
+        return await apiRequest(
+            '/processing-monitor/trigger',
+            {
+                method: 'POST',
+                body: JSON.stringify({ policyId })
+            }
+        );
+    },
+
+    // Get processing status
+    getProcessingStatus: async (processId: string) => {
+        return await apiRequest(
+            `/processing-monitor/status/${processId}`,
+            { method: 'GET' }
+        );
     }
-
-    async getActiveProcessing(organization = 'all'): Promise<{ success: boolean; data: ActiveProcessing }> {
-        return apiRequest(`${this.baseUrl}/active-processing?organization=${organization}`, {
-            method: 'GET',
-        });
-    }
-
-    async getPerformanceMetrics(timeframe = '7d', organization = 'all'): Promise<{ success: boolean; data: PerformanceMetrics }> {
-        return apiRequest(`${this.baseUrl}/performance-metrics?timeframe=${timeframe}&organization=${organization}`, {
-            method: 'GET',
-        });
-    }
-
-    async getSystemHealth(): Promise<{ success: boolean; data: SystemHealth }> {
-        return apiRequest(`${this.baseUrl}/system-health`, {
-            method: 'GET',
-        });
-    }
-
-    async getRecentActivity(limit = 50, organization = 'all'): Promise<{ success: boolean; data: RecentActivity }> {
-        return apiRequest(`${this.baseUrl}/recent-activity?limit=${limit}&organization=${organization}`, {
-            method: 'GET',
-        });
-    }
-}
-
-export const processingMonitorService = new ProcessingMonitorService();
+};

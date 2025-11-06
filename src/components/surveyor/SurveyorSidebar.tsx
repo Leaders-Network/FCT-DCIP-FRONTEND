@@ -18,6 +18,8 @@ const SurveyorSidebar = () => {
     localStorage.removeItem("surveyorToken");
     localStorage.removeItem("surveyorName");
     localStorage.removeItem("surveyorRole");
+    localStorage.removeItem("surveyorOrganization");
+    localStorage.removeItem("surveyorInfo");
     router.push("/surveyor");
   };
 

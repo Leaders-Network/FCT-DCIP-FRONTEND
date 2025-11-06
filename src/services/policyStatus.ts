@@ -56,7 +56,7 @@ export interface EnhancedPolicyStatus {
 }
 
 class PolicyStatusService {
-    private baseUrl = '/api/v1/policy-status';
+    private baseUrl = '/policy-status';
 
     async getEnhancedStatus(policyId: string): Promise<{ success: boolean; data?: EnhancedPolicyStatus; error?: string }> {
         try {

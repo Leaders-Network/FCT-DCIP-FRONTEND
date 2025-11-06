@@ -121,7 +121,9 @@ const EnhancedSurveyorDashboard = () => {
                             total: dashboardData.statistics.total || 0,
                             pending: dashboardData.statistics.pending || 0,
                             inProgress: dashboardData.statistics.inProgress || 0,
-                            completed: dashboardData.statistics.completed || 0
+                            completed: dashboardData.statistics.completed || 0,
+                            dualAssignments: dashboardData.statistics.dualAssignments || 0,
+                            conflictsDetected: dashboardData.statistics.conflictsDetected || 0
                         }));
                     }
                 }
@@ -163,21 +165,23 @@ const EnhancedSurveyorDashboard = () => {
 
                 setAssignments(enhancedAssignments);
 
-                // Calculate dual-surveyor specific stats
-                const dualAssignments = enhancedAssignments.filter(a => a.isDualSurveyor).length;
-                const conflictsDetected = enhancedAssignments.filter(a =>
-                    a.dualAssignmentInfo?.conflictDetected
-                ).length;
+                // Update stats if not already set from dashboard
+                if (dashboardResponse.status !== 'fulfilled' || !dashboardResponse.value?.data?.statistics) {
+                    const dualAssignments = enhancedAssignments.filter(a => a.isDualSurveyor).length;
+                    const conflictsDetected = enhancedAssignments.filter(a =>
+                        a.dualAssignmentInfo?.conflictDetected
+                    ).length;
 
-                setStats(prev => ({
-                    ...prev,
-                    dualAssignments,
-                    conflictsDetected,
-                    total: enhancedAssignments.length,
-                    pending: enhancedAssignments.filter(a => a.status === 'assigned' || a.status === 'accepted').length,
-                    inProgress: enhancedAssignments.filter(a => (a.status as any) === 'in-progress').length,
-                    completed: enhancedAssignments.filter(a => a.status === 'completed').length
-                }));
+                    setStats(prev => ({
+                        ...prev,
+                        dualAssignments,
+                        conflictsDetected,
+                        total: enhancedAssignments.length,
+                        pending: enhancedAssignments.filter(a => a.status === 'assigned' || a.status === 'accepted').length,
+                        inProgress: enhancedAssignments.filter(a => (a.status as any) === 'in-progress').length,
+                        completed: enhancedAssignments.filter(a => a.status === 'completed').length
+                    }));
+                }
 
             } catch (err) {
                 console.error("Failed to fetch surveyor data:", err);
@@ -417,26 +421,6 @@ const EnhancedSurveyorDashboard = () => {
                                                         <FileText className="w-4 h-4 mr-2" />
                                                         License: {assignment.dualAssignmentInfo.otherSurveyor.licenseNumber || assignment.dualAssignmentInfo.otherSurveyor.license || 'Not provided'}
                                                     </div>
-                                                    {assignment.dualAssignmentInfo.otherSurveyor.experience && (
-                                                        <div className="flex items-center text-blue-800">
-                                                            <TrendingUp className="w-4 h-4 mr-2" />
-                                                            Experience: {assignment.dualAssignmentInfo.otherSurveyor.experience} years
-                                                        </div>
-                                                    )}
-                                                    {assignment.dualAssignmentInfo.otherSurveyor.specialization && assignment.dualAssignmentInfo.otherSurveyor.specialization.length > 0 && (
-                                                        <div className="col-span-2">
-                                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                                {assignment.dualAssignmentInfo.otherSurveyor.specialization.map((spec: string, index: number) => (
-                                                                    <span
-                                                                        key={index}
-                                                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                                                                    >
-                                                                        {spec}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
                                                 </div>
 
                                                 {/* Progress Indicator */}
