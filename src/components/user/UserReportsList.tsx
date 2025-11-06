@@ -13,21 +13,8 @@ import {
     RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
-
-interface UserReport {
-    reportId: string;
-    policyId: string;
-    propertyAddress: string;
-    releaseStatus: 'pending' | 'withheld' | 'released';
-    releasedAt?: string;
-    finalRecommendation?: string;
-    paymentEnabled: boolean;
-    conflictDetected: boolean;
-    conflictResolved: boolean;
-    createdAt: string;
-    canDownload: boolean;
-    isMerged: boolean;
-}
+import { Badge } from '@/components/ui/badge';
+import { UserReport, UserReportsResponse } from '@/types/api.types';
 
 interface UserReportsListProps {
     refreshTrigger?: number;
@@ -49,22 +36,22 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
             setLoading(pageNum === 1);
 
             const { userReportAPI } = await import('@/services/api');
-            const response = await userReportAPI.getUserReports(pageNum, 10);
+            const response: UserReportsResponse = await userReportAPI.getUserReports(pageNum, 10);
 
-            if (response.success) {
-                const formattedReports = response.data.reports.map((report: UserReport) => ({
+            if (response.success && response.data) {
+                const formattedReports: UserReport[] = response.data.reports.map((report: UserReport) => ({
                     reportId: report.reportId,
                     policyId: report.policyId,
                     propertyAddress: report.propertyAddress,
-                    releaseStatus: report.status,
-                    releasedAt: report.releasedAt,
-                    finalRecommendation: report.finalRecommendation,
-                    paymentEnabled: report.paymentEnabled,
-                    conflictDetected: report.conflictDetected,
-                    conflictResolved: report.conflictResolved || false,
+                    propertyType: report.propertyType,
+                    status: report.status,
                     createdAt: report.createdAt,
+                    downloadCount: report.downloadCount,
                     canDownload: report.canDownload,
-                    isMerged: report.isMerged
+                    isMerged: report.isMerged || false,
+                    finalRecommendation: report.finalRecommendation,
+                    paymentEnabled: report.paymentEnabled || false,
+                    conflictDetected: report.conflictDetected || false
                 }));
 
                 if (pageNum === 1) {
@@ -73,7 +60,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                     setReports(prev => [...prev, ...formattedReports]);
                 }
 
-                setHasMore(response.data.pagination.hasNext);
+                setHasMore(response.data.pagination.currentPage < response.data.pagination.totalPages);
                 setError(null);
             } else {
                 throw new Error(response.message || 'Failed to fetch reports');
@@ -91,7 +78,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
         fetchReports(nextPage);
     };
 
-    const getStatusIcon = (status: string, conflictDetected: boolean) => {
+    const getStatusIcon = (status: UserReport['status'], conflictDetected: boolean) => {
         if (status === 'released') {
             return conflictDetected ?
                 <AlertTriangle className="w-5 h-5 text-yellow-500" /> :
@@ -103,7 +90,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
         }
     };
 
-    const getStatusColor = (status: string, conflictDetected: boolean) => {
+    const getStatusColor = (status: UserReport['status'], conflictDetected: boolean) => {
         if (status === 'released') {
             return conflictDetected ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800';
         } else if (status === 'withheld') {
@@ -113,12 +100,10 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
         }
     };
 
-    const getStatusText = (status: string, conflictDetected: boolean, conflictResolved: boolean) => {
+    const getStatusText = (status: UserReport['status'], conflictDetected: boolean) => {
         if (status === 'released') {
-            if (conflictDetected && !conflictResolved) {
+            if (conflictDetected) {
                 return 'Released with Conflicts';
-            } else if (conflictDetected && conflictResolved) {
-                return 'Released (Conflicts Resolved)';
             } else {
                 return 'Available';
             }
@@ -211,7 +196,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                     <div key={report.reportId} className="bg-white rounded-lg shadow-sm border p-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-3">
-                                {getStatusIcon(report.releaseStatus, report.conflictDetected)}
+                                {getStatusIcon(report.status, report.conflictDetected)}
                                 <div>
                                     <div className="flex items-center">
                                         <h3 className="font-medium text-gray-900">Policy {report.policyId}</h3>
@@ -225,8 +210,8 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                             </div>
 
                             <div className="flex items-center space-x-2">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.releaseStatus, report.conflictDetected)}`}>
-                                    {getStatusText(report.releaseStatus, report.conflictDetected, report.conflictResolved)}
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status, report.conflictDetected)}`}>
+                                    {getStatusText(report.status, report.conflictDetected)}
                                 </span>
 
                                 {report.finalRecommendation && (
@@ -243,12 +228,9 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                                 <span>Created: {new Date(report.createdAt).toLocaleDateString()}</span>
                             </div>
 
-                            {report.releasedAt && (
-                                <div className="flex items-center space-x-2">
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span>Released: {new Date(report.releasedAt).toLocaleDateString()}</span>
-                                </div>
-                            )}
+                            <div className="flex items-center space-x-2">
+                                <span>Downloads: {report.downloadCount}</span>
+                            </div>
 
                             <div className="flex items-center space-x-2">
                                 <span className={`inline-flex items-center space-x-1 ${report.paymentEnabled ? 'text-green-600' : 'text-yellow-600'}`}>
@@ -264,14 +246,11 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                                 <div className="flex items-center space-x-2">
                                     <AlertTriangle className="w-4 h-4 text-yellow-600" />
                                     <span className="text-sm font-medium text-yellow-800">
-                                        {report.conflictResolved ? 'Conflicts Resolved' : 'Conflicts Detected'}
+                                        Conflicts Detected
                                     </span>
                                 </div>
                                 <p className="text-sm text-yellow-700 mt-1">
-                                    {report.conflictResolved
-                                        ? 'All conflicts have been reviewed and resolved by administrators.'
-                                        : 'Differences between surveyor assessments were detected and noted in the report.'
-                                    }
+                                    Differences between surveyor assessments were detected and noted in the report.
                                 </p>
                             </div>
                         )}
@@ -329,7 +308,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
 
                                 {!report.canDownload && (
                                     <span className="text-sm text-gray-500">
-                                        {report.releaseStatus === 'pending' ? 'Processing...' : 'Under Review'}
+                                        {report.status === 'pending' ? 'Processing...' : 'Under Review'}
                                     </span>
                                 )}
                             </div>

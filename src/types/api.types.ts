@@ -938,6 +938,14 @@ export interface UserReportsResponse extends ApiResponse<{
   pagination: PaginationData;
 }> { }
 
+export interface ReportSummaryResponse extends ApiResponse<{
+  totalReports: number;
+  releasedReports: number;
+  pendingReports: number;
+  withheldReports: number;
+  completedReports: number;
+}> { }
+
 export interface ReportDetailsResponse extends ApiResponse<ReportDetails> { }
 
 export interface ReportStatusResponse extends ApiResponse<ReportStatus> { }
@@ -961,6 +969,136 @@ export interface ProcessingMonitorData {
   performanceMetrics: PerformanceMetrics | null;
   systemHealth: SystemHealth | null;
   recentActivity: RecentActivity | null;
+}
+
+// Component Props Types
+export interface ComponentProps {
+  className?: string;
+  children?: React.ReactNode;
+}
+
+// Generic API Response Handler
+export interface ApiErrorDetails {
+  code?: string;
+  field?: string;
+  message: string;
+}
+
+// Enhanced Error Response
+export interface EnhancedApiErrorResponse {
+  success: false;
+  error: string;
+  message: string;
+  code?: string;
+  details?: ApiErrorDetails[] | Record<string, unknown>;
+  timestamp?: string;
+  path?: string;
+}
+
+// Form Data Types
+export interface FormFieldValue {
+  value: unknown;
+  error?: string;
+  touched?: boolean;
+}
+
+export interface FormData {
+  [key: string]: FormFieldValue | FormData;
+}
+
+// Navigation and UI Types
+export interface NavItem {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  badge?: string | number;
+}
+
+export interface DropdownOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+
+// Modal and Dialog Types
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+}
+
+// Table and List Types
+export interface TableColumn<T = unknown> {
+  key: keyof T | string;
+  label: string;
+  sortable?: boolean;
+  render?: (value: unknown, item: T) => React.ReactNode;
+}
+
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage?: number;
+  totalItems?: number;
+}
+
+// Search and Filter Types
+export interface SearchFilters {
+  search?: string;
+  status?: string;
+  category?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  [key: string]: string | undefined;
+}
+
+// File Upload Types
+export interface FileUploadProps {
+  accept?: string;
+  multiple?: boolean;
+  maxSize?: number;
+  onUpload: (files: File[]) => void;
+  onError?: (error: string) => void;
+}
+
+export interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+  uploadedAt: string;
+}
+
+// Dashboard and Analytics Types
+export interface DashboardCard {
+  title: string;
+  value: string | number;
+  change?: number;
+  trend?: 'up' | 'down' | 'neutral';
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+  color?: string;
+}
+
+// Notification Types
+export interface NotificationItem {
+  id: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  actions?: Array<{
+    label: string;
+    action: () => void;
+  }>;
 }
 
 // Strict typing for status values
