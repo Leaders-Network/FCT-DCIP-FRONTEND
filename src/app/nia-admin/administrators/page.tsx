@@ -58,7 +58,8 @@ const NIAAdministratorsPage = () => {
     const fetchNIAAdmins = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('niaAdminToken');
+            // Try NIA admin token first, then fall back to regular token
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
 
             if (!token) {
                 throw new Error('No authentication token found');
@@ -93,7 +94,8 @@ const NIAAdministratorsPage = () => {
     const handleCreateAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('niaAdminToken');
+            // Try NIA admin token first, then fall back to regular token
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
 
             if (!token) {
                 throw new Error('No authentication token found');
