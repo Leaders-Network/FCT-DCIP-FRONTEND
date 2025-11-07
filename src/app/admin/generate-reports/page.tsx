@@ -200,7 +200,7 @@ export default function GenerateReportsPage() {
                             <div className="mt-4">
                                 <h5 className="font-medium mb-2">Created Reports:</h5>
                                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                                    {result.data.reports.slice(0, 10).map((report: any, index: number) => (
+                                    {result.data.reports.slice(0, 10).map((report: { _id: string; policyId: string; status: string; createdAt: string }, index: number) => (
                                         <div key={index} className="flex items-center justify-between p-2 border rounded">
                                             <div>
                                                 <div className="font-medium text-sm">

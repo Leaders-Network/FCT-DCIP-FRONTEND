@@ -37,8 +37,16 @@ interface ConflictInquiry {
     };
     policyId: {
         _id: string;
-        propertyDetails: any;
-        contactDetails: any;
+        propertyDetails: {
+            address: string;
+            propertyType: string;
+            buildingValue: number;
+        };
+        contactDetails: {
+            fullName: string;
+            email: string;
+            phoneNumber: string;
+        };
         status: string;
     };
     assignedAdminId?: {

@@ -253,7 +253,7 @@ export default function DebugMergedReportsPage() {
 
                                 <div className="space-y-3">
                                     <h5 className="font-medium">Policies Missing Merged Reports:</h5>
-                                    {missingReports.missingReportPolicies.map((policy: any) => (
+                                    {missingReports.missingReportPolicies.map((policy: { _id: string; policyNumber: string; status: string; propertyDetails: { address: string } }) => (
                                         <div key={policy._id} className="flex items-center justify-between p-3 border rounded-lg">
                                             <div>
                                                 <div className="font-medium">Policy: {policy._id.substring(0, 8)}...</div>

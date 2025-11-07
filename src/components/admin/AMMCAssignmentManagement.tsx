@@ -27,6 +27,17 @@ interface AMMCSurveyorForAssignment {
     completedSurveys: number;
 }
 
+interface SurveyorProfile {
+    availability?: 'available' | 'busy' | 'unavailable';
+    specialization?: string[];
+    experience?: number;
+}
+
+interface SurveyorStatistics {
+    completedSurveys?: number;
+    currentWorkload?: number;
+}
+
 interface AMMCSurveyorApiResponse {
     _id: string;
     firstname?: string;
@@ -37,15 +48,8 @@ interface AMMCSurveyorApiResponse {
     experience?: number;
     rating?: number;
     completedSurveys?: number;
-    profile?: {
-        availability?: 'available' | 'busy' | 'unavailable';
-        specialization?: string[];
-        experience?: number;
-    };
-    statistics?: {
-        completedSurveys?: number;
-        currentWorkload?: number;
-    };
+    profile?: SurveyorProfile;
+    statistics?: SurveyorStatistics;
 }
 
 // Use types from api.types.ts

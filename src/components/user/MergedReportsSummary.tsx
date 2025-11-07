@@ -22,10 +22,8 @@ interface ReportSummary {
     totalReports: number;
     releasedReports: number;
     pendingReports: number;
-    approvedReports: number;
-    rejectedReports: number;
-    conflictReports: number;
-    paymentEnabledReports: number;
+    withheldReports: number;
+    completedReports: number;
 }
 
 interface RecentReport {
@@ -160,10 +158,10 @@ export default function MergedReportsSummary() {
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">Approved</p>
-                                <p className="text-2xl font-bold text-blue-600">{summary.approvedReports}</p>
+                                <p className="text-sm text-gray-600">Processing</p>
+                                <p className="text-2xl font-bold text-yellow-600">{summary.pendingReports}</p>
                             </div>
-                            <TrendingUp className="w-8 h-8 text-blue-600" />
+                            <Clock className="w-8 h-8 text-yellow-600" />
                         </div>
                     </CardContent>
                 </Card>
@@ -172,10 +170,10 @@ export default function MergedReportsSummary() {
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">Payment Enabled</p>
-                                <p className="text-2xl font-bold text-green-600">{summary.paymentEnabledReports}</p>
+                                <p className="text-sm text-gray-600">Under Review</p>
+                                <p className="text-2xl font-bold text-red-600">{summary.withheldReports}</p>
                             </div>
-                            <DollarSign className="w-8 h-8 text-green-600" />
+                            <AlertTriangle className="w-8 h-8 text-red-600" />
                         </div>
                     </CardContent>
                 </Card>
