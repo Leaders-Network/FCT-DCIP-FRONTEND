@@ -7,7 +7,9 @@ import { Home, Users, FileText, Settings, Building, ClipboardList, Shield, Alert
 import { useAuth } from "@/context/useAuth";
 import { IoMdLogOut } from "react-icons/io";
 
-const NavItem = ({ href, icon, label }: { href: string; icon: any; label: string }) => {
+import { LucideIcon } from 'lucide-react';
+
+const NavItem = ({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) => {
   const pathname = usePathname();
   const isActive = pathname === href;
 
@@ -18,7 +20,7 @@ const NavItem = ({ href, icon, label }: { href: string; icon: any; label: string
           ? "bg-[#028835] text-white"
           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
           }`}>
-        {React.createElement(icon, { className: "h-5 w-5 mr-3" })}
+        <Icon className="h-5 w-5 mr-3" />
         <span>{label}</span>
       </div>
     </Link>

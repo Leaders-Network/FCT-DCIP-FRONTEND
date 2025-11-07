@@ -46,8 +46,16 @@ interface ConflictInquiry {
   };
   policyId: {
     _id: string;
-    propertyDetails: any;
-    contactDetails: any;
+    propertyDetails: {
+      address: string;
+      propertyType: string;
+      buildingValue: number;
+    };
+    contactDetails: {
+      fullName: string;
+      email: string;
+      phoneNumber: string;
+    };
     status: string;
   };
   assignedAdminId?: {
@@ -867,10 +875,17 @@ const InquiryDetailsModal: React.FC<{
 };
 
 // Response Modal Component
+interface ResponseForm {
+  response: string;
+  status: 'resolved' | 'investigating' | 'escalated';
+  priority: 'low' | 'medium' | 'high';
+  internalNotes: string;
+}
+
 const ResponseModal: React.FC<{
   inquiry: ConflictInquiry;
-  responseForm: any;
-  setResponseForm: (form: any) => void;
+  responseForm: ResponseForm;
+  setResponseForm: (form: ResponseForm) => void;
   onClose: () => void;
   onSubmit: () => void;
 }> = ({ inquiry, responseForm, setResponseForm, onClose, onSubmit }) => {

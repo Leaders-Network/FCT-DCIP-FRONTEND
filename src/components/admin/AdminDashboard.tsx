@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { 
-  Users, 
-  FileText, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle, 
-  TrendingUp, 
+import {
+  Users,
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  TrendingUp,
   Calendar,
   MapPin,
   Star,
@@ -15,17 +15,17 @@ import {
   Bell
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { 
-  getAdminDashboardData, 
-  getQuickStats, 
+import {
+  getAdminDashboardData,
+  getQuickStats,
   getAdminAlerts,
-  getAdminSurveyors 
+  getAdminSurveyors
 } from '@/services/api';
-import { 
-  DashboardData, 
-  QuickStats, 
+import {
+  DashboardData,
+  QuickStats,
   AdminAlert,
-  Surveyor 
+  Surveyor
 } from '@/types/api.types';
 
 interface SurveyorPerformance {
@@ -42,13 +42,13 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // API Data States
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [quickStats, setQuickStats] = useState<QuickStats | null>(null);
   const [alerts, setAlerts] = useState<AdminAlert[]>([]);
   const [topPerformers, setTopPerformers] = useState<SurveyorPerformance[]>([]);
-  
+
   // UI State
   const [activeTab, setActiveTab] = useState<'overview' | 'alerts'>('overview');
 
@@ -59,7 +59,7 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Fetch all dashboard data from the new API endpoints
       const [
@@ -71,7 +71,7 @@ const AdminDashboard: React.FC = () => {
         getAdminDashboardData(),
         getQuickStats(),
         getAdminAlerts(),
-  getAdminSurveyors({ status: 'active', limit: 5 })
+        getAdminSurveyors({ status: 'active', limit: 5 })
       ]);
 
       // Handle dashboard data
@@ -104,7 +104,7 @@ const AdminDashboard: React.FC = () => {
         setTopPerformers(performers);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch dashboard data:', error);
       setError('Failed to load dashboard data. Please try refreshing.');
     } finally {
@@ -223,7 +223,7 @@ const AdminDashboard: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-2">Overview of policy requests and surveyor operations</p>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {/* Alerts Badge */}
             {alerts.length > 0 && (
@@ -238,7 +238,7 @@ const AdminDashboard: React.FC = () => {
                 )}
               </button>
             )}
-            
+
             {/* Refresh Button */}
             <button
               onClick={handleRefresh}
@@ -282,11 +282,10 @@ const AdminDashboard: React.FC = () => {
                       <p className="text-sm mt-1 opacity-80">{alert.message}</p>
                       <p className="text-xs mt-2 opacity-60">{formatTimeAgo(alert.timestamp)}</p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      alert.severity === 'high' ? 'bg-red-200 text-red-800' :
-                      alert.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
-                      'bg-blue-200 text-blue-800'
-                    }`}>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${alert.severity === 'high' ? 'bg-red-200 text-red-800' :
+                        alert.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                          'bg-blue-200 text-blue-800'
+                      }`}>
                       {alert.severity.toUpperCase()}
                     </span>
                   </div>
@@ -425,9 +424,8 @@ const AdminDashboard: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center text-sm">
                 <span className="text-gray-600">Overdue Rate:</span>
-                <span className={`ml-2 font-medium ${
-                  (dashboardData?.analytics.systemHealth.overdueRate || 0) < 5 ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <span className={`ml-2 font-medium ${(dashboardData?.analytics.systemHealth.overdueRate || 0) < 5 ? 'text-green-600' : 'text-red-600'
+                  }`}>
                   {dashboardData?.analytics.systemHealth.overdueRate || 0}%
                 </span>
               </div>
@@ -474,12 +472,11 @@ const AdminDashboard: React.FC = () => {
                               {policy.propertyDetails?.propertyType} • {formatTimeAgo(policy.createdAt)}
                             </p>
                           </div>
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            policy.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            policy.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                            policy.status === 'approved' ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${policy.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              policy.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                                policy.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  'bg-gray-100 text-gray-800'
+                            }`}>
                             {policy.status}
                           </span>
                         </div>
@@ -500,19 +497,18 @@ const AdminDashboard: React.FC = () => {
                         <div key={assignment._id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-gray-900">
-                              Assignment {assignment.status === 'completed' ? 'completed' : 'updated'} - 
+                              Assignment {assignment.status === 'completed' ? 'completed' : 'updated'} -
                               <span className="font-medium"> {assignment.location?.address}</span>
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                               Priority: {assignment.priority} • {formatTimeAgo(assignment.updatedAt)}
                             </p>
                           </div>
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                            assignment.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                                assignment.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                            }`}>
                             {assignment.status.replace('_', ' ')}
                           </span>
                         </div>
@@ -539,12 +535,11 @@ const AdminDashboard: React.FC = () => {
                               Action: {submission.recommendedAction} • {formatTimeAgo(submission.submissionTime)}
                             </p>
                           </div>
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            submission.status === 'approved' ? 'bg-green-100 text-green-800' :
-                            submission.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
-                            submission.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${submission.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              submission.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
+                                submission.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                            }`}>
                             {submission.status.replace('_', ' ')}
                           </span>
                         </div>
@@ -554,14 +549,14 @@ const AdminDashboard: React.FC = () => {
                 )}
 
                 {/* No recent activity fallback */}
-                {(!dashboardData?.recentActivity.policies?.length && 
-                  !dashboardData?.recentActivity.assignments?.length && 
+                {(!dashboardData?.recentActivity.policies?.length &&
+                  !dashboardData?.recentActivity.assignments?.length &&
                   !dashboardData?.recentActivity.submissions?.length) && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>No recent activity</p>
-                  </div>
-                )}
+                    <div className="text-center py-8 text-gray-500">
+                      <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p>No recent activity</p>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -679,13 +674,13 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </div> 
+        </div>
 
         {/* Quick Actions */}
         <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <button 
+            <button
               onClick={() => router.push('/admin/dashboard/policies')}
               className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -693,8 +688,8 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-900">Manage Policies</p>
               <p className="text-xs text-gray-500">View and assign policies</p>
             </button>
-            
-            <button 
+
+            <button
               onClick={() => router.push('/admin/dashboard/surveyors')}
               className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -702,8 +697,8 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-900">Manage Surveyors</p>
               <p className="text-xs text-gray-500">View surveyor profiles</p>
             </button>
-            
-            <button 
+
+            <button
               onClick={() => router.push('/admin/dashboard/assignments')}
               className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -711,8 +706,8 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-900">View Assignments</p>
               <p className="text-xs text-gray-500">Manage surveyor tasks</p>
             </button>
-            
-            <button 
+
+            <button
               onClick={() => router.push('/admin/dashboard/policies?tab=surveyed')}
               className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >

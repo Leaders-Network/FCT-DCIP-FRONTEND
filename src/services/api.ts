@@ -14,8 +14,8 @@ import {
   PolicyRequest,
   ApiResponse,
   UserReportsResponse,
+  ReportSummaryResponse,
   ReportDetailsResponse,
-  ReportStatusResponse,
   DownloadReportResponse
 } from "../types/api.types";
 
@@ -1479,12 +1479,7 @@ export const userReportAPI = {
   },
 
   // Get report summary/statistics
-  getReportSummary: async (): Promise<ApiResponse<{
-    totalReports: number;
-    completedReports: number;
-    pendingReports: number;
-    withheldReports: number;
-  }>> => {
+  getReportSummary: async (): Promise<ReportSummaryResponse> => {
     const response = await api.get('/report-release/user/reports/summary');
     return response.data;
   },
@@ -1503,9 +1498,17 @@ export const userReportAPI = {
 
   // Download individual AMMC report
   downloadAMMCReport: async (assignmentId: string): Promise<ApiResponse<{
-    downloadUrl: string;
-    reportId: string;
-    downloadCount: number;
+    submissionId: string;
+    organization: string;
+    downloadUrl?: string;
+    documents?: Array<{
+      cloudinaryUrl: string;
+      fileName: string;
+      isMainReport: boolean;
+    }>;
+    surveyData: any;
+    submittedAt: string;
+    surveyorNotes: string;
   }>> => {
     const response = await api.post(`/report-release/download/ammc/${assignmentId}`);
     return response.data;
@@ -1513,9 +1516,17 @@ export const userReportAPI = {
 
   // Download individual NIA report
   downloadNIAReport: async (assignmentId: string): Promise<ApiResponse<{
-    downloadUrl: string;
-    reportId: string;
-    downloadCount: number;
+    submissionId: string;
+    organization: string;
+    downloadUrl?: string;
+    documents?: Array<{
+      cloudinaryUrl: string;
+      fileName: string;
+      isMainReport: boolean;
+    }>;
+    surveyData: any;
+    submittedAt: string;
+    surveyorNotes: string;
   }>> => {
     const response = await api.post(`/report-release/download/nia/${assignmentId}`);
     return response.data;

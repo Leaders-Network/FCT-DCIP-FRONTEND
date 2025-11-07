@@ -46,7 +46,7 @@ const ConflictsPage: React.FC = () => {
 
       if (response.data?.dualAssignments) {
         const conflictAssignments = response.data.dualAssignments.filter(
-          (assignment: any) => assignment.conflictDetected
+          (assignment: { conflictDetected: boolean }) => assignment.conflictDetected
         );
         setConflicts(conflictAssignments);
       }

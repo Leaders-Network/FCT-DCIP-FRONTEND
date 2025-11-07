@@ -74,7 +74,8 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
       await adminApi.createAssignment(assignmentData);
       onAssignmentCreated();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setError(`Failed to create assignment: ${error.message}`);
     }
   };

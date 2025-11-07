@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, Save, User, Award } from 'lucide-react';
-import { NIASurveyor, SurveyorManagementProps } from '@/types/api.types';
+import { NIASurveyor, NIASurveyorManagementProps } from '@/types/api.types';
 
-const NIASurveyorManagement: React.FC<SurveyorManagementProps> = ({
+const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
     surveyor,
     mode,
     onSave,

@@ -5,7 +5,7 @@ import { PlusCircle, X, ChevronRight, MoreVertical, CheckCircle, List, Calendar,
 import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkout"
+import { Checkbox } from "@/components/ui/checkbox"
 import { getAdminProperties } from "@/services/api";
 
 export default function PropertiesPage() {
@@ -100,7 +100,15 @@ export default function PropertiesPage() {
     setIsFilterPanelOpen(false)
   }
 
-  const handleDeleteProperty = async (property: any) => {
+  interface AdminProperty {
+    _id: string;
+    address: string;
+    propertyType: string;
+    buildingValue: number;
+    status: string;
+  }
+
+  const handleDeleteProperty = async (property: AdminProperty) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/property/${property._id}`, {
         method: 'DELETE',
@@ -128,7 +136,7 @@ export default function PropertiesPage() {
 
   const handleBulkDelete = async () => {
     if (selectedProperties.length === 0) return;
-    
+
     try {
       const deletePromises = selectedProperties.map(propertyId =>
         fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/property/${propertyId}`, {
@@ -142,7 +150,7 @@ export default function PropertiesPage() {
       );
 
       await Promise.all(deletePromises);
-      
+
       setProperties(prev => prev.filter(p => !selectedProperties.includes(p._id)));
       setFilteredProperties(prev => prev.filter(p => !selectedProperties.includes(p._id)));
       setSelectedProperties([]);
@@ -153,8 +161,8 @@ export default function PropertiesPage() {
   };
 
   const togglePropertySelection = (propertyId: string) => {
-    setSelectedProperties(prev => 
-      prev.includes(propertyId) 
+    setSelectedProperties(prev =>
+      prev.includes(propertyId)
         ? prev.filter(id => id !== propertyId)
         : [...prev, propertyId]
     );
@@ -193,270 +201,269 @@ export default function PropertiesPage() {
     <>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Properties</h1>
-          <div className="flex gap-4">
-            {selectedProperties.length > 0 && (
-              <Button
-                onClick={handleBulkDelete}
-                className="bg-red-600 text-white hover:bg-red-700 rounded-full"
-              >
-                <Trash2 className="mr-2 h-5 w-5" />
-                Delete Selected ({selectedProperties.length})
-              </Button>
-            )}
+        <div className="flex gap-4">
+          {selectedProperties.length > 0 && (
             <Button
-              onClick={() => setShowPropertySidebar(true)}
-              className="bg-[#028835] text-white hover:bg-[#026a29] rounded-full"
+              onClick={handleBulkDelete}
+              className="bg-red-600 text-white hover:bg-red-700 rounded-full"
             >
-              <PlusCircle className="mr-2 h-5 w-5" />
-              New Property
+              <Trash2 className="mr-2 h-5 w-5" />
+              Delete Selected ({selectedProperties.length})
             </Button>
-          </div>
+          )}
+          <Button
+            onClick={() => setShowPropertySidebar(true)}
+            className="bg-[#028835] text-white hover:bg-[#026a29] rounded-full"
+          >
+            <PlusCircle className="mr-2 h-5 w-5" />
+            New Property
+          </Button>
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {/* Filter Section */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex space-x-2 flex-wrap items-center">
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setIsFilterPanelOpen(!isFilterPanelOpen)
-                      setSelectedFilterCategory(null)
-                    }}
-                    className="p-2 rounded hover:bg-[#DBDBDB]/80 flex items-center space-x-1"
-                  >
-                    <span>Add Filter</span>
-                    <span>≡</span>
-                  </button>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* Filter Section */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex space-x-2 flex-wrap items-center">
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setIsFilterPanelOpen(!isFilterPanelOpen)
+                    setSelectedFilterCategory(null)
+                  }}
+                  className="p-2 rounded hover:bg-[#DBDBDB]/80 flex items-center space-x-1"
+                >
+                  <span>Add Filter</span>
+                  <span>≡</span>
+                </button>
 
-                  {isFilterPanelOpen && (
-                    <div className="absolute top-10 left-0 bg-white border rounded shadow-md z-10 w-96">
-                      <div className="flex">
-                        {/* Left Column: Categories */}
-                        <div className="w-1/3 border-r">
-                          {["Status", "Keyword", "Date"].map((category) => (
-                            <button
-                              key={category}
-                              onClick={() => setSelectedFilterCategory(category.toLowerCase())}
-                              className={`rounded hover:bg-[#DBDBDB]/80 w-full text-left p-2 flex items-center justify-between ${
-                                selectedFilterCategory === category.toLowerCase() ? "bg-gray-100" : ""
+                {isFilterPanelOpen && (
+                  <div className="absolute top-10 left-0 bg-white border rounded shadow-md z-10 w-96">
+                    <div className="flex">
+                      {/* Left Column: Categories */}
+                      <div className="w-1/3 border-r">
+                        {["Status", "Keyword", "Date"].map((category) => (
+                          <button
+                            key={category}
+                            onClick={() => setSelectedFilterCategory(category.toLowerCase())}
+                            className={`rounded hover:bg-[#DBDBDB]/80 w-full text-left p-2 flex items-center justify-between ${selectedFilterCategory === category.toLowerCase() ? "bg-gray-100" : ""
                               }`}
-                            >
-                              <span className="flex items-center space-x-2">
+                          >
+                            <span className="flex items-center space-x-2">
                               <span>{category === "Status" ? (<CheckCircle />) : category === "Keyword" ? (<List />) : (<Calendar />)}</span>
-                                <span>{category}</span>
-                              </span>
-                              <ChevronRight className="w-3 h-3 text-gray-400" />
-                            </button>
-                          ))}
-                        </div>
+                              <span>{category}</span>
+                            </span>
+                            <ChevronRight className="w-3 h-3 text-gray-400" />
+                          </button>
+                        ))}
+                      </div>
 
-                        {/* Right Column: Options */}
-                        <div className="w-2/3 p-2">
-                          {selectedFilterCategory === "status" && (
+                      {/* Right Column: Options */}
+                      <div className="w-2/3 p-2">
+                        {selectedFilterCategory === "status" && (
+                          <div>
+                            {statusOptions.map((status) => (
+                              <label key={status} className="flex items-center space-x-2 p-1">
+                                <Checkbox
+                                  checked={activeFilters.includes(status)}
+                                  onCheckedChange={() => toggleFilter(status)}
+                                />
+                                <span>{status}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        {selectedFilterCategory === "keyword" && (
+                          <div>
+                            <Input
+                              type="text"
+                              placeholder="Search Keyword"
+                              value={searchKeyword}
+                              onChange={(e) => setSearchKeyword(e.target.value)}
+                              className="w-full p-2 border rounded"
+                            />
+                            <Button className="w-full mt-2 bg-[#028835] text-white" onClick={handleKeywordSearch}>
+                              Search
+                            </Button>
+                          </div>
+                        )}
+                        {selectedFilterCategory === "date" && (
+                          <div className="space-y-2">
                             <div>
-                              {statusOptions.map((status) => (
-                                <label key={status} className="flex items-center space-x-2 p-1">
-                                  <Checkbox
-                                    checked={activeFilters.includes(status)}
-                                    onCheckedChange={() => toggleFilter(status)}
-                                  />
-                                  <span>{status}</span>
-                                </label>
-                              ))}
-                            </div>
-                          )}
-                          {selectedFilterCategory === "keyword" && (
-                            <div>
+                              <label className="text-sm text-gray-500 mb-1 block">Date from</label>
                               <Input
-                                type="text"
-                                placeholder="Search Keyword"
-                                value={searchKeyword}
-                                onChange={(e) => setSearchKeyword(e.target.value)}
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
                                 className="w-full p-2 border rounded"
                               />
-                              <Button className="w-full mt-2 bg-[#028835] text-white" onClick={handleKeywordSearch}>
-                                Search
-                              </Button>
                             </div>
-                          )}
-                          {selectedFilterCategory === "date" && (
-                            <div className="space-y-2">
-                              <div>
-                                <label className="text-sm text-gray-500 mb-1 block">Date from</label>
-                                <Input
-                                  type="date"
-                                  value={dateFrom}
-                                  onChange={(e) => setDateFrom(e.target.value)}
-                                  className="w-full p-2 border rounded"
-                                />
-                              </div>
-                              <div>
-                                <label className="text-sm text-gray-500 mb-1 block">Date to</label>
-                                <Input
-                                  type="date"
-                                  value={dateTo}
-                                  onChange={(e) => setDateTo(e.target.value)}
-                                  className="w-full p-2 border rounded"
-                                />
-                              </div>
-                              <Button onClick={handleDateSearch} className="w-full bg-[#028835] text-white">
-                                Search
-                              </Button>
+                            <div>
+                              <label className="text-sm text-gray-500 mb-1 block">Date to</label>
+                              <Input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                className="w-full p-2 border rounded"
+                              />
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Applied Filters */}
-                {activeFilters.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {activeFilters.map((filter) => (
-                      <div key={filter} className="flex items-center space-x-1 p-2 bg-gray-100 rounded">
-                        <span>{filter}</span>
-                        <button onClick={() => removeFilter(filter)} className="ml-1 text-red-500">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-gray-500 text-sm">No filters applied</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-white">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
-                    <Checkbox 
-                      checked={selectedProperties.length === filteredProperties.length && filteredProperties.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Address
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Owned By
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Property ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <tr key={index} className="border-b animate-pulse">
-                        <td className="py-4 px-4">
-                          <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="h-4 bg-gray-200 rounded w-32"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="h-4 bg-gray-200 rounded w-24"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="h-4 bg-gray-200 rounded w-20"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="h-6 bg-gray-200 rounded w-16"></div>
-                        </td>
-                        <td className="py-4">
-                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                        </td>
-                      </tr>
-                  ))
-                ) : filteredProperties.map((property, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Checkbox 
-                        checked={selectedProperties.includes(property._id)}
-                        onCheckedChange={() => togglePropertySelection(property._id)}
-                      />
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 max-w-xs">
-                      <div className="truncate">{property?.address}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.ownedBy?.firstname} {property?.ownedBy?.lastname}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?._id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusBadgeClass(property?.status)}`}
-                      >
-                        {property?.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowActionsDropdown(showActionsDropdown === property._id ? null : property._id)}
-                          className="p-2 hover:bg-gray-100 rounded-full"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </button>
-                        {showActionsDropdown === property._id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
-                            <div className="py-1">
-                              <button
-                                onClick={() => {
-                                  // View property logic
-                                  setShowActionsDropdown(null);
-                                }}
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                              >
-                                <Eye className="mr-3 h-4 w-4" />
-                                View Details
-                              </button>
-                              <button
-                                onClick={() => {
-                                  // Edit property logic
-                                  setShowActionsDropdown(null);
-                                }}
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                              >
-                                <Edit className="mr-3 h-4 w-4" />
-                                Edit Property
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setPropertyToDelete(property);
-                                  setShowDeleteModal(true);
-                                  setShowActionsDropdown(null);
-                                }}
-                                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                              >
-                                <Trash2 className="mr-3 h-4 w-4" />
-                                Delete Property
-                              </button>
-                            </div>
+                            <Button onClick={handleDateSearch} className="w-full bg-[#028835] text-white">
+                              Search
+                            </Button>
                           </div>
                         )}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Applied Filters */}
+              {activeFilters.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {activeFilters.map((filter) => (
+                    <div key={filter} className="flex items-center space-x-1 p-2 bg-gray-100 rounded">
+                      <span>{filter}</span>
+                      <button onClick={() => removeFilter(filter)} className="ml-1 text-red-500">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-gray-500 text-sm">No filters applied</span>
+              )}
+            </div>
           </div>
         </div>
-      
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-white">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                  <Checkbox
+                    checked={selectedProperties.length === filteredProperties.length && filteredProperties.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Address
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Owned By
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Property ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className="border-b animate-pulse">
+                    <td className="py-4 px-4">
+                      <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="h-6 bg-gray-200 rounded w-16"></div>
+                    </td>
+                    <td className="py-4">
+                      <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredProperties.map((property, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Checkbox
+                      checked={selectedProperties.includes(property._id)}
+                      onCheckedChange={() => togglePropertySelection(property._id)}
+                    />
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 max-w-xs">
+                    <div className="truncate">{property?.address}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?.ownedBy?.firstname} {property?.ownedBy?.lastname}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{property?._id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-md ${getStatusBadgeClass(property?.status)}`}
+                    >
+                      {property?.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowActionsDropdown(showActionsDropdown === property._id ? null : property._id)}
+                        className="p-2 hover:bg-gray-100 rounded-full"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                      {showActionsDropdown === property._id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                // View property logic
+                                setShowActionsDropdown(null);
+                              }}
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              <Eye className="mr-3 h-4 w-4" />
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => {
+                                // Edit property logic
+                                setShowActionsDropdown(null);
+                              }}
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            >
+                              <Edit className="mr-3 h-4 w-4" />
+                              Edit Property
+                            </button>
+                            <button
+                              onClick={() => {
+                                setPropertyToDelete(property);
+                                setShowDeleteModal(true);
+                                setShowActionsDropdown(null);
+                              }}
+                              className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                            >
+                              <Trash2 className="mr-3 h-4 w-4" />
+                              Delete Property
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <AddNewProperty isOpen={showPropertySidebar} onClose={() => setShowPropertySidebar(false)} />
 
       {/* Delete Confirmation Modal */}
