@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import ReportViewer from '@/components/user/ReportViewer';
+import { ReportViewer } from '@/components/LazyComponents';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { ReportId } from '@/types/api.types';

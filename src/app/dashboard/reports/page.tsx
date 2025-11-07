@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, AlertTriangle, FileText, RefreshCw } from 'lucide-react';
-import MergedReportDetailsModal from '@/components/user/MergedReportDetailsModal';
+import { MergedReportDetailsModal } from '@/components/LazyComponents';
 
 export default function UserReportsPage() {
     const [reports, setReports] = useState<UserReport[]>([]);
@@ -32,7 +32,7 @@ export default function UserReportsPage() {
     const fetchSummary = async () => {
         try {
             const response = await userReportAPI.getReportSummary();
-            if (response.success) {
+            if (response.success && response.data) {
                 setSummary(response.data);
             }
         } catch (error) {

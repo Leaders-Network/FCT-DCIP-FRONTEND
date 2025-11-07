@@ -38,7 +38,7 @@ interface RecentReport {
     canDownload: boolean;
 }
 
-export default function MergedReportsSummary() {
+const MergedReportsSummary: React.FC = () => {
     const [summary, setSummary] = useState<ReportSummary | null>(null);
     const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
     const [loading, setLoading] = useState(true);
@@ -266,4 +266,6 @@ export default function MergedReportsSummary() {
             )}
         </div>
     );
-}
+};
+
+export default React.memo(MergedReportsSummary);
