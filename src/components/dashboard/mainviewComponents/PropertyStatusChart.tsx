@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip, ChartOptions } from 'chart.js';
 import { Pie } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip);
@@ -16,7 +16,7 @@ const PropertyStatusChart: React.FC = () => {
     ],
   };
 
-  const options = {
+  const options: ChartOptions<'pie'> = {
     responsive: true,
     plugins: {
       legend: {
@@ -27,7 +27,7 @@ const PropertyStatusChart: React.FC = () => {
         text: "Property Status Report",
         font: {
           size: 16,
-          weight: 'bold',
+          weight: 'bold' as const,
         },
       },
     },
@@ -53,7 +53,6 @@ const PropertyStatusChart: React.FC = () => {
         <div className="w-2/3">
           <Pie
             data={data}
-            //@ts-expect-error the option must be an object
             options={options}
           />
         </div>
