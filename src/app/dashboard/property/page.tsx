@@ -66,7 +66,15 @@ const PropertyPage = () => {
     fetchProperties();
   };
 
-  const handleDeleteProperty = async (property: any) => {
+  interface Property {
+    _id: string;
+    status: string;
+    address: string;
+    propertyType: string;
+    buildingValue: number;
+  }
+
+  const handleDeleteProperty = async (property: Property) => {
     // Safety check: Only allow deletion of unverified properties
     if (property.status !== "Unverified") {
       alert('Only unverified properties can be deleted.');
@@ -87,12 +95,12 @@ const PropertyPage = () => {
     }
   };
 
-  const handleInsureClick = (property: any) => {
+  const handleInsureClick = (property: Property) => {
     setSelectedProperty(property);
     setShowPolicyRequest(true);
   };
 
-  const handleViewClick = (property: any) => {
+  const handleViewClick = (property: Property) => {
     setSelectedPropertyForView(property);
     setShowViewModal(true);
   };

@@ -2,18 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, AlertCircle, Download, RefreshCw, Eye } from 'lucide-react';
-import { ConflictDetails } from '@/types/api.types';
-
-interface ProcessingStatus {
-    status: 'not_started' | 'awaiting_surveys' | 'processing' | 'processing_delayed' | 'under_review' | 'completed' | 'unknown';
-    message: string;
-    progress?: number;
-    estimatedCompletion?: string;
-    processingProgress?: number;
-    conflictDetails?: ConflictDetails;
-    completedAt?: string;
-    reportId?: string;
-}
+import { ReportStatus, ReportStatusResponse } from '@/types/api.types';
 
 interface ReportProcessingStatusProps {
     policyId: string;
@@ -26,33 +15,31 @@ const ReportProcessingStatus: React.FC<ReportProcessingStatusProps> = ({
     onReportReady,
     refreshInterval = 30000 // 30 seconds default
 }) => {
-    const [status, setStatus] = useState<ProcessingStatus | null>(null);
+    const [status, setStatus] = useState<ReportStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-    const fetchStatus = async () => {
+    const fetchStatus = async (): Promise<void> => {
         try {
-            const response = await fetch(`/api/v1/report-release/status/${policyId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+            // Use the userReportAPI to get proper authentication
+            const { userReportAPI } = await import('@/services/api');
+            const response: ReportStatusResponse = await userReportAPI.getReportStatus(policyId);
+
+            if (response.success && response.data) {
+                setStatus(response.data);
+                setError(null);
+                setLastUpdated(new Date());
+
+                // Notify parent if report is ready
+                if (response.data.status === 'completed' && response.data.reportId && onReportReady) {
+                    onReportReady(response.data.reportId);
                 }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch processing status');
-            }
-
-            const data = await response.json();
-            setStatus(data.data);
-            setError(null);
-            setLastUpdated(new Date());
-
-            // Notify parent if report is ready
-            if (data.data.status === 'completed' && data.data.reportId && onReportReady) {
-                onReportReady(data.data.reportId);
+            } else {
+                throw new Error(response.message || 'Failed to fetch processing status');
             }
         } catch (err) {
+            console.error('Error fetching report status:', err);
             setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);
@@ -74,7 +61,7 @@ const ReportProcessingStatus: React.FC<ReportProcessingStatusProps> = ({
         };
     }, [policyId, status?.status, refreshInterval]);
 
-    const getStatusIcon = (status: string) => {
+    const getStatusIcon = (status: string): React.ReactNode => {
         switch (status) {
             case 'not_started':
                 return <Clock className="w-5 h-5 text-gray-500" />;
@@ -93,7 +80,7 @@ const ReportProcessingStatus: React.FC<ReportProcessingStatusProps> = ({
         }
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: string): string => {
         switch (status) {
             case 'not_started':
                 return 'bg-gray-100 text-gray-800';
@@ -112,7 +99,7 @@ const ReportProcessingStatus: React.FC<ReportProcessingStatusProps> = ({
         }
     };
 
-    const formatEstimatedTime = (estimatedCompletion: string) => {
+    const formatEstimatedTime = (estimatedCompletion: string): string => {
         const now = new Date();
         const completion = new Date(estimatedCompletion);
         const diffMs = completion.getTime() - now.getTime();

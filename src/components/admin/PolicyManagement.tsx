@@ -43,7 +43,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     }
   }, [showActionsDropdown]);
 
-  const handleFetchDocumentUrl = async (document: any) => {
+  const handleFetchDocumentUrl = async (document: string | { cloudinaryUrl: string }) => {
     if (typeof document === 'string') {
       const response = await adminApi.getSurveyDocumentDownloadUrl(document);
       setDocumentUrl(response.data.url);
@@ -576,7 +576,16 @@ const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, getStat
 };
 
 // Policy Details Tab
-const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: any }> = ({
+interface AssignmentData {
+  _id: string;
+  surveyorId: string | null;
+  status: string;
+  assignedAt?: string;
+  deadline?: string;
+  priority?: string;
+}
+
+const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: AssignmentData | null }> = ({
   policy,
   assignmentData
 }) => (
@@ -717,9 +726,32 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: any }>
 );
 
 // Policy Survey Tab
+interface SurveyData {
+  surveyDetails?: {
+    propertyCondition?: string;
+    structuralAssessment?: string;
+    riskFactors?: string;
+    recommendations?: string;
+    estimatedValue?: number;
+  };
+  surveyNotes?: string;
+  recommendedAction?: string;
+  contactLog?: Array<{
+    date: string;
+    method: string;
+    notes: string;
+    successful: boolean;
+  }>;
+  documents?: Array<{
+    fileName: string;
+    cloudinaryUrl: string;
+    category: string;
+  }>;
+}
+
 const PolicySurveyTab: React.FC<{
   policy: PolicyRequest;
-  surveyData: any;
+  surveyData: SurveyData | null;
   loading: boolean;
 }> = ({ policy, surveyData, loading }) => {
   if (policy.status === 'submitted' || policy.status === 'assigned') {
@@ -822,7 +854,7 @@ const PolicySurveyTab: React.FC<{
         <div>
           <h4 className="font-medium text-gray-900 mb-3">Contact Log</h4>
           <div className="space-y-3">
-            {surveyData.contactLog.map((entry: any, index: number) => (
+            {surveyData.contactLog?.map((entry, index: number) => (
               <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
                 <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
                   <Calendar className="h-4 w-4" />
@@ -846,7 +878,7 @@ const PolicySurveyTab: React.FC<{
 // Policy Documents Tab
 const PolicyDocumentsTab: React.FC<{
   policy: PolicyRequest;
-  surveyData: any;
+  surveyData: SurveyData | null;
   loading: boolean;
 }> = ({ policy, surveyData, loading }) => {
   if (loading && (policy.status === 'surveyed' || policy.status === 'approved' || policy.status === 'rejected')) {

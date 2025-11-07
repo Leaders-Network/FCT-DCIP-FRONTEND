@@ -34,7 +34,7 @@ const AssignmentsList = () => {
 
           if (response.data && response.data.dualAssignments) {
             // Convert dual assignments to assignment format
-            fetchedAssignments = response.data.dualAssignments.map((dualAssignment: any) => {
+            fetchedAssignments = response.data.dualAssignments.map((dualAssignment: DualAssignment) => {
               const currentAssignment = dualAssignment.currentSurveyorInfo?.assignmentId || {};
 
               return {

@@ -2,7 +2,9 @@
  * Authentication utility functions
  */
 
-export const getAuthToken = (tokenType?: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor'): string | null => {
+export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor';
+
+export const getAuthToken = (tokenType?: TokenType): string | null => {
     if (typeof window === 'undefined') return null;
 
     // If specific token type is requested, try to get that first
@@ -80,7 +82,7 @@ export const isAuthenticated = (): boolean => {
     return getAuthToken() !== null;
 };
 
-export const setAuthToken = (token: string, tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor' = 'admin'): void => {
+export const setAuthToken = (token: string, tokenType: TokenType = 'admin'): void => {
     if (typeof window === 'undefined') return;
 
     const tokenKey = getTokenKeyForType(tokenType);
@@ -88,7 +90,7 @@ export const setAuthToken = (token: string, tokenType: 'user' | 'admin' | 'super
     console.log(`Auth token set for: ${tokenKey}`);
 };
 
-export const removeAuthToken = (tokenType?: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor'): void => {
+export const removeAuthToken = (tokenType?: TokenType): void => {
     if (typeof window === 'undefined') return;
 
     if (tokenType) {
@@ -144,7 +146,7 @@ export const clearAuthTokens = (): void => {
     console.log('All auth tokens and user info cleared');
 };
 
-export const getApiHeaders = (tokenType?: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor'): Record<string, string> => {
+export const getApiHeaders = (tokenType?: TokenType): Record<string, string> => {
     const token = getAuthToken(tokenType);
     const headers: Record<string, string> = {
         'Content-Type': 'application/json'
@@ -184,7 +186,7 @@ export const getCurrentTokenType = (): string | null => {
 };
 
 // Check if user has specific access level
-export const hasAccessLevel = (requiredLevel: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor'): boolean => {
+export const hasAccessLevel = (requiredLevel: TokenType): boolean => {
     const currentType = getCurrentTokenType();
     if (!currentType) return false;
 

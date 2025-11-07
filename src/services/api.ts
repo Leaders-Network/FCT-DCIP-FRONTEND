@@ -13,7 +13,11 @@ import {
   ContactLogEntry,
   PolicyRequest,
   ApiResponse,
-  PaginationData
+  UserReportsResponse,
+  ReportSummaryResponse,
+  ReportDetailsResponse,
+  DownloadReportResponse,
+  IndividualReportDownloadResponse
 } from "../types/api.types";
 
 
@@ -55,6 +59,7 @@ api.interceptors.request.use(
     } else if (config.url?.includes('/user') ||
       config.url?.includes('/policy') ||
       config.url?.includes('/payment') ||
+      config.url?.includes('/report-release') ||
       config.url?.includes('/auth/login') ||
       config.url?.includes('/auth/register')) {
       // User-specific endpoints
@@ -1470,37 +1475,37 @@ export const tokenManager = {
 // User Report API functions
 export const userReportAPI = {
   // Get user's reports
-  getUserReports: async (page = 1, limit = 10) => {
+  getUserReports: async (page = 1, limit = 10): Promise<UserReportsResponse> => {
     const response = await api.get(`/report-release/user/reports?page=${page}&limit=${limit}`);
     return response.data;
   },
 
   // Get report summary/statistics
-  getReportSummary: async () => {
+  getReportSummary: async (): Promise<ReportSummaryResponse> => {
     const response = await api.get('/report-release/user/reports/summary');
     return response.data;
   },
 
   // Get specific report details
-  getReportDetails: async (reportId: string) => {
+  getReportDetails: async (reportId: string): Promise<ReportDetailsResponse> => {
     const response = await api.get(`/report-release/report/${reportId}`);
     return response.data;
   },
 
   // Download merged report
-  downloadReport: async (reportId: string) => {
+  downloadReport: async (reportId: string): Promise<DownloadReportResponse> => {
     const response = await api.post(`/report-release/download/${reportId}`);
     return response.data;
   },
 
   // Download individual AMMC report
-  downloadAMMCReport: async (assignmentId: string) => {
+  downloadAMMCReport: async (assignmentId: string): Promise<ApiResponse<IndividualReportDownloadResponse>> => {
     const response = await api.post(`/report-release/download/ammc/${assignmentId}`);
     return response.data;
   },
 
   // Download individual NIA report
-  downloadNIAReport: async (assignmentId: string) => {
+  downloadNIAReport: async (assignmentId: string): Promise<ApiResponse<IndividualReportDownloadResponse>> => {
     const response = await api.post(`/report-release/download/nia/${assignmentId}`);
     return response.data;
   },

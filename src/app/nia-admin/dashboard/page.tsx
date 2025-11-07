@@ -36,7 +36,13 @@ interface DashboardStats {
         'in-progress'?: number;
         completed?: number;
     };
-    recentAssignments: any[];
+    recentAssignments: Array<{
+        _id: string;
+        assignmentStatus: string;
+        completionStatus: number;
+        priority: string;
+        createdAt: string;
+    }>;
 }
 
 const NIAAdminDashboard = () => {
