@@ -604,8 +604,16 @@ const NIASurveyorsPage = () => {
                         specialization: selectedSurveyor.specialization || [],
                         experience: selectedSurveyor.experience || 0,
                         availability: selectedSurveyor.availability || 'unavailable',
-                        maxAssignments: selectedSurveyor.maxAssignments || 10
-                    } as NIASurveyor : null}
+                        maxAssignments: selectedSurveyor.maxAssignments || 10,
+                        // Required fields from NIASurveyor interface
+                        userId: selectedSurveyor.userId,
+                        status: selectedSurveyor.status,
+                        currentAssignments: selectedSurveyor.currentAssignments,
+                        completedAssignments: selectedSurveyor.completedAssignments,
+                        rating: selectedSurveyor.rating,
+                        joinedDate: selectedSurveyor.joinedDate,
+                        lastActive: selectedSurveyor.lastActive
+                    } : null}
                     mode={managementMode}
                     onSave={async (surveyorData: NIASurveyor) => {
                         // Convert NIASurveyor to NIASurveyorForManagement format

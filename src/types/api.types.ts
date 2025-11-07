@@ -712,7 +712,27 @@ export type {
   ReportDetailsProps,
   AssignmentDetailProps,
   SurveySubmissionProps,
-  SurveySubmissionData
+  SurveySubmissionData,
+  BaseComponentProps,
+  ModalComponentProps,
+  FormComponentProps,
+  TableComponentProps,
+  SearchComponentProps,
+  FilterComponentProps,
+  PaginationComponentProps,
+  DashboardCardProps,
+  StatusBadgeProps,
+  FileUploadComponentProps,
+  DropdownComponentProps,
+  NavigationProps,
+  SidebarProps,
+  HeaderProps,
+  LoadingComponentProps,
+  ErrorComponentProps,
+  EmptyStateProps,
+  ConfirmationDialogProps,
+  ToastProps,
+  ChartComponentProps
 } from './component.types';
 
 // Report Types
@@ -913,14 +933,8 @@ export interface ServerError {
 export type AppError = ValidationError | NetworkError | ServerError;
 
 // Form Data Types
-export interface FormFieldValue {
-  value: unknown;
-  error?: string;
-  touched?: boolean;
-}
-
 export interface FormData {
-  [key: string]: FormFieldValue | FormData;
+  [key: string]: FormFieldValue<unknown> | FormData;
 }
 
 // Navigation and UI Types
@@ -1026,6 +1040,35 @@ export type ConflictSeverity = 'low' | 'medium' | 'high' | 'critical';
 export type SystemHealthStatus = 'healthy' | 'warning' | 'critical';
 export type RecommendationAction = 'approve' | 'reject' | 'request_more_info';
 
+// Survey Data Interface for proper typing
+export interface SurveyData {
+  propertyCondition?: string;
+  structuralAssessment?: string;
+  riskFactors?: string;
+  recommendations?: string;
+  estimatedValue?: number;
+  photos?: Array<{
+    url: string;
+    description: string;
+    timestamp: string;
+  }>;
+}
+
+// Individual Report Download Response
+export interface IndividualReportDownloadResponse {
+  submissionId: string;
+  organization: string;
+  downloadUrl?: string;
+  documents?: Array<{
+    cloudinaryUrl: string;
+    fileName: string;
+    isMainReport: boolean;
+  }>;
+  surveyData: SurveyData;
+  submittedAt: string;
+  surveyorNotes: string;
+}
+
 // Enhanced API Response types with better error handling
 export interface ApiErrorResponse {
   success: false;
@@ -1046,6 +1089,41 @@ export type ApiResponseUnion<T = unknown> = ApiSuccessResponse<T> | ApiErrorResp
 
 // Utility type for API method return types
 export type ApiMethod<T = unknown> = Promise<ApiResponse<T>>;
+
+// Generic utility types
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
+// Event handler types
+export type EventHandler<T = Event> = (event: T) => void;
+export type AsyncEventHandler<T = Event> = (event: T) => Promise<void>;
+
+// Form types
+export type FormFieldError = string | null;
+export type FormFieldValue<T = unknown> = {
+  value: T;
+  error: FormFieldError;
+  touched: boolean;
+};
+
+// API status types
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+export type RequestStatus = 'pending' | 'fulfilled' | 'rejected';
+
+// Date and time types
+export type DateString = string; // ISO date string
+export type TimestampString = string; // ISO timestamp string
+
+// ID types for better type safety
+export type UserId = string;
+export type PolicyId = string;
+export type AssignmentId = string;
+export type SurveyorId = string;
+export type ReportId = string;
+export type DocumentId = string;
 
 // Processing Monitor Types (matching processingMonitor service)
 export interface ProcessingOverview {
@@ -1195,4 +1273,3 @@ export interface ReportDetailsExtended {
     niaReportId?: string;
   };
 }
-

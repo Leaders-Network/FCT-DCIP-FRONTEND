@@ -151,32 +151,26 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
         try {
             setDownloading(true);
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/report-release/download/${reportId}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
+            const { userReportAPI } = await import('@/services/api');
+            const response = await userReportAPI.downloadReport(reportId);
 
-            if (!response.ok) {
-                throw new Error('Failed to initiate download');
+            if (response.success) {
+                // Create and trigger download
+                const dataStr = JSON.stringify(response.data, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `merged-report-${reportId}-${Date.now()}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                alert('Report downloaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to download report');
             }
-
-            const data = await response.json();
-
-            // Create and trigger download
-            const dataStr = JSON.stringify(data.data, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `merged-report-${reportId}-${Date.now()}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            alert('Report downloaded successfully');
 
         } catch (err) {
             console.error('Download failed:', err);
@@ -355,36 +349,29 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                     onClick={async () => {
                                         if (mergedReport.individualReports?.ammcReportId) {
                                             try {
-                                                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/report-release/download/ammc/${mergedReport.individualReports.ammcReportId}`, {
-                                                    method: 'POST',
-                                                    headers: {
-                                                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                                                    }
-                                                });
+                                                const { userReportAPI } = await import('@/services/api');
+                                                const response = await userReportAPI.downloadAMMCReport(mergedReport.individualReports.ammcReportId);
 
-                                                if (response.ok) {
-                                                    const data = await response.json();
-                                                    if (data.success && data.data) {
-                                                        // Check if there's a direct download URL
-                                                        if (data.data.downloadUrl) {
-                                                            window.open(data.data.downloadUrl, '_blank');
-                                                        } else if (data.data.documents && data.data.documents.length > 0) {
-                                                            window.open(data.data.documents[0].cloudinaryUrl, '_blank');
-                                                        } else {
-                                                            // Fallback: download as JSON
-                                                            const dataStr = JSON.stringify(data.data, null, 2);
-                                                            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                                                            const url = URL.createObjectURL(dataBlob);
-                                                            const link = document.createElement('a');
-                                                            link.href = url;
-                                                            link.download = `ammc-report-${mergedReport.individualReports.ammcReportId}-${Date.now()}.json`;
-                                                            document.body.appendChild(link);
-                                                            link.click();
-                                                            document.body.removeChild(link);
-                                                            URL.revokeObjectURL(url);
-                                                        }
-                                                        alert('AMMC report downloaded successfully');
+                                                if (response.success && response.data) {
+                                                    // Check if there's a direct download URL
+                                                    if (response.data.downloadUrl) {
+                                                        window.open(response.data.downloadUrl, '_blank');
+                                                    } else if (response.data.documents && response.data.documents.length > 0) {
+                                                        window.open(response.data.documents[0].cloudinaryUrl, '_blank');
+                                                    } else {
+                                                        // Fallback: download as JSON
+                                                        const dataStr = JSON.stringify(response.data, null, 2);
+                                                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                                                        const url = URL.createObjectURL(dataBlob);
+                                                        const link = document.createElement('a');
+                                                        link.href = url;
+                                                        link.download = `ammc-report-${mergedReport.individualReports.ammcReportId}-${Date.now()}.json`;
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        document.body.removeChild(link);
+                                                        URL.revokeObjectURL(url);
                                                     }
+                                                    alert('AMMC report downloaded successfully');
                                                 } else {
                                                     alert('Failed to download AMMC report');
                                                 }
@@ -514,36 +501,29 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                     onClick={async () => {
                                         if (mergedReport.individualReports?.niaReportId) {
                                             try {
-                                                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/report-release/download/nia/${mergedReport.individualReports.niaReportId}`, {
-                                                    method: 'POST',
-                                                    headers: {
-                                                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                                                    }
-                                                });
+                                                const { userReportAPI } = await import('@/services/api');
+                                                const response = await userReportAPI.downloadNIAReport(mergedReport.individualReports.niaReportId);
 
-                                                if (response.ok) {
-                                                    const data = await response.json();
-                                                    if (data.success && data.data) {
-                                                        // Check if there's a direct download URL
-                                                        if (data.data.downloadUrl) {
-                                                            window.open(data.data.downloadUrl, '_blank');
-                                                        } else if (data.data.documents && data.data.documents.length > 0) {
-                                                            window.open(data.data.documents[0].cloudinaryUrl, '_blank');
-                                                        } else {
-                                                            // Fallback: download as JSON
-                                                            const dataStr = JSON.stringify(data.data, null, 2);
-                                                            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                                                            const url = URL.createObjectURL(dataBlob);
-                                                            const link = document.createElement('a');
-                                                            link.href = url;
-                                                            link.download = `nia-report-${mergedReport.individualReports.niaReportId}-${Date.now()}.json`;
-                                                            document.body.appendChild(link);
-                                                            link.click();
-                                                            document.body.removeChild(link);
-                                                            URL.revokeObjectURL(url);
-                                                        }
-                                                        alert('NIA report downloaded successfully');
+                                                if (response.success && response.data) {
+                                                    // Check if there's a direct download URL
+                                                    if (response.data.downloadUrl) {
+                                                        window.open(response.data.downloadUrl, '_blank');
+                                                    } else if (response.data.documents && response.data.documents.length > 0) {
+                                                        window.open(response.data.documents[0].cloudinaryUrl, '_blank');
+                                                    } else {
+                                                        // Fallback: download as JSON
+                                                        const dataStr = JSON.stringify(response.data, null, 2);
+                                                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                                                        const url = URL.createObjectURL(dataBlob);
+                                                        const link = document.createElement('a');
+                                                        link.href = url;
+                                                        link.download = `nia-report-${mergedReport.individualReports.niaReportId}-${Date.now()}.json`;
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        document.body.removeChild(link);
+                                                        URL.revokeObjectURL(url);
                                                     }
+                                                    alert('NIA report downloaded successfully');
                                                 } else {
                                                     alert('Failed to download NIA report');
                                                 }
