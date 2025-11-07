@@ -1,290 +1,501 @@
 /**
- * Utility type definitions
+ * Utility Types for Type-Safe Development
+ * Reusable type utilities for the FCT-DCIP application
  */
 
-// Make all properties optional
-export type Partial<T> = {
-    [P in keyof T]?: T[P];
-};
+// ============================================================================
+// Generic Utility Types
+// ============================================================================
 
-// Make all properties required
-export type Required<T> = {
-    [P in keyof T]-?: T[P];
-};
+/**
+ * Make specific properties of T optional
+ * @example Optional<User, 'email' | 'phone'>
+ */
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
-// Pick specific properties from a type
-export type Pick<T, K extends keyof T> = {
-    [P in K]: T[P];
-};
+/**
+ * Make specific properties of T required
+ * @example RequiredFields<User, 'email' | 'phone'>
+ */
+export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
-// Omit specific properties from a type
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-
-// Make specific properties optional
-export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-
-// Make specific properties required
-export type RequiredBy<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
-
-// Nullable type
-export type Nullable<T> = T | null;
-
-// Optional type
-export type Optional<T> = T | undefined;
-
-// Maybe type (nullable or undefined)
-export type Maybe<T> = T | null | undefined;
-
-// Non-nullable type
-export type NonNullable<T> = T extends null | undefined ? never : T;
-
-// Deep partial type
+/**
+ * Deep partial - makes all properties and nested properties optional
+ * @example DeepPartial<ComplexObject>
+ */
 export type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
 
-// Deep required type
+/**
+ * Deep required - makes all properties and nested properties required
+ */
 export type DeepRequired<T> = {
     [P in keyof T]-?: T[P] extends object ? DeepRequired<T[P]> : T[P];
 };
 
-// Readonly deep type
+/**
+ * Make all properties readonly recursively
+ */
 export type DeepReadonly<T> = {
     readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
 };
 
-// Mutable type (opposite of readonly)
-export type Mutable<T> = {
-    -readonly [P in keyof T]: T[P];
+/**
+ * Extract keys of T where the value type is V
+ * @example KeysOfType<User, string> // 'name' | 'email'
+ */
+export type KeysOfType<T, V> = {
+    [K in keyof T]: T[K] extends V ? K : never;
+}[keyof T];
+
+/**
+ * Exclude keys of T where the value type is V
+ */
+export type ExcludeKeysOfType<T, V> = {
+    [K in keyof T]: T[K] extends V ? never : K;
+}[keyof T];
+
+/**
+ * Make properties nullable
+ */
+export type Nullable<T> = {
+    [P in keyof T]: T[P] | null;
 };
 
-// Deep mutable type
-export type DeepMutable<T> = {
-    -readonly [P in keyof T]: T[P] extends object ? DeepMutable<T[P]> : T[P];
+/**
+ * Remove null and undefined from all properties
+ */
+export type NonNullableFields<T> = {
+    [P in keyof T]: NonNullable<T[P]>;
 };
 
-// Extract function parameters
-export type Parameters<T extends (...args: unknown[]) => unknown> = T extends (...args: infer P) => unknown ? P : never;
-
-// Extract function return type
-export type ReturnType<T extends (...args: unknown[]) => unknown> = T extends (...args: unknown[]) => infer R ? R : unknown;
-
-// Promise type extraction
+/**
+ * Extract promise type
+ * @example Awaited<Promise<string>> // string
+ */
 export type Awaited<T> = T extends Promise<infer U> ? U : T;
 
-// Array element type
+/**
+ * Function that returns a promise
+ */
+export type AsyncFunction<T = void> = (...args: unknown[]) => Promise<T>;
+
+/**
+ * Extract array element type
+ * @example ArrayElement<string[]> // string
+ */
 export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
-// Object values type
-export type ValueOf<T> = T[keyof T];
+// ============================================================================
+// API-Specific Utility Types
+// ============================================================================
 
-// Object keys type
-export type KeyOf<T> = keyof T;
+/**
+ * Standard API response wrapper
+ */
+export interface ApiResponse<T = unknown> {
+    success: boolean;
+    data?: T;
+    message?: string;
+    error?: string;
+}
 
-// Conditional type
-export type If<C extends boolean, T, F> = C extends true ? T : F;
+/**
+ * Paginated API response
+ */
+export interface PaginatedResponse<T> {
+    success: boolean;
+    data: T[];
+    pagination: {
+        currentPage: number;
+        totalPages: number;
+        totalItems: number;
+        itemsPerPage: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+    };
+}
 
-// Union to intersection type
-export type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+/**
+ * API error response
+ */
+export interface ApiError {
+    success: false;
+    error: string;
+    message: string;
+    code?: string;
+    details?: Record<string, unknown>;
+    timestamp?: string;
+}
 
-// Flatten type
-export type Flatten<T> = T extends (infer U)[] ? U : T;
+/**
+ * Loading state for async operations
+ */
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 
-// Tuple to union type
-export type TupleToUnion<T extends readonly unknown[]> = T[number];
+/**
+ * Request status
+ */
+export type RequestStatus = 'pending' | 'fulfilled' | 'rejected';
 
-// String literal type helpers (these are built-in TypeScript utility types)
-// No need to redefine them, they're available globally
+// ============================================================================
+// Form & Validation Types
+// ============================================================================
 
-// Brand type for nominal typing
-export type Brand<T, B> = T & { __brand: B };
+/**
+ * Form field state
+ */
+export interface FormField<T = string> {
+    value: T;
+    error: string | null;
+    touched: boolean;
+    dirty: boolean;
+}
 
-// ID types
-export type ID = Brand<string, 'ID'>;
-export type UserID = Brand<string, 'UserID'>;
-export type PolicyID = Brand<string, 'PolicyID'>;
-export type AssignmentID = Brand<string, 'AssignmentID'>;
-
-// Status types
-export type Status = 'idle' | 'loading' | 'success' | 'error';
-export type AsyncStatus = 'idle' | 'pending' | 'fulfilled' | 'rejected';
-
-// Common form field types
-export type FormFieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'file' | 'date' | 'time' | 'datetime-local';
-
-// Validation result type
-export type ValidationResult<T = unknown> = {
+/**
+ * Form state
+ */
+export interface FormState<T extends Record<string, unknown>> {
+    values: T;
+    errors: Partial<Record<keyof T, string>>;
+    touched: Partial<Record<keyof T, boolean>>;
     isValid: boolean;
-    errors: string[];
-    value?: T;
-};
+    isSubmitting: boolean;
+    isDirty: boolean;
+}
 
-// API response wrapper
-export type ApiResponseWrapper<T> = {
-    data: T;
-    status: number;
-    statusText: string;
-    headers: Record<string, string>;
-};
+/**
+ * Validation rule
+ */
+export type ValidationRule<T = unknown> = (value: T) => string | null;
 
-// Pagination info
-export type PaginationInfo = {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-};
+/**
+ * Validator function
+ */
+export type Validator<T> = (values: T) => Partial<Record<keyof T, string>>;
 
-// Sort order
-export type SortOrder = 'asc' | 'desc';
+// ============================================================================
+// Event Handler Types
+// ============================================================================
 
-// Sort configuration
-export type SortConfig<T> = {
-    field: keyof T;
-    order: SortOrder;
-};
-
-// Filter configuration
-export type FilterConfig<T> = {
-    field: keyof T;
-    operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'contains' | 'startsWith' | 'endsWith';
-    value: unknown;
-};
-
-// Search configuration
-export type SearchConfig<T> = {
-    fields: (keyof T)[];
-    query: string;
-    caseSensitive?: boolean;
-};
-
-// Theme types
-export type Theme = 'light' | 'dark' | 'auto';
-export type ColorScheme = 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'pink' | 'gray';
-
-// Size types
-export type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-export type Spacing = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-
-// Position types
-export type Position = 'top' | 'right' | 'bottom' | 'left';
-export type Alignment = 'start' | 'center' | 'end';
-
-// Event handler types
+/**
+ * Generic event handler
+ */
 export type EventHandler<T = Event> = (event: T) => void;
-export type ChangeHandler<T = unknown> = (value: T) => void;
-export type SubmitHandler<T = Record<string, unknown>> = (data: T) => void | Promise<void>;
 
-// Component ref types
-export type ComponentRef<T = HTMLElement> = React.RefObject<T>;
-export type ForwardedRef<T = HTMLElement> = React.ForwardedRef<T>;
+/**
+ * Async event handler
+ */
+export type AsyncEventHandler<T = Event> = (event: T) => Promise<void>;
 
-// Children types
-export type Children = React.ReactNode;
-export type ChildrenFunction<T = unknown> = (props: T) => React.ReactNode;
+/**
+ * Change event handler for inputs
+ */
+export type ChangeHandler = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
 
-// Style types
-export type CSSProperties = React.CSSProperties;
-export type ClassName = string | undefined;
+/**
+ * Click event handler
+ */
+export type ClickHandler = (event: React.MouseEvent<HTMLElement>) => void;
 
-// Generic function types
-export type AnyFunction = (...args: unknown[]) => unknown;
-export type VoidFunction = () => void;
-export type AsyncFunction<T = unknown> = (...args: unknown[]) => Promise<T>;
+/**
+ * Submit event handler
+ */
+export type SubmitHandler = (event: React.FormEvent<HTMLFormElement>) => void;
 
-// Utility function types
-export type Predicate<T> = (value: T) => boolean;
-export type Mapper<T, U> = (value: T) => U;
-export type Reducer<T, U> = (accumulator: U, current: T) => U;
+// ============================================================================
+// Component Props Types
+// ============================================================================
 
-// Date types
-export type DateString = string; // ISO date string
-export type Timestamp = number; // Unix timestamp
+/**
+ * Base component props
+ */
+export interface BaseComponentProps {
+    className?: string;
+    children?: React.ReactNode;
+    id?: string;
+    'data-testid'?: string;
+}
 
-// File types
-export type FileType = 'image' | 'document' | 'video' | 'audio' | 'archive' | 'other';
-export type MimeType = string;
+/**
+ * Props with children
+ */
+export interface WithChildren {
+    children: React.ReactNode;
+}
 
-// URL types
-export type URL = string;
-export type RelativeURL = string;
-export type AbsoluteURL = string;
+/**
+ * Props with optional children
+ */
+export interface WithOptionalChildren {
+    children?: React.ReactNode;
+}
 
-// Environment types
-export type Environment = 'development' | 'staging' | 'production';
+/**
+ * Props with className
+ */
+export interface WithClassName {
+    className?: string;
+}
 
-// Log level types
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+/**
+ * Props with style
+ */
+export interface WithStyle {
+    style?: React.CSSProperties;
+}
 
-// HTTP method types
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+/**
+ * Clickable component props
+ */
+export interface ClickableProps {
+    onClick?: ClickHandler;
+    disabled?: boolean;
+}
 
-// Content type
-export type ContentType = 'application/json' | 'application/xml' | 'text/html' | 'text/plain' | 'multipart/form-data' | 'application/x-www-form-urlencoded';
+/**
+ * Modal component props
+ */
+export interface ModalProps extends BaseComponentProps {
+    isOpen: boolean;
+    onClose: () => void;
+    title?: string;
+    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+}
 
-// Generic dictionary type
-export type Dictionary<T = unknown> = Record<string, T>;
+// ============================================================================
+// Data Structure Types
+// ============================================================================
 
-// Serializable types (for JSON)
-export type Serializable = string | number | boolean | null | SerializableObject | SerializableArray;
-export type SerializableObject = { [key: string]: Serializable };
-export type SerializableArray = Serializable[];
+/**
+ * Key-value pair
+ */
+export interface KeyValuePair<K = string, V = unknown> {
+    key: K;
+    value: V;
+}
 
-// Deep freeze type
-export type DeepFreeze<T> = {
-    readonly [P in keyof T]: T[P] extends object ? DeepFreeze<T[P]> : T[P];
-};
+/**
+ * Option for select/dropdown
+ */
+export interface SelectOption<T = string> {
+    value: T;
+    label: string;
+    disabled?: boolean;
+    icon?: React.ReactNode;
+}
 
-// Extract type from array
-export type ExtractArrayType<T> = T extends (infer U)[] ? U : never;
+/**
+ * Table column definition
+ */
+export interface TableColumn<T = unknown> {
+    key: keyof T | string;
+    label: string;
+    sortable?: boolean;
+    width?: string | number;
+    align?: 'left' | 'center' | 'right';
+    render?: (value: unknown, item: T, index: number) => React.ReactNode;
+}
 
-// Extract type from promise
-export type ExtractPromiseType<T> = T extends Promise<infer U> ? U : never;
+/**
+ * Sort configuration
+ */
+export interface SortConfig<T = unknown> {
+    key: keyof T;
+    direction: 'asc' | 'desc';
+}
 
-// Conditional required fields
-export type ConditionalRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
+/**
+ * Filter configuration
+ */
+export interface FilterConfig {
+    [key: string]: string | number | boolean | null | undefined;
+}
 
-// Conditional optional fields
-export type ConditionalOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+// ============================================================================
+// Date & Time Types
+// ============================================================================
 
-// Type-safe object keys
-export const typedKeys = <T extends Record<string, unknown>>(obj: T): (keyof T)[] => {
-    return Object.keys(obj) as (keyof T)[];
-};
+/**
+ * ISO date string
+ */
+export type ISODateString = string;
 
-// Type-safe object entries
-export const typedEntries = <T extends Record<string, unknown>>(obj: T): [keyof T, T[keyof T]][] => {
-    return Object.entries(obj) as [keyof T, T[keyof T]][];
-};
+/**
+ * Timestamp in milliseconds
+ */
+export type Timestamp = number;
 
-// Type guard for non-null values
-export const isNonNull = <T>(value: T | null | undefined): value is T => {
+/**
+ * Date range
+ */
+export interface DateRange {
+    start: Date | ISODateString;
+    end: Date | ISODateString;
+}
+
+// ============================================================================
+// ID Types for Type Safety
+// ============================================================================
+
+/**
+ * Branded type for type-safe IDs
+ */
+export type Brand<K, T> = K & { __brand: T };
+
+/**
+ * User ID
+ */
+export type UserId = Brand<string, 'UserId'>;
+
+/**
+ * Policy ID
+ */
+export type PolicyId = Brand<string, 'PolicyId'>;
+
+/**
+ * Assignment ID
+ */
+export type AssignmentId = Brand<string, 'AssignmentId'>;
+
+/**
+ * Surveyor ID
+ */
+export type SurveyorId = Brand<string, 'SurveyorId'>;
+
+/**
+ * Report ID
+ */
+export type ReportId = Brand<string, 'ReportId'>;
+
+/**
+ * Document ID
+ */
+export type DocumentId = Brand<string, 'DocumentId'>;
+
+// ============================================================================
+// Type Guards
+// ============================================================================
+
+/**
+ * Check if value is defined (not null or undefined)
+ */
+export const isDefined = <T>(value: T | null | undefined): value is T => {
     return value !== null && value !== undefined;
 };
 
-// Type guard for defined values
-export const isDefined = <T>(value: T | undefined): value is T => {
-    return value !== undefined;
+/**
+ * Check if value is a string
+ */
+export const isString = (value: unknown): value is string => {
+    return typeof value === 'string';
 };
 
-// Type guard for non-empty strings
-export const isNonEmptyString = (value: unknown): value is string => {
-    return typeof value === 'string' && value.length > 0;
+/**
+ * Check if value is a number
+ */
+export const isNumber = (value: unknown): value is number => {
+    return typeof value === 'number' && !isNaN(value);
 };
 
-// Type guard for arrays
+/**
+ * Check if value is an array
+ */
 export const isArray = <T>(value: unknown): value is T[] => {
     return Array.isArray(value);
 };
 
-// Type guard for objects
+/**
+ * Check if value is an object
+ */
 export const isObject = (value: unknown): value is Record<string, unknown> => {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 
-// Type guard for functions
-export const isFunction = (value: unknown): value is AnyFunction => {
+/**
+ * Check if value is a function
+ */
+export const isFunction = (value: unknown): value is Function => {
     return typeof value === 'function';
 };
+
+/**
+ * Check if value is a promise
+ */
+export const isPromise = <T>(value: unknown): value is Promise<T> => {
+    return value instanceof Promise || (isObject(value) && isFunction((value as { then?: unknown }).then));
+};
+
+// ============================================================================
+// Conditional Types
+// ============================================================================
+
+/**
+ * If T is never, return F, otherwise return T
+ */
+export type IfNever<T, F> = [T] extends [never] ? F : T;
+
+/**
+ * If T is any, return Y, otherwise return N
+ */
+export type IfAny<T, Y, N> = 0 extends (1 & T) ? Y : N;
+
+/**
+ * If T is unknown, return Y, otherwise return N
+ */
+export type IfUnknown<T, Y, N> = unknown extends T ? Y : N;
+
+// ============================================================================
+// Tuple Types
+// ============================================================================
+
+/**
+ * First element of tuple
+ */
+export type First<T extends unknown[]> = T extends [infer F, ...unknown[]] ? F : never;
+
+/**
+ * Last element of tuple
+ */
+export type Last<T extends unknown[]> = T extends [...unknown[], infer L] ? L : never;
+
+/**
+ * Tail of tuple (all except first)
+ */
+export type Tail<T extends unknown[]> = T extends [unknown, ...infer R] ? R : never;
+
+// ============================================================================
+// String Manipulation Types
+// ============================================================================
+
+/**
+ * Capitalize first letter
+ */
+export type Capitalize<S extends string> = S extends `${infer F}${infer R}` ? `${Uppercase<F>}${R}` : S;
+
+/**
+ * Uncapitalize first letter
+ */
+export type Uncapitalize<S extends string> = S extends `${infer F}${infer R}` ? `${Lowercase<F>}${R}` : S;
+
+/**
+ * Convert to kebab-case
+ */
+export type KebabCase<S extends string> = S extends `${infer T}${infer U}`
+    ? `${T extends Capitalize<T> ? '-' : ''}${Lowercase<T>}${KebabCase<U>}`
+    : S;
+
+// ============================================================================
+// Exports
+// ============================================================================
+
+export type {
+    // Re-export commonly used React types
+    React,
+    ReactNode,
+    ReactElement,
+    FC,
+    ComponentType,
+    PropsWithChildren,
+} from 'react';
