@@ -16,7 +16,13 @@ export default function UserReportsPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [summary, setSummary] = useState<any>(null);
+    const [summary, setSummary] = useState<{
+        totalReports: number;
+        releasedReports: number;
+        pendingReports: number;
+        withheldReports: number;
+        completedReports: number;
+    } | null>(null);
 
     useEffect(() => {
         fetchReports();
