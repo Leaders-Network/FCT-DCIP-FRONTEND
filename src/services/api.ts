@@ -16,7 +16,8 @@ import {
   UserReportsResponse,
   ReportSummaryResponse,
   ReportDetailsResponse,
-  DownloadReportResponse
+  DownloadReportResponse,
+  IndividualReportDownloadResponse
 } from "../types/api.types";
 
 
@@ -58,6 +59,7 @@ api.interceptors.request.use(
     } else if (config.url?.includes('/user') ||
       config.url?.includes('/policy') ||
       config.url?.includes('/payment') ||
+      config.url?.includes('/report-release') ||
       config.url?.includes('/auth/login') ||
       config.url?.includes('/auth/register')) {
       // User-specific endpoints
@@ -1497,37 +1499,13 @@ export const userReportAPI = {
   },
 
   // Download individual AMMC report
-  downloadAMMCReport: async (assignmentId: string): Promise<ApiResponse<{
-    submissionId: string;
-    organization: string;
-    downloadUrl?: string;
-    documents?: Array<{
-      cloudinaryUrl: string;
-      fileName: string;
-      isMainReport: boolean;
-    }>;
-    surveyData: any;
-    submittedAt: string;
-    surveyorNotes: string;
-  }>> => {
+  downloadAMMCReport: async (assignmentId: string): Promise<ApiResponse<IndividualReportDownloadResponse>> => {
     const response = await api.post(`/report-release/download/ammc/${assignmentId}`);
     return response.data;
   },
 
   // Download individual NIA report
-  downloadNIAReport: async (assignmentId: string): Promise<ApiResponse<{
-    submissionId: string;
-    organization: string;
-    downloadUrl?: string;
-    documents?: Array<{
-      cloudinaryUrl: string;
-      fileName: string;
-      isMainReport: boolean;
-    }>;
-    surveyData: any;
-    submittedAt: string;
-    surveyorNotes: string;
-  }>> => {
+  downloadNIAReport: async (assignmentId: string): Promise<ApiResponse<IndividualReportDownloadResponse>> => {
     const response = await api.post(`/report-release/download/nia/${assignmentId}`);
     return response.data;
   },
