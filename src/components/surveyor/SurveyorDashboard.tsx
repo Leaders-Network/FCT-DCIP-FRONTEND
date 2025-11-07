@@ -72,7 +72,7 @@ const SurveyorDashboard = () => {
           console.log('Dual assignments fetched:', dualAssignments.length);
 
           // Convert dual assignments to assignment format
-          fetchedAssignments = dualAssignments.map((dualAssignment: any) => {
+          fetchedAssignments = dualAssignments.map((dualAssignment: DualAssignment) => {
             const currentAssignment = dualAssignment.currentSurveyorInfo?.assignmentId || {};
 
             return {

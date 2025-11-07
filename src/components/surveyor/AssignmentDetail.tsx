@@ -10,43 +10,51 @@ interface AssignmentDetailProps {
   assignmentId: string;
 }
 
+interface PolicyPropertyDetails {
+  propertyType: string;
+  address: string;
+  buildingValue: number;
+  yearBuilt: number;
+  squareFootage: number;
+  constructionMaterial: string;
+}
+
+interface PolicyContactDetails {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  alternatePhone?: string;
+  rcNumber: string;
+}
+
+interface PolicyRequestDetails {
+  coverageType: string;
+  policyDuration: string;
+  additionalCoverage?: string[];
+  specialRequests?: string;
+}
+
 interface PolicyDetails extends Omit<import('@/types/api.types').PolicyRequest, 'propertyDetails' | 'contactDetails' | 'requestDetails'> {
-  propertyDetails: {
-    propertyType: string;
-    address: string;
-    buildingValue: number;
-    yearBuilt: number;
-    squareFootage: number;
-    constructionMaterial: string;
-  };
-  contactDetails: {
-    fullName: string;
-    email: string;
-    phoneNumber: string;
-    alternatePhone?: string;
-    rcNumber: string;
-  };
-  requestDetails: {
-    coverageType: string;
-    policyDuration: string;
-    additionalCoverage?: string[];
-    specialRequests?: string;
-  };
+  propertyDetails: PolicyPropertyDetails;
+  contactDetails: PolicyContactDetails;
+  requestDetails: PolicyRequestDetails;
+}
+
+interface OtherSurveyorInfo {
+  name?: string;
+  fullName?: string;
+  phone?: string;
+  phonenumber?: string;
+  email?: string;
+  licenseNumber?: string;
+  organization?: 'AMMC' | 'NIA';
 }
 
 interface DualAssignmentInfo {
-  completionStatus: number;
-  assignmentStatus: string;
-  priority: string;
-  otherSurveyor?: {
-    name?: string;
-    fullName?: string;
-    phone?: string;
-    phonenumber?: string;
-    email?: string;
-    licenseNumber?: string;
-    organization?: string;
-  };
+  completionStatus: 0 | 50 | 100;
+  assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  otherSurveyor?: OtherSurveyorInfo;
 }
 
 interface EnhancedAssignment extends Omit<Assignment, 'ammcId'> {
@@ -88,7 +96,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       const { submitSurvey } = await import("@/services/api");
 
       const formData = new FormData();
-      formData.append('ammcId', typeof assignment!.ammcId === 'object' ? (assignment!.ammcId as any)._id : assignment!.ammcId);
+      formData.append('ammcId', typeof assignment!.ammcId === 'object' ? (assignment!.ammcId as PolicyDetails)._id : assignment!.ammcId);
       formData.append('assignmentId', assignmentId || '');
       formData.append('surveyNotes', submission.surveyNotes);
       formData.append('recommendedAction', submission.recommendedAction);

@@ -5,10 +5,34 @@ import { useParams } from 'next/navigation';
 import ReportViewer from '@/components/user/ReportViewer';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { ReportId } from '@/types/api.types';
+
+interface ReportPageParams {
+    reportId: ReportId;
+    [key: string]: string | string[];
+}
 
 const ReportPage: React.FC = () => {
-    const params = useParams();
-    const reportId = params.reportId as string;
+    const params = useParams<ReportPageParams>();
+    const reportId = params.reportId;
+
+    if (!reportId) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Report Not Found</h1>
+                    <p className="text-gray-600 mb-4">The requested report could not be found.</p>
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Back to Dashboard</span>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -16,8 +40,8 @@ const ReportPage: React.FC = () => {
             <div className="bg-white border-b">
                 <div className="max-w-6xl mx-auto px-6 py-4">
                     <Link
-                        href="/user/dashboard"
-                        className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                        href="/dashboard"
+                        className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span>Back to Dashboard</span>

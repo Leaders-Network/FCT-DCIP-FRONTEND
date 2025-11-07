@@ -18,7 +18,7 @@ import {
   Edit,
   Trash2
 } from "lucide-react";
-import { Surveyor as BaseSurveyor, Assignment } from "@/types/api.types";
+import { Surveyor as BaseSurveyor, Assignment, PolicyRequest } from "@/types/api.types";
 
 type UserIdType = {
   firstname?: string;
@@ -115,7 +115,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
       if (response?.data && Array.isArray(response.data)) {
         // Transform policy requests to assignment format if needed
-        const assignmentData = response.data?.map((policy: any) => ({
+        const assignmentData = response.data?.map((policy: PolicyRequest) => ({
           _id: policy._id,
           surveyorId: policy.assignedSurveyors?.[0] || null,
           ammcId: policy._id,
