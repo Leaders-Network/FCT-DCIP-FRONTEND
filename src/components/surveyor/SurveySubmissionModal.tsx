@@ -33,6 +33,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
 
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'details' | 'contact' | 'photos'>('details');
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -91,8 +92,8 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                         <button
                             onClick={() => setActiveTab('details')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'details'
-                                    ? 'border-[#028835] text-[#028835]'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                ? 'border-[#028835] text-[#028835]'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             <FileText className="w-4 h-4 inline mr-2" />
@@ -101,8 +102,8 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                         <button
                             onClick={() => setActiveTab('contact')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'contact'
-                                    ? 'border-[#028835] text-[#028835]'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                ? 'border-[#028835] text-[#028835]'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             <Phone className="w-4 h-4 inline mr-2" />
@@ -111,8 +112,8 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                         <button
                             onClick={() => setActiveTab('photos')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'photos'
-                                    ? 'border-[#028835] text-[#028835]'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                ? 'border-[#028835] text-[#028835]'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             <Camera className="w-4 h-4 inline mr-2" />
@@ -348,21 +349,68 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Survey Documentation</h3>
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#028835] transition-colors cursor-pointer">
                                     <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                                     <p className="text-gray-600 mb-2">Upload survey photos and documents</p>
-                                    <p className="text-sm text-gray-500">Drag and drop files here, or click to select</p>
+                                    <p className="text-sm text-gray-500 mb-4">Drag and drop files here, or click to select</p>
+                                    <label
+                                        htmlFor="survey-file-upload"
+                                        className="inline-flex items-center px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 cursor-pointer transition-colors"
+                                    >
+                                        <Camera className="w-4 h-4 mr-2" />
+                                        Choose Files
+                                    </label>
                                     <input
+                                        id="survey-file-upload"
                                         type="file"
                                         multiple
                                         accept="image/*,.pdf,.doc,.docx"
                                         className="hidden"
                                         onChange={(e) => {
-                                            // Handle file upload
-                                            console.log('Files selected:', e.target.files);
+                                            if (e.target.files && e.target.files.length > 0) {
+                                                const filesArray = Array.from(e.target.files);
+                                                setUploadedFiles(prev => [...prev, ...filesArray]);
+                                                console.log('Files selected:', filesArray);
+                                            }
                                         }}
                                     />
                                 </div>
+
+                                {/* Display uploaded files */}
+                                {uploadedFiles.length > 0 && (
+                                    <div className="mt-6">
+                                        <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                                            Uploaded Files ({uploadedFiles.length})
+                                        </h4>
+                                        <div className="space-y-2">
+                                            {uploadedFiles.map((file, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
+                                                >
+                                                    <div className="flex items-center space-x-3">
+                                                        <FileText className="w-5 h-5 text-green-600" />
+                                                        <div>
+                                                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                                                            <p className="text-xs text-gray-500">
+                                                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+                                                        }}
+                                                        className="text-red-600 hover:text-red-800 transition-colors"
+                                                    >
+                                                        <X className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
