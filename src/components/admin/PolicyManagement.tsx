@@ -662,7 +662,7 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: Assign
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Duration:</span>
-            <span className="font-medium text-gray-900">{policy.requestDetails.policyDuration}</span>
+            <span className="font-medium text-gray-900">1 Year</span>
           </div>
         </div>
         {policy.requestDetails.additionalCoverage && policy.requestDetails.additionalCoverage.length > 0 && (

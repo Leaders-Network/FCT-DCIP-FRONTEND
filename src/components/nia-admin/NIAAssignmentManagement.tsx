@@ -13,6 +13,7 @@ import {
 
 interface NIASurveyorForAssignment {
   _id: string;
+  userId: string; // Employee ID - required for backend assignment
   firstname: string;
   lastname: string;
   email: string;
@@ -164,7 +165,7 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          surveyorId: selectedSurveyor._id,
+          surveyorId: selectedSurveyor.userId, // Send Employee ID, not Surveyor ID
           priority: assignment.priority,
           deadline: assignment.estimatedCompletion.overallDeadline
         })

@@ -683,12 +683,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                     {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.coverageType || 'N/A'}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Policy Duration:</span>
-                  <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.policyDuration || 'N/A'}
-                  </span>
-                </div>
+                {/* Policy Duration removed - always 1 year */}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Property Value:</span>
                   <span className="font-medium text-gray-900">

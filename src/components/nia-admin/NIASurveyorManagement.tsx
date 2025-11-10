@@ -54,6 +54,13 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
         }
         if (!formData.phoneNumber?.trim()) {
             newErrors.phoneNumber = 'Phone number is required';
+        } else {
+            // Validate phone format
+            const normalizedPhone = formData.phoneNumber.replace(/[\s\-]/g, '');
+            const phoneRegex = /^(?:\+234\d{10}|234\d{10}|0\d{10})$/;
+            if (!phoneRegex.test(normalizedPhone)) {
+                newErrors.phoneNumber = 'Invalid format. Use: 08012345678, 2348012345678, or +2348012345678';
+            }
         }
         if (!formData.licenseNumber?.trim()) {
             newErrors.licenseNumber = 'License number is required';
@@ -180,12 +187,16 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
                                     value={formData.phoneNumber || ''}
                                     onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                                     disabled={isReadOnly}
+                                    placeholder="08012345678 or +2348012345678"
                                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
                                         } ${isReadOnly ? 'bg-gray-50' : ''}`}
                                 />
                                 {errors.phoneNumber && (
                                     <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>
                                 )}
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Format: 08012345678, 2348012345678, or +2348012345678
+                                </p>
                             </div>
 
                             <div>
