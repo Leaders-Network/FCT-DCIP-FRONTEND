@@ -84,7 +84,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (userType === 'employee') {
         const response = await loginEmployee(email, password);
         const { token, employee } = response.data;
-        setAuthToken(token);
+
+        // Store token with correct type for employees
+        setAuthToken(token, 'admin'); // Default to admin for employees
         localStorage.setItem('user', JSON.stringify(employee));
         setUser(employee);
         setState({
@@ -97,8 +99,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         const response = await loginUser(email, password);
         const { token, user } = response.data;
-        setAuthToken(token);
+
+        // Store token with correct type for users
+        setAuthToken(token, 'user'); // Explicitly set as user token
         localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('userInfo', JSON.stringify(user)); // Also store in userInfo for compatibility
         setUser(user);
         setState({
           isAuthenticated: true,
