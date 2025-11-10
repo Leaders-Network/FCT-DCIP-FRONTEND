@@ -283,8 +283,8 @@ const AdminDashboard: React.FC = () => {
                       <p className="text-xs mt-2 opacity-60">{formatTimeAgo(alert.timestamp)}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${alert.severity === 'high' ? 'bg-red-200 text-red-800' :
-                        alert.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
-                          'bg-blue-200 text-blue-800'
+                      alert.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                        'bg-blue-200 text-blue-800'
                       }`}>
                       {alert.severity.toUpperCase()}
                     </span>
@@ -387,7 +387,7 @@ const AdminDashboard: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{dashboardData?.summary.assignments.total || 0}</p>
               <div className="flex items-center text-sm">
                 <span className="text-blue-500 mr-1">⚡</span>
-                <span className="text-blue-600 font-medium">{dashboardData?.summary.assignments.completionRate || 0}%</span>
+                <span className="text-blue-600 font-medium">{(dashboardData?.summary.assignments.completionRate || 0).toFixed(2)}%</span>
                 <span className="text-gray-500 ml-1">completion rate</span>
               </div>
               <div className="text-xs text-gray-500 space-y-1">
@@ -473,9 +473,9 @@ const AdminDashboard: React.FC = () => {
                             </p>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${policy.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              policy.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                                policy.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                  'bg-gray-100 text-gray-800'
+                            policy.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                              policy.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
                             }`}>
                             {policy.status}
                           </span>
@@ -505,9 +505,9 @@ const AdminDashboard: React.FC = () => {
                             </p>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                                assignment.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
+                            assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                              assignment.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
                             }`}>
                             {assignment.status.replace('_', ' ')}
                           </span>
@@ -536,9 +536,9 @@ const AdminDashboard: React.FC = () => {
                             </p>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${submission.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              submission.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
-                                submission.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
+                            submission.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
+                              submission.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
                             }`}>
                             {submission.status.replace('_', ' ')}
                           </span>

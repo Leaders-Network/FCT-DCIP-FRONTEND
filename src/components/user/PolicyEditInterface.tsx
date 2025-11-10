@@ -113,7 +113,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                 },
                 requestDetails: {
                     coverageType: data.data.requestDetails?.coverageType || '',
-                    policyDuration: data.data.requestDetails?.policyDuration || '',
+                    policyDuration: '1 Year', // Always 1 year
                     additionalCoverage: data.data.requestDetails?.additionalCoverage || [],
                     specialRequests: data.data.requestDetails?.specialRequests || ''
                 }
@@ -186,9 +186,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
         if (!policyData.requestDetails.coverageType) {
             errors['requestDetails.coverageType'] = 'Coverage type is required';
         }
-        if (!policyData.requestDetails.policyDuration) {
-            errors['requestDetails.policyDuration'] = 'Policy duration is required';
-        }
+        // Policy duration removed - always 1 year
 
         setValidationErrors(errors);
         return Object.keys(errors).length === 0;
@@ -560,25 +558,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             )}
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Policy Duration *
-                                            </label>
-                                            <select
-                                                value={policyData.requestDetails.policyDuration}
-                                                onChange={(e) => handleInputChange('requestDetails', 'policyDuration', e.target.value)}
-                                                className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['requestDetails.policyDuration'] ? 'border-red-300' : 'border-gray-300'
-                                                    }`}
-                                            >
-                                                <option value="">Select duration</option>
-                                                {POLICY_DURATIONS.map((duration) => (
-                                                    <option key={duration} value={duration}>{duration}</option>
-                                                ))}
-                                            </select>
-                                            {validationErrors['requestDetails.policyDuration'] && (
-                                                <p className="text-red-500 text-xs mt-1">{validationErrors['requestDetails.policyDuration']}</p>
-                                            )}
-                                        </div>
+                                        {/* Policy Duration removed - always 1 year */}
 
                                         <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">

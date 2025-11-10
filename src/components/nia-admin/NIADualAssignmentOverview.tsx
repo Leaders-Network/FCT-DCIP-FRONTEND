@@ -113,8 +113,8 @@ const NIADualAssignmentOverview: React.FC<NIADualAssignmentOverviewProps> = ({ s
                     <div className="flex items-center justify-between">
                         <span className="text-xs text-green-700">
                             {stats.totalDualAssignments > 0
-                                ? `${Math.round((stats.fullyComplete / stats.totalDualAssignments) * 100)}%`
-                                : '0%'
+                                ? `${((stats.fullyComplete / stats.totalDualAssignments) * 100).toFixed(2)}%`
+                                : '0.00%'
                             } of assignments completed
                         </span>
                         <span className="text-sm font-bold text-green-800">
