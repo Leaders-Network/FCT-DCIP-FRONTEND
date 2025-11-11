@@ -560,7 +560,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
                       name="recommendation"
                       value={option.value}
                       checked={recommendedAction === option.value}
-                      onChange={(e) => setRecommendedAction(e.target.value as any)}
+                      onChange={(e) => setRecommendedAction(e.target.value as 'approve' | 'reject' | 'request_more_info')}
                       className="sr-only"
                     />
                     <div className="text-center">

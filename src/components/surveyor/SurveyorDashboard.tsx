@@ -109,7 +109,7 @@ const SurveyorDashboard = () => {
             setStats({
               total: fetchedAssignments.length,
               pending: fetchedAssignments.filter(a => a.status === 'assigned' || a.status === 'accepted').length,
-              inProgress: fetchedAssignments.filter(a => (a.status as any) === 'in-progress').length,
+              inProgress: fetchedAssignments.filter(a => a.status === 'in_progress').length,
               completed: fetchedAssignments.filter(a => a.status === 'completed').length
             });
           }
@@ -241,10 +241,10 @@ const SurveyorDashboard = () => {
                       </div>
                       <div>
                         <h3 className="text-md font-semibold text-gray-900">
-                          {(assignment.ammcId as any)?.propertyDetails?.propertyType || 'Assignment'}
+                          {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.propertyType || 'Assignment'}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          {(assignment.ammcId as any)?.propertyDetails?.address || assignment.location?.address || 'Location not specified'}
+                          {typeof assignment.ammcId === 'object' && assignment.ammcId?.propertyDetails?.address || assignment.location?.address || 'Location not specified'}
                         </p>
                       </div>
                     </div>
@@ -252,7 +252,7 @@ const SurveyorDashboard = () => {
                     <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 mr-1.5" />
-                        {(assignment.ammcId as any)?.contactDetails?.fullName || assignment.location?.contactPerson?.name || 'Contact not available'}
+                        {typeof assignment.ammcId === 'object' && assignment.ammcId?.contactDetails?.fullName || assignment.location?.contactPerson?.name || 'Contact not available'}
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1.5" />

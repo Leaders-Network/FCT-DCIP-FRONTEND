@@ -10,7 +10,9 @@ export default function MainView() {
     return <div>Loading...</div>;
   }
 
-  const role = (user as any)?.employeeRole?.role;
+  const role = user && 'employeeRole' in user && user.employeeRole && typeof user.employeeRole === 'object' && 'role' in user.employeeRole
+    ? user.employeeRole.role
+    : null;
 
   return (
     <>
