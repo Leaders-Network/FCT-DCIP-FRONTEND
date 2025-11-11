@@ -37,6 +37,9 @@ const NIAAdministratorsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedAdmin, setSelectedAdmin] = useState<NIAAdmin | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [formData, setFormData] = useState({
         firstname: '',
@@ -58,7 +61,8 @@ const NIAAdministratorsPage = () => {
     const fetchNIAAdmins = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('niaAdminToken');
+            // Try NIA admin token first, then fall back to regular token
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
 
             if (!token) {
                 throw new Error('No authentication token found');
@@ -93,7 +97,8 @@ const NIAAdministratorsPage = () => {
     const handleCreateAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('niaAdminToken');
+            // Try NIA admin token first, then fall back to regular token
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
 
             if (!token) {
                 throw new Error('No authentication token found');
@@ -129,12 +134,128 @@ const NIAAdministratorsPage = () => {
                     }
                 });
                 fetchNIAAdmins(); // Refresh the list
+                setError(null);
             } else {
                 throw new Error(data.message || 'Failed to create administrator');
             }
         } catch (error) {
             console.error('Create admin error:', error);
             setError(error instanceof Error ? error.message : 'Failed to create administrator');
+        }
+    };
+
+    const handleEditClick = (admin: NIAAdmin) => {
+        setSelectedAdmin(admin);
+        setFormData({
+            firstname: admin.userId.firstname,
+            lastname: admin.userId.lastname,
+            email: admin.userId.email,
+            phonenumber: admin.userId.phonenumber,
+            permissions: admin.permissions
+        });
+        setShowEditModal(true);
+    };
+
+    const handleUpdateAdmin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedAdmin) return;
+
+        try {
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/nia-admin/${selectedAdmin._id}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        permissions: formData.permissions
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to update NIA administrator');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                setShowEditModal(false);
+                setSelectedAdmin(null);
+                setFormData({
+                    firstname: '',
+                    lastname: '',
+                    email: '',
+                    phonenumber: '',
+                    permissions: {
+                        canManageSurveyors: true,
+                        canManageAssignments: true,
+                        canViewReports: true,
+                        canManageAdmins: false
+                    }
+                });
+                fetchNIAAdmins();
+                setError(null);
+            } else {
+                throw new Error(data.message || 'Failed to update administrator');
+            }
+        } catch (error) {
+            console.error('Update admin error:', error);
+            setError(error instanceof Error ? error.message : 'Failed to update administrator');
+        }
+    };
+
+    const handleDeleteClick = (admin: NIAAdmin) => {
+        setSelectedAdmin(admin);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteAdmin = async () => {
+        if (!selectedAdmin) return;
+
+        try {
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/nia-admin/${selectedAdmin._id}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to delete NIA administrator');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                setShowDeleteModal(false);
+                setSelectedAdmin(null);
+                fetchNIAAdmins();
+                setError(null);
+            } else {
+                throw new Error(data.message || 'Failed to delete administrator');
+            }
+        } catch (error) {
+            console.error('Delete admin error:', error);
+            setError(error instanceof Error ? error.message : 'Failed to delete administrator');
         }
     };
 
@@ -271,11 +392,17 @@ const NIAAdministratorsPage = () => {
                                 </div>
 
                                 <div className="flex space-x-2">
-                                    <button className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 flex items-center justify-center">
+                                    <button
+                                        onClick={() => handleEditClick(admin)}
+                                        className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 flex items-center justify-center transition-colors"
+                                    >
                                         <Edit className="w-4 h-4 mr-1" />
                                         Edit
                                     </button>
-                                    <button className="flex-1 bg-red-100 text-red-700 px-3 py-2 rounded-md text-sm hover:bg-red-200 flex items-center justify-center">
+                                    <button
+                                        onClick={() => handleDeleteClick(admin)}
+                                        className="flex-1 bg-red-100 text-red-700 px-3 py-2 rounded-md text-sm hover:bg-red-200 flex items-center justify-center transition-colors"
+                                    >
                                         <Trash2 className="w-4 h-4 mr-1" />
                                         Delete
                                     </button>

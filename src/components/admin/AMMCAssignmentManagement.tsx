@@ -14,6 +14,7 @@ import { getAuthToken } from '@/utils/auth';
 
 interface AMMCSurveyorForAssignment {
     _id: string;
+    userId: string; // Employee ID - required for backend assignment
     firstname: string;
     lastname: string;
     email: string;
@@ -40,6 +41,13 @@ interface SurveyorStatistics {
 
 interface AMMCSurveyorApiResponse {
     _id: string;
+    userId?: string | {
+        _id?: string;
+        firstname?: string;
+        lastname?: string;
+        email?: string;
+        phonenumber?: string;
+    };
     firstname?: string;
     lastname?: string;
     email?: string;
@@ -50,12 +58,6 @@ interface AMMCSurveyorApiResponse {
     completedSurveys?: number;
     profile?: SurveyorProfile;
     statistics?: SurveyorStatistics;
-    userId?: {
-        firstname?: string;
-        lastname?: string;
-        email?: string;
-        phonenumber?: string;
-    };
 }
 
 // Use types from api.types.ts
@@ -123,9 +125,13 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                 // Transform the data to match our interface
                 const ammcSurveyors = (data.data || []).map((surveyor: AMMCSurveyorApiResponse): AMMCSurveyorForAssignment => {
                     // The API returns user data nested in userId field
-                    const userData = surveyor.userId || surveyor;
+                    const userData = typeof surveyor.userId === 'object' ? surveyor.userId : surveyor;
+                    const employeeId = typeof surveyor.userId === 'string' ? surveyor.userId :
+                        (typeof surveyor.userId === 'object' && surveyor.userId?._id) || '';
+
                     return {
                         _id: surveyor._id,
+                        userId: employeeId, // Employee ID for backend assignment
                         firstname: userData.firstname || surveyor.firstname || '',
                         lastname: userData.lastname || surveyor.lastname || '',
                         email: userData.email || surveyor.email || '',
@@ -218,7 +224,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    surveyorId: selectedSurveyor._id,
+                    surveyorId: selectedSurveyor.userId, // Send Employee ID, not Surveyor ID
                     priority: assignment.priority,
                     deadline: assignment.estimatedCompletion.overallDeadline
                 })
