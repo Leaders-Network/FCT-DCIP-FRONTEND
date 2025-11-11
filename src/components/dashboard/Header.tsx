@@ -7,8 +7,10 @@ import { FaSearch } from "react-icons/fa";
 const Header = () => {
   const { user } = useAuth();
   // Get firstname and create initials from firstname and lastname
-  const firstName = (user as any)?.firstname || "User";
-  const initials = user ? `${(user as any).firstname?.[0] || 'U'}${(user as any).lastname?.[0] || ''}`.toUpperCase() : "U";
+  const firstName = (user && 'firstname' in user ? user.firstname : null) || "User";
+  const initials = user && 'firstname' in user && 'lastname' in user
+    ? `${user.firstname?.[0] || 'U'}${user.lastname?.[0] || ''}`.toUpperCase()
+    : "U";
 
   useEffect(() => {
     console.log("Auth Context User:", user);
