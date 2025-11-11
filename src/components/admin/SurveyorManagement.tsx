@@ -706,7 +706,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                       Specializations *
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      {["residential", "commercial", "industrial", "agricultural", "structural", "environmental", "valuation", "quantity-surveying"].map(spec => (
+                      {["residential", "commercial", "industrial", "agricultural"].map(spec => (
                         <label key={spec} className="flex items-center">
                           <input
                             type="checkbox"
