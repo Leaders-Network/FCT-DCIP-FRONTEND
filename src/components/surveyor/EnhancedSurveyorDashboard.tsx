@@ -376,38 +376,6 @@ const EnhancedSurveyorDashboard = () => {
 
     return (
         <div className="space-y-8">
-            {/* Debug Panel - Only in development */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-yellow-800 mb-2">
-                        Debug Panel - Current Auth: {getCurrentAuthType()}
-                    </h3>
-                    <div className="flex space-x-2 mb-2">
-                        <button
-                            onClick={debugAuthState}
-                            className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs"
-                        >
-                            Check Auth State
-                        </button>
-                        <button
-                            onClick={clearAllAuthData}
-                            className="px-3 py-1 bg-red-200 text-red-800 rounded text-xs"
-                        >
-                            Clear All Auth Data
-                        </button>
-                        <button
-                            onClick={() => window.location.href = '/surveyor'}
-                            className="px-3 py-1 bg-blue-200 text-blue-800 rounded text-xs"
-                        >
-                            Go to Surveyor Login
-                        </button>
-                    </div>
-                    <div className="text-xs text-yellow-700">
-                        Expected: 'surveyor' | Current: {getCurrentAuthType()}
-                    </div>
-                </div>
-            )}
-
             {/* Header with Organization Context */}
             <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-lg p-6 text-white">
                 <div className="flex items-center justify-between">
