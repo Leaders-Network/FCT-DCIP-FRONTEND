@@ -392,11 +392,11 @@ const NIASurveyorsPage = () => {
                         onChange={(e) => setFilters(prev => ({ ...prev, specialization: e.target.value }))}
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                        <option value="all">All
-                            <option value="residential">Residential</option>
-                            <option value="commercial">Commercial</option>
-                            <option value="industrial">Industrial</option>
-                            <option value="land">Land Survey</option>
+                        <option value="all">All</option>
+                        <option value="residential">Residential</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="land">Land Survey</option>
                     </select>
                 </div>
             </div>
