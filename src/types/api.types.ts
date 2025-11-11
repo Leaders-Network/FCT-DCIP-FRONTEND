@@ -162,6 +162,11 @@ export interface Surveyor extends Employee {
   notes?: string;
   status?: 'active' | 'inactive' | 'suspended';
   role?: string;
+  experience?: number;
+  maxAssignments?: number;
+  dateOfBirth?: string;
+  qualifications?: string[];
+  availability?: 'available' | 'busy' | 'unavailable';
   profile?: {
     availability: 'available' | 'busy' | 'unavailable';
     specialization: string[];
@@ -689,6 +694,7 @@ export interface SurveyorFilters {
   availability?: string;
   specialization?: string;
   search?: string;
+  organization?: string;
   page?: number;
   limit?: number;
 }

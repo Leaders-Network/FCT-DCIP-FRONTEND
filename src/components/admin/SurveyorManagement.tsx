@@ -495,7 +495,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <div>
                     <p className="text-xs text-gray-600 mb-1">Qualifications:</p>
                     <div className="flex flex-wrap gap-1">
-                      {surveyor.qualifications.slice(0, 2).map((qual, index) => (
+                      {surveyor.qualifications.slice(0, 2).map((qual: string, index: number) => (
                         <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
                           {qual}
                         </span>
@@ -1030,7 +1030,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Qualifications</h4>
                   <div className="space-y-1">
-                    {selectedSurveyor.qualifications.map((qual, index) => (
+                    {selectedSurveyor.qualifications.map((qual: string, index: number) => (
                       <div key={index} className="flex items-center px-3 py-2 bg-gray-50 rounded-lg">
                         <span className="text-sm text-gray-900">{qual}</span>
                       </div>
