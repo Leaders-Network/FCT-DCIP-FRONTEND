@@ -137,8 +137,9 @@ function SignUpForm() {
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const formattedErrors = error.errors.reduce((acc, curr) => {
-          acc[curr.path[0]] = curr.message;
+        const formattedErrors = error.issues.reduce((acc, curr) => {
+          const key = String(curr.path[0]);
+          acc[key] = curr.message;
           return acc;
         }, {} as { [key: string]: string });
         setErrors(formattedErrors);
