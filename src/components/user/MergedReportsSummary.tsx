@@ -53,14 +53,19 @@ const MergedReportsSummary: React.FC = () => {
 
             // Fetch summary statistics
             const summaryResponse = await userReportAPI.getReportSummary();
-            if (summaryResponse.success) {
+            if (summaryResponse.success && summaryResponse.data) {
                 setSummary(summaryResponse.data);
             }
 
             // Fetch recent reports (first 3)
             const reportsResponse = await userReportAPI.getUserReports(1, 3);
-            if (reportsResponse.success) {
-                setRecentReports(reportsResponse.data.reports);
+            if (reportsResponse.success && reportsResponse.data?.reports) {
+                setRecentReports(reportsResponse.data.reports.map(report => ({
+                    ...report,
+                    finalRecommendation: report.finalRecommendation || 'pending',
+                    paymentEnabled: report.paymentEnabled || false,
+                    conflictDetected: report.conflictDetected || false
+                })));
             }
 
         } catch (error) {

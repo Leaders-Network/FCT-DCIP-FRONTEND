@@ -10,19 +10,24 @@ import {
   ADDITIONAL_COVERAGE_OPTIONS
 } from "@/constants/policyConstants";
 
+interface PropertyDetailWithContact {
+  _id: string;
+  address: string;
+  propertyType: string;
+  buildingValue: number;
+  yearBuilt: number;
+  squareFootage: number;
+  constructionMaterial: string;
+  phonenumber?: string;
+  category?: { category: string };
+  status?: string;
+}
+
 interface PolicyRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePolicyRequestData) => Promise<void>;
-  property?: {
-    _id: string;
-    address: string;
-    propertyType: string;
-    buildingValue: number;
-    yearBuilt: number;
-    squareFootage: number;
-    constructionMaterial: string;
-  };
+  property?: PropertyDetailWithContact;
 }
 
 const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
@@ -122,7 +127,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         },
         contactDetails: {
           ...prev.contactDetails,
-          phoneNumber: property.phonenumber,
+          phoneNumber: property.phonenumber || "",
           // Preserve user's email from stored user data
           email: (() => {
             const storedUser = localStorage.getItem("user");

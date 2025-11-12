@@ -58,8 +58,8 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
       setError(null);
       const response = await userReportAPI.getReportDetails(reportId);
 
-      if (response.success) {
-        setReportDetails(response.data);
+      if (response.success && response.data) {
+        setReportDetails(response.data as any);
       } else {
         setError(response.message || 'Failed to fetch report details');
       }
@@ -199,7 +199,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
 
     <div class="info-row">
       <span class="label">Policy ID:</span>
-      <span class="value">${reportData.policyId || 'N/A'}</span>
+      <span class="value">${(reportData as any).policyId || 'N/A'}</span>
     </div>
 
     <div class="info-row">
@@ -214,17 +214,16 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
 
     <div class="info-row">
       <span class="label">Report Status:</span>
-      <span class="value">${reportData.status || 'N/A'}</span>
+      <span class="value">${(reportData as any).status || 'N/A'}</span>
     </div>
 
     <div class="info-row">
       <span class="label">Released Date:</span>
       <span class="value">
-        ${
-          reportData.releasedAt
+        ${reportData.releasedAt
             ? new Date(reportData.releasedAt).toLocaleString()
             : 'N/A'
-        }
+          }
       </span>
     </div>
 
@@ -234,60 +233,54 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
     </div>
   </div>
 
-  <div class="recommendation ${
-    reportData.finalRecommendation === 'approve'
-      ? 'approve'
-      : reportData.finalRecommendation === 'reject'
-      ? 'reject'
-      : ''
-  }">
+  <div class="recommendation ${reportData.finalRecommendation === 'approve'
+            ? 'approve'
+            : reportData.finalRecommendation === 'reject'
+              ? 'reject'
+              : ''
+          }">
     <h2>
       Final Recommendation: ${(reportData.finalRecommendation || 'N/A').toUpperCase()}
     </h2>
 
-    ${
-      reportData.paymentEnabled
-        ? `<p>✓ Payment Enabled</p>`
-        : `<p>✗ Payment Not Enabled</p>`
-    }
+    ${reportData.paymentEnabled
+            ? `<p>✓ Payment Enabled</p>`
+            : `<p>✗ Payment Not Enabled</p>`
+          }
   </div>
 
-  ${
-    reportData.conflictDetected
-      ? `
+  ${reportData.conflictDetected
+            ? `
       <div class="conflict">
         <h3>⚠️ Conflict Detected</h3>
-        <p>Status: ${
-          reportData.conflictResolved ? 'Resolved' : 'Pending Resolution'
-        }</p>
+        <p>Status: ${(reportData as any).conflictResolved ? 'Resolved' : 'Pending Resolution'
+            }</p>
 
-        ${
-          reportData.conflictDetails
-            ? `<p>Details: ${JSON.stringify(reportData.conflictDetails)}</p>`
-            : ''
-        }
+        ${(reportData as any).conflictDetails
+              ? `<p>Details: ${JSON.stringify((reportData as any).conflictDetails)}</p>`
+              : ''
+            }
       </div>
       `
-      : ''
-  }
+            : ''
+          }
 
   <div class="section">
     <h2>Report Sections</h2>
 
-    ${
-      reportData.reportSections
-        ? Object.entries(reportData.reportSections)
-            .map(
-              ([key, value]) => `
+    ${reportData.reportSections
+            ? Object.entries(reportData.reportSections)
+              .map(
+                ([key, value]) => `
                 <h3>${key.replace(/([A-Z])/g, ' $1').trim()}</h3>
                 <pre>${typeof value === 'object'
-                  ? JSON.stringify(value, null, 2)
-                  : value}</pre>
+                    ? JSON.stringify(value, null, 2)
+                    : value}</pre>
               `
-            )
-            .join('')
-        : `<p>No report sections available</p>`
-    }
+              )
+              .join('')
+            : `<p>No report sections available</p>`
+          }
   </div>
 
   <div class="footer">
@@ -327,7 +320,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         alert('AMMC report not available');
         return;
       }
-      const response: ApiResponse<DownloadResponse> = await userReportAPI.downloadAMMCReport(reportDetails.individualReports.ammcReportId);
+      const response = await userReportAPI.downloadAMMCReport(reportDetails.individualReports.ammcReportId);
       if (response.success && response.data) {
         // Check if there's a direct download URL for the PDF
         if (response.data.downloadUrl) {
@@ -374,7 +367,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         alert('NIA report not available');
         return;
       }
-      const response: ApiResponse<DownloadResponse> = await userReportAPI.downloadNIAReport(reportDetails.individualReports.niaReportId);
+      const response = await userReportAPI.downloadNIAReport(reportDetails.individualReports.niaReportId);
       if (response.success && response.data) {
         // Check if there's a direct download URL for the PDF
         if (response.data.downloadUrl) {

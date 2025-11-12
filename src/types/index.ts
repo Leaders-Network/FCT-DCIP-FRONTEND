@@ -3,14 +3,42 @@
  * Import types from here for consistency
  */
 
-// Re-export all API types
+// Re-export all API types (excluding AssignmentManagementProps to avoid duplicate)
 export * from './api.types';
 
 // Re-export all utility types
 export * from './utility.types';
 
-// Re-export component types if they exist
-export * from './component.types';
+// Re-export component types (excluding AssignmentManagementProps which is in api.types)
+export type {
+    SurveySubmissionData,
+    ModalComponentProps,
+    FormComponentProps,
+    TableComponentProps,
+    SearchComponentProps,
+    FilterComponentProps,
+    PaginationComponentProps,
+    DashboardCardProps,
+    StatusBadgeProps,
+    FileUploadComponentProps,
+    DropdownComponentProps,
+    NavigationProps,
+    SidebarProps,
+    HeaderProps,
+    LoadingComponentProps,
+    ErrorComponentProps,
+    EmptyStateProps,
+    ConfirmationDialogProps,
+    ToastProps,
+    ChartComponentProps,
+    ContactManagementProps,
+    PolicyDetailsProps,
+    ReportListProps,
+    ReportDetailsProps,
+    AssignmentDetailProps,
+    SurveySubmissionProps,
+    SurveyorManagementProps
+} from './component.types';
 
 // Common type aliases for convenience
 export type {
@@ -47,7 +75,6 @@ export type {
     SubmitHandler,
 
     // Component props
-    BaseComponentProps,
     WithChildren,
     WithOptionalChildren,
     WithClassName,
@@ -87,3 +114,6 @@ export {
     isFunction,
     isPromise,
 } from './utility.types';
+
+// Re-export BaseComponentProps separately to avoid duplicate
+export type { BaseComponentProps } from './component.types';

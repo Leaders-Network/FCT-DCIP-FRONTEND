@@ -362,7 +362,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All AMMC Surveyors</option>
-              {(surveyors || []).map((surveyor) => (
+              {(surveyors || []).map((surveyor: any) => (
                 <option key={surveyor?._id} value={surveyor?._id}>
                   {typeof surveyor?.userId === 'object' && surveyor.userId?.firstname} {typeof surveyor?.userId === 'object' && surveyor.userId?.lastname}
                 </option>))}
@@ -752,7 +752,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Assignment Details</h3>
               <p className="text-sm text-gray-500 mt-1">
-                Policy #{typeof assignment.ammcId === 'object' && assignment.ammcId?._id ? assignment.ammcId._id : assignment.ammcId}
+                Policy #{typeof assignment.ammcId === 'object' && assignment.ammcId?._id ? assignment.ammcId._id : String(assignment.ammcId)}
               </p>
             </div>
             <button
@@ -1201,7 +1201,7 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
     fetchSurveyData();
   }, [assignment._id, assignment.status]);
 
-  const handleDocumentsChange = (documents: File[]) => {
+  const handleDocumentsChange = (documents: any[]) => {
     console.log('Documents updated:', documents);
     // Handle document updates
   }

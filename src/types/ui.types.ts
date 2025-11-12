@@ -1,3 +1,4 @@
 /**
  * UI Component Types
- * Comprehensive type definitions for UI compon
+ * Comprehensive type definitions for UI components
+ */

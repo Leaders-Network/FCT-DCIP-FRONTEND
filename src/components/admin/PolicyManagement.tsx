@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical } from 'lucide-react';
 import { PolicyRequest, Surveyor } from '@/types/api.types';
-import { adminApi, withErrorHandling, reviewSubmission, deletePolicyRequest } from '@/services/api';
+import { adminApi, reviewSubmission, deletePolicyRequest } from '@/services/api';
 import { useAuth } from '@/context/useAuth';
 import { useRouter } from 'next/navigation';
 import AssignSurveyorModal from './AssignSurveyorModal';
@@ -43,25 +43,28 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     }
   }, [showActionsDropdown]);
 
-  const handleFetchDocumentUrl = async (document: string | { cloudinaryUrl: string }) => {
+  const handleFetchDocumentUrl = async (document: string | { cloudinaryUrl: string } | { name: string; url: string; publicId: string }) => {
     if (typeof document === 'string') {
       const response = await adminApi.getSurveyDocumentDownloadUrl(document);
       setDocumentUrl(response.data.url);
-    } else if (document && document.cloudinaryUrl) {
+    } else if (document && 'cloudinaryUrl' in document) {
       setDocumentUrl(document.cloudinaryUrl);
+    } else if (document && 'url' in document) {
+      setDocumentUrl(document.url);
     }
   };
 
   const fetchPoliciesAndSurveyors = async () => {
-    const fetcher = withErrorHandling(async () => {
+    try {
       const [policiesResponse, surveyorsResponse] = await Promise.all([
         adminApi.getPolicies({ status: 'all', page: 1, limit: 100 }),
         adminApi.getSurveyors(),
       ]);
       setPolicies(policiesResponse.data.policyRequests);
       setSurveyors(surveyorsResponse.data);
-    });
-    fetcher();
+    } catch (error) {
+      console.error('Failed to fetch policies and surveyors:', error);
+    }
   };
 
   useEffect(() => {
@@ -72,40 +75,50 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     ? policies.filter(policy => activeTab === 'all' ? true : policy.status === activeTab)
     : [];
 
-  const handleReviewSubmission = withErrorHandling(async (decision: 'approved' | 'rejected' | 'requires_more_info') => {
-    if (!selectedPolicy || selectedPolicySubmissions.length === 0) return;
+  const handleReviewSubmission = async (decision: 'approved' | 'rejected' | 'requires_more_info') => {
+    try {
+      if (!selectedPolicy || selectedPolicySubmissions.length === 0) return;
 
-    const submissionId = selectedPolicySubmissions[0]._id;
+      const submissionId = selectedPolicySubmissions[0]._id;
 
-    await reviewSubmission(submissionId, decision as 'approved' | 'rejected', reviewNotes);
-    setPolicies(prev =>
-      prev.map(p =>
-        p._id === selectedPolicy._id
-          ? { ...p, status: decision as any }
-          : p
-      )
-    );
-    setShowReviewModal(false);
-    setReviewNotes("");
-    const actionText = decision === 'approved' ? 'approved' :
-      decision === 'rejected' ? 'rejected' :
-        'marked as requiring more information';
-    alert(`Submission ${actionText} successfully!`);
-  });
+      await reviewSubmission(submissionId, decision as 'approved' | 'rejected', reviewNotes);
+      setPolicies(prev =>
+        prev.map(p =>
+          p._id === selectedPolicy._id
+            ? { ...p, status: decision as any }
+            : p
+        )
+      );
+      setShowReviewModal(false);
+      setReviewNotes("");
+      const actionText = decision === 'approved' ? 'approved' :
+        decision === 'rejected' ? 'rejected' :
+          'marked as requiring more information';
+      alert(`Submission ${actionText} successfully!`);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      alert(`Failed to review submission: ${err.message}`);
+    }
+  };
 
-  const handleSendToUser = withErrorHandling(async (ammcId: string) => {
-    await adminApi.sendPolicyToUser(ammcId);
-    setPolicies(prev =>
-      prev.map(p =>
-        p._id === ammcId
-          ? { ...p, status: 'sent_to_user' as any }
-          : p
-      )
-    );
-    alert('Policy sent to user successfully!');
-  });
+  const handleSendToUser = async (ammcId: string) => {
+    try {
+      await adminApi.sendPolicyToUser(ammcId);
+      setPolicies(prev =>
+        prev.map(p =>
+          p._id === ammcId
+            ? { ...p, status: 'sent_to_user' as any }
+            : p
+        )
+      );
+      alert('Policy sent to user successfully!');
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      alert(`Failed to send policy: ${err.message}`);
+    }
+  };
 
-  const handleDeletePolicy = withErrorHandling(async (policy: PolicyRequest) => {
+  const handleDeletePolicy = async (policy: PolicyRequest) => {
     try {
       await deletePolicyRequest(policy._id);
       setPolicies(prev => prev.filter(p => p._id !== policy._id));
@@ -116,7 +129,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       console.error('Delete policy error:', error);
       alert('Failed to delete policy');
     }
-  });
+  };
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -330,7 +343,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Survey Document</label>
                   {!documentUrl && (
-                    <button onClick={() => handleFetchDocumentUrl(selectedPolicy.surveyDocument)} className="text-blue-600 hover:text-blue-800">Show Document</button>
+                    <button onClick={() => selectedPolicy.surveyDocument && handleFetchDocumentUrl(selectedPolicy.surveyDocument)} className="text-blue-600 hover:text-blue-800">Show Document</button>
                   )}
                   {documentUrl && (
                     <a href={documentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Document</a>
@@ -689,13 +702,13 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: Assign
             <div className="flex justify-between">
               <span className="text-gray-600">Assigned:</span>
               <span className="font-medium text-gray-900">
-                {new Date(assignmentData.assignedAt).toLocaleDateString()}
+                {assignmentData.assignedAt ? new Date(assignmentData.assignedAt).toLocaleDateString() : 'N/A'}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Deadline:</span>
               <span className="font-medium text-gray-900">
-                {new Date(assignmentData.deadline).toLocaleDateString()}
+                {assignmentData.deadline ? new Date(assignmentData.deadline).toLocaleDateString() : 'N/A'}
               </span>
             </div>
             <div className="flex justify-between">
@@ -705,7 +718,7 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: Assign
                   assignmentData.priority === 'medium' ? 'text-yellow-600' :
                     'text-green-600'
                 }`}>
-                {assignmentData.priority.toUpperCase()}
+                {assignmentData?.priority ? assignmentData.priority.toUpperCase() : 'N/A'}
               </span>
             </div>
           </div>
@@ -747,6 +760,8 @@ interface SurveyData {
     cloudinaryUrl: string;
     category: string;
   }>;
+  surveyDocument?: string;
+  submissionTime?: string;
 }
 
 const PolicySurveyTab: React.FC<{
@@ -895,7 +910,7 @@ const PolicyDocumentsTab: React.FC<{
       <h4 className="font-medium text-gray-900">Policy Documents</h4>
 
       {/* Survey Document */}
-      {surveyData?.surveyDocument && (
+      {(surveyData as any)?.surveyDocument && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -904,13 +919,13 @@ const PolicyDocumentsTab: React.FC<{
                 <h5 className="font-medium text-blue-900">Survey Report</h5>
                 <p className="text-sm text-blue-700">Completed survey document (PDF)</p>
                 <p className="text-xs text-blue-600 mt-1">
-                  Submitted: {surveyData.submissionTime ? new Date(surveyData.submissionTime).toLocaleDateString() : 'N/A'}
+                  Submitted: {surveyData?.submissionTime ? new Date(surveyData.submissionTime).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
             </div>
             <div className="flex space-x-2">
               <a
-                href={surveyData.surveyDocument}
+                href={(surveyData as any)?.surveyDocument || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -918,7 +933,7 @@ const PolicyDocumentsTab: React.FC<{
                 View PDF
               </a>
               <a
-                href={surveyData.surveyDocument}
+                href={(surveyData as any)?.surveyDocument || '#'}
                 download
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
               >

@@ -1076,6 +1076,11 @@ export const adminApi = {
     return response.data;
   },
 
+  deleteEmployee: async (employeeId: string) => {
+    const response = await api.delete(`/admin/employees/${employeeId}`);
+    return response.data;
+  },
+
   createAdministrator: async (adminData: EmployeeRegistrationData) => {
     const response = await api.post('/admin/administrators', adminData);
     return response.data;

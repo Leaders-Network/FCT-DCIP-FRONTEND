@@ -7,7 +7,6 @@ import {
     Building2,
     AlertTriangle,
     Calendar,
-    Progress,
     User
 } from 'lucide-react';
 

@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { Phone, Mail, MapPin, Calendar, Eye, Clock, CheckCircle, Search } from "lucide-react";
-import { Assignment } from "@/types/api.types";
+import { Assignment, DualAssignment } from "@/types/api.types";
+import { SurveySubmissionData } from "@/types/component.types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSurveyorAssignments, getSurveyorDualAssignments } from "@/services/api";
@@ -35,21 +36,21 @@ const AssignmentsList = () => {
           if (response.data && response.data.dualAssignments) {
             // Convert dual assignments to assignment format
             fetchedAssignments = response.data.dualAssignments.map((dualAssignment: DualAssignment) => {
-              const currentAssignment = dualAssignment.currentSurveyorInfo?.assignmentId || {};
+              const currentAssignment = (dualAssignment.currentSurveyorInfo?.assignmentId as Assignment | undefined) || ({} as Partial<Assignment>);
 
               return {
                 _id: currentAssignment._id || dualAssignment._id,
                 status: currentAssignment.status || 'assigned',
                 assignedAt: dualAssignment.createdAt,
-                deadline: currentAssignment.deadline,
+                deadline: currentAssignment.deadline || '',
                 priority: dualAssignment.priority,
                 ammcId: dualAssignment.policyId,
                 location: {
                   address: dualAssignment.policyDetails?.address || 'Address not available',
                   contactPerson: {
                     name: dualAssignment.policyId?.contactDetails?.fullName || 'Contact not available',
-                    phone: dualAssignment.policyId?.contactDetails?.phoneNumber,
-                    email: dualAssignment.policyId?.contactDetails?.email
+                    phone: dualAssignment.policyId?.contactDetails?.phoneNumber || '',
+                    email: dualAssignment.policyId?.contactDetails?.email || ''
                   }
                 },
                 organization: dualAssignment.currentSurveyorOrganization,
@@ -97,7 +98,7 @@ const AssignmentsList = () => {
     setShowSurveyModal(true);
   };
 
-  const handleSurveySubmission = async (submission: FormData) => {
+  const handleSurveySubmission = async (submission: SurveySubmissionData) => {
     try {
       const { submitSurvey } = await import("@/services/api");
 
@@ -105,7 +106,7 @@ const AssignmentsList = () => {
       const ammcId = typeof selectedAssignment!.ammcId === 'object' && selectedAssignment!.ammcId?._id
         ? selectedAssignment!.ammcId._id
         : selectedAssignment!.ammcId;
-      formData.append('ammcId', ammcId);
+      formData.append('ammcId', ammcId as string);
       formData.append('assignmentId', selectedAssignment!._id);
       formData.append('surveyNotes', submission.surveyNotes);
       formData.append('recommendedAction', submission.recommendedAction);
@@ -407,6 +408,7 @@ const AssignmentsList = () => {
       {/* Survey Submission Modal */}
       {selectedAssignment && typeof selectedAssignment.ammcId === 'object' && (
         <SurveySubmissionModal
+          assignment={selectedAssignment}
           policy={selectedAssignment.ammcId}
           isOpen={showSurveyModal}
           onSubmit={handleSurveySubmission}
