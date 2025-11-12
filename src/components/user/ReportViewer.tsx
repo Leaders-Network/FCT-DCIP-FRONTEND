@@ -136,7 +136,9 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
             const response = await userReportAPI.getReportDetails(reportId);
 
             if (response.success) {
-                setReport(response.data);
+                // response.data comes from the API and may be a slightly different shape than
+                // our local ReportData/IndividualReportData types. Narrow by casting here.
+                setReport(response.data as unknown as ReportData | IndividualReportData);
             } else {
                 throw new Error(response.message || 'Failed to fetch report');
             }
@@ -156,7 +158,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
             if (response.success && response.data) {
                 // Generate a formatted HTML report that can be printed as PDF
-                const reportData = response.data;
+                const reportData: any = response.data; // API download payload may differ slightly from runtime types
                 const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -188,7 +190,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
         <div class="info-row"><span class="label">Policy ID:</span><span class="value">${reportData.policyId || 'N/A'}</span></div>
         <div class="info-row"><span class="label">Property Address:</span><span class="value">${reportData.propertyDetails?.address || 'N/A'}</span></div>
         <div class="info-row"><span class="label">Property Type:</span><span class="value">${reportData.propertyDetails?.propertyType || 'N/A'}</span></div>
-        <div class="info-row"><span class="label">Report Status:</span><span class="value">${reportData.status || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Report Status:</span><span class="value">${reportData.status || reportData.releaseStatus || 'N/A'}</span></div>
         <div class="info-row"><span class="label">Released Date:</span><span class="value">${reportData.releasedAt ? new Date(reportData.releasedAt).toLocaleString() : 'N/A'}</span></div>
         <div class="info-row"><span class="label">Download Count:</span><span class="value">${reportData.downloadCount || 0}</span></div>
     </div>
@@ -527,8 +529,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
 
 
-                            {(mergedReport.reportSections?.ammc?.photos?.length > 0 ||
-                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length > 0) && (
+                                {((mergedReport.reportSections?.ammc?.photos?.length || 0) > 0 ||
+                                    (mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 0) && (
                                     <div>
                                         <h4 className="font-medium mb-2">
                                             Photos ({mergedReport.reportSections?.ammc?.photos?.length ||
@@ -537,11 +539,14 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                         <div className="grid grid-cols-2 gap-2">
                                             {(mergedReport.reportSections?.ammc?.photos ||
                                                 mergedReport.individualReports?.ammcSubmission?.surveyData?.photos || [])
-                                                .slice(0, 4).map((photo, index) => (
+                                                .slice(0, 4).map((photo, index) => {
+                                                    const photoUrl = typeof photo === 'string' ? photo : photo?.url;
+                                                    const photoDesc = typeof photo === 'string' ? undefined : photo?.description;
+                                                    return (
                                                     <div key={index} className="relative">
                                                         <img
-                                                            src={photo.url || photo}
-                                                            alt={photo.description || `AMMC Photo ${index + 1}`}
+                                                            src={photoUrl}
+                                                            alt={photoDesc || `AMMC Photo ${index + 1}`}
                                                             className="w-full h-24 object-cover rounded"
                                                         />
                                                         {index === 3 && (mergedReport.reportSections?.ammc?.photos?.length ||
@@ -554,7 +559,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                                 </div>
                                                             )}
                                                     </div>
-                                                ))}
+                                                    );
+                                                })}
                                         </div>
                                     </div>
                                 )}
@@ -689,8 +695,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
 
 
-                            {(mergedReport.reportSections?.nia?.photos?.length > 0 ||
-                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length > 0) && (
+                                {((mergedReport.reportSections?.nia?.photos?.length || 0) > 0 ||
+                                    (mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 0) && (
                                     <div>
                                         <h4 className="font-medium mb-2">
                                             Photos ({mergedReport.reportSections?.nia?.photos?.length ||
@@ -699,11 +705,14 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                         <div className="grid grid-cols-2 gap-2">
                                             {(mergedReport.reportSections?.nia?.photos ||
                                                 mergedReport.individualReports?.niaSubmission?.surveyData?.photos || [])
-                                                .slice(0, 4).map((photo, index) => (
+                                                .slice(0, 4).map((photo, index) => {
+                                                    const photoUrl = typeof photo === 'string' ? photo : photo?.url;
+                                                    const photoDesc = typeof photo === 'string' ? undefined : photo?.description;
+                                                    return (
                                                     <div key={index} className="relative">
                                                         <img
-                                                            src={photo.url || photo}
-                                                            alt={photo.description || `NIA Photo ${index + 1}`}
+                                                            src={photoUrl}
+                                                            alt={photoDesc || `NIA Photo ${index + 1}`}
                                                             className="w-full h-24 object-cover rounded"
                                                         />
                                                         {index === 3 && (mergedReport.reportSections?.nia?.photos?.length ||
@@ -716,7 +725,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                                 </div>
                                                             )}
                                                     </div>
-                                                ))}
+                                                    );
+                                                })}
                                         </div>
                                     </div>
                                 )}
