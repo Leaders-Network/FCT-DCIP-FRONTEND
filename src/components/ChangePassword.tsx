@@ -38,7 +38,7 @@ export default function ChangePassword() {
       passwordSchema.parse({ password, confirmPassword });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        setError(error.errors[0].message);
+        setError(error.issues[0].message);
         return;
       }
     }
