@@ -56,7 +56,11 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   // Check if this is a dual-surveyor assignment
   const isDualSurveyor = assignment?.dualAssignmentId || assignment?.isDualSurveyor;
   const otherOrganization = surveyorOrganization === 'AMMC' ? 'NIA' : 'AMMC';
-  const otherSurveyorContact = assignment?.dualAssignmentInfo?.otherSurveyor;
+  const otherSurveyorContact = assignment?.dualAssignmentInfo ? 
+    (surveyorOrganization === 'AMMC' 
+      ? (assignment.dualAssignmentInfo as any).niaSurveyorContact 
+      : (assignment.dualAssignmentInfo as any).ammcSurveyorContact)
+    : undefined;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -658,8 +662,8 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={loading || !uploadedDocument || !surveyNotes.trim() ||
-                  (isDualSurveyor && contactLog.length === 0)}
+                disabled={Boolean(loading || !uploadedDocument || !surveyNotes.trim() ||
+                  (isDualSurveyor && contactLog.length === 0))}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

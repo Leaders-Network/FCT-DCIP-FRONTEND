@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Save, FileText, Camera, Phone, Mail, MessageSquare } from 'lucide-react';
-import { SurveySubmissionData, Assignment, PolicyRequest } from '@/types/api.types';
+import { Assignment, PolicyRequest, ContactLogEntry } from '@/types/api.types';
+import { SurveySubmissionData } from '@/types/component.types';
 
 interface SurveySubmissionModalProps {
     policy: PolicyRequest;
@@ -57,7 +58,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
             successful: true
         };
 
-        setFormData(prev => ({
+        setFormData((prev: SurveySubmissionData) => ({
             ...prev,
             contactLog: [...prev.contactLog, newEntry]
         }));
@@ -132,7 +133,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </label>
                                 <textarea
                                     value={formData.surveyDetails.propertyCondition}
-                                    onChange={(e) => setFormData(prev => ({
+                                    onChange={(e) => setFormData((prev: SurveySubmissionData) => ({
                                         ...prev,
                                         surveyDetails: { ...prev.surveyDetails, propertyCondition: e.target.value }
                                     }))}
@@ -149,7 +150,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </label>
                                 <textarea
                                     value={formData.surveyDetails.structuralAssessment}
-                                    onChange={(e) => setFormData(prev => ({
+                                    onChange={(e) => setFormData((prev: SurveySubmissionData) => ({
                                         ...prev,
                                         surveyDetails: { ...prev.surveyDetails, structuralAssessment: e.target.value }
                                     }))}
@@ -166,7 +167,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </label>
                                 <textarea
                                     value={formData.surveyDetails.riskFactors}
-                                    onChange={(e) => setFormData(prev => ({
+                                    onChange={(e) => setFormData((prev: SurveySubmissionData) => ({
                                         ...prev,
                                         surveyDetails: { ...prev.surveyDetails, riskFactors: e.target.value }
                                     }))}
@@ -183,7 +184,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </label>
                                 <textarea
                                     value={formData.surveyDetails.recommendations}
-                                    onChange={(e) => setFormData(prev => ({
+                                    onChange={(e) => setFormData((prev: SurveySubmissionData) => ({
                                         ...prev,
                                         surveyDetails: { ...prev.surveyDetails, recommendations: e.target.value }
                                     }))}
@@ -203,7 +204,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                         type="number"
                                         min="0"
                                         value={formData.surveyDetails.estimatedValue || ''}
-                                        onChange={(e) => setFormData(prev => ({
+                                        onChange={(e) => setFormData((prev: SurveySubmissionData) => ({
                                             ...prev,
                                             surveyDetails: { ...prev.surveyDetails, estimatedValue: parseInt(e.target.value) || 0 }
                                         }))}
@@ -218,7 +219,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                     </label>
                                     <select
                                         value={formData.recommendedAction}
-                                        onChange={(e) => setFormData(prev => ({
+                                        onChange={(e) => setFormData((prev: SurveySubmissionData) => ({
                                             ...prev,
                                             recommendedAction: e.target.value as 'approve' | 'reject' | 'request_more_info'
                                         }))}
@@ -238,7 +239,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </label>
                                 <textarea
                                     value={formData.surveyNotes}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, surveyNotes: e.target.value }))}
+                                    onChange={(e) => setFormData((prev: SurveySubmissionData) => ({ ...prev, surveyNotes: e.target.value }))}
                                     rows={3}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
                                     placeholder="Any additional notes or observations..."
@@ -267,7 +268,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {formData.contactLog.map((entry, index) => (
+                                    {formData.contactLog.map((entry: ContactLogEntry, index: number) => (
                                         <div key={index} className="border border-gray-200 rounded-lg p-4">
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div>
@@ -280,7 +281,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                                         onChange={(e) => {
                                                             const updatedLog = [...formData.contactLog];
                                                             updatedLog[index] = { ...entry, date: e.target.value };
-                                                            setFormData(prev => ({ ...prev, contactLog: updatedLog }));
+                                                            setFormData((prev: SurveySubmissionData) => ({ ...prev, contactLog: updatedLog }));
                                                         }}
                                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
                                                     />
@@ -313,7 +314,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                                         onChange={(e) => {
                                                             const updatedLog = [...formData.contactLog];
                                                             updatedLog[index] = { ...entry, successful: e.target.value === 'yes' };
-                                                            setFormData(prev => ({ ...prev, contactLog: updatedLog }));
+                                                            setFormData((prev: SurveySubmissionData) => ({ ...prev, contactLog: updatedLog }));
                                                         }}
                                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
                                                     >

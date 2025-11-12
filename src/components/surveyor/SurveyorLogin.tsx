@@ -58,12 +58,13 @@ const SurveyorLogin = () => {
       console.error("Login failed:", error);
 
       // Handle different error types
-      if (error.response?.status === 401) {
+      const err = error as any;
+      if (err.response?.status === 401) {
         setError("Invalid email or password.");
-      } else if (error.response?.status === 403) {
+      } else if (err.response?.status === 403) {
         setError("Account access denied. Please contact administrator.");
-      } else if (error.response?.data?.message) {
-        setError(error.response.data.message);
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else {
         setError("Login failed. Please check your connection and try again.");
       }

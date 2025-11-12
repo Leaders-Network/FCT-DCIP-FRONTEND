@@ -241,8 +241,8 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
             if (data.success) {
                 console.log('Assignment successful');
-                onAssignmentComplete();
-                onClose();
+                onAssignmentComplete?.();
+                onClose?.();
             } else {
                 throw new Error(data.message || 'Failed to assign surveyor');
             }

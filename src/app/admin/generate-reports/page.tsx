@@ -207,7 +207,7 @@ export default function GenerateReportsPage() {
                                                     Policy: {report.policyId.substring(0, 8)}...
                                                 </div>
                                                 <div className="text-xs text-gray-600">
-                                                    {report.propertyAddress || 'No address'}
+                                                    {(report as any).propertyAddress || 'No address'}
                                                 </div>
                                             </div>
                                             <Badge className="bg-green-100 text-green-800">

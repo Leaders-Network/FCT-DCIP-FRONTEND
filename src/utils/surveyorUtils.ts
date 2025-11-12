@@ -145,11 +145,11 @@ interface ApiSurveyorData {
  */
 export const transformSurveyorData = (apiSurveyor: ApiSurveyorData): Surveyor => {
     return {
-        _id: apiSurveyor.userId?._id || apiSurveyor._id,
-        firstname: apiSurveyor.userId?.firstname || apiSurveyor.firstname,
-        lastname: apiSurveyor.userId?.lastname || apiSurveyor.lastname,
-        email: apiSurveyor.userId?.email || apiSurveyor.email,
-        phoneNumber: apiSurveyor.userId?.phonenumber || apiSurveyor.phoneNumber,
+        _id: apiSurveyor.userId?._id || apiSurveyor._id || '',
+        firstname: apiSurveyor.userId?.firstname || apiSurveyor.firstname || '',
+        lastname: apiSurveyor.userId?.lastname || apiSurveyor.lastname || '',
+        email: apiSurveyor.userId?.email || apiSurveyor.email || '',
+        phoneNumber: apiSurveyor.userId?.phonenumber || apiSurveyor.phoneNumber || '',
         specialization: apiSurveyor.profile?.specialization || apiSurveyor.specialization || ['residential'],
         experience: apiSurveyor.profile?.experience || apiSurveyor.experience || 0,
         availability: apiSurveyor.profile?.availability || apiSurveyor.availability || 'available',

@@ -44,7 +44,7 @@ export const testNIAAdminLogin = async () => {
         }
     } catch (error) {
         console.error('❌ Network Error:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
 };
 

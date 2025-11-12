@@ -17,7 +17,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
     email: "",
     phonenumber: "",
     role: "",
+    roleId: "",
     status: "Active",
+    statusId: "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -39,7 +41,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
         email: "",
         phonenumber: "",
         role: "",
+        roleId: "",
         status: "Active",
+        statusId: "",
       });
     } catch (error) {
       console.error("Failed to create administrator:", error);

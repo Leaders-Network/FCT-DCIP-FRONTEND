@@ -492,7 +492,6 @@ export type KebabCase<S extends string> = S extends `${infer T}${infer U}`
 
 export type {
     // Re-export commonly used React types
-    React,
     ReactNode,
     ReactElement,
     FC,

@@ -310,11 +310,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
                     </div>
                     {sidebarOpen && propertiesOpen && (
                       <ul className="pl-10 mt-1 space-y-1">
-                        {('subItems' in item && Array.isArray(item.subItems) ? item.subItems : []).map((subItem: { name: string; href: string; icon?: React.ComponentType }) => (
+                        {('subItems' in item && Array.isArray(item.subItems) ? item.subItems : []).map((subItem: { name: string; href: string; path?: string; icon?: React.ComponentType }) => (
                           <li key={subItem.name}>
                             <Link
-                              href={subItem.path}
-                              className={`block px-3 py-2 rounded-md ${pathname === subItem.path ? "bg-gray-100 font-medium" : "text-gray-600 hover:bg-gray-50"
+                              href={subItem.path || subItem.href}
+                              className={`block px-3 py-2 rounded-md ${pathname === (subItem.path || subItem.href) ? "bg-gray-100 font-medium" : "text-gray-600 hover:bg-gray-50"
                                 }`}
                             >
                               {subItem.name}

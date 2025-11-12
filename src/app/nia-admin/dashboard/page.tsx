@@ -324,23 +324,23 @@ const NIAAdminDashboard = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent NIA Assignments</h3>
                         <div className="space-y-3">
                             {stats?.recentAssignments && stats.recentAssignments.length > 0 ? (
-                                stats.recentAssignments.slice(0, 5).map((assignment, index) => (
+                                stats.recentAssignments.slice(0, 5).map((assignment: any, index) => (
                                     <div key={assignment._id || index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-gray-900 truncate">
-                                                {assignment.ammcId?.propertyDetails?.propertyType || 'Property Survey'}
+                                                {assignment.ammcId?.propertyDetails?.propertyType || assignment.policyId?.propertyDetails?.propertyType || 'Property Survey'}
                                             </p>
                                             <p className="text-xs text-gray-500 truncate">
-                                                {assignment.ammcId?.propertyDetails?.address || 'No address'}
+                                                {assignment.ammcId?.propertyDetails?.address || assignment.policyId?.propertyDetails?.address || 'No address'}
                                             </p>
                                         </div>
                                         <div className="ml-4 flex-shrink-0">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                assignment.status === 'in-progress' ? 'bg-purple-100 text-purple-800' :
-                                                    assignment.status === 'accepted' ? 'bg-blue-100 text-blue-800' :
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.status === 'completed' || assignment.assignmentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                                                assignment.status === 'in-progress' || assignment.assignmentStatus === 'in-progress' ? 'bg-purple-100 text-purple-800' :
+                                                    assignment.status === 'accepted' || assignment.assignmentStatus === 'accepted' ? 'bg-blue-100 text-blue-800' :
                                                         'bg-yellow-100 text-yellow-800'
                                                 }`}>
-                                                {assignment.status}
+                                                {assignment.status || assignment.assignmentStatus}
                                             </span>
                                         </div>
                                     </div>

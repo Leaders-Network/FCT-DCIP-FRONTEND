@@ -134,12 +134,13 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
         throw new Error(response.message || 'Upload failed');
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
       setUploadProgress(prev => ({
         ...prev,
         [fileId]: {
           progress: 0,
           status: 'error',
-          error: error.message || 'Upload failed'
+          error: errorMessage
         }
       }));
 
@@ -267,10 +268,10 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
               <div className="w-full bg-gray-200 rounded-full h-1.5">
                 <div
                   className={`h-1.5 rounded-full transition-all duration-300 ${progress.status === 'error'
-                      ? 'bg-red-500'
-                      : progress.status === 'success'
-                        ? 'bg-green-500'
-                        : 'bg-blue-500'
+                    ? 'bg-red-500'
+                    : progress.status === 'success'
+                      ? 'bg-green-500'
+                      : 'bg-blue-500'
                     }`}
                   style={{ width: `${progress.progress}%` }}
                 />

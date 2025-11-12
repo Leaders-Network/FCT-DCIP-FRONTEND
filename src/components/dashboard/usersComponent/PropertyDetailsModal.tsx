@@ -13,6 +13,9 @@ interface PropertyDetailsModalProps {
     yearBuilt: number;
     squareFootage: number;
     constructionMaterial: string;
+    phonenumber?: string;
+    category?: { category: string };
+    status?: string;
   };
 }
 

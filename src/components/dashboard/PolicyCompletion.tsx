@@ -54,7 +54,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
         // Set merged reports (these are the new dual surveyor reports)
         if (reportsResponse.success) {
-          setMergedReports(reportsResponse.data.reports || []);
+          setMergedReports(reportsResponse.data?.reports || []);
         }
       } catch (error) {
         console.error("Failed to fetch completed data:", error);
