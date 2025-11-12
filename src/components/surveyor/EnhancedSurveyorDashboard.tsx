@@ -18,21 +18,42 @@ import {
     Shield,
     TrendingUp
 } from "lucide-react";
-import { Assignment } from "@/types/api.types";
+import { Assignment, DualAssignment } from "@/types/api.types";
 import Link from "next/link";
 import { getSurveyorDashboard, getSurveyorAssignments, getSurveyorDualAssignments } from "@/services/api";
 import { debugAuthState, clearAllAuthData, getCurrentAuthType } from "@/utils/debug-auth";
 
 interface DualAssignmentInfo {
     _id: string;
-    policyId: string;
-    ammcSurveyorId: string;
-    niaSurveyorId: string;
-    ammcAssignmentId: string;
-    niaAssignmentId: string;
-    completionStatus: number;
-    conflictDetected: boolean;
-    mergedReportId?: string;
+    policyId: string | {
+        _id: string;
+        contactDetails?: {
+            fullName: string;
+            phoneNumber: string;
+            email: string;
+        };
+    };
+    assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
+    completionStatus: 0 | 50 | 100;
+    createdAt: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    estimatedCompletion: {
+        overallDeadline: string;
+    };
+    policyDetails?: {
+        address: string;
+    };
+    currentSurveyorInfo?: {
+        assignmentId: Assignment;
+    };
+    partnerSurveyorInfo?: {
+        name: string;
+        organization: string;
+        email: string;
+        phone: string;
+    };
+    currentSurveyorOrganization?: 'AMMC' | 'NIA';
+    conflictDetected?: boolean;
     otherSurveyor?: {
         name: string;
         organization: string;
@@ -48,8 +69,9 @@ interface DualAssignmentInfo {
     };
 }
 
-interface EnhancedAssignment extends Assignment {
-    dualAssignmentInfo?: DualAssignmentInfo;
+interface EnhancedAssignment extends Omit<Assignment, 'dualAssignmentInfo'> {
+    // Accept DualAssignmentInfo with otherSurveyor OR DualAssignment with partner info
+    dualAssignmentInfo?: DualAssignmentInfo | (DualAssignment & { otherSurveyor?: { name: string; organization: string; email: string; phone: string; license?: string; licenseNumber?: string }; conflictDetected?: boolean });
     organization: 'AMMC' | 'NIA';
     isDualSurveyor: boolean;
 }
@@ -157,52 +179,30 @@ const EnhancedSurveyorDashboard = () => {
                     // Convert dual assignments to enhanced assignments
                     enhancedAssignments = dualAssignments.map((dualAssignment) => {
                         // Use the current surveyor's assignment from the dual assignment
-                        const currentAssignment = dualAssignment.currentSurveyorInfo?.assignmentId || {};
+                        const currentAssignment = dualAssignment.currentSurveyorInfo?.assignmentId || {} as Assignment;
                         const partnerInfo = dualAssignment.partnerSurveyorInfo || {};
 
                         return {
+                            ...currentAssignment,
                             _id: currentAssignment._id || dualAssignment._id,
                             status: currentAssignment.status || 'assigned',
                             assignedAt: dualAssignment.createdAt,
                             deadline: currentAssignment.deadline,
                             priority: dualAssignment.priority,
-                            ammcId: dualAssignment.policyId,
+                            ammcId: typeof dualAssignment.policyId === 'string' ? dualAssignment.policyId : dualAssignment.policyId._id,
                             location: {
                                 address: dualAssignment.policyDetails?.address || 'Address not available',
                                 contactPerson: {
-                                    name: dualAssignment.policyId?.contactDetails?.fullName || 'Contact not available',
-                                    phone: dualAssignment.policyId?.contactDetails?.phoneNumber,
-                                    email: dualAssignment.policyId?.contactDetails?.email
+                                    name: typeof dualAssignment.policyId === 'object' ? dualAssignment.policyId.contactDetails?.fullName || 'Contact not available' : 'Contact not available',
+                                    phone: typeof dualAssignment.policyId === 'object' ? dualAssignment.policyId.contactDetails?.phoneNumber : undefined,
+                                    email: typeof dualAssignment.policyId === 'object' ? dualAssignment.policyId.contactDetails?.email : undefined
                                 }
                             },
-                            organization: dualAssignment.currentSurveyorOrganization,
+                            organization: (['AMMC', 'NIA'].includes(dualAssignment.currentSurveyorOrganization || '') ? dualAssignment.currentSurveyorOrganization : 'AMMC') as 'AMMC' | 'NIA',
                             isDualSurveyor: true,
                             dualAssignmentId: dualAssignment._id,
-                            dualAssignmentInfo: {
-                                _id: dualAssignment._id,
-                                policyId: dualAssignment.policyId?._id,
-                                ammcSurveyorId: dualAssignment.ammcSurveyorId,
-                                niaSurveyorId: dualAssignment.niaSurveyorId,
-                                ammcAssignmentId: dualAssignment.ammcAssignmentId,
-                                niaAssignmentId: dualAssignment.niaAssignmentId,
-                                completionStatus: dualAssignment.completionStatus,
-                                conflictDetected: dualAssignment.conflictDetected,
-                                mergedReportId: dualAssignment.mergedReportId,
-                                otherSurveyor: {
-                                    name: partnerInfo.contact?.name || 'Partner Surveyor',
-                                    organization: partnerInfo.organization,
-                                    email: partnerInfo.contact?.email,
-                                    phone: partnerInfo.contact?.phone,
-                                    license: partnerInfo.contact?.license,
-                                    licenseNumber: partnerInfo.contact?.licenseNumber,
-                                    address: partnerInfo.contact?.address,
-                                    emergencyContact: partnerInfo.contact?.emergencyContact,
-                                    specialization: partnerInfo.contact?.specialization,
-                                    experience: partnerInfo.contact?.experience,
-                                    rating: partnerInfo.contact?.rating
-                                }
-                            }
-                        };
+                            dualAssignmentInfo: dualAssignment
+                        } as EnhancedAssignment;
                     });
                 } else {
                     // Fallback to regular assignments with dual-surveyor enhancement
@@ -210,7 +210,7 @@ const EnhancedSurveyorDashboard = () => {
                         fetchedAssignments.map(async (assignment) => {
                             const enhanced: EnhancedAssignment = {
                                 ...assignment,
-                                organization: assignment.organization || organization,
+                                organization: (assignment.organization || organization) as 'AMMC' | 'NIA',
                                 isDualSurveyor: !!assignment.dualAssignmentId
                             };
 
@@ -245,7 +245,7 @@ const EnhancedSurveyorDashboard = () => {
                 if (dashboardResponse.status !== 'fulfilled' || !dashboardResponse.value?.data?.statistics) {
                     const dualAssignments = enhancedAssignments.filter(a => a.isDualSurveyor).length;
                     const conflictsDetected = enhancedAssignments.filter(a =>
-                        a.dualAssignmentInfo?.conflictDetected
+                        a.dualAssignmentInfo && 'conflictDetected' in a.dualAssignmentInfo && (a.dualAssignmentInfo as any).conflictDetected
                     ).length;
 
                     setStats(prev => ({
@@ -278,7 +278,7 @@ const EnhancedSurveyorDashboard = () => {
     const getStatusBadge = (status: string, isDualSurveyor: boolean = false) => {
         const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
         const dualIndicator = isDualSurveyor ? (
-            <Shield className="w-3 h-3 ml-1" title="Dual Surveyor Assignment" />
+            <Shield className="w-3 h-3 ml-1" />
         ) : null;
 
         switch (status) {
@@ -474,28 +474,28 @@ const EnhancedSurveyorDashboard = () => {
                                         </div>
 
                                         {/* Dual Surveyor Information */}
-                                        {assignment.isDualSurveyor && assignment.dualAssignmentInfo?.otherSurveyor && (
+                                        {assignment.isDualSurveyor && assignment.dualAssignmentInfo && 'otherSurveyor' in assignment.dualAssignmentInfo && (
                                             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                                 <h4 className="text-sm font-medium text-blue-900 mb-2 flex items-center">
                                                     <Users className="w-4 h-4 mr-2" />
-                                                    Collaborating Surveyor ({assignment.dualAssignmentInfo.otherSurveyor.organization})
+                                                    Collaborating Surveyor ({(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.organization})
                                                 </h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                                     <div className="flex items-center text-blue-800">
                                                         <User className="w-4 h-4 mr-2" />
-                                                        {assignment.dualAssignmentInfo.otherSurveyor.name}
+                                                        {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.name}
                                                     </div>
                                                     <div className="flex items-center text-blue-800">
                                                         <Mail className="w-4 h-4 mr-2" />
-                                                        {assignment.dualAssignmentInfo.otherSurveyor.email}
+                                                        {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.email}
                                                     </div>
                                                     <div className="flex items-center text-blue-800">
                                                         <Phone className="w-4 h-4 mr-2" />
-                                                        {assignment.dualAssignmentInfo.otherSurveyor.phone}
+                                                        {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.phone}
                                                     </div>
                                                     <div className="flex items-center text-blue-800">
                                                         <FileText className="w-4 h-4 mr-2" />
-                                                        License: {assignment.dualAssignmentInfo.otherSurveyor.licenseNumber || assignment.dualAssignmentInfo.otherSurveyor.license || 'Not provided'}
+                                                        License: {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.licenseNumber || (assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.license || 'Not provided'}
                                                     </div>
                                                 </div>
 
@@ -514,7 +514,7 @@ const EnhancedSurveyorDashboard = () => {
                                                 </div>
 
                                                 {/* Conflict Indicator */}
-                                                {assignment.dualAssignmentInfo.conflictDetected && (
+                                                {(assignment.dualAssignmentInfo as DualAssignmentInfo).conflictDetected && (
                                                     <div className="mt-2 flex items-center text-orange-600">
                                                         <AlertCircle className="w-4 h-4 mr-2" />
                                                         <span className="text-xs font-medium">Conflict detected - requires attention</span>
