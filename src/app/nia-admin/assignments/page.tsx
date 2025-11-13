@@ -81,7 +81,7 @@ const NIAAssignmentsPage = () => {
                 console.log('NIA Admin - Raw assignments count:', filteredAssignments.length);
 
                 // Debug: Log the raw data to see what's being returned
-                console.log('🔍 NIA Assignments Debug:', filteredAssignments.map((a: any) => ({
+                console.log('🔍 NIA Assignments Debug:', filteredAssignments.map((a: DualAssignment) => ({
                     id: a._id?.slice(-6),
                     status: a.assignmentStatus,
                     hasNIA: !!a.niaSurveyorContact,

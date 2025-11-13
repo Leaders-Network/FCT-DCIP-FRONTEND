@@ -1380,5 +1380,152 @@ export interface AdminContact {
   emergencyContact?: boolean;
 }
 
+// Broker Admin Types
+export interface BrokerAdmin {
+  _id: string;
+  userId: string;
+  organization: 'Broker';
+  brokerFirmName: string;
+  brokerFirmLicense: string;
+  permissions: {
+    canViewClaims: boolean;
+    canUpdateClaimStatus: boolean;
+    canViewReports: boolean;
+    canAccessAnalytics: boolean;
+  };
+  profile: {
+    department: string;
+    position: string;
+    licenseNumber: string;
+  };
+  settings: {
+    notifications: {
+      email: boolean;
+      sms: boolean;
+    };
+    dashboard: {
+      defaultView: 'claims' | 'analytics' | 'reports';
+      autoRefresh: boolean;
+    };
+  };
+  status: 'active' | 'inactive' | 'suspended';
+  lastLogin?: string;
+  loginHistory: Array<{
+    timestamp: string;
+    ipAddress: string;
+    userAgent: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BrokerAdminLoginResponse {
+  success: boolean;
+  message: string;
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    fullname: string;
+    organization: 'Broker';
+    role: string;
+    tokenType: 'broker-admin';
+  };
+  brokerAdmin: {
+    id: string;
+    brokerFirmName: string;
+    permissions: BrokerAdmin['permissions'];
+    settings: BrokerAdmin['settings'];
+  };
+}
+
+export interface BrokerAdminVerifyResponse {
+  success: boolean;
+  user: {
+    id: string;
+    fullname: string;
+    organization: 'Broker';
+    role: string;
+    tokenType: 'broker-admin';
+  };
+  brokerAdmin: {
+    id: string;
+    brokerFirmName: string;
+    permissions: BrokerAdmin['permissions'];
+    settings: BrokerAdmin['settings'];
+    status: 'active' | 'inactive' | 'suspended';
+  };
+}
+
+export interface BrokerClaimStatusHistory {
+  status: 'pending' | 'under_review' | 'rejected' | 'completed';
+  changedBy: string;
+  changedAt: string;
+  reason?: string;
+  notes?: string;
+}
+
+export interface BrokerPolicyRequest extends PolicyRequest {
+  brokerStatus: 'pending' | 'under_review' | 'rejected' | 'completed';
+  brokerNotes?: string;
+  brokerAssignedTo?: string;
+  brokerStatusHistory: BrokerClaimStatusHistory[];
+}
+
+export interface BrokerDashboardData {
+  statistics: {
+    pending: number;
+    under_review: number;
+    rejected: number;
+    completed: number;
+    total: number;
+  };
+  averageProcessingTime: number;
+  recentActivity: Array<{
+    claimId: string;
+    policyNumber?: string;
+    action: string;
+    timestamp: string;
+    performedBy: string;
+  }>;
+}
+
+export interface BrokerClaimFilters {
+  status?: 'all' | 'pending' | 'under_review' | 'rejected' | 'completed';
+  dateFrom?: string;
+  dateTo?: string;
+  policyNumber?: string;
+  sortBy?: 'submissionDate' | 'priority' | 'policyNumber';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface BrokerClaimsResponse {
+  success: boolean;
+  claims: BrokerPolicyRequest[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface BrokerClaimDetailResponse {
+  success: boolean;
+  claim: BrokerPolicyRequest;
+}
+
+export interface BrokerStatusUpdateRequest {
+  status: 'under_review' | 'rejected' | 'completed';
+  reason?: string;
+  notes?: string;
+}
+
+export interface BrokerStatusUpdateResponse {
+  success: boolean;
+  message: string;
+  claim: BrokerPolicyRequest;
+}
+
 // Export SurveySubmissionData from component.types
 export type { SurveySubmissionData } from './component.types';

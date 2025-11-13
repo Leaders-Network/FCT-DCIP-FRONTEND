@@ -39,9 +39,22 @@ interface DashboardStats {
     recentAssignments: Array<{
         _id: string;
         assignmentStatus: string;
+        status?: string;
         completionStatus: number;
         priority: string;
         createdAt: string;
+        ammcId?: {
+            propertyDetails?: {
+                propertyType?: string;
+                address?: string;
+            };
+        };
+        policyId?: {
+            propertyDetails?: {
+                propertyType?: string;
+                address?: string;
+            };
+        };
     }>;
 }
 
@@ -324,7 +337,7 @@ const NIAAdminDashboard = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent NIA Assignments</h3>
                         <div className="space-y-3">
                             {stats?.recentAssignments && stats.recentAssignments.length > 0 ? (
-                                stats.recentAssignments.slice(0, 5).map((assignment: any, index) => (
+                                stats.recentAssignments.slice(0, 5).map((assignment, index) => (
                                     <div key={assignment._id || index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-gray-900 truncate">
