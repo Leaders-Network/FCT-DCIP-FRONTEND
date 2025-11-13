@@ -1525,8 +1525,8 @@ export const userReportAPI = {
 };
 
 export default api;
-//
- Broker Admin API functions
+
+// Broker Admin API functions
 export const brokerAdminAPI = {
   // Login broker admin
   login: async (email: string, password: string): Promise<import("../types/api.types").BrokerAdminLoginResponse> => {
