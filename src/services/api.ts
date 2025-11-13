@@ -1525,3 +1525,67 @@ export const userReportAPI = {
 };
 
 export default api;
+//
+ Broker Admin API functions
+export const brokerAdminAPI = {
+  // Login broker admin
+  login: async (email: string, password: string): Promise<import("../types/api.types").BrokerAdminLoginResponse> => {
+    const response = await api.post('/broker-admin/auth/login', { email, password });
+    return response.data;
+  },
+
+  // Verify broker admin token
+  verify: async (): Promise<import("../types/api.types").BrokerAdminVerifyResponse> => {
+    const response = await api.get('/broker-admin/auth/verify');
+    return response.data;
+  },
+
+  // Logout broker admin
+  logout: async (): Promise<ApiResponse> => {
+    const response = await api.post('/broker-admin/auth/logout');
+    return response.data;
+  },
+
+  // Get broker dashboard data
+  getDashboardData: async (): Promise<ApiResponse<import("../types/api.types").BrokerDashboardData>> => {
+    const response = await api.get('/broker-admin/dashboard');
+    return response.data;
+  },
+
+  // Get all claims with filters
+  getClaims: async (filters?: import("../types/api.types").BrokerClaimFilters): Promise<import("../types/api.types").BrokerClaimsResponse> => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== 'all') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/broker-admin/claims${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  // Get claim by ID
+  getClaimById: async (claimId: string): Promise<import("../types/api.types").BrokerClaimDetailResponse> => {
+    const response = await api.get(`/broker-admin/claims/${claimId}`);
+    return response.data;
+  },
+
+  // Update claim status
+  updateClaimStatus: async (
+    claimId: string,
+    statusUpdate: import("../types/api.types").BrokerStatusUpdateRequest
+  ): Promise<import("../types/api.types").BrokerStatusUpdateResponse> => {
+    const response = await api.patch(`/broker-admin/claims/${claimId}/status`, statusUpdate);
+    return response.data;
+  },
+
+  // Get claim analytics
+  getAnalytics: async (period?: string): Promise<ApiResponse> => {
+    const endpoint = `/broker-admin/analytics${period ? `?period=${period}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  }
+};

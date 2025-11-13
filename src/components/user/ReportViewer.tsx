@@ -158,7 +158,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
             if (response.success && response.data) {
                 // Generate a formatted HTML report that can be printed as PDF
-                const reportData = response.data as ReportData; // API download payload
+                const reportData = response.data as unknown as Record<string, unknown>; // API download payload may have additional fields
                 const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -186,17 +186,17 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
     
     <div class="section">
         <h2>Report Information</h2>
-        <div class="info-row"><span class="label">Report ID:</span><span class="value">${reportData.reportId || 'N/A'}</span></div>
-        <div class="info-row"><span class="label">Policy ID:</span><span class="value">${reportData.policyId || 'N/A'}</span></div>
-        <div class="info-row"><span class="label">Property Address:</span><span class="value">${reportData.propertyDetails?.address || 'N/A'}</span></div>
-        <div class="info-row"><span class="label">Property Type:</span><span class="value">${reportData.propertyDetails?.propertyType || 'N/A'}</span></div>
-        <div class="info-row"><span class="label">Report Status:</span><span class="value">${reportData.status || reportData.releaseStatus || 'N/A'}</span></div>
-        <div class="info-row"><span class="label">Released Date:</span><span class="value">${reportData.releasedAt ? new Date(reportData.releasedAt).toLocaleString() : 'N/A'}</span></div>
-        <div class="info-row"><span class="label">Download Count:</span><span class="value">${reportData.downloadCount || 0}</span></div>
+        <div class="info-row"><span class="label">Report ID:</span><span class="value">${(reportData.reportId as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Policy ID:</span><span class="value">${(reportData.policyId as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Property Address:</span><span class="value">${((reportData.propertyDetails as Record<string, unknown>)?.address as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Property Type:</span><span class="value">${((reportData.propertyDetails as Record<string, unknown>)?.propertyType as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Report Status:</span><span class="value">${(reportData.status as string) || (reportData.releaseStatus as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Released Date:</span><span class="value">${reportData.releasedAt ? new Date(reportData.releasedAt as string).toLocaleString() : 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Download Count:</span><span class="value">${(reportData.downloadCount as number) || 0}</span></div>
     </div>
 
-    <div class="recommendation ${reportData.finalRecommendation === 'approve' ? 'approve' : reportData.finalRecommendation === 'reject' ? 'reject' : ''}">
-        <h2>Final Recommendation: ${(reportData.finalRecommendation || 'N/A').toUpperCase()}</h2>
+    <div class="recommendation ${(reportData.finalRecommendation as string) === 'approve' ? 'approve' : (reportData.finalRecommendation as string) === 'reject' ? 'reject' : ''}">
+        <h2>Final Recommendation: ${((reportData.finalRecommendation as string) || 'N/A').toUpperCase()}</h2>
         ${reportData.paymentEnabled ? '<p>✓ Payment Enabled</p>' : '<p>✗ Payment Not Enabled</p>'}
     </div>
 
