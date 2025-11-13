@@ -2,7 +2,7 @@
  * Authentication utility functions
  */
 
-export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor';
+export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor';
 
 export const getAuthToken = (tokenType?: TokenType): string | null => {
     if (typeof window === 'undefined') return null;
@@ -21,6 +21,7 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     const tokenKeys = [
         'superAdminToken',  // Super admin has highest priority
         'niaAdminToken',
+        'brokerAdminToken',
         'adminToken',
         'surveyorToken',
         'userToken',
@@ -46,6 +47,7 @@ const getTokenKeyForType = (tokenType: string): string => {
         case 'admin': return 'adminToken';
         case 'super-admin': return 'superAdminToken';
         case 'nia-admin': return 'niaAdminToken';
+        case 'broker-admin': return 'brokerAdminToken';
         case 'surveyor': return 'surveyorToken';
         default: return 'token';
     }
@@ -103,6 +105,7 @@ export const removeAuthToken = (tokenType?: TokenType): void => {
         const tokenKeys = [
             'superAdminToken',
             'niaAdminToken',
+            'brokerAdminToken',
             'adminToken',
             'surveyorToken',
             'userToken',
@@ -124,6 +127,7 @@ export const clearAuthTokens = (): void => {
     const tokenKeys = [
         'superAdminToken',
         'niaAdminToken',
+        'brokerAdminToken',
         'adminToken',
         'surveyorToken',
         'userToken',
@@ -134,6 +138,7 @@ export const clearAuthTokens = (): void => {
         'surveyorName',
         'surveyorId',
         'niaAdminInfo',
+        'brokerAdminInfo',
         'adminInfo',
         'userInfo',
         'superAdminInfo'
@@ -166,6 +171,7 @@ export const getCurrentTokenType = (): string | null => {
     const tokenTypes = [
         { type: 'super-admin', key: 'superAdminToken' },
         { type: 'nia-admin', key: 'niaAdminToken' },
+        { type: 'broker-admin', key: 'brokerAdminToken' },
         { type: 'admin', key: 'adminToken' },
         { type: 'surveyor', key: 'surveyorToken' },
         { type: 'user', key: 'userToken' }
@@ -196,11 +202,13 @@ export const hasAccessLevel = (requiredLevel: TokenType): boolean => {
     // Check specific access levels
     switch (requiredLevel) {
         case 'user':
-            return ['user', 'admin', 'super-admin', 'nia-admin', 'surveyor'].includes(currentType);
+            return ['user', 'admin', 'super-admin', 'nia-admin', 'broker-admin', 'surveyor'].includes(currentType);
         case 'admin':
             return ['admin', 'super-admin'].includes(currentType);
         case 'nia-admin':
             return ['nia-admin', 'super-admin'].includes(currentType);
+        case 'broker-admin':
+            return ['broker-admin', 'super-admin'].includes(currentType);
         case 'surveyor':
             return ['surveyor', 'super-admin'].includes(currentType);
         case 'super-admin':

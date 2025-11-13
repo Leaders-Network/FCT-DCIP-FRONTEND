@@ -45,14 +45,16 @@ api.interceptors.request.use(
     config.headers['apikey'] = API_KEY;
 
     // Determine the appropriate token type based on the request URL
-    let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor' | undefined;
+    let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor' | undefined;
 
-    if (config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor')) {
+    if (config.url?.includes('/broker-admin')) {
+      tokenType = 'broker-admin';
+    } else if (config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor')) {
       tokenType = 'nia-admin';
     } else if (config.url?.includes('/surveyor') || config.url?.includes('/dual-assignment')) {
       tokenType = 'surveyor';
-    } else if (config.url?.includes('/admin') && !config.url?.includes('/nia-admin')) {
-      // AMMC admin endpoints (exclude nia-admin)
+    } else if (config.url?.includes('/admin') && !config.url?.includes('/nia-admin') && !config.url?.includes('/broker-admin')) {
+      // AMMC admin endpoints (exclude nia-admin and broker-admin)
       tokenType = 'admin';
     } else if (config.url?.includes('/super-admin')) {
       tokenType = 'super-admin';
