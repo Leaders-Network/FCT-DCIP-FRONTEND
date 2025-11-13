@@ -158,7 +158,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
             if (response.success && response.data) {
                 // Generate a formatted HTML report that can be printed as PDF
-                const reportData: any = response.data; // API download payload may differ slightly from runtime types
+                const reportData = response.data as ReportData; // API download payload
                 const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -529,8 +529,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
 
 
-                                {((mergedReport.reportSections?.ammc?.photos?.length || 0) > 0 ||
-                                    (mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 0) && (
+                            {((mergedReport.reportSections?.ammc?.photos?.length || 0) > 0 ||
+                                (mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 0) && (
                                     <div>
                                         <h4 className="font-medium mb-2">
                                             Photos ({mergedReport.reportSections?.ammc?.photos?.length ||
@@ -543,22 +543,22 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                     const photoUrl = typeof photo === 'string' ? photo : photo?.url;
                                                     const photoDesc = typeof photo === 'string' ? undefined : photo?.description;
                                                     return (
-                                                    <div key={index} className="relative">
-                                                        <img
-                                                            src={photoUrl}
-                                                            alt={photoDesc || `AMMC Photo ${index + 1}`}
-                                                            className="w-full h-24 object-cover rounded"
-                                                        />
-                                                        {index === 3 && (mergedReport.reportSections?.ammc?.photos?.length ||
-                                                            mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 4 && (
-                                                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
-                                                                    <span className="text-white text-sm">
-                                                                        +{(mergedReport.reportSections?.ammc?.photos?.length ||
-                                                                            mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) - 4} more
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                    </div>
+                                                        <div key={index} className="relative">
+                                                            <img
+                                                                src={photoUrl}
+                                                                alt={photoDesc || `AMMC Photo ${index + 1}`}
+                                                                className="w-full h-24 object-cover rounded"
+                                                            />
+                                                            {index === 3 && (mergedReport.reportSections?.ammc?.photos?.length ||
+                                                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 4 && (
+                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
+                                                                        <span className="text-white text-sm">
+                                                                            +{(mergedReport.reportSections?.ammc?.photos?.length ||
+                                                                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) - 4} more
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                        </div>
                                                     );
                                                 })}
                                         </div>
@@ -695,8 +695,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
 
 
-                                {((mergedReport.reportSections?.nia?.photos?.length || 0) > 0 ||
-                                    (mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 0) && (
+                            {((mergedReport.reportSections?.nia?.photos?.length || 0) > 0 ||
+                                (mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 0) && (
                                     <div>
                                         <h4 className="font-medium mb-2">
                                             Photos ({mergedReport.reportSections?.nia?.photos?.length ||
@@ -709,22 +709,22 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                     const photoUrl = typeof photo === 'string' ? photo : photo?.url;
                                                     const photoDesc = typeof photo === 'string' ? undefined : photo?.description;
                                                     return (
-                                                    <div key={index} className="relative">
-                                                        <img
-                                                            src={photoUrl}
-                                                            alt={photoDesc || `NIA Photo ${index + 1}`}
-                                                            className="w-full h-24 object-cover rounded"
-                                                        />
-                                                        {index === 3 && (mergedReport.reportSections?.nia?.photos?.length ||
-                                                            mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 4 && (
-                                                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
-                                                                    <span className="text-white text-sm">
-                                                                        +{(mergedReport.reportSections?.nia?.photos?.length ||
-                                                                            mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) - 4} more
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                    </div>
+                                                        <div key={index} className="relative">
+                                                            <img
+                                                                src={photoUrl}
+                                                                alt={photoDesc || `NIA Photo ${index + 1}`}
+                                                                className="w-full h-24 object-cover rounded"
+                                                            />
+                                                            {index === 3 && (mergedReport.reportSections?.nia?.photos?.length ||
+                                                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 4 && (
+                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
+                                                                        <span className="text-white text-sm">
+                                                                            +{(mergedReport.reportSections?.nia?.photos?.length ||
+                                                                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) - 4} more
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                        </div>
                                                     );
                                                 })}
                                         </div>

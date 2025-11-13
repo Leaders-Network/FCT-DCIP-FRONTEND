@@ -362,7 +362,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All AMMC Surveyors</option>
-              {(surveyors || []).map((surveyor: any) => (
+              {(surveyors || []).map((surveyor: Surveyor) => (
                 <option key={surveyor?._id} value={surveyor?._id}>
                   {typeof surveyor?.userId === 'object' && surveyor.userId?.firstname} {typeof surveyor?.userId === 'object' && surveyor.userId?.lastname}
                 </option>))}

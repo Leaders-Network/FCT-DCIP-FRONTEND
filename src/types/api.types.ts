@@ -480,8 +480,12 @@ export interface DualAssignment {
   currentSurveyorInfo?: {
     assignmentId: Assignment;
   };
-  partnerSurveyorInfo?: any;
-  policyDetails?: any;
+  partnerSurveyorInfo?: SurveyorContact;
+  policyDetails?: {
+    address: string;
+    propertyType?: string;
+    buildingValue?: number;
+  };
   currentSurveyorOrganization?: string;
 }
 
