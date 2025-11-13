@@ -59,7 +59,7 @@ interface DualAssignmentInfo {
 
 // Helper type: DualAssignmentInfo | DualAssignment union,
 // but we need a common base that allows otherSurveyor for render time access
-type DualAssignmentLike = DualAssignmentInfo | (DualAssignment & { otherSurveyor?: any });
+type DualAssignmentLike = DualAssignmentInfo | (DualAssignment & { otherSurveyor?: OtherSurveyorInfo });
 
 interface EnhancedAssignment extends Omit<Assignment, 'ammcId' | 'dualAssignmentInfo'> {
   ammcId: PolicyDetails | string;
