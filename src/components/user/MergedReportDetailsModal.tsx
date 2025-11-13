@@ -9,14 +9,12 @@ import {
   Download,
   FileText,
   AlertTriangle,
-  CheckCircle,
   Building,
   Shield,
   TrendingUp
 } from 'lucide-react';
 import {
   ReportDetailsExtended,
-  ApiResponse,
   RecommendationAction
 } from '@/types/api.types';
 import { normalizeError, getErrorMessage } from '@/utils/errorHandling';
@@ -25,16 +23,6 @@ interface MergedReportDetailsModalProps {
   reportId: string;
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface DownloadResponse {
-  downloadUrl?: string;
-  reportId: string;
-  downloadCount: number;
-  documents?: Array<{
-    cloudinaryUrl: string;
-    fileName: string;
-  }>;
 }
 
 const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
