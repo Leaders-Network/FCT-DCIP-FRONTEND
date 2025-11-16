@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical } from 'lucide-react';
+import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign } from 'lucide-react';
 import { PolicyRequest, Surveyor } from '@/types/api.types';
 import { adminApi, reviewSubmission, deletePolicyRequest } from '@/services/api';
 import { useAuth } from '@/context/useAuth';
@@ -115,6 +115,40 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
       alert(`Failed to send policy: ${err.message}`);
+    }
+  };
+
+  const handleConfirmPayment = async (policy: PolicyRequest) => {
+    const confirmed = window.confirm(
+      `Confirm payment received for policy:\n\n` +
+      `Property: ${policy.propertyDetails.propertyType}\n` +
+      `Owner: ${policy.contactDetails.fullName}\n` +
+      `Value: ₦${policy.propertyDetails.buildingValue.toLocaleString()}\n\n` +
+      `This will mark the policy as COMPLETED and finalize the workflow.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { updatePolicyRequest } = await import('@/services/api');
+      await updatePolicyRequest(policy._id, {
+        status: 'completed',
+        adminNotes: `Payment confirmed on ${new Date().toLocaleDateString()}`
+      });
+
+      setPolicies(prev =>
+        prev.map(p =>
+          p._id === policy._id
+            ? { ...p, status: 'completed' as any }
+            : p
+        )
+      );
+
+      alert('Payment confirmed! Policy marked as completed.');
+    } catch (error) {
+      console.error('Failed to confirm payment:', error);
+      const err = error instanceof Error ? error : new Error('Unknown error');
+      alert(`Failed to confirm payment: ${err.message}`);
     }
   };
 
@@ -277,15 +311,39 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                               </button>
                             )}
                             {policy.status === 'approved' && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    handleSendToUser(policy._id);
+                                    setShowActionsDropdown(null);
+                                  }}
+                                  className="flex items-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"
+                                >
+                                  <CheckCircle className="mr-3 h-4 w-4" />
+                                  Send to User
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleConfirmPayment(policy);
+                                    setShowActionsDropdown(null);
+                                  }}
+                                  className="flex items-center px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 w-full text-left"
+                                >
+                                  <DollarSign className="mr-3 h-4 w-4" />
+                                  Confirm Payment
+                                </button>
+                              </>
+                            )}
+                            {policy.status === 'sent_to_user' && (
                               <button
                                 onClick={() => {
-                                  handleSendToUser(policy._id);
+                                  handleConfirmPayment(policy);
                                   setShowActionsDropdown(null);
                                 }}
-                                className="flex items-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"
+                                className="flex items-center px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 w-full text-left"
                               >
-                                <CheckCircle className="mr-3 h-4 w-4" />
-                                Send to User
+                                <DollarSign className="mr-3 h-4 w-4" />
+                                Confirm Payment
                               </button>
                             )}
                             {['submitted', 'assigned', 'rejected'].includes(policy.status) && (
