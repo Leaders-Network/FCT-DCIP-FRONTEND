@@ -334,18 +334,6 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                                 </button>
                               </>
                             )}
-                            {policy.status === 'sent_to_user' && (
-                              <button
-                                onClick={() => {
-                                  handleConfirmPayment(policy);
-                                  setShowActionsDropdown(null);
-                                }}
-                                className="flex items-center px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 w-full text-left"
-                              >
-                                <DollarSign className="mr-3 h-4 w-4" />
-                                Confirm Payment
-                              </button>
-                            )}
                             {['submitted', 'assigned', 'rejected'].includes(policy.status) && (
                               <button
                                 onClick={() => {

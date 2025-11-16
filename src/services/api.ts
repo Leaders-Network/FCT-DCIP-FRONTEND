@@ -1292,22 +1292,22 @@ export const adminApi = {
   // Generic HTTP methods for dynamic API calls
   get: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
     const response = await api.get<T>(url, config);
-    return response;
+    return response.data;
   },
 
   post: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
     const response = await api.post<T>(url, data, config);
-    return response;
+    return response.data;
   },
 
   patch: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
     const response = await api.patch<T>(url, data, config);
-    return response;
+    return response.data;
   },
 
   delete: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
     const response = await api.delete<T>(url, config);
-    return response;
+    return response.data;
   },
 
 };

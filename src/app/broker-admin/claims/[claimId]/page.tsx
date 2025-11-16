@@ -21,12 +21,10 @@ export default function BrokerClaimDetailPageClient() {
       setLoading(true);
       try {
         const res = await brokerAdminAPI.getClaimById(claimId);
-        if (res?.success) {
-          // some broker APIs return the claim object directly or under `data`/`claim`
-          const payload = (res as any).data || (res as any).claim || res;
-          setClaim(payload as BrokerPolicyRequest);
+        if (res?.success && res?.claim) {
+          setClaim(res.claim);
         } else {
-          setError((res as any)?.message || "Failed to load claim");
+          setError("Failed to load claim");
         }
       } catch (err) {
         console.error(err);
@@ -84,13 +82,13 @@ export default function BrokerClaimDetailPageClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h3 className="text-sm font-medium text-gray-700">Property</h3>
-              <div className="text-sm text-gray-900">{(claim as any)?.propertyDetails?.address || 'N/A'}</div>
+              <div className="text-sm text-gray-900">{claim.propertyDetails.address}</div>
             </div>
 
             <div>
               <h3 className="text-sm font-medium text-gray-700">Contact</h3>
-              <div className="text-sm text-gray-900">{(claim as any)?.contactDetails?.fullName || 'N/A'}</div>
-              <div className="text-xs text-gray-500">{(claim as any)?.contactDetails?.email}</div>
+              <div className="text-sm text-gray-900">{claim.contactDetails.fullName}</div>
+              <div className="text-xs text-gray-500">{claim.contactDetails.email}</div>
             </div>
           </div>
 
@@ -98,7 +96,7 @@ export default function BrokerClaimDetailPageClient() {
             <h3 className="text-sm font-medium text-gray-700">Status</h3>
             <div className="mt-2">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                {((claim as any).brokerStatus || 'pending').replace('_', ' ').toUpperCase()}
+                {(claim.brokerStatus || 'pending').replace('_', ' ').toUpperCase()}
               </span>
             </div>
           </div>
