@@ -399,14 +399,14 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                                 <FileText className="w-4 h-4 text-gray-400 mr-3" />
                                 <div>
                                     <div className="text-sm font-medium text-gray-900">Coverage Type</div>
-                                    <div className="text-sm text-gray-600">{policy.requestDetails.coverageType}</div>
+                                    <div className="text-sm text-gray-600">{policy.requestDetails?.coverageType || 'N/A'}</div>
                                 </div>
                             </div>
                             <div className="flex items-center">
                                 <Clock className="w-4 h-4 text-gray-400 mr-3" />
                                 <div>
                                     <div className="text-sm font-medium text-gray-900">Duration</div>
-                                    <div className="text-sm text-gray-600">{policy.requestDetails.policyDuration}</div>
+                                    <div className="text-sm text-gray-600">{policy.requestDetails?.policyDuration || 'N/A'}</div>
                                 </div>
                             </div>
                             <div className="flex items-center">

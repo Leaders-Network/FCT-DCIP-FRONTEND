@@ -5,77 +5,39 @@ import { useRouter } from 'next/navigation';
 import { brokerAdminAPI } from '@/services/api';
 import {
     FileText,
-    Clock,
-    CheckCircle,
-    XCircle,
-    TrendingUp,
     AlertCircle,
     Search,
     Filter,
     Eye,
     RefreshCw
 } from 'lucide-react';
-import type { BrokerDashboardData, BrokerPolicyRequest, BrokerClaimFilters } from '@/types/api.types';
+import type { BrokerPolicyRequest, BrokerClaimFilters } from '@/types/api.types';
 
-interface StatCardProps {
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    value: number;
-    color: string;
-    trend?: string;
-}
-
-const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color, trend }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-            <div>
-                <p className="text-sm font-medium text-gray-600">{label}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
-                {trend && (
-                    <p className="text-xs text-gray-500 mt-1">{trend}</p>
-                )}
-            </div>
-            <div className={`p-3 rounded-full bg-${color}-100`}>
-                <Icon className={`w-6 h-6 text-${color}-600`} />
-            </div>
-        </div>
-    </div>
-);
-
-export default function BrokerAdminDashboard() {
+export default function BrokerClaimsListPage() {
     const router = useRouter();
-    const [dashboardData, setDashboardData] = useState<BrokerDashboardData | null>(null);
     const [claims, setClaims] = useState<BrokerPolicyRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'under_review' | 'rejected' | 'completed'>('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalClaims, setTotalClaims] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
-        fetchDashboardData();
         fetchClaims();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [statusFilter]);
-
-    const fetchDashboardData = async () => {
-        try {
-            const response = await brokerAdminAPI.getDashboardData();
-            if (response.success && response.data) {
-                setDashboardData(response.data);
-            }
-        } catch (err) {
-            console.error('Failed to fetch dashboard data:', err);
-        }
-    };
+    }, [statusFilter, currentPage]);
 
     const fetchClaims = async () => {
         try {
             setLoading(true);
+            setError(null);
             const filters: BrokerClaimFilters = {
                 status: statusFilter,
-                page: 1,
-                limit: 10
+                page: currentPage,
+                limit: 15
             };
 
             if (searchQuery) {
@@ -85,6 +47,8 @@ export default function BrokerAdminDashboard() {
             const response = await brokerAdminAPI.getClaims(filters);
             if (response.success) {
                 setClaims(response.claims);
+                setTotalPages(response.pagination?.totalPages || 1);
+                setTotalClaims(response.pagination?.total || 0);
             }
         } catch (err) {
             console.error('Failed to fetch claims:', err);
@@ -96,12 +60,19 @@ export default function BrokerAdminDashboard() {
 
     const handleRefresh = async () => {
         setRefreshing(true);
-        await Promise.all([fetchDashboardData(), fetchClaims()]);
+        await fetchClaims();
         setRefreshing(false);
     };
 
     const handleSearch = () => {
+        setCurrentPage(1);
         fetchClaims();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
     };
 
     const getStatusBadge = (status: string) => {
@@ -122,7 +93,13 @@ export default function BrokerAdminDashboard() {
         });
     };
 
-    if (loading && !dashboardData) {
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -136,8 +113,8 @@ export default function BrokerAdminDashboard() {
             <div className="mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Broker Admin Dashboard</h1>
-                        <p className="text-sm text-gray-600 mt-1">Manage insurance claims and policy requests</p>
+                        <h1 className="text-2xl font-bold text-gray-900">Claims Management</h1>
+                        <p className="text-sm text-gray-600 mt-1">View and manage all insurance claims ({totalClaims} total)</p>
                     </div>
                     <button
                         onClick={handleRefresh}
@@ -150,42 +127,6 @@ export default function BrokerAdminDashboard() {
                 </div>
             </div>
 
-            {/* Statistics */}
-            {dashboardData && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                    <StatCard
-                        icon={FileText}
-                        label="Total Claims"
-                        value={dashboardData.statistics.total}
-                        color="blue"
-                    />
-                    <StatCard
-                        icon={Clock}
-                        label="Pending"
-                        value={dashboardData.statistics.pending}
-                        color="yellow"
-                    />
-                    <StatCard
-                        icon={TrendingUp}
-                        label="Under Review"
-                        value={dashboardData.statistics.under_review}
-                        color="indigo"
-                    />
-                    <StatCard
-                        icon={CheckCircle}
-                        label="Completed"
-                        value={dashboardData.statistics.completed}
-                        color="green"
-                    />
-                    <StatCard
-                        icon={XCircle}
-                        label="Rejected"
-                        value={dashboardData.statistics.rejected}
-                        color="red"
-                    />
-                </div>
-            )}
-
             {/* Filters and Search */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
                 <div className="flex flex-col md:flex-row gap-4">
@@ -197,7 +138,7 @@ export default function BrokerAdminDashboard() {
                                 placeholder="Search by policy number..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                onKeyDown={handleKeyDown}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                         </div>
@@ -315,6 +256,31 @@ export default function BrokerAdminDashboard() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                        <div className="text-sm text-gray-700">
+                            Page {currentPage} of {totalPages}
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

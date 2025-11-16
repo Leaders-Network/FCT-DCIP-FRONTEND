@@ -32,13 +32,13 @@ const BrokerAdminSidebar = () => {
 
     const menuItems = [
         {
-            href: "/brokerAdmin/BrokerDashboardStats",
+            href: "/broker-admin/dashboard",
             label: "Dashboard",
             icon: Home,
             description: "Overview and statistics"
         },
         {
-            href: "#",
+            href: "/broker-admin/claims",
             label: "Claims",
             icon: FileText,
             description: "View Claims"
@@ -172,7 +172,7 @@ const BrokerAdminSidebar = () => {
                                 <p className="text-xs text-gray-500 truncate">
                                     {(() => {
                                         try {
-                                            const userData = localStorage.getItem('broker-admin-user');
+                                            const userData = localStorage.getItem('brokerAdminInfo');
                                             if (userData) {
                                                 const parsed = JSON.parse(userData) as { email?: string };
                                                 return parsed.email || 'admin@faithtrust.org';

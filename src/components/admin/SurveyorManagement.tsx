@@ -3,20 +3,14 @@ import React, { useState, useEffect } from "react";
 import {
   Users,
   Star,
-  Clock,
   MapPin,
   Phone,
   Mail,
-  Calendar,
-  CheckCircle,
-  AlertCircle,
   Plus,
-  Filter,
   Search,
   MoreVertical,
   Eye,
-  Edit,
-  Trash2
+  Edit
 } from "lucide-react";
 import { Surveyor as BaseSurveyor, Assignment, PolicyRequest } from "@/types/api.types";
 
@@ -817,7 +811,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                       type="text"
                       placeholder="Enter qualification"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           const input = e.target as HTMLInputElement;
