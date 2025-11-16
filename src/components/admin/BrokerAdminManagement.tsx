@@ -121,8 +121,8 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                 }
             });
 
-            if (response?.data?.success && response?.data?.data) {
-                setBrokerAdmins(response.data.data);
+            if ((response as any)?.success && (response as any)?.data) {
+                setBrokerAdmins((response as any).data);
             } else {
                 setBrokerAdmins([]);
             }
@@ -140,8 +140,8 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
 
             const response = await adminApi.get('/broker-admin/management/stats');
 
-            if (response?.data?.success && response?.data?.data) {
-                setStats(response.data.data);
+            if ((response as any)?.success && (response as any)?.data) {
+                setStats((response as any).data);
             }
         } catch (error) {
             console.error("Failed to fetch stats:", error);
@@ -156,7 +156,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
 
             const response = await adminApi.post('/broker-admin/management', formData);
 
-            if (response?.data?.success) {
+            if ((response as any)?.success) {
                 alert('Broker admin created successfully!');
                 setShowCreateModal(false);
                 resetForm();
@@ -183,7 +183,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                 formData
             );
 
-            if (response?.data?.success) {
+            if ((response as any)?.success) {
                 alert('Broker admin updated successfully!');
                 setShowEditModal(false);
                 setSelectedBrokerAdmin(null);
@@ -207,7 +207,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
 
             const response = await adminApi.delete(`/broker-admin/management/${id}`);
 
-            if (response?.data?.success) {
+            if ((response as any)?.success) {
                 alert('Broker admin deactivated successfully!');
                 fetchBrokerAdmins();
                 fetchStats();
