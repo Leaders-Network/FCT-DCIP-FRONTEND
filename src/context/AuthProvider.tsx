@@ -7,6 +7,7 @@ import {
   setAuthToken,
   removeAuthToken,
 } from "@/utils/auth";
+import { getCookie, setCookie, deleteCookie } from "@/utils/cookies";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import { User, Employee } from "@/types/api.types";
 
@@ -42,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = useCallback(() => {
     removeAuthToken();
-    localStorage.removeItem('user');
+    deleteCookie('user');
     setUser(null);
     setState({
       isAuthenticated: false,
@@ -57,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const checkAuth = async () => {
       try {
         const token = getAuthToken();
-        const storedUser = localStorage.getItem('user');
+        const storedUser = getCookie('user');
 
         if (token && storedUser) {
           const userData = JSON.parse(storedUser);
@@ -87,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Store token with correct type for employees
         setAuthToken(token, 'admin'); // Default to admin for employees
-        localStorage.setItem('user', JSON.stringify(employee));
+        setCookie('user', JSON.stringify(employee), { expires: 7 });
         setUser(employee);
         setState({
           isAuthenticated: true,
@@ -102,8 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Store token with correct type for users
         setAuthToken(token, 'user'); // Explicitly set as user token
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('userInfo', JSON.stringify(user)); // Also store in userInfo for compatibility
+        setCookie('user', JSON.stringify(user), { expires: 7 });
+        setCookie('userInfo', JSON.stringify(user), { expires: 7 }); // Also store in userInfo for compatibility
         setUser(user);
         setState({
           isAuthenticated: true,
