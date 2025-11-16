@@ -1459,8 +1459,8 @@ export interface BrokerAdminVerifyResponse {
 
 export interface BrokerClaimStatusHistory {
   status: 'pending' | 'under_review' | 'rejected' | 'completed';
-  changedBy: string;
   changedAt: string;
+  changedBy?: string;
   reason?: string;
   notes?: string;
 }
@@ -1508,6 +1508,12 @@ export interface BrokerClaimsResponse {
   page: number;
   limit: number;
   totalPages: number;
+  pagination?: {
+    total: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+  };
 }
 
 export interface BrokerClaimDetailResponse {

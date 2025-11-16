@@ -343,8 +343,8 @@ const DualAssignmentCoordination: React.FC<DualAssignmentCoordinationProps> = ({
                                 >
                                     <div
                                         className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.fromOrganization === currentSurveyorOrg
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-100 text-gray-900'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-100 text-gray-900'
                                             }`}
                                     >
                                         <div className="flex items-center space-x-2 mb-1">
@@ -376,7 +376,7 @@ const DualAssignmentCoordination: React.FC<DualAssignmentCoordinationProps> = ({
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder="Type a coordination message..."
                             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            onKeyPress={(e) => e.key === 'Enter' && sendCoordinationMessage()}
+                            onKeyDown={(e) => e.key === 'Enter' && sendCoordinationMessage()}
                         />
                         <button
                             onClick={sendCoordinationMessage}

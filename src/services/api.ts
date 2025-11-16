@@ -45,19 +45,21 @@ api.interceptors.request.use(
     config.headers['apikey'] = API_KEY;
 
     // Determine the appropriate token type based on the request URL
+    // Order matters: check most specific patterns first
     let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor' | undefined;
 
     if (config.url?.includes('/broker-admin')) {
       tokenType = 'broker-admin';
     } else if (config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor')) {
       tokenType = 'nia-admin';
-    } else if (config.url?.includes('/surveyor') || config.url?.includes('/dual-assignment')) {
-      tokenType = 'surveyor';
-    } else if (config.url?.includes('/admin') && !config.url?.includes('/nia-admin') && !config.url?.includes('/broker-admin')) {
-      // AMMC admin endpoints (exclude nia-admin and broker-admin)
-      tokenType = 'admin';
     } else if (config.url?.includes('/super-admin')) {
       tokenType = 'super-admin';
+    } else if (config.url?.startsWith('/surveyor') || config.url?.includes('/dual-assignment')) {
+      // Use startsWith to avoid matching /admin/surveyors
+      tokenType = 'surveyor';
+    } else if (config.url?.includes('/admin')) {
+      // AMMC admin endpoints (after checking nia-admin, broker-admin, and super-admin)
+      tokenType = 'admin';
     } else if (config.url?.includes('/user') ||
       config.url?.includes('/policy') ||
       config.url?.includes('/payment') ||
@@ -1273,6 +1275,26 @@ export const adminApi = {
     return response.data;
   },
 
+  // Generic HTTP methods for dynamic API calls
+  get: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
+    const response = await api.get<T>(url, config);
+    return response;
+  },
+
+  post: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
+    const response = await api.post<T>(url, data, config);
+    return response;
+  },
+
+  patch: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
+    const response = await api.patch<T>(url, data, config);
+    return response;
+  },
+
+  delete: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
+    const response = await api.delete<T>(url, config);
+    return response;
+  },
 
 };
 
@@ -1554,6 +1576,21 @@ export const brokerAdminAPI = {
 
   // Get all claims with filters
   getClaims: async (filters?: import("../types/api.types").BrokerClaimFilters): Promise<import("../types/api.types").BrokerClaimsResponse> => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== 'all') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/broker-admin/claims${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  // Get all claims with filters (alias for consistency)
+  getAllClaims: async (filters?: import("../types/api.types").BrokerClaimFilters): Promise<import("../types/api.types").BrokerClaimsResponse> => {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {

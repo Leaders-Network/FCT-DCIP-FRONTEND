@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { brokerAdminAPI } from '@/services/api';
 import { setAuthToken } from '@/utils/auth';
 
 export default function BrokerAdminLogin() {
-    const router = useRouter();
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -35,10 +33,14 @@ export default function BrokerAdminLogin() {
                 return;
             }
 
+            console.log('Attempting broker admin login...');
+
             // Call login API
             const response = await brokerAdminAPI.login(formData.email, formData.password);
 
-            if (response.success) {
+            console.log('Login response:', response);
+
+            if (response.success && response.token) {
                 // Store token and user info
                 setAuthToken(response.token, 'broker-admin');
                 localStorage.setItem('brokerAdminInfo', JSON.stringify({
@@ -46,16 +48,22 @@ export default function BrokerAdminLogin() {
                     brokerAdmin: response.brokerAdmin
                 }));
 
+                console.log('Token stored, redirecting to dashboard...');
+
+                // Force a small delay to ensure localStorage is written
+                await new Promise(resolve => setTimeout(resolve, 100));
+
                 // Redirect to dashboard
-                router.push('/broker-admin/dashboard');
+                window.location.href = '/broker-admin/dashboard';
             } else {
                 setError('Invalid credentials. Please try again.');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Login error:', err);
+            const error = err as { response?: { data?: { error?: string; message?: string } } };
             setError(
-                err.response?.data?.error ||
-                err.response?.data?.message ||
+                error.response?.data?.error ||
+                error.response?.data?.message ||
                 'Login failed. Please check your credentials and try again.'
             );
         } finally {

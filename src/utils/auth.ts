@@ -7,12 +7,45 @@ export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker
 export const getAuthToken = (tokenType?: TokenType): string | null => {
     if (typeof window === 'undefined') return null;
 
-    // If specific token type is requested, try to get that first
+    // If specific token type is requested, ONLY try to get that specific token
+    // Do NOT fallback to other token types to avoid token type confusion
     if (tokenType) {
         const tokenKey = getTokenKeyForType(tokenType);
         const token = localStorage.getItem(tokenKey);
         if (token) {
             console.log(`Using specific auth token from: ${tokenKey}`);
+            return token;
+        }
+        // If specific token type requested but not found, return null
+        // This prevents using wrong token type (e.g., surveyor token for admin endpoints)
+        console.warn(`Requested token type '${tokenType}' not found in localStorage`);
+        return null;
+    }
+
+    // Auto-detect token type based on current URL path when no specific type is requested
+    const currentPath = window.location.pathname;
+    let detectedType: TokenType | null = null;
+
+    if (currentPath.includes('/broker-admin')) {
+        detectedType = 'broker-admin';
+    } else if (currentPath.includes('/nia-admin')) {
+        detectedType = 'nia-admin';
+    } else if (currentPath.includes('/surveyor')) {
+        detectedType = 'surveyor';
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
+        detectedType = 'admin';
+    } else if (currentPath.includes('/super-admin')) {
+        detectedType = 'super-admin';
+    } else if (currentPath.includes('/dashboard') || currentPath.includes('/user')) {
+        detectedType = 'user';
+    }
+
+    // If we detected a type from the URL, try to get that specific token first
+    if (detectedType) {
+        const tokenKey = getTokenKeyForType(detectedType);
+        const token = localStorage.getItem(tokenKey);
+        if (token) {
+            console.log(`Auto-detected and using auth token from: ${tokenKey} (based on path: ${currentPath})`);
             return token;
         }
     }
@@ -32,7 +65,7 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     for (const key of tokenKeys) {
         const token = localStorage.getItem(key);
         if (token) {
-            console.log(`Using auth token from: ${key}`);
+            console.log(`Using fallback auth token from: ${key}`);
             return token;
         }
     }
@@ -164,10 +197,28 @@ export const getApiHeaders = (tokenType?: TokenType): Record<string, string> => 
     return headers;
 };
 
-// Get current user's token type based on available tokens
+// Get current user's token type based on URL path and available tokens
 export const getCurrentTokenType = (): string | null => {
     if (typeof window === 'undefined') return null;
 
+    // First, try to detect from current URL path
+    const currentPath = window.location.pathname;
+
+    if (currentPath.includes('/broker-admin')) {
+        if (localStorage.getItem('brokerAdminToken')) return 'broker-admin';
+    } else if (currentPath.includes('/nia-admin')) {
+        if (localStorage.getItem('niaAdminToken')) return 'nia-admin';
+    } else if (currentPath.includes('/surveyor')) {
+        if (localStorage.getItem('surveyorToken')) return 'surveyor';
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
+        if (localStorage.getItem('adminToken')) return 'admin';
+    } else if (currentPath.includes('/super-admin')) {
+        if (localStorage.getItem('superAdminToken')) return 'super-admin';
+    } else if (currentPath.includes('/dashboard') || currentPath.includes('/user')) {
+        if (localStorage.getItem('userToken')) return 'user';
+    }
+
+    // Fallback: check all token types in priority order
     const tokenTypes = [
         { type: 'super-admin', key: 'superAdminToken' },
         { type: 'nia-admin', key: 'niaAdminToken' },
