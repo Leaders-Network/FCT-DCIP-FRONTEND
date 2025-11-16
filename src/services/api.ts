@@ -27,6 +27,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-b
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
 import { getAuthToken } from "@/utils/auth";
+import { getCookie, deleteCookie } from "@/utils/cookies";
 
 
 
@@ -44,29 +45,42 @@ api.interceptors.request.use(
     // Ensure API key is always present (lowercase to match validation middleware)
     config.headers['apikey'] = API_KEY;
 
-    // Determine the appropriate token type based on the request URL
-    // Order matters: check most specific patterns first
+    // Determine the appropriate token type based on current page context AND request URL
+    // Page context takes priority since API endpoints like /policy can be used by multiple user types
     let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor' | undefined;
 
-    if (config.url?.includes('/broker-admin')) {
+    // First check the current page path to determine context
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+
+    // Page context takes priority
+    if (currentPath.includes('/broker-admin')) {
+      tokenType = 'broker-admin';
+    } else if (currentPath.includes('/nia-admin')) {
+      tokenType = 'nia-admin';
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
+      tokenType = 'admin';
+    } else if (currentPath.includes('/surveyor')) {
+      tokenType = 'surveyor';
+    } else if (currentPath.includes('/super-admin')) {
+      tokenType = 'super-admin';
+    }
+    // If page context didn't determine type, check the API URL
+    else if (config.url?.includes('/broker-admin')) {
       tokenType = 'broker-admin';
     } else if (config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor')) {
       tokenType = 'nia-admin';
     } else if (config.url?.includes('/super-admin')) {
       tokenType = 'super-admin';
-    } else if (config.url?.startsWith('/surveyor') || config.url?.includes('/dual-assignment')) {
-      // Use startsWith to avoid matching /admin/surveyors
-      tokenType = 'surveyor';
     } else if (config.url?.includes('/admin')) {
-      // AMMC admin endpoints (after checking nia-admin, broker-admin, and super-admin)
       tokenType = 'admin';
+    } else if (config.url?.startsWith('/surveyor') || config.url?.includes('/dual-assignment')) {
+      tokenType = 'surveyor';
     } else if (config.url?.includes('/user') ||
       config.url?.includes('/policy') ||
       config.url?.includes('/payment') ||
       config.url?.includes('/report-release') ||
       config.url?.includes('/auth/login') ||
       config.url?.includes('/auth/register')) {
-      // User-specific endpoints
       tokenType = 'user';
     }
     // If no specific type detected, getAuthToken will use fallback priority
@@ -1470,17 +1484,17 @@ export const tokenManager = {
     if (typeof window === 'undefined') return null;
 
     if (userType === 'nia') {
-      return localStorage.getItem('niaAdminToken');
+      return getCookie('niaAdminToken');
     } else if (userType === 'ammc') {
-      return localStorage.getItem('adminToken') ||
-        localStorage.getItem('token') ||
-        localStorage.getItem('authToken');
+      return getCookie('adminToken') ||
+        getCookie('token') ||
+        getCookie('authToken');
     } else {
       // Try all possible token sources
-      return localStorage.getItem('niaAdminToken') ||
-        localStorage.getItem('adminToken') ||
-        localStorage.getItem('token') ||
-        localStorage.getItem('authToken');
+      return getCookie('niaAdminToken') ||
+        getCookie('adminToken') ||
+        getCookie('token') ||
+        getCookie('authToken');
     }
   },
 
@@ -1494,10 +1508,10 @@ export const tokenManager = {
   clearAllTokens: (): void => {
     if (typeof window === 'undefined') return;
 
-    localStorage.removeItem('niaAdminToken');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('token');
-    localStorage.removeItem('authToken');
+    deleteCookie('niaAdminToken');
+    deleteCookie('adminToken');
+    deleteCookie('token');
+    deleteCookie('authToken');
   }
 };
 
