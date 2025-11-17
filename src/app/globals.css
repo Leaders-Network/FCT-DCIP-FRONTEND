@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 
+@import 'aos/dist/aos.css';
+
+
 html{
   scroll-behavior: smooth;
   scrollbar-width: none;
