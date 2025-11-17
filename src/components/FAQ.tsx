@@ -6,6 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import Link from "next/link";
 
 const faqItems = [
   {
@@ -62,9 +63,11 @@ const FAQ = () => {
                 ))}
               </Accordion>
               <div className="text-center mt-6">
-                <button className="bg-[#00A86B] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#008C5A] transition-colors">
-                  View More →
-                </button>
+                <Link href="/faq">
+                  <button className="bg-[#00A86B] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#008C5A] transition-colors">
+                    View More →
+                  </button>
+                </Link>
               </div>
             </div>
           </div>

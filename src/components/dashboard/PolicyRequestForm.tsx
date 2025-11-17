@@ -94,10 +94,10 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     if (isOpen) {
       let userEmail = "";
 
-      const storUser = localStorage.getItem("user");
-      if (storUser) {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
         try {
-          const userData = JSON.parse(storUser);
+          const userData = JSON.parse(storedUser);
           userEmail = userData.email || "";
         } catch (error) {
           console.error('Error parsing user data:', error);
