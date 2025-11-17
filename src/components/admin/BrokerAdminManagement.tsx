@@ -46,6 +46,7 @@ interface BrokerAdminFormData {
         canUpdateClaimStatus: boolean;
         canViewReports: boolean;
         canAccessAnalytics: boolean;
+        canManageAdmins: boolean;
     };
 }
 
@@ -98,7 +99,8 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
             canViewClaims: true,
             canUpdateClaimStatus: true,
             canViewReports: true,
-            canAccessAnalytics: false
+            canAccessAnalytics: false,
+            canManageAdmins: false
         }
     });
 
@@ -258,7 +260,8 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                 canViewClaims: true,
                 canUpdateClaimStatus: true,
                 canViewReports: true,
-                canAccessAnalytics: false
+                canAccessAnalytics: false,
+                canManageAdmins: false
             }
         });
     };
@@ -699,6 +702,16 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                                             />
                                             <span className="ml-2 text-sm text-gray-700">Can Access Analytics</span>
                                         </label>
+                                        <label className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                name="permissions.canManageAdmins"
+                                                checked={formData.permissions.canManageAdmins}
+                                                onChange={handleInputChange}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <span className="ml-2 text-sm text-gray-700">Can Manage Admins</span>
+                                        </label>
                                     </div>
                                 </div>
 
@@ -848,6 +861,16 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                                             />
                                             <span className="ml-2 text-sm text-gray-700">Can Access Analytics</span>
                                         </label>
+                                        <label className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                name="permissions.canManageAdmins"
+                                                checked={formData.permissions.canManageAdmins}
+                                                onChange={handleInputChange}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <span className="ml-2 text-sm text-gray-700">Can Manage Admins</span>
+                                        </label>
                                     </div>
                                 </div>
 
@@ -976,6 +999,14 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm">Access Analytics</span>
                                             {selectedBrokerAdmin.permissions.canAccessAnalytics ? (
+                                                <CheckCircle className="w-5 h-5 text-green-500" />
+                                            ) : (
+                                                <XCircle className="w-5 h-5 text-red-500" />
+                                            )}
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm">Manage Admins</span>
+                                            {selectedBrokerAdmin.permissions.canManageAdmins ? (
                                                 <CheckCircle className="w-5 h-5 text-green-500" />
                                             ) : (
                                                 <XCircle className="w-5 h-5 text-red-500" />

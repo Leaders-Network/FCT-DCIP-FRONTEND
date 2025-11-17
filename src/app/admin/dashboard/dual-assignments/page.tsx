@@ -58,13 +58,23 @@ const AMMCDualAssignmentsPage = () => {
 
                 console.log('AMMC Admin - Raw assignments count:', filteredAssignments.length);
 
+                // Filter out assignments with null policyId
+                filteredAssignments = filteredAssignments.filter((assignment: DualAssignment) =>
+                    assignment.policyId && assignment.policyId.propertyDetails
+                );
+
+                console.log('AMMC Admin - Valid assignments count:', filteredAssignments.length);
+
                 // Apply search filter
                 if (filters.search) {
-                    filteredAssignments = filteredAssignments.filter((assignment: DualAssignment) =>
-                        assignment.policyId?.propertyDetails?.address?.toLowerCase().includes(filters.search.toLowerCase()) ||
-                        assignment.policyId?.contactDetails?.fullName?.toLowerCase().includes(filters.search.toLowerCase()) ||
-                        assignment.policyId?.propertyDetails?.propertyType?.toLowerCase().includes(filters.search.toLowerCase())
-                    );
+                    filteredAssignments = filteredAssignments.filter((assignment: DualAssignment) => {
+                        const searchLower = filters.search.toLowerCase();
+                        return (
+                            assignment.policyId.propertyDetails?.address?.toLowerCase().includes(searchLower) ||
+                            assignment.policyId.contactDetails?.fullName?.toLowerCase().includes(searchLower) ||
+                            assignment.policyId.propertyDetails?.propertyType?.toLowerCase().includes(searchLower)
+                        );
+                    });
                 }
 
                 console.log('AMMC Admin - Filtered assignments count:', filteredAssignments.length);

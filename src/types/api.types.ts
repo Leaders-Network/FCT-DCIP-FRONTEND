@@ -1392,6 +1392,7 @@ export interface BrokerAdmin {
     canUpdateClaimStatus: boolean;
     canViewReports: boolean;
     canAccessAnalytics: boolean;
+    canManageAdmins: boolean;
   };
   profile: {
     department: string;
