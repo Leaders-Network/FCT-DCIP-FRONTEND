@@ -14,6 +14,7 @@ interface ReportSectionProps {
             address: string;
             propertyType: string;
         };
+        reportId?: string;
     }>;
 }
 
@@ -40,7 +41,7 @@ const ReportSection: React.FC<ReportSectionProps> = ({ userPolicies }) => {
             const response = await userReportAPI.getUserReports(1, 100);
 
             if (response.success) {
-                const reports = response.data.reports || [];
+                const reports = response.data?.reports || [];
 
                 const stats = {
                     processing: reports.filter((r) => r.status === 'pending').length,

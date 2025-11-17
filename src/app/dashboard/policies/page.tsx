@@ -43,11 +43,34 @@ export default function PoliciesPage() {
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
   const [showEnhancedView, setShowEnhancedView] = useState(false);
   const [inProgressPolicies, setInProgressPolicies] = useState<PolicyRequest[]>([]);
+  const [completedCount, setCompletedCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchInProgressPolicies();
+    fetchCompletedCount();
   }, []);
+
+  const fetchCompletedCount = async () => {
+    try {
+      const [approvedResponse, surveyedResponse, rejectedResponse, completedResponse] = await Promise.all([
+        getUserPolicyRequests("approved", 1, 1),
+        getUserPolicyRequests("surveyed", 1, 1),
+        getUserPolicyRequests("rejected", 1, 1),
+        getUserPolicyRequests("completed", 1, 1),
+      ]);
+
+      const total =
+        (approvedResponse.data.pagination?.totalRecords || 0) +
+        (surveyedResponse.data.pagination?.totalRecords || 0) +
+        (rejectedResponse.data.pagination?.totalRecords || 0) +
+        (completedResponse.data.pagination?.totalRecords || 0);
+
+      setCompletedCount(total);
+    } catch (error) {
+      console.error("Failed to fetch completed count:", error);
+    }
+  };
 
   const fetchInProgressPolicies = async () => {
     try {
@@ -163,7 +186,7 @@ export default function PoliciesPage() {
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
-            Completed (2)
+            Completed ({completedCount})
           </button>
         </nav>
       </div>

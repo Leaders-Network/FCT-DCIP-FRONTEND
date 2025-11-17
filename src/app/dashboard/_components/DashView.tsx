@@ -604,7 +604,7 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
             {/* Always show survey document download if available */}
             {policy.surveyDocument && (
               <a
-                href={policy.surveyDocument}
+                href={typeof policy.surveyDocument === 'string' ? policy.surveyDocument : policy.surveyDocument.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setShowDropdown(false)}
@@ -1008,7 +1008,17 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
 
     try {
       const api = await import('@/services/api');
-      await api.updatePolicyRequest(policy._id, formData);
+      // Ensure yearBuilt is a number
+      const submitData = {
+        ...formData,
+        propertyDetails: {
+          ...formData.propertyDetails,
+          yearBuilt: typeof formData.propertyDetails.yearBuilt === 'string'
+            ? parseInt(formData.propertyDetails.yearBuilt, 10)
+            : formData.propertyDetails.yearBuilt
+        }
+      };
+      await api.updatePolicyRequest(policy._id, submitData);
       alert('Policy request updated successfully! It will be reassigned for survey.');
       onUpdate();
     } catch (error) {

@@ -55,12 +55,15 @@ const SurveyorLogin = () => {
       }
     } catch (error: unknown) {
       console.error("Login failed:", error);
-      if (error.response?.status === 401) {
-        toast.error("Invalid email or password.");
-      } else if (error.response?.status === 403) {
-        toast.error("Account access denied. Please contact administrator.");
-      } else if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
+
+      // Handle different error types
+      const err = error as any;
+      if (err.response?.status === 401) {
+        setError("Invalid email or password.");
+      } else if (err.response?.status === 403) {
+        setError("Account access denied. Please contact administrator.");
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else {
         toast.error("Login failed. Please check your connection and try again.");
       }

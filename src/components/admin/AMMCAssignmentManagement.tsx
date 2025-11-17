@@ -14,6 +14,7 @@ import { getAuthToken } from '@/utils/auth';
 
 interface AMMCSurveyorForAssignment {
     _id: string;
+    userId: string; // Employee ID - required for backend assignment
     firstname: string;
     lastname: string;
     email: string;
@@ -40,6 +41,13 @@ interface SurveyorStatistics {
 
 interface AMMCSurveyorApiResponse {
     _id: string;
+    userId?: string | {
+        _id?: string;
+        firstname?: string;
+        lastname?: string;
+        email?: string;
+        phonenumber?: string;
+    };
     firstname?: string;
     lastname?: string;
     email?: string;
@@ -53,7 +61,7 @@ interface AMMCSurveyorApiResponse {
 }
 
 // Use types from api.types.ts
-import { DualAssignment, AssignmentManagementProps, Surveyor } from '@/types/api.types';
+import { DualAssignment, AssignmentManagementProps } from '@/types/api.types';
 
 interface AMMCAssignmentManagementProps extends AssignmentManagementProps {
     assignment: DualAssignment;
@@ -116,12 +124,18 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
             if (data.success) {
                 // Transform the data to match our interface
                 const ammcSurveyors = (data.data || []).map((surveyor: AMMCSurveyorApiResponse): AMMCSurveyorForAssignment => {
+                    // The API returns user data nested in userId field
+                    const userData = typeof surveyor.userId === 'object' ? surveyor.userId : surveyor;
+                    const employeeId = typeof surveyor.userId === 'string' ? surveyor.userId :
+                        (typeof surveyor.userId === 'object' && surveyor.userId?._id) || '';
+
                     return {
                         _id: surveyor._id,
-                        firstname: surveyor.firstname || '',
-                        lastname: surveyor.lastname || '',
-                        email: surveyor.email || '',
-                        phoneNumber: surveyor.phonenumber || '',
+                        userId: employeeId, // Employee ID for backend assignment
+                        firstname: userData.firstname || surveyor.firstname || '',
+                        lastname: userData.lastname || surveyor.lastname || '',
+                        email: userData.email || surveyor.email || '',
+                        phoneNumber: userData.phonenumber || surveyor.phonenumber || '',
                         specialization: surveyor.profile?.specialization || surveyor.specializations || ['residential'],
                         experience: surveyor.profile?.experience || surveyor.experience || 0,
                         availability: surveyor.profile?.availability || 'available',
@@ -210,7 +224,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    surveyorId: selectedSurveyor._id,
+                    surveyorId: selectedSurveyor.userId, // Send Employee ID, not Surveyor ID
                     priority: assignment.priority,
                     deadline: assignment.estimatedCompletion.overallDeadline
                 })
@@ -227,8 +241,8 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
             if (data.success) {
                 console.log('Assignment successful');
-                onAssignmentComplete();
-                onClose();
+                onAssignmentComplete?.();
+                onClose?.();
             } else {
                 throw new Error(data.message || 'Failed to assign surveyor');
             }
@@ -323,6 +337,45 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                                 <label className="text-sm font-medium text-gray-600">Deadline</label>
                                 <p className="text-gray-900">{new Date(assignment.estimatedCompletion.overallDeadline).toLocaleDateString()}</p>
                             </div>
+
+                            {assignment.ammcSurveyorContact && (
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">AMMC Surveyor (Current)</label>
+                                    <div className="text-sm text-gray-900 space-y-1">
+                                        <p className="font-medium">{assignment.ammcSurveyorContact.name}</p>
+                                        <p className="flex items-center">
+                                            <Mail className="w-3 h-3 mr-1 text-gray-400" />
+                                            {assignment.ammcSurveyorContact.email}
+                                        </p>
+                                        <p className="flex items-center">
+                                            <Phone className="w-3 h-3 mr-1 text-gray-400" />
+                                            {assignment.ammcSurveyorContact.phone}
+                                        </p>
+                                        {assignment.ammcSurveyorContact.licenseNumber && (
+                                            <p className="text-xs text-gray-600">
+                                                License: {assignment.ammcSurveyorContact.licenseNumber}
+                                            </p>
+                                        )}
+                                        {assignment.ammcSurveyorContact.experience && (
+                                            <p className="text-xs text-gray-600">
+                                                Experience: {assignment.ammcSurveyorContact.experience} years
+                                            </p>
+                                        )}
+                                        {assignment.ammcSurveyorContact.specialization && assignment.ammcSurveyorContact.specialization.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                {assignment.ammcSurveyorContact.specialization.map((spec: string, index: number) => (
+                                                    <span
+                                                        key={index}
+                                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
+                                                    >
+                                                        {spec}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {assignment.niaSurveyorContact && (
                                 <div>

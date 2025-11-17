@@ -9,14 +9,12 @@ import {
   Download,
   FileText,
   AlertTriangle,
-  CheckCircle,
   Building,
   Shield,
   TrendingUp
 } from 'lucide-react';
 import {
   ReportDetailsExtended,
-  ApiResponse,
   RecommendationAction
 } from '@/types/api.types';
 import { normalizeError, getErrorMessage } from '@/utils/errorHandling';
@@ -25,16 +23,6 @@ interface MergedReportDetailsModalProps {
   reportId: string;
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface DownloadResponse {
-  downloadUrl?: string;
-  reportId: string;
-  downloadCount: number;
-  documents?: Array<{
-    cloudinaryUrl: string;
-    fileName: string;
-  }>;
 }
 
 const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
@@ -58,8 +46,8 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
       setError(null);
       const response = await userReportAPI.getReportDetails(reportId);
 
-      if (response.success) {
-        setReportDetails(response.data);
+      if (response.success && response.data) {
+        setReportDetails(response.data as any);
       } else {
         setError(response.message || 'Failed to fetch report details');
       }
@@ -74,20 +62,236 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
   const handleDownload = async () => {
     try {
       const response = await userReportAPI.downloadReport(reportId);
-      if (response.success) {
-        // Create and trigger download
-        const dataStr = JSON.stringify(response.data, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
+      if (response.success && response.data) {
+        // Generate a formatted HTML report that can be printed as PDF
+        const reportData = response.data;
+        const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Merged Survey Report - ${reportId}</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #028835;
+      border-bottom: 3px solid #028835;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      color: #333;
+      margin-top: 30px;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 5px;
+    }
+
+    h3 {
+      color: #555;
+      margin-top: 20px;
+    }
+
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-left: 4px solid #028835;
+    }
+
+    .info-row {
+      display: flex;
+      margin: 10px 0;
+    }
+
+    .label {
+      font-weight: bold;
+      width: 200px;
+      color: #555;
+    }
+
+    .value {
+      flex: 1;
+    }
+
+    .recommendation {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .approve {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .reject {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .conflict {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background: #028835;
+      color: white;
+    }
+
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #ddd;
+      text-align: center;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Merged Dual Survey Report</h1>
+
+  <div class="section">
+    <h2>Report Information</h2>
+
+    <div class="info-row">
+      <span class="label">Report ID:</span>
+      <span class="value">${reportData.reportId || 'N/A'}</span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">Policy ID:</span>
+      <span class="value">${(reportData as any).policyId || 'N/A'}</span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">Property Address:</span>
+      <span class="value">${reportData.propertyDetails?.address || 'N/A'}</span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">Property Type:</span>
+      <span class="value">${reportData.propertyDetails?.propertyType || 'N/A'}</span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">Report Status:</span>
+      <span class="value">${(reportData as any).status || 'N/A'}</span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">Released Date:</span>
+      <span class="value">
+        ${reportData.releasedAt
+            ? new Date(reportData.releasedAt).toLocaleString()
+            : 'N/A'
+          }
+      </span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">Download Count:</span>
+      <span class="value">${reportData.downloadCount || 0}</span>
+    </div>
+  </div>
+
+  <div class="recommendation ${reportData.finalRecommendation === 'approve'
+            ? 'approve'
+            : reportData.finalRecommendation === 'reject'
+              ? 'reject'
+              : ''
+          }">
+    <h2>
+      Final Recommendation: ${(reportData.finalRecommendation || 'N/A').toUpperCase()}
+    </h2>
+
+    ${reportData.paymentEnabled
+            ? `<p>✓ Payment Enabled</p>`
+            : `<p>✗ Payment Not Enabled</p>`
+          }
+  </div>
+
+  ${reportData.conflictDetected
+            ? `
+      <div class="conflict">
+        <h3>⚠️ Conflict Detected</h3>
+        <p>Status: ${(reportData as any).conflictResolved ? 'Resolved' : 'Pending Resolution'
+            }</p>
+
+        ${(reportData as any).conflictDetails
+              ? `<p>Details: ${JSON.stringify((reportData as any).conflictDetails)}</p>`
+              : ''
+            }
+      </div>
+      `
+            : ''
+          }
+
+  <div class="section">
+    <h2>Report Sections</h2>
+
+    ${reportData.reportSections
+            ? Object.entries(reportData.reportSections)
+              .map(
+                ([key, value]) => `
+                <h3>${key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+                <pre>${typeof value === 'object'
+                    ? JSON.stringify(value, null, 2)
+                    : value}</pre>
+              `
+              )
+              .join('')
+            : `<p>No report sections available</p>`
+          }
+  </div>
+
+  <div class="footer">
+    <p>Generated on ${new Date().toLocaleString()}</p>
+    <p>FCT-DCIP — Dual Survey Report System</p>
+  </div>
+
+</body>
+</html>`;
+
+
+        // Create blob and download
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `merged-report-${reportId}-${Date.now()}.json`;
+        link.download = `merged-report-${reportId}-${Date.now()}.html`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        alert('Merged report downloaded successfully');
+        alert('Merged report downloaded successfully. Open the HTML file and print to PDF from your browser.');
         fetchReportDetails();
       } else {
         alert('Failed to download merged report');
@@ -104,31 +308,40 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         alert('AMMC report not available');
         return;
       }
-      const response: ApiResponse<DownloadResponse> = await userReportAPI.downloadAMMCReport(reportDetails.individualReports.ammcReportId);
+      const response = await userReportAPI.downloadAMMCReport(reportDetails.individualReports.ammcReportId);
       if (response.success && response.data) {
-        // Check if there's a direct download URL
+        // Check if there's a direct download URL for the PDF
         if (response.data.downloadUrl) {
-          // Open the document URL in a new tab
-          window.open(response.data.downloadUrl, '_blank');
-        } else if (response.data.documents && response.data.documents.length > 0) {
-          // Download the first available document
-          window.open(response.data.documents[0].cloudinaryUrl, '_blank');
-        } else {
-          // Fallback: download as JSON
-          const dataStr = JSON.stringify(response.data, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const url = URL.createObjectURL(dataBlob);
+          // Create a temporary link to download the PDF
           const link = document.createElement('a');
-          link.href = url;
-          link.download = `ammc-report-${reportDetails.individualReports.ammcReportId}-${Date.now()}.json`;
+          link.href = response.data.downloadUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          // Extract filename from URL or use default
+          const filename = response.data.downloadUrl.split('/').pop() || `ammc-report-${Date.now()}.pdf`;
+          link.download = filename;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          URL.revokeObjectURL(url);
+          alert('AMMC report opened in new tab. If download didn\'t start, please check your browser\'s download settings.');
+        } else if (response.data.documents && response.data.documents.length > 0) {
+          // Download the first available document
+          const doc = response.data.documents[0];
+          const link = document.createElement('a');
+          link.href = doc.cloudinaryUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          const filename = doc.cloudinaryUrl.split('/').pop() || `ammc-report-${Date.now()}.pdf`;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          alert('AMMC report opened in new tab.');
+        } else {
+          alert('No AMMC report document available for download');
         }
-        alert('AMMC report downloaded successfully');
       } else {
-        alert('Failed to download AMMC report');
+        alert('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error downloading AMMC report:', error);
@@ -142,31 +355,40 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         alert('NIA report not available');
         return;
       }
-      const response: ApiResponse<DownloadResponse> = await userReportAPI.downloadNIAReport(reportDetails.individualReports.niaReportId);
+      const response = await userReportAPI.downloadNIAReport(reportDetails.individualReports.niaReportId);
       if (response.success && response.data) {
-        // Check if there's a direct download URL
+        // Check if there's a direct download URL for the PDF
         if (response.data.downloadUrl) {
-          // Open the document URL in a new tab
-          window.open(response.data.downloadUrl, '_blank');
-        } else if (response.data.documents && response.data.documents.length > 0) {
-          // Download the first available document
-          window.open(response.data.documents[0].cloudinaryUrl, '_blank');
-        } else {
-          // Fallback: download as JSON
-          const dataStr = JSON.stringify(response.data, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const url = URL.createObjectURL(dataBlob);
+          // Create a temporary link to download the PDF
           const link = document.createElement('a');
-          link.href = url;
-          link.download = `nia-report-${reportDetails.individualReports.niaReportId}-${Date.now()}.json`;
+          link.href = response.data.downloadUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          // Extract filename from URL or use default
+          const filename = response.data.downloadUrl.split('/').pop() || `nia-report-${Date.now()}.pdf`;
+          link.download = filename;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          URL.revokeObjectURL(url);
+          alert('NIA report opened in new tab. If download didn\'t start, please check your browser\'s download settings.');
+        } else if (response.data.documents && response.data.documents.length > 0) {
+          // Download the first available document
+          const doc = response.data.documents[0];
+          const link = document.createElement('a');
+          link.href = doc.cloudinaryUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          const filename = doc.cloudinaryUrl.split('/').pop() || `nia-report-${Date.now()}.pdf`;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          alert('NIA report opened in new tab.');
+        } else {
+          alert('No NIA report document available for download');
         }
-        alert('NIA report downloaded successfully');
       } else {
-        alert('Failed to download NIA report');
+        alert('Failed to download NIA report: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error downloading NIA report:', error);

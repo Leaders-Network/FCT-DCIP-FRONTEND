@@ -1,18 +1,51 @@
 /**
  * Authentication utility functions
+ * Uses secure cookies for token storage instead of localStorage
  */
 
-export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor';
+import { getCookie, setCookie, deleteCookie, hasCookie } from './cookies';
+
+export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor';
 
 export const getAuthToken = (tokenType?: TokenType): string | null => {
     if (typeof window === 'undefined') return null;
 
-    // If specific token type is requested, try to get that first
+    // If specific token type is requested, try to get that specific token first
     if (tokenType) {
         const tokenKey = getTokenKeyForType(tokenType);
-        const token = localStorage.getItem(tokenKey);
+        const token = getCookie(tokenKey);
         if (token) {
-            console.log(`Using specific auth token from: ${tokenKey}`);
+            console.log(`Using specific auth token from cookie: ${tokenKey}`);
+            return token;
+        }
+        // If specific token not found, fall back to auto-detection
+        console.warn(`Requested token type '${tokenType}' not found, trying auto-detection`);
+    }
+
+    // Auto-detect token type based on current URL path
+    const currentPath = window.location.pathname;
+    let detectedType: TokenType | null = null;
+
+    if (currentPath.includes('/broker-admin')) {
+        detectedType = 'broker-admin';
+    } else if (currentPath.includes('/nia-admin')) {
+        detectedType = 'nia-admin';
+    } else if (currentPath.includes('/surveyor')) {
+        detectedType = 'surveyor';
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
+        detectedType = 'admin';
+    } else if (currentPath.includes('/super-admin')) {
+        detectedType = 'super-admin';
+    } else if (currentPath.includes('/dashboard') || currentPath.includes('/user')) {
+        detectedType = 'user';
+    }
+
+    // If we detected a type from the URL, try to get that specific token
+    if (detectedType) {
+        const tokenKey = getTokenKeyForType(detectedType);
+        const token = getCookie(tokenKey);
+        if (token) {
+            console.log(`Auto-detected and using auth token from cookie: ${tokenKey} (based on path: ${currentPath})`);
             return token;
         }
     }
@@ -21,6 +54,7 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     const tokenKeys = [
         'superAdminToken',  // Super admin has highest priority
         'niaAdminToken',
+        'brokerAdminToken',
         'adminToken',
         'surveyorToken',
         'userToken',
@@ -29,14 +63,14 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     ];
 
     for (const key of tokenKeys) {
-        const token = localStorage.getItem(key);
+        const token = getCookie(key);
         if (token) {
-            console.log(`Using auth token from: ${key}`);
+            console.log(`Using fallback auth token from cookie: ${key}`);
             return token;
         }
     }
 
-    console.warn('No authentication token found in localStorage');
+    console.warn('No authentication token found in cookies');
     return null;
 };
 
@@ -46,6 +80,7 @@ const getTokenKeyForType = (tokenType: string): string => {
         case 'admin': return 'adminToken';
         case 'super-admin': return 'superAdminToken';
         case 'nia-admin': return 'niaAdminToken';
+        case 'broker-admin': return 'brokerAdminToken';
         case 'surveyor': return 'surveyorToken';
         default: return 'token';
     }
@@ -55,7 +90,7 @@ export const getUserRole = (): string | null => {
     if (typeof window === 'undefined') return null;
 
     // Try to get user role from different sources
-    const adminInfo = localStorage.getItem('niaAdminInfo');
+    const adminInfo = getCookie('niaAdminInfo');
     if (adminInfo) {
         try {
             const parsed = JSON.parse(adminInfo);
@@ -65,7 +100,7 @@ export const getUserRole = (): string | null => {
         }
     }
 
-    const userInfo = localStorage.getItem('userInfo');
+    const userInfo = getCookie('userInfo');
     if (userInfo) {
         try {
             const parsed = JSON.parse(userInfo);
@@ -86,8 +121,14 @@ export const setAuthToken = (token: string, tokenType: TokenType = 'admin'): voi
     if (typeof window === 'undefined') return;
 
     const tokenKey = getTokenKeyForType(tokenType);
-    localStorage.setItem(tokenKey, token);
-    console.log(`Auth token set for: ${tokenKey}`);
+    // Set cookie with secure options
+    setCookie(tokenKey, token, {
+        expires: 7, // 7 days
+        path: '/',
+        secure: window.location.protocol === 'https:',
+        sameSite: 'lax'
+    });
+    console.log(`Auth token set in cookie: ${tokenKey}`);
 };
 
 export const removeAuthToken = (tokenType?: TokenType): void => {
@@ -96,13 +137,14 @@ export const removeAuthToken = (tokenType?: TokenType): void => {
     if (tokenType) {
         // Remove specific token type
         const tokenKey = getTokenKeyForType(tokenType);
-        localStorage.removeItem(tokenKey);
-        console.log(`Auth token removed for: ${tokenKey}`);
+        deleteCookie(tokenKey);
+        console.log(`Auth token removed from cookie: ${tokenKey}`);
     } else {
         // Remove all tokens
         const tokenKeys = [
             'superAdminToken',
             'niaAdminToken',
+            'brokerAdminToken',
             'adminToken',
             'surveyorToken',
             'userToken',
@@ -111,10 +153,10 @@ export const removeAuthToken = (tokenType?: TokenType): void => {
         ];
 
         tokenKeys.forEach(key => {
-            localStorage.removeItem(key);
+            deleteCookie(key);
         });
 
-        console.log('All auth tokens removed');
+        console.log('All auth tokens removed from cookies');
     }
 };
 
@@ -124,6 +166,7 @@ export const clearAuthTokens = (): void => {
     const tokenKeys = [
         'superAdminToken',
         'niaAdminToken',
+        'brokerAdminToken',
         'adminToken',
         'surveyorToken',
         'userToken',
@@ -134,16 +177,17 @@ export const clearAuthTokens = (): void => {
         'surveyorName',
         'surveyorId',
         'niaAdminInfo',
+        'brokerAdminInfo',
         'adminInfo',
         'userInfo',
         'superAdminInfo'
     ];
 
     tokenKeys.forEach(key => {
-        localStorage.removeItem(key);
+        deleteCookie(key);
     });
 
-    console.log('All auth tokens and user info cleared');
+    console.log('All auth tokens and user info cleared from cookies');
 };
 
 export const getApiHeaders = (tokenType?: TokenType): Record<string, string> => {
@@ -159,26 +203,45 @@ export const getApiHeaders = (tokenType?: TokenType): Record<string, string> => 
     return headers;
 };
 
-// Get current user's token type based on available tokens
+// Get current user's token type based on URL path and available tokens
 export const getCurrentTokenType = (): string | null => {
     if (typeof window === 'undefined') return null;
 
+    // First, try to detect from current URL path
+    const currentPath = window.location.pathname;
+
+    if (currentPath.includes('/broker-admin')) {
+        if (hasCookie('brokerAdminToken')) return 'broker-admin';
+    } else if (currentPath.includes('/nia-admin')) {
+        if (hasCookie('niaAdminToken')) return 'nia-admin';
+    } else if (currentPath.includes('/surveyor')) {
+        if (hasCookie('surveyorToken')) return 'surveyor';
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
+        if (hasCookie('adminToken')) return 'admin';
+    } else if (currentPath.includes('/super-admin')) {
+        if (hasCookie('superAdminToken')) return 'super-admin';
+    } else if (currentPath.includes('/dashboard') || currentPath.includes('/user')) {
+        if (hasCookie('userToken')) return 'user';
+    }
+
+    // Fallback: check all token types in priority order
     const tokenTypes = [
         { type: 'super-admin', key: 'superAdminToken' },
         { type: 'nia-admin', key: 'niaAdminToken' },
+        { type: 'broker-admin', key: 'brokerAdminToken' },
         { type: 'admin', key: 'adminToken' },
         { type: 'surveyor', key: 'surveyorToken' },
         { type: 'user', key: 'userToken' }
     ];
 
     for (const { type, key } of tokenTypes) {
-        if (localStorage.getItem(key)) {
+        if (hasCookie(key)) {
             return type;
         }
     }
 
     // Check legacy tokens
-    if (localStorage.getItem('token') || localStorage.getItem('authToken')) {
+    if (hasCookie('token') || hasCookie('authToken')) {
         return 'legacy';
     }
 
@@ -196,11 +259,13 @@ export const hasAccessLevel = (requiredLevel: TokenType): boolean => {
     // Check specific access levels
     switch (requiredLevel) {
         case 'user':
-            return ['user', 'admin', 'super-admin', 'nia-admin', 'surveyor'].includes(currentType);
+            return ['user', 'admin', 'super-admin', 'nia-admin', 'broker-admin', 'surveyor'].includes(currentType);
         case 'admin':
             return ['admin', 'super-admin'].includes(currentType);
         case 'nia-admin':
             return ['nia-admin', 'super-admin'].includes(currentType);
+        case 'broker-admin':
+            return ['broker-admin', 'super-admin'].includes(currentType);
         case 'surveyor':
             return ['surveyor', 'super-admin'].includes(currentType);
         case 'super-admin':

@@ -10,19 +10,24 @@ import {
   ADDITIONAL_COVERAGE_OPTIONS
 } from "@/constants/policyConstants";
 
+interface PropertyDetailWithContact {
+  _id: string;
+  address: string;
+  propertyType: string;
+  buildingValue: number;
+  yearBuilt: number;
+  squareFootage: number;
+  constructionMaterial: string;
+  phonenumber?: string;
+  category?: { category: string };
+  status?: string;
+}
+
 interface PolicyRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePolicyRequestData) => Promise<void>;
-  property?: {
-    _id: string;
-    address: string;
-    propertyType: string;
-    buildingValue: number;
-    yearBuilt: number;
-    squareFootage: number;
-    constructionMaterial: string;
-  };
+  property?: PropertyDetailWithContact;
 }
 
 const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
@@ -75,7 +80,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
       },
       requestDetails: {
         coverageType: "",
-        policyDuration: "",
+        policyDuration: "1 Year", // Always 1 year
         additionalCoverage: [],
         specialRequests: "",
       },
@@ -122,7 +127,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         },
         contactDetails: {
           ...prev.contactDetails,
-          phoneNumber: property.phonenumber,
+          phoneNumber: property.phonenumber || "",
           // Preserve user's email from stored user data
           email: (() => {
             const storedUser = localStorage.getItem("user");
@@ -211,8 +216,8 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   const coverageTypes = [
     "Contract Works Coverage",
     "Public Liability Coverage",
-    "Employer’s Liability Coverage",
-    "Contractor’s Plant and Equipment Coverage",
+    "Employers Liability Coverage",
+    "Contractors Plant and Equipment Coverage",
     "Professional Indemnity",
   ];
 
@@ -554,27 +559,10 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   </p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Policy Duration *
-                  </label>
-                  <select
-                    required
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835]"
-                    value={formData.requestDetails.policyDuration}
-                    onChange={(e) =>
-                      handleInputChange("requestDetails", "policyDuration", e.target.value)
-                    }
-                  >
-                    <option value="">Select duration</option>
-                    {POLICY_DURATIONS.map((duration) => (
-                      <option key={duration} value={duration}>
-                        {duration}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Select how long you need the insurance coverage. Project-based coverage lasts until construction completion.
+                {/* Policy Duration removed - always 1 year */}
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Policy Duration:</strong> All policies are issued for 1 year
                   </p>
                 </div>
               </div>

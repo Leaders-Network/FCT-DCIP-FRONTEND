@@ -140,6 +140,7 @@ export const withErrorHandling = <T extends unknown[], R>(
             return await fn(...args);
         } catch (error) {
             handleApiError(error);
+            throw error; // Re-throw after handling
         }
     };
 };
@@ -185,4 +186,5 @@ export const retryWithBackoff = async <T>(
     }
 
     handleApiError(lastError);
+    throw lastError; // Throw after all retries exhausted
 };

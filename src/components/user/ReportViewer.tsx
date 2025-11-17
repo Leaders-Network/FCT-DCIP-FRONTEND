@@ -136,7 +136,9 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
             const response = await userReportAPI.getReportDetails(reportId);
 
             if (response.success) {
-                setReport(response.data);
+                // response.data comes from the API and may be a slightly different shape than
+                // our local ReportData/IndividualReportData types. Narrow by casting here.
+                setReport(response.data as unknown as ReportData | IndividualReportData);
             } else {
                 throw new Error(response.message || 'Failed to fetch report');
             }
@@ -154,20 +156,85 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
             const { userReportAPI } = await import('@/services/api');
             const response = await userReportAPI.downloadReport(reportId);
 
-            if (response.success) {
-                // Create and trigger download
-                const dataStr = JSON.stringify(response.data, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
+            if (response.success && response.data) {
+                // Generate a formatted HTML report that can be printed as PDF
+                const reportData = response.data as unknown as Record<string, unknown>; // API download payload may have additional fields
+                const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Merged Survey Report - ${reportId}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        h1 { color: #028835; border-bottom: 3px solid #028835; padding-bottom: 10px; }
+        h2 { color: #333; margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        h3 { color: #555; margin-top: 20px; }
+        .section { margin: 20px 0; padding: 15px; background: #f9f9f9; border-left: 4px solid #028835; }
+        .info-row { display: flex; margin: 10px 0; }
+        .label { font-weight: bold; width: 200px; color: #555; }
+        .value { flex: 1; }
+        .recommendation { padding: 15px; margin: 20px 0; border-radius: 5px; font-weight: bold; }
+        .approve { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .reject { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .conflict { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #777; }
+    </style>
+</head>
+<body>
+    <h1>Merged Dual Survey Report</h1>
+    
+    <div class="section">
+        <h2>Report Information</h2>
+        <div class="info-row"><span class="label">Report ID:</span><span class="value">${(reportData.reportId as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Policy ID:</span><span class="value">${(reportData.policyId as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Property Address:</span><span class="value">${((reportData.propertyDetails as Record<string, unknown>)?.address as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Property Type:</span><span class="value">${((reportData.propertyDetails as Record<string, unknown>)?.propertyType as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Report Status:</span><span class="value">${(reportData.status as string) || (reportData.releaseStatus as string) || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Released Date:</span><span class="value">${reportData.releasedAt ? new Date(reportData.releasedAt as string).toLocaleString() : 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Download Count:</span><span class="value">${(reportData.downloadCount as number) || 0}</span></div>
+    </div>
+
+    <div class="recommendation ${(reportData.finalRecommendation as string) === 'approve' ? 'approve' : (reportData.finalRecommendation as string) === 'reject' ? 'reject' : ''}">
+        <h2>Final Recommendation: ${((reportData.finalRecommendation as string) || 'N/A').toUpperCase()}</h2>
+        ${reportData.paymentEnabled ? '<p>✓ Payment Enabled</p>' : '<p>✗ Payment Not Enabled</p>'}
+    </div>
+
+    ${reportData.conflictDetected ? `
+    <div class="conflict">
+        <h3>⚠️ Conflict Detected</h3>
+        <p>Status: ${reportData.conflictResolved ? 'Resolved' : 'Pending Resolution'}</p>
+        ${reportData.conflictDetails ? `<p>Details: ${JSON.stringify(reportData.conflictDetails)}</p>` : ''}
+    </div>
+    ` : ''}
+
+    <div class="section">
+        <h2>Report Sections</h2>
+        ${reportData.reportSections ? Object.entries(reportData.reportSections).map(([key, value]) => `
+            <h3>${key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+            <p>${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</p>
+        `).join('') : '<p>No report sections available</p>'}
+    </div>
+
+    <div class="footer">
+        <p>Generated on ${new Date().toLocaleString()}</p>
+        <p>FCT-DCIP - Dual Survey Report System</p>
+    </div>
+</body>
+</html>`;
+
+                // Create blob and download
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `merged-report-${reportId}-${Date.now()}.json`;
+                link.download = `merged-report-${reportId}-${Date.now()}.html`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
 
-                alert('Report downloaded successfully');
+                alert('Merged report downloaded successfully. Open the HTML file and print to PDF from your browser.');
             } else {
                 throw new Error(response.message || 'Failed to download report');
             }
@@ -353,27 +420,37 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                 const response = await userReportAPI.downloadAMMCReport(mergedReport.individualReports.ammcReportId);
 
                                                 if (response.success && response.data) {
-                                                    // Check if there's a direct download URL
+                                                    // Check if there's a direct download URL for the PDF
                                                     if (response.data.downloadUrl) {
-                                                        window.open(response.data.downloadUrl, '_blank');
-                                                    } else if (response.data.documents && response.data.documents.length > 0) {
-                                                        window.open(response.data.documents[0].cloudinaryUrl, '_blank');
-                                                    } else {
-                                                        // Fallback: download as JSON
-                                                        const dataStr = JSON.stringify(response.data, null, 2);
-                                                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                                                        const url = URL.createObjectURL(dataBlob);
+                                                        // Create a temporary link to download the PDF
                                                         const link = document.createElement('a');
-                                                        link.href = url;
-                                                        link.download = `ammc-report-${mergedReport.individualReports.ammcReportId}-${Date.now()}.json`;
+                                                        link.href = response.data.downloadUrl;
+                                                        link.target = '_blank';
+                                                        link.rel = 'noopener noreferrer';
+                                                        const filename = response.data.downloadUrl.split('/').pop() || `ammc-report-${Date.now()}.pdf`;
+                                                        link.download = filename;
                                                         document.body.appendChild(link);
                                                         link.click();
                                                         document.body.removeChild(link);
-                                                        URL.revokeObjectURL(url);
+                                                        alert('AMMC report opened in new tab.');
+                                                    } else if (response.data.documents && response.data.documents.length > 0) {
+                                                        // Download the first available document
+                                                        const doc = response.data.documents[0];
+                                                        const link = document.createElement('a');
+                                                        link.href = doc.cloudinaryUrl;
+                                                        link.target = '_blank';
+                                                        link.rel = 'noopener noreferrer';
+                                                        const filename = doc.cloudinaryUrl.split('/').pop() || `ammc-report-${Date.now()}.pdf`;
+                                                        link.download = filename;
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        document.body.removeChild(link);
+                                                        alert('AMMC report opened in new tab.');
+                                                    } else {
+                                                        alert('No AMMC report document available for download');
                                                     }
-                                                    alert('AMMC report downloaded successfully');
                                                 } else {
-                                                    alert('Failed to download AMMC report');
+                                                    alert('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
                                                 }
                                             } catch (error) {
                                                 console.error('Error downloading AMMC report:', error);
@@ -452,8 +529,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
 
 
-                            {(mergedReport.reportSections?.ammc?.photos?.length > 0 ||
-                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length > 0) && (
+                            {((mergedReport.reportSections?.ammc?.photos?.length || 0) > 0 ||
+                                (mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 0) && (
                                     <div>
                                         <h4 className="font-medium mb-2">
                                             Photos ({mergedReport.reportSections?.ammc?.photos?.length ||
@@ -462,24 +539,28 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                         <div className="grid grid-cols-2 gap-2">
                                             {(mergedReport.reportSections?.ammc?.photos ||
                                                 mergedReport.individualReports?.ammcSubmission?.surveyData?.photos || [])
-                                                .slice(0, 4).map((photo, index) => (
-                                                    <div key={index} className="relative">
-                                                        <img
-                                                            src={photo.url || photo}
-                                                            alt={photo.description || `AMMC Photo ${index + 1}`}
-                                                            className="w-full h-24 object-cover rounded"
-                                                        />
-                                                        {index === 3 && (mergedReport.reportSections?.ammc?.photos?.length ||
-                                                            mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 4 && (
-                                                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
-                                                                    <span className="text-white text-sm">
-                                                                        +{(mergedReport.reportSections?.ammc?.photos?.length ||
-                                                                            mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) - 4} more
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                    </div>
-                                                ))}
+                                                .slice(0, 4).map((photo, index) => {
+                                                    const photoUrl = typeof photo === 'string' ? photo : photo?.url;
+                                                    const photoDesc = typeof photo === 'string' ? undefined : photo?.description;
+                                                    return (
+                                                        <div key={index} className="relative">
+                                                            <img
+                                                                src={photoUrl}
+                                                                alt={photoDesc || `AMMC Photo ${index + 1}`}
+                                                                className="w-full h-24 object-cover rounded"
+                                                            />
+                                                            {index === 3 && (mergedReport.reportSections?.ammc?.photos?.length ||
+                                                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) > 4 && (
+                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
+                                                                        <span className="text-white text-sm">
+                                                                            +{(mergedReport.reportSections?.ammc?.photos?.length ||
+                                                                                mergedReport.individualReports?.ammcSubmission?.surveyData?.photos?.length || 0) - 4} more
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                        </div>
+                                                    );
+                                                })}
                                         </div>
                                     </div>
                                 )}
@@ -505,27 +586,37 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                 const response = await userReportAPI.downloadNIAReport(mergedReport.individualReports.niaReportId);
 
                                                 if (response.success && response.data) {
-                                                    // Check if there's a direct download URL
+                                                    // Check if there's a direct download URL for the PDF
                                                     if (response.data.downloadUrl) {
-                                                        window.open(response.data.downloadUrl, '_blank');
-                                                    } else if (response.data.documents && response.data.documents.length > 0) {
-                                                        window.open(response.data.documents[0].cloudinaryUrl, '_blank');
-                                                    } else {
-                                                        // Fallback: download as JSON
-                                                        const dataStr = JSON.stringify(response.data, null, 2);
-                                                        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                                                        const url = URL.createObjectURL(dataBlob);
+                                                        // Create a temporary link to download the PDF
                                                         const link = document.createElement('a');
-                                                        link.href = url;
-                                                        link.download = `nia-report-${mergedReport.individualReports.niaReportId}-${Date.now()}.json`;
+                                                        link.href = response.data.downloadUrl;
+                                                        link.target = '_blank';
+                                                        link.rel = 'noopener noreferrer';
+                                                        const filename = response.data.downloadUrl.split('/').pop() || `nia-report-${Date.now()}.pdf`;
+                                                        link.download = filename;
                                                         document.body.appendChild(link);
                                                         link.click();
                                                         document.body.removeChild(link);
-                                                        URL.revokeObjectURL(url);
+                                                        alert('NIA report opened in new tab.');
+                                                    } else if (response.data.documents && response.data.documents.length > 0) {
+                                                        // Download the first available document
+                                                        const doc = response.data.documents[0];
+                                                        const link = document.createElement('a');
+                                                        link.href = doc.cloudinaryUrl;
+                                                        link.target = '_blank';
+                                                        link.rel = 'noopener noreferrer';
+                                                        const filename = doc.cloudinaryUrl.split('/').pop() || `nia-report-${Date.now()}.pdf`;
+                                                        link.download = filename;
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        document.body.removeChild(link);
+                                                        alert('NIA report opened in new tab.');
+                                                    } else {
+                                                        alert('No NIA report document available for download');
                                                     }
-                                                    alert('NIA report downloaded successfully');
                                                 } else {
-                                                    alert('Failed to download NIA report');
+                                                    alert('Failed to download NIA report: ' + (response.message || 'Unknown error'));
                                                 }
                                             } catch (error) {
                                                 console.error('Error downloading NIA report:', error);
@@ -604,8 +695,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
 
 
-                            {(mergedReport.reportSections?.nia?.photos?.length > 0 ||
-                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length > 0) && (
+                            {((mergedReport.reportSections?.nia?.photos?.length || 0) > 0 ||
+                                (mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 0) && (
                                     <div>
                                         <h4 className="font-medium mb-2">
                                             Photos ({mergedReport.reportSections?.nia?.photos?.length ||
@@ -614,24 +705,28 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                         <div className="grid grid-cols-2 gap-2">
                                             {(mergedReport.reportSections?.nia?.photos ||
                                                 mergedReport.individualReports?.niaSubmission?.surveyData?.photos || [])
-                                                .slice(0, 4).map((photo, index) => (
-                                                    <div key={index} className="relative">
-                                                        <img
-                                                            src={photo.url || photo}
-                                                            alt={photo.description || `NIA Photo ${index + 1}`}
-                                                            className="w-full h-24 object-cover rounded"
-                                                        />
-                                                        {index === 3 && (mergedReport.reportSections?.nia?.photos?.length ||
-                                                            mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 4 && (
-                                                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
-                                                                    <span className="text-white text-sm">
-                                                                        +{(mergedReport.reportSections?.nia?.photos?.length ||
-                                                                            mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) - 4} more
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                    </div>
-                                                ))}
+                                                .slice(0, 4).map((photo, index) => {
+                                                    const photoUrl = typeof photo === 'string' ? photo : photo?.url;
+                                                    const photoDesc = typeof photo === 'string' ? undefined : photo?.description;
+                                                    return (
+                                                        <div key={index} className="relative">
+                                                            <img
+                                                                src={photoUrl}
+                                                                alt={photoDesc || `NIA Photo ${index + 1}`}
+                                                                className="w-full h-24 object-cover rounded"
+                                                            />
+                                                            {index === 3 && (mergedReport.reportSections?.nia?.photos?.length ||
+                                                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) > 4 && (
+                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded">
+                                                                        <span className="text-white text-sm">
+                                                                            +{(mergedReport.reportSections?.nia?.photos?.length ||
+                                                                                mergedReport.individualReports?.niaSubmission?.surveyData?.photos?.length || 0) - 4} more
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                        </div>
+                                                    );
+                                                })}
                                         </div>
                                     </div>
                                 )}
