@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { useAuth } from "@/context/useAuth";
+import {toast} from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -14,13 +15,18 @@ const loginSchema = z.object({
 
 export function Login() {
 
-  const [currentImage, setCurrentImage] = useState(0)
-  const backgroundImages = [
-    "/abuja-bg.png",
-    "/insurance-bg-4.jpg",
-    "/insurance-bg-3.jpeg",
-    "/insurance-bg-9.jpeg",
-  ]
+   const [currentImage, setCurrentImage] = useState(0)
+   const backgroundImages = [
+    "/bg-construct-2.webp",
+    "/bg-hero-1.jpg",
+    "/bg-hero-4.jpg",
+    "/bg-hero-5.jpg",
+    "/bg-hero-6.jpg",
+    "/bg-hero-7.jpg",
+    "/bg-hero-8.jpg",
+    "/bg-hero-9.jpg",
+    "/bg-hero-11.jpg",
+]
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,17 +46,27 @@ export function Login() {
         </main>
       </div>
       <div className="hidden md:block md:w-1/3 relative">
-        {backgroundImages.map((src, index) => (
-          <Image
-            key={index}
-            src={src}
-            alt={`Background ${index + 1}`}
-            fill
-            priority={index === 0}
-            className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
-          />
-        ))}
-        <div className="absolute inset-0 bg-black opacity-20" />
+              {backgroundImages.map((src, index) => (
+                <Image 
+                key={index}
+                src={src}
+                alt={`Background ${index + 1}`}
+                fill
+                priority={index === 0}
+                className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
+        <div className="absolute inset-0 bg-black/60"></div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 md:px-10 text-white">
+            <div className="max-w-md">
+              <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">
+                Welcome Back!
+              </h2>
+              <p className="text-sm md:text-[1.1rem] leading-relaxed fade-in-text mt-2">
+                We’re glad to have you again, log in to continue protecting what matters most.
+              </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -145,6 +161,7 @@ function LoginForm() {
     try {
       loginSchema.parse({ email, password });
       setErrors({});
+      toast.success("Validation successful! ✅");
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -154,6 +171,10 @@ function LoginForm() {
           return acc;
         }, {} as { [key: string]: string });
         setErrors(formattedErrors);
+         //Show the first validation error as a red toast
+        toast.error(formattedErrors[Object.keys(formattedErrors)[0]]);
+      } else {
+        toast.error("Something went wrong. Please try again.")
       }
       return false;
     }
@@ -176,7 +197,12 @@ function LoginForm() {
         >
           Email
         </label>
-        {errors.email && <p className="text-red-500 text-xs md:text-sm mt-1">{errors.email}</p>}
+        {errors.email && (
+        <p 
+        className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
+          {errors.email}
+        </p>
+      )}
       </div>
 
       <div className="mb-4 relative">
@@ -194,7 +220,12 @@ function LoginForm() {
         >
           Password
         </label>
-        {errors.password && <p className="text-red-500 text-xs md:text-sm mt-1">{errors.password}</p>}
+        {errors.password && 
+        (<p 
+        className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
+          {errors.password}
+          </p>
+        )}
       </div>
 
       <div className="mb-6">
@@ -235,12 +266,18 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
         await login(email, password, 'employee');
       } catch (employeeError) {
         console.error("Login error:", employeeError);
-        setError(employeeError instanceof Error ? employeeError.message : "An unexpected error occurred");
-      }
-    } finally {
-      setIsLoading(false);
+        const message = employeeError instanceof Error ? employeeError.message : "An unexpected error occurred. please try again.";
+
+        setError(message);
+        toast.error(message, {
+        description: "Please check your credentials and try again.",
+        duration: 3000, // optional: controls how long the toast stays
+      });
     }
-  };
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <>
@@ -250,7 +287,10 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
             <svg className="w-4 h-4 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
-            <p className="text-red-700 text-xs md:text-sm">{error}</p>
+            <p 
+              className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
+                {error}
+        </p>
           </div>
         </div>
       )}

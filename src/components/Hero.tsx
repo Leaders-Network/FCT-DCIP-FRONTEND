@@ -10,8 +10,16 @@ const Hero: React.FC = () => {
   const [currentImage, setCurrentImage] = useState(0)
 
 const backgroundImages = [
-     "/abuja-bg.png",
-    "/insurance-bg-4.jpg",
+     "/bg-hero-1.jpg",
+    "/bg-hero-4.jpg",
+    "/bg-hero-5.jpg",
+    "/bg-hero-6.jpg",
+    "/bg-hero-7.jpg",
+    "/bg-hero-8.jpg",
+    "/bg-hero-9.jpg",
+    "/bg-hero-11.jpg",
+    "/bg-construct-2.webp",
+    "/bg-construct-3.jpg",
 ]
 
 useEffect(() => {
@@ -58,12 +66,13 @@ useEffect(() => {
         className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
         />
       ))}
+      <div className="absolute inset-0 bg-black/65"></div>
 
       {/* Hero content */}
       <div className="absolute inset-0 flex items-center">
-        <div data-aos="fade-left" className="container mx-auto px-4">
+        <div data-aos="zoom-in" className="container mx-auto px-4">
           <h1 className="text-5xl font-bold text-white mb-4">
-            Protect Your Property <br /> with Confidence
+            Protect Your Properties <br /> with Confidence
           </h1>
           <p className="text-xl text-white mb-8">
             Comprehensive insurance solutions tailored to your needs. <br />
@@ -71,19 +80,22 @@ useEffect(() => {
           </p>
 
           <div className="flex space-x-4">
+            <Link href="/signup">
             <button
-              onClick={() => openModal("auth")}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition"
+              className="bg-green-600 text-white px-6 py-3 font-semibold rounded-lg shadow-md hover:bg-green-700 transition"
             >
-              Login/Register Now<span className="ml-2">→</span>
+              
+              Register Now<span className="ml-2">→</span>
             </button>
-
+             </Link>
+            
+            <Link href="/login">
             <button
-              onClick={() => openModal("contact")}
-              className="bg-white text-green-600 px-6 py-3 rounded-lg shadow-md hover:bg-gray-100 transition"
+              className="bg-white text-green-600 px-6 font-semibold py-3 rounded-lg shadow-md hover:bg-gray-100 transition"
             >
-              Contact Us
+              Login
             </button>
+            </Link>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import axios from "axios";
 import Button from "../Button";
 import Input from "../Input";
 import { useAuth } from "@/context/useAuth";
+import { toast } from "sonner";
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -22,12 +23,13 @@ const AdminLogin: React.FC = () => {
 
     try {
       await login(email, password, 'employee');
+      toast.success("Login successful!");
       router.push("/admin/dashboard");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        setError(`Login failed: ${error.response.data.message}`);
+        toast.error(`Login failed: ${error.response.data.message}`);
       } else {
-        setError("Login failed. Please try again.");
+        toast.error("Login failed. Please try again.");
       }
     } finally {
       setIsLoading(false);
