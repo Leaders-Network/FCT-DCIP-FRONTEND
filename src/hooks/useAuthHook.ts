@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCookie, setCookie, deleteCookie } from '@/utils/cookies';
 
 export function useAuthHook() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -7,7 +8,7 @@ export function useAuthHook() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getCookie('token') || getCookie('userToken');
     if (token) {
       setIsAuthenticated(true);
     }
@@ -15,15 +16,15 @@ export function useAuthHook() {
   }, []);
 
   const login = (token: string, name: string) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('name', name);
+    setCookie('token', token, { expires: 7 });
+    setCookie('name', name, { expires: 7 });
     setIsAuthenticated(true);
     router.push('/dashboard');
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('name');
+    deleteCookie('token');
+    deleteCookie('name');
     setIsAuthenticated(false);
     router.push('/login');
   };

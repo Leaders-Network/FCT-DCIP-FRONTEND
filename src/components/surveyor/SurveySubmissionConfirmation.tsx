@@ -18,8 +18,8 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
     const otherSurveyorNotified = submissionResult.otherSurveyorNotified || false;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="bg-green-600 text-white p-6 rounded-t-lg">
                     <div className="flex items-center">
@@ -80,10 +80,10 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
                                 <div className="w-full bg-blue-200 rounded-full h-3 mb-4">
                                     <div
                                         className={`h-3 rounded-full transition-all duration-500 ${completionStatus === 100
-                                                ? 'bg-green-500'
-                                                : completionStatus === 50
-                                                    ? 'bg-yellow-500'
-                                                    : 'bg-blue-400'
+                                            ? 'bg-green-500'
+                                            : completionStatus === 50
+                                                ? 'bg-yellow-500'
+                                                : 'bg-blue-400'
                                             }`}
                                         style={{ width: `${completionStatus}%` }}
                                     ></div>

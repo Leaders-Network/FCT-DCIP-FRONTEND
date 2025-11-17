@@ -32,8 +32,8 @@ export const setupNIAAdminToken = async () => {
         const data = await response.json();
 
         if (data.success && data.token) {
-            // Set the token as niaAdminToken
-            setAuthToken(data.token, 'niaAdmin');
+            // Set the token as nia-admin token
+            setAuthToken(data.token, 'nia-admin');
 
             // Also store NIA admin info
             if (data.employee) {

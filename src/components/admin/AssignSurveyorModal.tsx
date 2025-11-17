@@ -76,7 +76,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
       onClose();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      setError(`Failed to create assignment: ${error.message}`);
+      setError(`Failed to create assignment: ${errorMessage}`);
     }
   };
 

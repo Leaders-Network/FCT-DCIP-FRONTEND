@@ -1,216 +1,119 @@
 /**
- * Central type exports for the FCT-DCIP Frontend application
- * This file re-exports all types for easier importing
+ * Central export point for all type definitions
+ * Import types from here for consistency
  */
 
-// API Types
+// Re-export all API types (excluding AssignmentManagementProps to avoid duplicate)
 export * from './api.types';
 
-// Component Types
-export * from './component.types';
+// Re-export all utility types
+export * from './utility.types';
 
-// Common utility types
-export type Nullable<T> = T | null;
-export type Optional<T> = T | undefined;
-export type Maybe<T> = T | null | undefined;
+// Re-export component types (excluding AssignmentManagementProps which is in api.types)
+export type {
+    SurveySubmissionData,
+    ModalComponentProps,
+    FormComponentProps,
+    TableComponentProps,
+    SearchComponentProps,
+    FilterComponentProps,
+    PaginationComponentProps,
+    DashboardCardProps,
+    StatusBadgeProps,
+    FileUploadComponentProps,
+    DropdownComponentProps,
+    NavigationProps,
+    SidebarProps,
+    HeaderProps,
+    LoadingComponentProps,
+    ErrorComponentProps,
+    EmptyStateProps,
+    ConfirmationDialogProps,
+    ToastProps,
+    ChartComponentProps,
+    ContactManagementProps,
+    PolicyDetailsProps,
+    ReportListProps,
+    ReportDetailsProps,
+    AssignmentDetailProps,
+    SurveySubmissionProps,
+    SurveyorManagementProps
+} from './component.types';
 
-// React component types
-export type FC<P = {}> = React.FunctionComponent<P>;
-export type ComponentProps<T> = T extends React.ComponentType<infer P> ? P : never;
+// Common type aliases for convenience
+export type {
+    // Utility types
+    Optional,
+    RequiredFields,
+    DeepPartial,
+    DeepRequired,
+    DeepReadonly,
+    Nullable,
+    NonNullableFields,
+    Awaited,
+    AsyncFunction,
+    ArrayElement,
 
-// Event types
-export type ChangeEvent<T = HTMLInputElement> = React.ChangeEvent<T>;
-export type ClickEvent<T = HTMLButtonElement> = React.MouseEvent<T>;
-export type FormEvent<T = HTMLFormElement> = React.FormEvent<T>;
-export type KeyboardEvent<T = HTMLElement> = React.KeyboardEvent<T>;
+    // API types
+    ApiResponse,
+    PaginatedResponse,
+    ApiError,
+    LoadingState,
+    RequestStatus,
 
-// Common prop types
-export interface WithClassName {
-    className?: string;
-}
+    // Form types
+    FormField,
+    FormState,
+    ValidationRule,
+    Validator,
 
-export interface WithChildren {
-    children?: React.ReactNode;
-}
+    // Event handler types
+    EventHandler,
+    AsyncEventHandler,
+    ChangeHandler,
+    ClickHandler,
+    SubmitHandler,
 
-export interface WithTestId {
-    'data-testid'?: string;
-}
+    // Component props
+    WithChildren,
+    WithOptionalChildren,
+    WithClassName,
+    WithStyle,
+    ClickableProps,
+    ModalProps,
 
-// Base component props
-export interface BaseProps extends WithClassName, WithChildren, WithTestId { }
+    // Data structures
+    KeyValuePair,
+    SelectOption,
+    TableColumn,
+    SortConfig,
+    FilterConfig,
 
-// Loading states
-export type AsyncState<T, E = Error> =
-    | { status: 'idle' }
-    | { status: 'loading' }
-    | { status: 'success'; data: T }
-    | { status: 'error'; error: E };
+    // Date types
+    ISODateString,
+    Timestamp,
+    DateRange,
 
-// Form validation
-export interface ValidationRule<T = unknown> {
-    required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    pattern?: RegExp;
-    custom?: (value: T) => string | null;
-}
+    // ID types
+    Brand,
+    UserId,
+    PolicyId,
+    AssignmentId,
+    SurveyorId,
+    ReportId,
+    DocumentId,
+} from './utility.types';
 
-export interface FormField<T = unknown> {
-    value: T;
-    error: string | null;
-    touched: boolean;
-    rules?: ValidationRule<T>[];
-}
+// Re-export type guards
+export {
+    isDefined,
+    isString,
+    isNumber,
+    isArray,
+    isObject,
+    isFunction,
+    isPromise,
+} from './utility.types';
 
-// API response helpers
-export type ApiSuccess<T> = { success: true; data: T; message?: string };
-export type ApiError = { success: false; error: string; message: string };
-export type ApiResult<T> = ApiSuccess<T> | ApiError;
-
-// Pagination helpers
-export interface PaginationInfo {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-}
-
-// Sort helpers
-export type SortDirection = 'asc' | 'desc';
-export interface SortConfig {
-    field: string;
-    direction: SortDirection;
-}
-
-// Filter helpers
-export type FilterValue = string | number | boolean | null;
-export type FilterConfig = Record<string, FilterValue>;
-
-// Theme types
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type ColorScheme = 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'gray';
-
-// Responsive breakpoints
-export type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-
-// Animation states
-export type AnimationState = 'enter' | 'exit' | 'idle';
-
-// Modal states
-export type ModalState = 'closed' | 'opening' | 'open' | 'closing';
-
-// Toast types
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
-export type ToastPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center';
-
-// File types
-export interface FileWithPreview extends File {
-    preview?: string;
-}
-
-// Geolocation types
-export interface Coordinates {
-    latitude: number;
-    longitude: number;
-}
-
-export interface Location extends Coordinates {
-    address?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    postalCode?: string;
-}
-
-// Time and date helpers
-export type TimeFormat = '12h' | '24h';
-export type DateFormat = 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
-
-// Currency types
-export type Currency = 'NGN' | 'USD' | 'EUR' | 'GBP';
-
-// Language types
-export type Language = 'en' | 'fr' | 'ha' | 'ig' | 'yo';
-
-// User preferences
-export interface UserPreferences {
-    theme: ThemeMode;
-    language: Language;
-    currency: Currency;
-    dateFormat: DateFormat;
-    timeFormat: TimeFormat;
-    notifications: {
-        email: boolean;
-        sms: boolean;
-        push: boolean;
-    };
-}
-
-// Error boundary types
-export interface ErrorInfo {
-    componentStack: string;
-    errorBoundary?: string;
-    eventType?: string;
-}
-
-export interface ErrorBoundaryState {
-    hasError: boolean;
-    error?: Error;
-    errorInfo?: ErrorInfo;
-}
-
-// Performance monitoring
-export interface PerformanceMetric {
-    name: string;
-    value: number;
-    unit: 'ms' | 'bytes' | 'count';
-    timestamp: number;
-}
-
-// Feature flags
-export type FeatureFlag =
-    | 'dual-surveyor-system'
-    | 'payment-integration'
-    | 'real-time-notifications'
-    | 'advanced-analytics'
-    | 'mobile-app-support';
-
-export interface FeatureFlags {
-    [key: string]: boolean;
-}
-
-// Environment types
-export type Environment = 'development' | 'staging' | 'production';
-
-// Build info
-export interface BuildInfo {
-    version: string;
-    buildDate: string;
-    commitHash: string;
-    environment: Environment;
-}
-
-// Type guards
-export const isString = (value: unknown): value is string => typeof value === 'string';
-export const isNumber = (value: unknown): value is number => typeof value === 'number' && !isNaN(value);
-export const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
-export const isObject = (value: unknown): value is Record<string, unknown> =>
-    typeof value === 'object' && value !== null && !Array.isArray(value);
-export const isArray = <T>(value: unknown): value is T[] => Array.isArray(value);
-export const isFunction = (value: unknown): value is Function => typeof value === 'function';
-export const isDefined = <T>(value: T | undefined): value is T => value !== undefined;
-export const isNotNull = <T>(value: T | null): value is T => value !== null;
-export const isNotEmpty = (value: string | unknown[] | null | undefined): boolean =>
-    value !== null && value !== undefined && value.length > 0;
-
-// Utility functions for type safety
-export const assertNever = (value: never): never => {
-    throw new Error(`Unexpected value: ${value}`);
-};
-
-export const exhaustiveCheck = (value: never): never => {
-    throw new Error(`Exhaustive check failed. Received: ${value}`);
-};
+// Re-export BaseComponentProps separately to avoid duplicate
+export type { BaseComponentProps } from './component.types';

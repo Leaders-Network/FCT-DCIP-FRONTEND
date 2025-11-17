@@ -9,6 +9,12 @@ export interface User {
   deleted: boolean;
 }
 
+// Assignment Management Props
+export interface AssignmentManagementProps {
+  onAssignmentComplete?: () => void;
+  onClose?: () => void;
+}
+
 export interface Employee {
   _id: string;
   firstname: string;
@@ -62,6 +68,13 @@ export interface EmployeeLoginResponse {
   success: boolean;
   employee: Employee;
   token: string;
+  organization?: 'AMMC' | 'NIA';
+  surveyorInfo?: {
+    _id: string;
+    specialization: string[];
+    experience: number;
+    availability: string;
+  };
 }
 
 export interface AvailableRolesResponse {
@@ -162,6 +175,11 @@ export interface Surveyor extends Employee {
   notes?: string;
   status?: 'active' | 'inactive' | 'suspended';
   role?: string;
+  experience?: number;
+  maxAssignments?: number;
+  dateOfBirth?: string;
+  qualifications?: string[];
+  availability?: 'available' | 'busy' | 'unavailable';
   profile?: {
     availability: 'available' | 'busy' | 'unavailable';
     specialization: string[];
@@ -234,7 +252,7 @@ export interface PolicyReview {
 // Assignment Management Types
 export interface Assignment {
   _id: string;
-  ammcId: string;
+  ammcId: string | PolicyRequest;
   surveyorId: string;
   assignedBy: string;
   assignedAt: string;
@@ -320,6 +338,10 @@ export interface Assignment {
   };
   createdAt: string;
   updatedAt: string;
+  dualAssignmentId?: string;
+  organization?: string;
+  isDualSurveyor?: boolean;
+  dualAssignmentInfo?: DualAssignment;
 }
 
 // Document File Interface
@@ -455,6 +477,16 @@ export interface DualAssignment {
     overallDeadline: string;
   };
   createdAt: string;
+  currentSurveyorInfo?: {
+    assignmentId: Assignment;
+  };
+  partnerSurveyorInfo?: SurveyorContact;
+  policyDetails?: {
+    address: string;
+    propertyType?: string;
+    buildingValue?: number;
+  };
+  currentSurveyorOrganization?: string;
 }
 
 export interface SurveyorContact {
@@ -504,7 +536,7 @@ export interface AdminContactInfo {
   name: string;
   email: string;
   phone: string;
-  organization?: 'AMMC' | 'NIA';
+  organization: 'AMMC' | 'NIA';
   title?: string;
   department?: string;
   officeHours?: string;
@@ -689,6 +721,7 @@ export interface SurveyorFilters {
   availability?: string;
   specialization?: string;
   search?: string;
+  organization?: string;
   page?: number;
   limit?: number;
 }
@@ -702,38 +735,7 @@ export interface AssignmentFilters {
   limit?: number;
 }
 
-// Re-export component props from component.types.ts
-export type {
-  AssignmentManagementProps,
-  SurveyorManagementProps,
-  PolicyDetailsProps,
-  ContactManagementProps,
-  ReportListProps,
-  ReportDetailsProps,
-  AssignmentDetailProps,
-  SurveySubmissionProps,
-  SurveySubmissionData,
-  BaseComponentProps,
-  ModalComponentProps,
-  FormComponentProps,
-  TableComponentProps,
-  SearchComponentProps,
-  FilterComponentProps,
-  PaginationComponentProps,
-  DashboardCardProps,
-  StatusBadgeProps,
-  FileUploadComponentProps,
-  DropdownComponentProps,
-  NavigationProps,
-  SidebarProps,
-  HeaderProps,
-  LoadingComponentProps,
-  ErrorComponentProps,
-  EmptyStateProps,
-  ConfirmationDialogProps,
-  ToastProps,
-  ChartComponentProps
-} from './component.types';
+
 
 // Report Types
 export interface UserReport {
@@ -794,7 +796,7 @@ export interface ReportDetails {
     [key: string]: unknown;
   };
   status: 'pending' | 'released' | 'withheld';
-  finalRecommendation: 'approve' | 'reject' | 'request_more_info';
+  finalRecommendation: string;
   paymentEnabled: boolean;
   conflictDetected: boolean;
   conflictResolved: boolean;
@@ -1271,5 +1273,265 @@ export interface ReportDetailsExtended {
   individualReports?: {
     ammcReportId?: string;
     niaReportId?: string;
+    ammcSubmission?: EnhancedSurveySubmission;
+    niaSubmission?: EnhancedSurveySubmission;
   };
 }
+
+// Conflict Inquiry Interface
+export interface ConflictInquiry {
+  _id?: string;
+  policyId?: string;
+  mergedReportId?: string;
+  conflictType: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  contactPreference: 'email' | 'phone';
+  additionalInfo?: string;
+  status?: 'pending' | 'in_progress' | 'resolved';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Inquiry Response Interface
+export interface InquiryResponse {
+  success: boolean;
+  inquiry: ConflictInquiry;
+  message?: string;
+}
+
+// Download Response Interface
+export interface DownloadResponse {
+  reportId: string;
+  downloadCount: number;
+  downloadUrl?: string;
+  propertyDetails: ReportDetails['propertyDetails'];
+  finalRecommendation: string;
+  paymentEnabled: boolean;
+  conflictDetected: boolean;
+  reportSections: ReportDetails['reportSections'];
+  mergingMetadata: MergingMetadata;
+  releasedAt: string;
+}
+
+// Report Photo Interface
+export interface ReportPhoto {
+  url: string;
+  description: string;
+  timestamp: string;
+  publicId?: string;
+}
+
+// Merged Report Interface
+export interface MergedReport extends ReportDetails {
+  individualReports: {
+    ammcReportId: string;
+    niaReportId: string;
+    ammcSubmission?: EnhancedSurveySubmission;
+    niaSubmission?: EnhancedSurveySubmission;
+  };
+}
+
+// Recent Report Interface
+export interface RecentReport {
+  reportId: string;
+  policyId: string;
+  propertyAddress: string;
+  propertyType: string;
+  status: 'pending' | 'released' | 'withheld';
+  createdAt: string;
+  finalRecommendation: string;
+  conflictDetected: boolean;
+  downloadCount: number;
+  canDownload: boolean;
+  isMerged?: boolean;
+  paymentEnabled: boolean;
+}
+
+// Report Summary Interface
+export interface ReportSummary {
+  totalReports: number;
+  releasedReports: number;
+  pendingReports: number;
+  withheldReports: number;
+  completedReports: number;
+}
+
+// Dual Assignment Data Interface
+export interface DualAssignmentData {
+  policyId: string;
+  ammcSurveyorId?: string;
+  niaSurveyorId?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  deadline: string;
+  instructions?: string;
+  completionStatus: 0 | 50 | 100;
+}
+
+// Admin Contact Interface
+export interface AdminContact {
+  name: string;
+  email: string;
+  phone: string;
+  organization: 'AMMC' | 'NIA';
+  title: string;
+  department: string;
+  officeHours?: string;
+  emergencyContact?: boolean;
+}
+
+// Broker Admin Types
+export interface BrokerAdmin {
+  _id: string;
+  userId: string;
+  organization: 'Broker';
+  brokerFirmName: string;
+  brokerFirmLicense: string;
+  permissions: {
+    canViewClaims: boolean;
+    canUpdateClaimStatus: boolean;
+    canViewReports: boolean;
+    canAccessAnalytics: boolean;
+  };
+  profile: {
+    department: string;
+    position: string;
+    licenseNumber: string;
+  };
+  settings: {
+    notifications: {
+      email: boolean;
+      sms: boolean;
+    };
+    dashboard: {
+      defaultView: 'claims' | 'analytics' | 'reports';
+      autoRefresh: boolean;
+    };
+  };
+  status: 'active' | 'inactive' | 'suspended';
+  lastLogin?: string;
+  loginHistory: Array<{
+    timestamp: string;
+    ipAddress: string;
+    userAgent: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BrokerAdminLoginResponse {
+  success: boolean;
+  message: string;
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    fullname: string;
+    organization: 'Broker';
+    role: string;
+    tokenType: 'broker-admin';
+  };
+  brokerAdmin: {
+    id: string;
+    brokerFirmName: string;
+    permissions: BrokerAdmin['permissions'];
+    settings: BrokerAdmin['settings'];
+  };
+}
+
+export interface BrokerAdminVerifyResponse {
+  success: boolean;
+  user: {
+    id: string;
+    fullname: string;
+    organization: 'Broker';
+    role: string;
+    tokenType: 'broker-admin';
+  };
+  brokerAdmin: {
+    id: string;
+    brokerFirmName: string;
+    permissions: BrokerAdmin['permissions'];
+    settings: BrokerAdmin['settings'];
+    status: 'active' | 'inactive' | 'suspended';
+  };
+}
+
+export interface BrokerClaimStatusHistory {
+  status: 'pending' | 'under_review' | 'rejected' | 'completed';
+  changedAt: string;
+  changedBy?: string;
+  reason?: string;
+  notes?: string;
+}
+
+export interface BrokerPolicyRequest extends PolicyRequest {
+  brokerStatus: 'pending' | 'under_review' | 'rejected' | 'completed';
+  brokerNotes?: string;
+  brokerAssignedTo?: string;
+  brokerStatusHistory: BrokerClaimStatusHistory[];
+}
+
+export interface BrokerDashboardData {
+  statistics: {
+    pending: number;
+    under_review: number;
+    rejected: number;
+    completed: number;
+    total: number;
+  };
+  averageProcessingTime: number;
+  recentActivity: Array<{
+    claimId: string;
+    policyNumber?: string;
+    action: string;
+    timestamp: string;
+    performedBy: string;
+  }>;
+}
+
+export interface BrokerClaimFilters {
+  status?: 'all' | 'pending' | 'under_review' | 'rejected' | 'completed';
+  dateFrom?: string;
+  dateTo?: string;
+  policyNumber?: string;
+  sortBy?: 'submissionDate' | 'priority' | 'policyNumber';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface BrokerClaimsResponse {
+  success: boolean;
+  claims: BrokerPolicyRequest[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  pagination?: {
+    total: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+  };
+}
+
+export interface BrokerClaimDetailResponse {
+  success: boolean;
+  claim: BrokerPolicyRequest;
+}
+
+export interface BrokerStatusUpdateRequest {
+  status: 'under_review' | 'rejected' | 'completed';
+  reason?: string;
+  notes?: string;
+}
+
+export interface BrokerStatusUpdateResponse {
+  success: boolean;
+  message: string;
+  claim: BrokerPolicyRequest;
+}
+
+// Export SurveySubmissionData from component.types
+export type { SurveySubmissionData } from './component.types';

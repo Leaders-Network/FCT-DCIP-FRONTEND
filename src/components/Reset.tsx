@@ -26,7 +26,7 @@ export default function Reset() {
       emailSchema.parse({ email });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        setError(error.errors[0].message);
+        setError(error.issues[0].message);
         return;
       }
     }

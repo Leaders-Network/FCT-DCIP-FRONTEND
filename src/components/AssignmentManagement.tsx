@@ -32,7 +32,7 @@ import {
   completeAssignment,
 } from '@/services/api';
 import { adminApi } from '@/services/api';
-import { Assignment, Surveyor, ContactLogEntry } from '@/types/api.types';
+import { Assignment, Surveyor, ContactLogEntry, DocumentFile } from '@/types/api.types';
 import { useAuth } from '../context/useAuth';
 import DocumentManager from './FileUpload/DocumentManager';
 import AssignSurveyorModal from './admin/AssignSurveyorModal';
@@ -138,7 +138,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           surveyorId: filters.surveyorId !== 'all' ? filters.surveyorId : undefined,
           page: 1,
           limit: 50
-        } as any);
+        });
       } else {
         assignmentsResponse = await getSurveyorAssignmentsNew({
           status: filters.status !== 'all' ? filters.status : undefined,
@@ -362,10 +362,16 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All AMMC Surveyors</option>
-              {(surveyors || []).map((surveyor) => (
-                <option key={surveyor?._id} value={surveyor?._id}>
-                  {(surveyor?.userId as any)?.firstname} {(surveyor?.userId as any)?.lastname}
-                </option>))}
+              {(surveyors || []).map((surveyor: Surveyor) => {
+                const user = typeof surveyor?.userId === 'object' && surveyor.userId ? surveyor.userId as any : null;
+                const firstName = user?.firstname || '';
+                const lastName = user?.lastname || '';
+                return (
+                  <option key={surveyor?._id} value={surveyor?._id}>
+                    {firstName} {lastName}
+                  </option>
+                );
+              })}
             </select>
 
             <button
@@ -752,7 +758,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Assignment Details</h3>
               <p className="text-sm text-gray-500 mt-1">
-                Policy #{typeof assignment.ammcId === 'object' ? (assignment.ammcId as any)._id : assignment.ammcId}
+                Policy #{typeof assignment.ammcId === 'object' && assignment.ammcId?._id ? assignment.ammcId._id : String(assignment.ammcId)}
               </p>
             </div>
             <button
@@ -1201,7 +1207,7 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
     fetchSurveyData();
   }, [assignment._id, assignment.status]);
 
-  const handleDocumentsChange = (documents: File[]) => {
+  const handleDocumentsChange = (documents: DocumentFile[]) => {
     console.log('Documents updated:', documents);
     // Handle document updates
   }

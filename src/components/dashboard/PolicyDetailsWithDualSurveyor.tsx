@@ -127,6 +127,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
 
             // Try to get policy data using user-accessible endpoint
             try {
+                const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
                 const policyResponse = await fetch(`${API_BASE_URL}/report-release/policy/${policyId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -169,7 +170,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                 _id: `dual_${policyId}`,
                 policyId: mockPolicy,
                 assignmentStatus: 'partially_assigned',
-                completionStatus: 25,
+                completionStatus: 50,
                 ammcSurveyorContact: {
                     name: 'John Adebayo',
                     email: 'j.adebayo@ammc.gov.ng',
@@ -398,14 +399,14 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                                 <FileText className="w-4 h-4 text-gray-400 mr-3" />
                                 <div>
                                     <div className="text-sm font-medium text-gray-900">Coverage Type</div>
-                                    <div className="text-sm text-gray-600">{policy.requestDetails.coverageType}</div>
+                                    <div className="text-sm text-gray-600">{policy.requestDetails?.coverageType || 'N/A'}</div>
                                 </div>
                             </div>
                             <div className="flex items-center">
                                 <Clock className="w-4 h-4 text-gray-400 mr-3" />
                                 <div>
                                     <div className="text-sm font-medium text-gray-900">Duration</div>
-                                    <div className="text-sm text-gray-600">{policy.requestDetails.policyDuration}</div>
+                                    <div className="text-sm text-gray-600">{policy.requestDetails?.policyDuration || 'N/A'}</div>
                                 </div>
                             </div>
                             <div className="flex items-center">

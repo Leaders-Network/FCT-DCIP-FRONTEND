@@ -16,6 +16,9 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [selectedPolicyForClaim, setSelectedPolicyForClaim] = useState<string | null>(null);
+  const [claimSubmitting, setClaimSubmitting] = useState(false);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -54,7 +57,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
         // Set merged reports (these are the new dual surveyor reports)
         if (reportsResponse.success) {
-          setMergedReports(reportsResponse.data.reports || []);
+          setMergedReports(reportsResponse.data?.reports || []);
         }
       } catch (error) {
         console.error("Failed to fetch completed data:", error);
@@ -91,6 +94,66 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedReportId(null);
+  };
+
+  const handleRequestClaim = (policyId: string) => {
+    setSelectedPolicyForClaim(policyId);
+    setShowClaimModal(true);
+  };
+
+  const handleSubmitClaim = async () => {
+    if (!selectedPolicyForClaim) return;
+
+    try {
+      setClaimSubmitting(true);
+
+      // Find the report to get property and contact details
+      const report = mergedReports.find(r => r.policyId === selectedPolicyForClaim);
+      if (!report) {
+        alert('Report not found');
+        return;
+      }
+
+      // Create a claim request using the policy data
+      const response = await fetch('/api/v1/policy-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          policyNumber: selectedPolicyForClaim.substring(0, 12),
+          propertyDetails: {
+            address: report.propertyAddress,
+            propertyType: report.propertyType,
+            buildingValue: 0, // Will be filled from policy data
+          },
+          contactDetails: {
+            fullName: '', // Will be filled from user data
+            email: '',
+            phoneNumber: '',
+          },
+          requestDetails: {
+            coverageType: 'Standard Coverage',
+            policyDuration: '1 year',
+          }
+        })
+      });
+
+      if (response.ok) {
+        alert('Claim request submitted successfully! The broker admin will review your claim.');
+        setShowClaimModal(false);
+        setSelectedPolicyForClaim(null);
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to submit claim request');
+      }
+    } catch (error) {
+      console.error('Claim submission error:', error);
+      alert('Failed to submit claim request');
+    } finally {
+      setClaimSubmitting(false);
+    }
   };
 
   // const handleProceedToPayment = (policy: PolicyRequest) => {
@@ -223,11 +286,11 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
                   <div className="flex items-center space-x-3">
                     <button
-                      onClick={() => handleViewDetails(report.reportId)}
-                      className="flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                      onClick={() => handleRequestClaim(report.policyId)}
+                      className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
+                      <FileText className="w-4 h-4 mr-2" />
+                      Request Claim
                     </button>
                     <button
                       onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
@@ -466,6 +529,52 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
         />
+      )}
+
+      {/* Claim Request Modal */}
+      {showClaimModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center mb-4">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <FileText className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Request Insurance Claim</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Are you sure you want to submit a claim request for this completed policy?
+                This will notify the broker admin to review your claim.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    setShowClaimModal(false);
+                    setSelectedPolicyForClaim(null);
+                  }}
+                  disabled={claimSubmitting}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitClaim}
+                  disabled={claimSubmitting}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center"
+                >
+                  {claimSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Claim Request'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

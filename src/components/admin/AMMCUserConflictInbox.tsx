@@ -115,8 +115,11 @@ const AMMCUserConflictInbox: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   // Response form state
-  const [responseForm, setResponseForm] = useState({
+  const [responseForm, setResponseForm] = useState<ResponseForm>({
     response: '',
+    status: 'investigating',
+    priority: 'medium',
+    internalNotes: '',
     method: 'email',
     internalNote: '',
     followUpRequired: false,
@@ -221,7 +224,7 @@ const AMMCUserConflictInbox: React.FC = () => {
 
       if (response.ok) {
         // Add internal note if provided
-        if (responseForm.internalNote.trim()) {
+        if (responseForm.internalNote && responseForm.internalNote.trim()) {
           await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user-conflict-inquiries/admin/${selectedInquiry._id}/add-note`, {
             method: 'PUT',
             headers: {
@@ -239,6 +242,9 @@ const AMMCUserConflictInbox: React.FC = () => {
         setShowResponseModal(false);
         setResponseForm({
           response: '',
+          status: 'investigating',
+          priority: 'medium',
+          internalNotes: '',
           method: 'email',
           internalNote: '',
           followUpRequired: false,
@@ -680,6 +686,9 @@ const AMMCUserConflictInbox: React.FC = () => {
             setShowResponseModal(false);
             setResponseForm({
               response: '',
+              status: 'investigating',
+              priority: 'medium',
+              internalNotes: '',
               method: 'email',
               internalNote: '',
               followUpRequired: false,
@@ -880,12 +889,16 @@ interface ResponseForm {
   status: 'resolved' | 'investigating' | 'escalated';
   priority: 'low' | 'medium' | 'high';
   internalNotes: string;
+  method?: string;
+  internalNote?: string;
+  followUpRequired?: boolean;
+  followUpDate?: string;
 }
 
 const ResponseModal: React.FC<{
   inquiry: ConflictInquiry;
   responseForm: ResponseForm;
-  setResponseForm: (form: ResponseForm) => void;
+  setResponseForm: React.Dispatch<React.SetStateAction<ResponseForm>>;
   onClose: () => void;
   onSubmit: () => void;
 }> = ({ inquiry, responseForm, setResponseForm, onClose, onSubmit }) => {
@@ -916,7 +929,7 @@ const ResponseModal: React.FC<{
               </label>
               <select
                 value={responseForm.method}
-                onChange={(e) => setResponseForm(prev => ({ ...prev, method: e.target.value }))}
+                onChange={(e) => setResponseForm((prev: ResponseForm) => ({ ...prev, method: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               >
                 <option value="email">Email</option>

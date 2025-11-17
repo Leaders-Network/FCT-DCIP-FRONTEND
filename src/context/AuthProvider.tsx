@@ -7,6 +7,7 @@ import {
   setAuthToken,
   removeAuthToken,
 } from "@/utils/auth";
+import { getCookie, setCookie, deleteCookie } from "@/utils/cookies";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import { User, Employee } from "@/types/api.types";
 
@@ -42,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = useCallback(() => {
     removeAuthToken();
-    localStorage.removeItem('user');
+    deleteCookie('user');
     setUser(null);
     setState({
       isAuthenticated: false,
@@ -57,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const checkAuth = async () => {
       try {
         const token = getAuthToken();
-        const storedUser = localStorage.getItem('user');
+        const storedUser = getCookie('user');
 
         if (token && storedUser) {
           const userData = JSON.parse(storedUser);
@@ -84,8 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (userType === 'employee') {
         const response = await loginEmployee(email, password);
         const { token, employee } = response.data;
-        setAuthToken(token);
-        localStorage.setItem('user', JSON.stringify(employee));
+
+        // Store token with correct type for employees
+        setAuthToken(token, 'admin'); // Default to admin for employees
+        setCookie('user', JSON.stringify(employee), { expires: 7 });
         setUser(employee);
         setState({
           isAuthenticated: true,
@@ -97,8 +100,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         const response = await loginUser(email, password);
         const { token, user } = response.data;
-        setAuthToken(token);
-        localStorage.setItem('user', JSON.stringify(user));
+
+        // Store token with correct type for users
+        setAuthToken(token, 'user'); // Explicitly set as user token
+        setCookie('user', JSON.stringify(user), { expires: 7 });
+        setCookie('userInfo', JSON.stringify(user), { expires: 7 }); // Also store in userInfo for compatibility
         setUser(user);
         setState({
           isAuthenticated: true,

@@ -36,6 +36,8 @@ export default function AdministratorsPage() {
     phonenumber: "",
     role: "",
     status: "Active",
+    roleId: "",
+    statusId: "active"
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -48,7 +50,17 @@ export default function AdministratorsPage() {
     setLoading(true)
 
     try {
-      await adminApi.createAdministrator(formData);
+      // Map role to roleId if needed
+      const submitData = {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        phonenumber: formData.phonenumber,
+        roleId: formData.roleId || formData.role,
+        statusId: formData.statusId || (formData.status === "Active" ? "active" : "inactive")
+      };
+
+      await adminApi.createAdministrator(submitData);
       setShowAdminSidebar(false);
       // Reset form
       setFormData({
@@ -58,6 +70,8 @@ export default function AdministratorsPage() {
         phonenumber: "",
         role: "",
         status: "Active",
+        roleId: "",
+        statusId: "active"
       });
       // Refresh administrators list
       const response = await adminApi.getAdministrators()
