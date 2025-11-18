@@ -21,8 +21,12 @@ const SurveyorLogin = () => {
 
     try {
       const { loginEmployee } = await import("@/services/api");
-      const { setAuthToken } = await import("@/utils/auth");
+      const { setAuthToken, clearAuthTokens } = await import("@/utils/auth");
       const { setCookie } = await import("@/utils/cookies");
+
+      // Clear all existing tokens first to avoid conflicts
+      console.log('🧹 Clearing all existing tokens...');
+      clearAuthTokens();
 
       const response = await loginEmployee(email, password);
 
@@ -35,7 +39,14 @@ const SurveyorLogin = () => {
         }
 
         // Store token in cookies using the auth utility
+        console.log('🔐 Storing surveyor token in cookies...');
         setAuthToken(token, 'surveyor');
+
+        // Verify token was stored
+        const { getCookie } = await import("@/utils/cookies");
+        const storedToken = getCookie('surveyorToken');
+        console.log('✅ Token stored successfully:', storedToken ? 'Yes' : 'No');
+        console.log('📝 Token preview:', storedToken ? storedToken.substring(0, 20) + '...' : 'N/A');
 
         // Store surveyor information in cookies
         const fullName = `${employee.firstname} ${employee.lastname}`;
@@ -62,7 +73,12 @@ const SurveyorLogin = () => {
           sameSite: 'lax'
         });
 
+        console.log('👤 Surveyor info stored:', surveyorInfo);
         toast.success(`Welcome back, ${fullName}!`);
+
+        // Small delay to ensure cookies are set before navigation
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         router.push("/surveyor/dashboard");
       } else {
         toast.error("Invalid response from server. Please try again.");
