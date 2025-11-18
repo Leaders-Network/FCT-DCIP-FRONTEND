@@ -21,6 +21,9 @@ const SurveyorLogin = () => {
 
     try {
       const { loginEmployee } = await import("@/services/api");
+      const { setAuthToken } = await import("@/utils/auth");
+      const { setCookie } = await import("@/utils/cookies");
+
       const response = await loginEmployee(email, password);
 
       if (response.data?.token && response.data?.employee) {
@@ -31,24 +34,35 @@ const SurveyorLogin = () => {
           return;
         }
 
-        localStorage.setItem("surveyorToken", token);
-        localStorage.setItem("authToken", token);
-        localStorage.setItem("token", token);
+        // Store token in cookies using the auth utility
+        setAuthToken(token, 'surveyor');
+
+        // Store surveyor information in cookies
         const fullName = `${employee.firstname} ${employee.lastname}`;
-        localStorage.setItem("surveyorName", fullName);
-        localStorage.setItem("userRole", employee.employeeRole.role);
-        localStorage.setItem("surveyorId", employee._id);
+        const surveyorInfo = {
+          id: employee._id,
+          name: fullName,
+          email: employee.email,
+          role: employee.employeeRole.role,
+          organization: response.data.organization || employee.organization || 'AMMC',
+          surveyorInfo: response.data.surveyorInfo
+        };
 
-        // Store organization information if available
-        if (response.data.organization) {
-          localStorage.setItem("surveyorOrganization", response.data.organization);
-        }
+        setCookie('surveyorInfo', JSON.stringify(surveyorInfo), {
+          expires: 7,
+          path: '/',
+          secure: window.location.protocol === 'https:',
+          sameSite: 'lax'
+        });
 
-        // Store surveyor info if available
-        if (response.data.surveyorInfo) {
-          localStorage.setItem("surveyorInfo", JSON.stringify(response.data.surveyorInfo));
-        }
+        setCookie('surveyorOrganization', surveyorInfo.organization, {
+          expires: 7,
+          path: '/',
+          secure: window.location.protocol === 'https:',
+          sameSite: 'lax'
+        });
 
+        toast.success(`Welcome back, ${fullName}!`);
         router.push("/surveyor/dashboard");
       } else {
         toast.error("Invalid response from server. Please try again.");
@@ -85,7 +99,7 @@ const SurveyorLogin = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/50 " />
         <div className="relative z-10 px-10 text-center text-white">
-            <div className=" flex justify-center mb-2">
+          <div className=" flex justify-center mb-2">
             <Image
               src="/logo.png"
               alt="FCT-DCIP Logo"
