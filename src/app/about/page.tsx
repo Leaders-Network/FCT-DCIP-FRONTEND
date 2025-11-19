@@ -96,7 +96,7 @@ const AboutPage = () => {
               <p className="text-gray-600 leading-relaxed">
                 To create a sustainable and secure built environment by ensuring
                 every property and construction project in the FCT is properly
-                insured — protecting lives, assets, and investments from
+                insured, protecting lives, assets, and investments from
                 avoidable risks.
               </p>
             </div>
@@ -106,7 +106,7 @@ const AboutPage = () => {
               </h3>
               <p className="text-gray-600 leading-relaxed">
                 To establish Abuja as a model city for compliance-driven,
-                insurance-backed development — where every structure stands as a
+                insurance-backed development, where every structure stands as a
                 symbol of safety, accountability, and collective progress.
               </p>
             </div>
