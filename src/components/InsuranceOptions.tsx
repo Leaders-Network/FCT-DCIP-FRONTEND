@@ -19,7 +19,7 @@ const InsuranceOptions = () => {
           </div>
           <div data-aos="fade-left" data-aos-anchor-placement="top-center" data-aos-delay="200" className="w-full md:w-1/2">
             <h2 className="text-3xl font-bold text-center mb-12">
-              Insurance that fits your lifestyle
+              About FCT-DCIP
             </h2>
             <div className="border-2 p-4 rounded-lg">
               <div className="flex items-center mb-4 ">
@@ -57,7 +57,7 @@ const InsuranceOptions = () => {
               Our Insurance Option
             </h2>
             <p className="text-gray-600 mb-8 max-w-lg">
-              Our insurance options provide comprehensive coverage tailored to your specific needs, offering peace of mind, financial security, expert support, and a range of benefits designed to protect your future and well-being.
+              Discover the compulsory insurance products you need to stay legally compliant and fully protected. Safeguard your assets, secure your investments, and ensure the safety of the people who matter—so you can focus on growth without fear of unexpected risks
             </p>
             <Link href="/insurance-options">
             <button className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors mb-12">
