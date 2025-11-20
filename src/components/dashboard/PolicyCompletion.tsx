@@ -9,6 +9,7 @@ interface PolicyCompletionProps { }
 
 const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
+  const [rejectedPolicies, setRejectedPolicies] = useState<PolicyRequest[]>([]);
   const [mergedReports, setMergedReports] = useState<UserReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -19,6 +20,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [selectedPolicyForClaim, setSelectedPolicyForClaim] = useState<string | null>(null);
   const [claimSubmitting, setClaimSubmitting] = useState(false);
+  const [claimReason, setClaimReason] = useState('');
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -53,7 +55,9 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
         const rejected = rejectedResponse.data.policyRequests || [];
         const completed = completedResponse.data.policyRequests || [];
 
-        setCompletedPolicies([...approved, ...surveyed, ...rejected, ...completed]);
+        // Separate completed and rejected policies
+        setCompletedPolicies([...approved, ...surveyed, ...completed]);
+        setRejectedPolicies(rejected);
 
         // Set merged reports (these are the new dual surveyor reports)
         if (reportsResponse.success) {
@@ -77,6 +81,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     try {
       await deletePolicyRequest(policy._id);
       setCompletedPolicies(prev => prev.filter(p => p._id !== policy._id));
+      setRejectedPolicies(prev => prev.filter(p => p._id !== policy._id));
       setShowDeleteModal(false);
       setPolicyToDelete(null);
       alert('Policy deleted successfully!');
@@ -98,11 +103,15 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
   const handleRequestClaim = (policyId: string) => {
     setSelectedPolicyForClaim(policyId);
+    setClaimReason('');
     setShowClaimModal(true);
   };
 
   const handleSubmitClaim = async () => {
-    if (!selectedPolicyForClaim) return;
+    if (!selectedPolicyForClaim || !claimReason.trim()) {
+      alert('Please provide a reason for the claim request');
+      return;
+    }
 
     try {
       setClaimSubmitting(true);
@@ -114,43 +123,45 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
         return;
       }
 
+      // Import the API service
+      const api = (await import('@/services/api')).default;
+
+      // Fetch the policy to get the reference number (policy number)
+      let policyNumber = report.propertyAddress; // Fallback to address for search
+
+      try {
+        const policyResponse = await api.get(`/policy/${report.policyId}`);
+        if (policyResponse.data?.policy?.referenceNumber) {
+          policyNumber = policyResponse.data.policy.referenceNumber;
+        }
+      } catch (error) {
+        console.warn('Could not fetch policy details, using address as fallback');
+      }
+
       // Create a claim request using the policy data
-      const response = await fetch('/api/v1/policy-requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          policyNumber: selectedPolicyForClaim.substring(0, 12),
-          propertyDetails: {
-            address: report.propertyAddress,
-            propertyType: report.propertyType,
-            buildingValue: 0, // Will be filled from policy data
-          },
-          contactDetails: {
-            fullName: '', // Will be filled from user data
-            email: '',
-            phoneNumber: '',
-          },
-          requestDetails: {
-            coverageType: 'Standard Coverage',
-            policyDuration: '1 year',
-          }
-        })
+      const response = await api.post('/claims/submit', {
+        policyNumber: policyNumber,
+        claimReason: claimReason,
+        claimType: 'property_damage',
+        propertyDetails: {
+          address: report.propertyAddress,
+          propertyType: report.propertyType,
+          buildingValue: report.estimatedValue || 0,
+        }
       });
 
-      if (response.ok) {
+      if (response.data?.success) {
         alert('Claim request submitted successfully! The broker admin will review your claim.');
         setShowClaimModal(false);
         setSelectedPolicyForClaim(null);
+        setClaimReason('');
       } else {
-        const error = await response.json();
-        alert(error.message || 'Failed to submit claim request');
+        alert(response.data?.message || 'Failed to submit claim request');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Claim submission error:', error);
-      alert('Failed to submit claim request');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit claim request';
+      alert(errorMessage);
     } finally {
       setClaimSubmitting(false);
     }
@@ -311,9 +322,9 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       {completedPolicies.length > 0 && (
         <div className="space-y-4">
           <div className="border-b border-gray-200 pb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Legacy Single Surveyor Reports</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Completed Policies</h3>
             <p className="text-sm text-gray-600 mt-1">
-              Older reports from the single surveyor system
+              Successfully completed and approved policies
             </p>
           </div>
 
@@ -486,6 +497,98 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
         </div>
       )}
 
+      {/* Rejected Policies Section */}
+      {rejectedPolicies.length > 0 && (
+        <div className="space-y-4">
+          <div className="border-b border-red-200 pb-4">
+            <h3 className="text-lg font-semibold text-red-900 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Rejected Policies
+            </h3>
+            <p className="text-sm text-red-600 mt-1">
+              Policies that were not approved. You can delete these or contact support for more information.
+            </p>
+          </div>
+
+          {rejectedPolicies.map((policy) => (
+            <div key={policy._id} className="bg-red-50 rounded-lg border border-red-200 shadow-sm">
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {policy.propertyDetails.propertyType}
+                    </h3>
+                    <p className="text-gray-600">{policy.propertyDetails.address}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Rejected
+                    </span>
+                    <div className="relative dropdown-container">
+                      <button
+                        onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
+                        className="p-2 hover:bg-red-100 rounded-full"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                      {showActionsDropdown === policy._id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                setPolicyToDelete(policy);
+                                setShowDeleteModal(true);
+                                setShowActionsDropdown(null);
+                              }}
+                              className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                            >
+                              <Trash2 className="mr-3 h-4 w-4" />
+                              Delete Policy
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {policy.rejectionReason && (
+                  <div className="mb-4 p-4 bg-red-100 border border-red-200 rounded-lg">
+                    <h4 className="font-medium text-red-900 mb-2 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      Rejection Reason
+                    </h4>
+                    <p className="text-sm text-red-800">
+                      {policy.rejectionReason}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Policy Details</h4>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p><span className="font-medium">Coverage:</span> {policy.requestDetails.coverageType}</p>
+                      <p><span className="font-medium">Duration:</span> {policy.requestDetails.policyDuration}</p>
+                      <p><span className="font-medium">Building Value:</span> ₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Rejection Information</h4>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p><span className="font-medium">Rejected Date:</span> {new Date(policy.updatedAt).toLocaleDateString()}</p>
+                      <p><span className="font-medium">Status:</span> Not Approved</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && policyToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -533,45 +636,67 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
       {/* Claim Request Modal */}
       {showClaimModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center mb-4">
               <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                 <FileText className="h-6 w-6 text-green-600" />
               </div>
             </div>
-            <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Request Insurance Claim</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Are you sure you want to submit a claim request for this completed policy?
-                This will notify the broker admin to review your claim.
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2 text-center">Request Insurance Claim</h3>
+              <p className="text-sm text-gray-500 mb-4 text-center">
+                Please provide a reason for your claim request. This will be reviewed by the broker admin.
               </p>
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => {
-                    setShowClaimModal(false);
-                    setSelectedPolicyForClaim(null);
-                  }}
-                  disabled={claimSubmitting}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmitClaim}
-                  disabled={claimSubmitting}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center"
-                >
-                  {claimSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit Claim Request'
-                  )}
-                </button>
-              </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleSubmitClaim(); }} className="space-y-4">
+                <div>
+                  <label htmlFor="claimReason" className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason for Claim *
+                  </label>
+                  <textarea
+                    id="claimReason"
+                    value={claimReason}
+                    onChange={(e) => setClaimReason(e.target.value)}
+                    required
+                    rows={4}
+                    placeholder="Please describe the reason for your claim request (e.g., property damage, incident details, etc.)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Minimum 20 characters required
+                  </p>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowClaimModal(false);
+                      setSelectedPolicyForClaim(null);
+                      setClaimReason('');
+                    }}
+                    disabled={claimSubmitting}
+                    className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={claimSubmitting || claimReason.trim().length < 20}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
+                  >
+                    {claimSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit Claim Request'
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { brokerAdminAPI } from '@/services/api';
 import {
     FileText,
@@ -13,9 +12,12 @@ import {
     Search,
     Filter,
     Eye,
-    RefreshCw
+    RefreshCw,
+    X,
+    Calendar,
+    User
 } from 'lucide-react';
-import type { BrokerDashboardData, BrokerPolicyRequest, BrokerClaimFilters } from '@/types/api.types';
+import type { BrokerDashboardData, BrokerPolicyRequest, BrokerClaimFilters, BrokerStatusUpdateRequest } from '@/types/api.types';
 
 interface StatCardProps {
     icon: React.ComponentType<{ className?: string }>;
@@ -43,7 +45,6 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color, tr
 );
 
 export default function BrokerAdminDashboard() {
-    const router = useRouter();
     const [dashboardData, setDashboardData] = useState<BrokerDashboardData | null>(null);
     const [claims, setClaims] = useState<BrokerPolicyRequest[]>([]);
     const [loading, setLoading] = useState(true);
@@ -51,6 +52,15 @@ export default function BrokerAdminDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'under_review' | 'rejected' | 'completed'>('all');
     const [refreshing, setRefreshing] = useState(false);
+
+    // Modal state
+    const [selectedClaim, setSelectedClaim] = useState<BrokerPolicyRequest | null>(null);
+    const [modalLoading, setModalLoading] = useState(false);
+    const [modalError, setModalError] = useState<string | null>(null);
+    const [updating, setUpdating] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [notes, setNotes] = useState('');
+    const [reason, setReason] = useState('');
 
     useEffect(() => {
         fetchDashboardData();
