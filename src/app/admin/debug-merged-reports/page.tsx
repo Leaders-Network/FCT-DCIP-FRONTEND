@@ -16,8 +16,8 @@ import {
 
 export default function DebugMergedReportsPage() {
     const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState<any>(null);
-    const [missingReports, setMissingReports] = useState<any>(null);
+    const [status, setStatus] = useState<import('@/types/survey.types').StatusType | null>(null);
+    const [missingReports, setMissingReports] = useState<import('@/types/survey.types').MissingReportsType | null>(null);
 
     const fetchStatus = async () => {
         try {

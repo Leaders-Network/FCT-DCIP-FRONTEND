@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NIAAdminHeader = () => {
-    const [adminInfo, setAdminInfo] = useState<any>(null);
+    const [adminInfo, setAdminInfo] = useState<{
+        fullname: string;
+        email: string;
+        organization: string;
+    } | null>(null);
     const [notifications, setNotifications] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
 

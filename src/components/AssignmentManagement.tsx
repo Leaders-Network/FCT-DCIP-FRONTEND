@@ -989,7 +989,7 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
 // Survey Results Tab Component
 const AssignmentSurveyTab: React.FC<{ assignment: Assignment }> = ({ assignment }) => {
   // We need to fetch the survey submission data for this assignment
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -1184,7 +1184,7 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
   assignment,
   viewMode
 }) => {
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -1319,7 +1319,7 @@ const AssignmentCommunicationTab: React.FC<{
   assignment: Assignment;
   formatTimeAgo: (date: string) => string;
 }> = ({ assignment, formatTimeAgo }) => {
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -507,8 +507,8 @@ interface PolicyDetailsModalProps {
 }
 
 const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, getStatusBadge, onClose }) => {
-  const [surveyData, setSurveyData] = useState<any>(null);
-  const [assignmentData, setAssignmentData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
+  const [assignmentData, setAssignmentData] = useState<import('@/types/survey.types').AssignmentDataType | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'survey' | 'documents'>('details');
 

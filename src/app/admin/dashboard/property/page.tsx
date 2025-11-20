@@ -21,7 +21,7 @@ export default function PropertiesPage() {
   const [filteredProperties, setFilteredProperties] = useState<any[]>([])
   const [selectedProperties, setSelectedProperties] = useState<string[]>([])
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [propertyToDelete, setPropertyToDelete] = useState<any>(null)
+  const [propertyToDelete, setPropertyToDelete] = useState<import('@/types/survey.types').PropertyType | null>(null)
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null)
 
   const statusOptions = ["Active", "Expired", "Blacklisted", "Processing", "Inactive", "Pending", "Cancelled"]

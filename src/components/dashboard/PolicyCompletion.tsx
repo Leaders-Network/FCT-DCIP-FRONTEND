@@ -158,9 +158,10 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       } else {
         alert(response.data?.message || 'Failed to submit claim request');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Claim submission error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit claim request';
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to submit claim request';
       alert(errorMessage);
     } finally {
       setClaimSubmitting(false);
