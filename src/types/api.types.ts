@@ -1467,10 +1467,13 @@ export interface BrokerClaimStatusHistory {
 }
 
 export interface BrokerPolicyRequest extends PolicyRequest {
-  brokerStatus: 'pending' | 'under_review' | 'rejected' | 'completed';
+  brokerStatus: 'pending' | 'under_review' | 'approved' | 'rejected' | 'completed';
   brokerNotes?: string;
   brokerAssignedTo?: string;
   brokerStatusHistory: BrokerClaimStatusHistory[];
+  claimRequested?: boolean;
+  claimRequestedAt?: string;
+  claimReason?: string;
 }
 
 export interface BrokerDashboardData {
