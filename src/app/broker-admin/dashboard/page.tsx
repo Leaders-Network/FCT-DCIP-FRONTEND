@@ -13,9 +13,17 @@ import {
     Search,
     Filter,
     Eye,
-    RefreshCw
+    RefreshCw,
+    X,
+    Calendar,
+    User
 } from 'lucide-react';
-import type { BrokerDashboardData, BrokerPolicyRequest, BrokerClaimFilters } from '@/types/api.types';
+import type {
+    BrokerDashboardData,
+    BrokerPolicyRequest,
+    BrokerClaimFilters,
+    BrokerStatusUpdateRequest
+} from '@/types/api.types';
 
 interface StatCardProps {
     icon: React.ComponentType<{ className?: string }>;
@@ -51,6 +59,15 @@ export default function BrokerAdminDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'under_review' | 'rejected' | 'completed'>('all');
     const [refreshing, setRefreshing] = useState(false);
+
+    // Modal state
+    const [selectedClaim, setSelectedClaim] = useState<BrokerPolicyRequest | null>(null);
+    const [modalLoading, setModalLoading] = useState(false);
+    const [modalError, setModalError] = useState<string | null>(null);
+    const [updating, setUpdating] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [notes, setNotes] = useState('');
+    const [reason, setReason] = useState('');
 
     useEffect(() => {
         fetchDashboardData();

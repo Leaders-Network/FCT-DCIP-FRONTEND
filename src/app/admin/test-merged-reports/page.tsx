@@ -17,8 +17,8 @@ import {
 
 export default function TestMergedReportsPage() {
     const [loading, setLoading] = useState(false);
-    const [testResults, setTestResults] = useState<any>(null);
-    const [mergedReports, setMergedReports] = useState<any[]>([]);
+    const [testResults, setTestResults] = useState<import('@/types/survey.types').TestResultsType | null>(null);
+    const [mergedReports, setMergedReports] = useState<import('@/types/survey.types').MergedReportType[]>([]);
 
     const runTest = async (testType: string) => {
         try {

@@ -55,7 +55,7 @@ const SurveyorLogin = () => {
           name: fullName,
           email: employee.email,
           role: employee.employeeRole.role,
-          organization: response.data.organization || (employee as any).organization || 'AMMC',
+          organization: response.data.organization || ('organization' in employee ? (employee as Employee & { organization?: string }).organization : undefined) || 'AMMC',
           surveyorInfo: response.data.surveyorInfo
         };
 
@@ -87,7 +87,7 @@ const SurveyorLogin = () => {
       console.error("Login failed:", error);
 
       // Handle different error types
-      const err = error as any;
+      const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
       if (err.response?.status === 401) {
         setError("Invalid email or password.");
       } else if (err.response?.status === 403) {

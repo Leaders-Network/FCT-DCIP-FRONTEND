@@ -14,7 +14,7 @@ import {
 
 export default function GenerateReportsPage() {
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<import('@/types/survey.types').TestResultsType | null>(null);
 
     const generateAllReports = async () => {
         try {

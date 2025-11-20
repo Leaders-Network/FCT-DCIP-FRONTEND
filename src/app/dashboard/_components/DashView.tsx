@@ -481,7 +481,7 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
   const [loadingSurveyData, setLoadingSurveyData] = useState(false);
 
   // Fetch survey data when dropdown opens
@@ -740,7 +740,7 @@ interface SurveyDetailsModalProps {
 }
 
 const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose }) => {
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

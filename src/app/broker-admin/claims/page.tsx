@@ -15,7 +15,11 @@ import {
     CheckCircle,
     Clock
 } from 'lucide-react';
-import type { BrokerPolicyRequest, BrokerClaimFilters, BrokerStatusUpdateRequest } from '@/types/api.types';
+import type {
+    BrokerPolicyRequest,
+    BrokerClaimFilters,
+    BrokerStatusUpdateRequest
+} from '@/types/api.types';
 
 export default function BrokerClaimsListPage() {
     const [claims, setClaims] = useState<BrokerPolicyRequest[]>([]);

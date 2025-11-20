@@ -7,7 +7,14 @@ export default function AdminSurveyorAvailability() {
   const [surveyors, setSurveyors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedSurveyor, setSelectedSurveyor] = useState<any>(null);
+  const [selectedSurveyor, setSelectedSurveyor] = useState<{
+    _id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    availability: string;
+    specializations?: string[];
+  } | null>(null);
   const [newAvailability, setNewAvailability] = useState('available');
   const [updating, setUpdating] = useState(false);
 
