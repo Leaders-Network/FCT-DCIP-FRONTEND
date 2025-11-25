@@ -42,9 +42,7 @@ const NIAAdminHeader = () => {
         console.log("Searching for:", searchQuery);
     };
 
-    const adminName = adminInfo?.name || adminInfo?.firstname
-        ? `${adminInfo.firstname} ${adminInfo.lastname}`
-        : "NIA Admin";
+    const adminName = adminInfo?.fullname || "NIA Admin";
 
     const initials = adminName
         .split(" ")

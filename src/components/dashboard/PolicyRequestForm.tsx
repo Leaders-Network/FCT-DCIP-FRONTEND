@@ -27,7 +27,7 @@ interface PolicyRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePolicyRequestData) => Promise<void>;
-  property?: PropertyDetailWithContact;
+  property?: PropertyDetailWithContact | null;
 }
 
 const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({

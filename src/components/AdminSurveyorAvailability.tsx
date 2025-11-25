@@ -3,8 +3,10 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+import { Surveyor } from '@/types/api.types';
+
 export default function AdminSurveyorAvailability() {
-  const [surveyors, setSurveyors] = useState<any[]>([]);
+  const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedSurveyor, setSelectedSurveyor] = useState<{

@@ -60,6 +60,7 @@ const DualAssignmentCoordination: React.FC<DualAssignmentCoordinationProps> = ({
         ammcSurveyorContact?: SurveyorInfo;
         niaSurveyorContact?: SurveyorInfo;
         priority: string;
+        conflictDetected?: boolean;
         estimatedCompletion: { overallDeadline: string };
     } | null>(null);
     const [partnerSurveyor, setPartnerSurveyor] = useState<SurveyorInfo | null>(null);

@@ -21,8 +21,17 @@ export default function PropertiesPage() {
   const [filteredProperties, setFilteredProperties] = useState<any[]>([])
   const [selectedProperties, setSelectedProperties] = useState<string[]>([])
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [propertyToDelete, setPropertyToDelete] = useState<import('@/types/survey.types').PropertyType | null>(null)
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null)
+
+  interface AdminProperty {
+    _id: string;
+    address: string;
+    propertyType: string;
+    buildingValue: number;
+    status: string;
+  }
+
+  const [propertyToDelete, setPropertyToDelete] = useState<AdminProperty | null>(null)
 
   const statusOptions = ["Active", "Expired", "Blacklisted", "Processing", "Inactive", "Pending", "Cancelled"]
 
@@ -98,14 +107,6 @@ export default function PropertiesPage() {
     setFilteredProperties(result)
     setSelectedFilterCategory(null)
     setIsFilterPanelOpen(false)
-  }
-
-  interface AdminProperty {
-    _id: string;
-    address: string;
-    propertyType: string;
-    buildingValue: number;
-    status: string;
   }
 
   const handleDeleteProperty = async (property: AdminProperty) => {

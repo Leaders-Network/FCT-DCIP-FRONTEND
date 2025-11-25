@@ -38,9 +38,7 @@ const BrokerHeader = () => {
         console.log("Searching for:", searchQuery);
     };
 
-    const adminName = adminInfo?.name || adminInfo?.firstname
-        ? `${adminInfo.firstname} ${adminInfo.lastname}`
-        : "Broker Admin";
+    const adminName = adminInfo?.fullname || "Broker Admin";
 
     const initials = adminName
         .split(" ")

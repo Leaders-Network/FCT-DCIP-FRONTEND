@@ -206,7 +206,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                     address: policyData.propertyDetails?.address || 'Property Address Not Available',
                     propertyType: policyData.propertyDetails?.propertyType || 'Property Type Not Available',
                     buildingValue: policyData.propertyDetails?.buildingValue || 0,
-                    yearBuilt: policyData.propertyDetails?.yearBuilt,
+                    yearBuilt: policyData.propertyDetails?.yearBuilt?.toString() || '2020',
                     squareFootage: policyData.propertyDetails?.squareFootage,
                     constructionMaterial: policyData.propertyDetails?.constructionMaterial
                 },
@@ -230,7 +230,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                     address: 'Sample Property Address',
                     propertyType: 'Residential Building',
                     buildingValue: 50000000,
-                    yearBuilt: 2020,
+                    yearBuilt: '2020',
                     squareFootage: 2500,
                     constructionMaterial: 'Concrete Block'
                 },

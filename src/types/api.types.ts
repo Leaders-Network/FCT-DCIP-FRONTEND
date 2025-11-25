@@ -95,6 +95,20 @@ export interface PolicyRequest {
   _id: string;
   userId: string;
   policyNumber?: string;
+  ammcId?: string | {
+    _id: string;
+    propertyDetails?: {
+      address: string;
+      propertyType: string;
+      buildingValue: number;
+    };
+    requestDetails?: {
+      coverageType: string;
+    };
+    contactDetails?: {
+      fullName: string;
+    };
+  };
   propertyDetails: {
     address: string;
     propertyType: string;
@@ -116,7 +130,7 @@ export interface PolicyRequest {
     additionalCoverage?: string[];
     specialRequests?: string;
   };
-  status: 'pending' | 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed' | 'under_review' | 'revision_required';
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   assignedSurveyors?: string[];
   surveyDocument?: string | {
@@ -126,6 +140,7 @@ export interface PolicyRequest {
   };
   surveyNotes?: string;
   adminNotes?: string;
+  rejectionReason?: string;
   documents?: DocumentFile[];
   statusHistory?: Array<{
     status: string;
@@ -1539,3 +1554,17 @@ export interface BrokerStatusUpdateResponse {
 
 // Export SurveySubmissionData from component.types
 export type { SurveySubmissionData } from './component.types';
+
+// User Report Type
+export interface UserReport {
+  _id: string;
+  policyId: string;
+  propertyAddress?: string;
+  propertyType?: string;
+  estimatedValue?: number;
+  surveyDetails?: {
+    estimatedValue?: number;
+  };
+  status: string;
+  createdAt: string;
+}
