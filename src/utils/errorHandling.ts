@@ -2,7 +2,7 @@
  * Error handling utilities for the FCT-DCIP application
  */
 
-import { AppError, ValidationError, NetworkError, ServerError } from '@/types/api.types';
+import { AppError, ValidationError, NetworkError, ServerError } from '@/types/utility.types';
 
 /**
  * Type guard to check if error is a ValidationError

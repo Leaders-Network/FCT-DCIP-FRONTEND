@@ -114,7 +114,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.get('/broker-admin/management', {
+            const response = await adminApi.get<{ success: boolean; data: BrokerAdminWithUser[] }>('/broker-admin/management', {
                 params: {
                     status: statusFilter !== "all" ? statusFilter : undefined,
                     search: searchTerm || undefined,
@@ -123,8 +123,8 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                 }
             });
 
-            if (response && 'success' in response && response.success && 'data' in response && response.data) {
-                setBrokerAdmins(response.data as BrokerAdmin[]);
+            if (response && typeof response === 'object' && 'success' in response && response.success && 'data' in response && response.data) {
+                setBrokerAdmins(response.data);
             } else {
                 setBrokerAdmins([]);
             }

@@ -10,7 +10,7 @@ import {
     PerformanceMetrics,
     SystemHealth,
     RecentActivity
-} from '@/types/api.types';
+} from '@/services/processingMonitor';
 import {
     FileText,
     Clock,
@@ -254,19 +254,18 @@ const ProcessingMonitorPage = () => {
                                     System Status: {systemHealth?.systemStatus?.toUpperCase() || 'UNKNOWN'}
                                 </h3>
                                 {(systemHealth?.alerts?.length || 0) > 0 && (
-                                    <div className="mt-2">
-                                        <ul className="text-sm text-gray-600 space-y-1">
-                                            {systemHealth?.alerts?.map((alert, index) => (
-                                                <li key={index}>• {alert}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
+                                                                            <div className="mt-2">
+                                                                                <ul className="text-sm text-gray-600 space-y-1">
+                                                                                    {systemHealth?.alerts?.map((alert: string, index: number) => (
+                                                                                        <li key={index}>• {alert}</li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                 {/* Overview Stats */}
                 {overview && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -435,29 +434,28 @@ const ProcessingMonitorPage = () => {
                             {(activeProcessing?.activeAssignments?.length || 0) === 0 ? (
                                 <p className="text-gray-600 text-center py-8">No active assignments</p>
                             ) : (
-                                <div className="space-y-3">
-                                    {activeProcessing?.activeAssignments?.slice(0, 5).map((assignment) => (
-                                        <div key={assignment._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">{assignment.policyId}</p>
-                                                <p className="text-xs text-gray-600">
-                                                    Status: {assignment.assignmentStatus} • {assignment.completionStatus}% complete
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <div className={`w-3 h-3 rounded-full ${assignment.completionStatus === 100 ? 'bg-green-500' :
-                                                    assignment.completionStatus === 50 ? 'bg-yellow-500' : 'bg-gray-300'
-                                                    }`}></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {(activeProcessing?.activeAssignments?.length || 0) > 5 && (
-                                        <p className="text-sm text-gray-600 text-center">
-                                            +{(activeProcessing?.activeAssignments?.length || 0) - 5} more assignments
-                                        </p>
-                                    )}
-                                </div>
-                            )}
+                                                                    <div className="space-y-3">
+                                                                        {activeProcessing?.activeAssignments?.slice(0, 5).map((assignment: ActiveProcessing['activeAssignments'][number]) => (
+                                                                            <div key={assignment._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                                                <div>
+                                                                                    <p className="text-sm font-medium text-gray-900">{assignment.policyId}</p>
+                                                                                    <p className="text-xs text-gray-600">
+                                                                                        Status: {assignment.assignmentStatus} • {assignment.completionStatus}% complete
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <div className={`w-3 h-3 rounded-full ${assignment.completionStatus === 100 ? 'bg-green-500' :
+                                                                                        assignment.completionStatus === 50 ? 'bg-yellow-500' : 'bg-gray-300'
+                                                                                        }`}></div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                        {(activeProcessing?.activeAssignments?.length || 0) > 5 && (
+                                                                            <p className="text-sm text-gray-600 text-center">
+                                                                                +{(activeProcessing?.activeAssignments?.length || 0) - 5} more assignments
+                                                                            </p>
+                                                                        )}
+                                                                    </div>                            )}
                         </div>
 
                         <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -465,27 +463,26 @@ const ProcessingMonitorPage = () => {
                             {(activeProcessing?.pendingReports?.length || 0) === 0 ? (
                                 <p className="text-gray-600 text-center py-8">No pending reports</p>
                             ) : (
-                                <div className="space-y-3">
-                                    {activeProcessing?.pendingReports?.slice(0, 5).map((report) => (
-                                        <div key={report._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">{report.policyId}</p>
-                                                <p className="text-xs text-gray-600">
-                                                    Status: {report.releaseStatus} • {new Date(report.createdAt).toLocaleString()}
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Clock className="h-4 w-4 text-yellow-500" />
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {(activeProcessing?.pendingReports?.length || 0) > 5 && (
-                                        <p className="text-sm text-gray-600 text-center">
-                                            +{(activeProcessing?.pendingReports?.length || 0) - 5} more reports
-                                        </p>
-                                    )}
-                                </div>
-                            )}
+                                                                    <div className="space-y-3">
+                                                                        {activeProcessing?.pendingReports?.slice(0, 5).map((report: ActiveProcessing['pendingReports'][number]) => (
+                                                                            <div key={report._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                                                <div>
+                                                                                    <p className="text-sm font-medium text-gray-900">{report.policyId}</p>
+                                                                                    <p className="text-xs text-gray-600">
+                                                                                        Status: {report.releaseStatus} • {new Date(report.createdAt).toLocaleString()}
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <Clock className="h-4 w-4 text-yellow-500" />
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                        {(activeProcessing?.pendingReports?.length || 0) > 5 && (
+                                                                            <p className="text-sm text-gray-600 text-center">
+                                                                                +{(activeProcessing?.pendingReports?.length || 0) - 5} more reports
+                                                                            </p>
+                                                                        )}
+                                                                    </div>                            )}
                         </div>
                     </div>
                 )}
@@ -493,56 +490,56 @@ const ProcessingMonitorPage = () => {
                 {/* Recent Activity */}
                 {recentActivity && (
                     <div className="bg-white p-6 rounded-lg shadow-sm border">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-                            <div className="text-sm text-gray-600">
-                                Last updated: {recentActivity?.lastUpdated ? new Date(recentActivity?.lastUpdated).toLocaleTimeString() : 'N/A'}
-                            </div>
-                        </div>
-                        {(recentActivity?.activities?.length || 0) === 0 ? (
-                            <p className="text-gray-600 text-center py-8">No recent activity</p>
-                        ) : (
-                            <div className="space-y-3">
-                                {recentActivity?.activities?.slice(0, 10).map((activity, index) => (
-                                    <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                                        <div className={`p-1 rounded-full ${activity.type === 'report_merged' ? 'bg-green-100' :
-                                            activity.type === 'conflict_detected' ? 'bg-orange-100' :
-                                                'bg-blue-100'
-                                            }`}>
-                                            {activity.type === 'report_merged' ? (
-                                                <FileText className="h-4 w-4 text-green-600" />
-                                            ) : activity.type === 'conflict_detected' ? (
-                                                <AlertTriangle className="h-4 w-4 text-orange-600" />
-                                            ) : (
-                                                <Users className="h-4 w-4 text-blue-600" />
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                                                        <div className="text-sm text-gray-600">
+                                                            Last updated: {recentActivity?.lastUpdated ? new Date(recentActivity?.lastUpdated).toLocaleTimeString() : 'N/A'}
+                                                        </div>
+                                                    </div>
+                                                    {(recentActivity?.activities?.length || 0) === 0 ? (
+                                                        <p className="text-gray-600 text-center py-8">No recent activity</p>
+                                                    ) : (
+                                                        <div className="space-y-3">
+                                                            {recentActivity?.activities?.slice(0, 10).map((activity: RecentActivity['activities'][number], index: number) => (
+                                                                <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                                                                    <div className={`p-1 rounded-full ${activity.type === 'report_merged' ? 'bg-green-100' :
+                                                                        activity.type === 'conflict_detected' ? 'bg-orange-100' :
+                                                                            'bg-blue-100'
+                                                                        }`}>
+                                                                        {activity.type === 'report_merged' ? (
+                                                                            <FileText className="h-4 w-4 text-green-600" />
+                                                                        ) : activity.type === 'conflict_detected' ? (
+                                                                            <AlertTriangle className="h-4 w-4 text-orange-600" />
+                                                                        ) : (
+                                                                            <Users className="h-4 w-4 text-blue-600" />
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <p className="text-sm text-gray-900">{activity.details}</p>
+                                                                        <div className="flex items-center space-x-2 mt-1">
+                                                                            <p className="text-xs text-gray-600">
+                                                                                {activity.propertyAddress}
+                                                                            </p>
+                                                                            <span className="text-xs text-gray-400">•</span>
+                                                                            <p className="text-xs text-gray-600">
+                                                                                {new Date(activity.timestamp).toLocaleString()}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            {(recentActivity?.activities?.length || 0) > 10 && (
+                                                                <p className="text-sm text-gray-600 text-center">
+                                                                    +{(recentActivity?.activities?.length || 0) - 10} more activities
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-sm text-gray-900">{activity.details}</p>
-                                            <div className="flex items-center space-x-2 mt-1">
-                                                <p className="text-xs text-gray-600">
-                                                    {activity.propertyAddress}
-                                                </p>
-                                                <span className="text-xs text-gray-400">•</span>
-                                                <p className="text-xs text-gray-600">
-                                                    {new Date(activity.timestamp).toLocaleString()}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {(recentActivity?.activities?.length || 0) > 10 && (
-                                    <p className="text-sm text-gray-600 text-center">
-                                        +{(recentActivity?.activities?.length || 0) - 10} more activities
-                                    </p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-        </NIATokenProvider>
-    );
-};
-
-export default ProcessingMonitorPage;
+                                    </NIATokenProvider>
+                                );
+                            };
+                        
+                            export default ProcessingMonitorPage;

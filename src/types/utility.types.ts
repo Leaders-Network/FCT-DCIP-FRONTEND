@@ -91,15 +91,32 @@ export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 // API-Specific Utility Types
 // ============================================================================
 
-/**
- * Standard API response wrapper
- */
-export interface ApiResponse<T = unknown> {
-    success: boolean;
-    data?: T;
-    message?: string;
-    error?: string;
+export interface PaginationData {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
 }
+
+export interface ApiSuccessResponse<T = unknown> {
+  success: true;
+  data: T;
+  message?: string;
+  pagination?: PaginationData;
+}
+
+export interface ApiErrorResponse {
+  success: false;
+  error: string;
+  message: string;
+  code?: string;
+  details?: Record<string, unknown>;
+}
+
+export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
+
 
 /**
  * Paginated API response
@@ -107,14 +124,7 @@ export interface ApiResponse<T = unknown> {
 export interface PaginatedResponse<T> {
     success: boolean;
     data: T[];
-    pagination: {
-        currentPage: number;
-        totalPages: number;
-        totalItems: number;
-        itemsPerPage: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-    };
+    pagination: PaginationData;
 }
 
 /**
@@ -138,6 +148,31 @@ export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
  * Request status
  */
 export type RequestStatus = 'pending' | 'fulfilled' | 'rejected';
+
+export type RecommendationAction = 'approve' | 'reject' | 'request_more_info';
+
+// Error handling utility types
+export interface ValidationError {
+  field: string;
+  message: string;
+  code?: string;
+}
+
+export interface NetworkError {
+  type: 'network';
+  message: string;
+  status?: number;
+  statusText?: string;
+}
+
+export interface ServerError {
+  type: 'server';
+  message: string;
+  code?: string;
+  details?: Record<string, unknown>;
+}
+
+export type AppError = ValidationError | NetworkError | ServerError;
 
 // ============================================================================
 // Form & Validation Types
