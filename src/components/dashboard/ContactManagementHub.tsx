@@ -170,8 +170,8 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                     {expandedSections.surveyors && (
                         <div className="p-6 border-t border-gray-200">
                             <SurveyorContactsDisplay
-                                ammcSurveyor={ammcSurveyor as any}
-                                niaSurveyor={niaSurveyor as any}
+                                ammcSurveyor={ammcSurveyor}
+                                niaSurveyor={niaSurveyor}
                                 assignmentStatus={assignmentStatus}
                                 showContactActions={showContactActions}
                             />

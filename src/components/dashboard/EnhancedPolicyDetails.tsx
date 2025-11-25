@@ -4,12 +4,8 @@ import {
     ArrowLeft,
     RefreshCw,
     Bell,
-    Clock,
-    TrendingUp,
     AlertTriangle,
-    CheckCircle,
-    Eye,
-    EyeOff
+    Eye
 } from 'lucide-react';
 import { policyStatusService, EnhancedPolicyStatus } from '@/services/policyStatus';
 import PolicyNotificationsComponent from './PolicyNotifications';
@@ -204,12 +200,12 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
             <div className="border-b border-gray-200">
                 <nav className="-mb-px flex space-x-8">
                     {[
-                        { key: 'overview', label: 'Overview' },
-                        { key: 'notifications', label: 'Notifications' }
+                        { key: 'overview' as const, label: 'Overview' },
+                        { key: 'notifications' as const, label: 'Notifications' }
                     ].map((tab) => (
                         <button
                             key={tab.key}
-                            onClick={() => setActiveTab(tab.key as any)}
+                            onClick={() => setActiveTab(tab.key)}
                             className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.key
                                 ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

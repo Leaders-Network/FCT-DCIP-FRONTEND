@@ -61,11 +61,11 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [policies, setPolicies] = useState<any[]>([]);
+  const [policies, setPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [selectedPolicy, setSelectedPolicy] = useState<any | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<PolicyRequest | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [isReassignMode, setIsReassignMode] = useState(false);
 
@@ -76,7 +76,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     search: ''
   });
 
-  const [assignedPolicies, setAssignedPolicies] = useState<any[]>([]);
+  const [assignedPolicies, setAssignedPolicies] = useState<PolicyRequest[]>([]);
 
   const fetchAssignedPolicies = async () => {
     try {
@@ -363,9 +363,9 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
             >
               <option value="all">All AMMC Surveyors</option>
               {(surveyors || []).map((surveyor: Surveyor) => {
-                const user = typeof surveyor?.userId === 'object' && surveyor.userId ? surveyor.userId as any : null;
-                const firstName = user?.firstname || '';
-                const lastName = user?.lastname || '';
+                const user = typeof surveyor?.userId === 'object' && surveyor.userId ? surveyor.userId as { firstname?: string; lastname?: string; email?: string } : null;
+                const firstName = user?.firstname || surveyor.firstname || '';
+                const lastName = user?.lastname || surveyor.lastname || '';
                 return (
                   <option key={surveyor?._id} value={surveyor?._id}>
                     {firstName} {lastName}

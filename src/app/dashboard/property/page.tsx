@@ -66,15 +66,7 @@ const PropertyPage = () => {
     fetchProperties();
   };
 
-  interface Property {
-    _id: string;
-    status: string;
-    address: string;
-    propertyType: string;
-    buildingValue: number;
-  }
-
-  const handleDeleteProperty = async (property: Property) => {
+  const handleDeleteProperty = async (property: import('@/types/survey.types').PropertyType) => {
     // Safety check: Only allow deletion of unverified properties
     if (property.status !== "Unverified") {
       alert('Only unverified properties can be deleted.');
@@ -95,12 +87,12 @@ const PropertyPage = () => {
     }
   };
 
-  const handleInsureClick = (property: Property) => {
+  const handleInsureClick = (property: import('@/types/survey.types').PropertyType) => {
     setSelectedProperty(property);
     setShowPolicyRequest(true);
   };
 
-  const handleViewClick = (property: Property) => {
+  const handleViewClick = (property: import('@/types/survey.types').PropertyType) => {
     setSelectedPropertyForView(property);
     setShowViewModal(true);
   };

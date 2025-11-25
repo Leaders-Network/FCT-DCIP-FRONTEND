@@ -55,7 +55,7 @@ const SurveyorLogin = () => {
           name: fullName,
           email: employee.email,
           role: employee.employeeRole.role,
-          organization: response.data.organization || ('organization' in employee ? (employee as Employee & { organization?: string }).organization : undefined) || 'AMMC',
+          organization: response.data.organization || (employee && 'organization' in employee ? (employee as { organization?: 'AMMC' | 'NIA' }).organization : undefined) || 'AMMC',
           surveyorInfo: response.data.surveyorInfo
         };
 

@@ -178,38 +178,38 @@ export default function DebugMergedReportsPage() {
                     <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-blue-600">{status.summary.totalPolicies}</div>
+                                <div className="text-2xl font-bold text-blue-600">{status.summary?.totalPolicies || 0}</div>
                                 <div className="text-sm text-gray-600">Total Policies</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-purple-600">{status.summary.totalDualAssignments}</div>
+                                <div className="text-2xl font-bold text-purple-600">{status.summary?.totalDualAssignments || 0}</div>
                                 <div className="text-sm text-gray-600">Dual Assignments</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-green-600">{status.summary.totalSurveySubmissions}</div>
+                                <div className="text-2xl font-bold text-green-600">{status.summary?.totalSurveySubmissions || 0}</div>
                                 <div className="text-sm text-gray-600">Survey Submissions</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-orange-600">{status.summary.totalMergedReports}</div>
+                                <div className="text-2xl font-bold text-orange-600">{status.summary?.totalMergedReports || 0}</div>
                                 <div className="text-sm text-gray-600">Merged Reports</div>
                             </div>
                         </div>
 
                         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="text-center">
-                                <div className="text-lg font-semibold text-blue-500">{status.summary.ammcSubmissions}</div>
+                                <div className="text-lg font-semibold text-blue-500">{status.summary?.ammcSubmissions || 0}</div>
                                 <div className="text-xs text-gray-500">AMMC Submissions</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-lg font-semibold text-indigo-500">{status.summary.niaSubmissions}</div>
+                                <div className="text-lg font-semibold text-indigo-500">{status.summary?.niaSubmissions || 0}</div>
                                 <div className="text-xs text-gray-500">NIA Submissions</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-lg font-semibold text-green-500">{status.summary.completedDualAssignments}</div>
+                                <div className="text-lg font-semibold text-green-500">{status.summary?.completedDualAssignments || 0}</div>
                                 <div className="text-xs text-gray-500">Completed Assignments</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-lg font-semibold text-yellow-500">{status.summary.pendingDualAssignments}</div>
+                                <div className="text-lg font-semibold text-yellow-500">{status.summary?.pendingDualAssignments || 0}</div>
                                 <div className="text-xs text-gray-500">Pending Assignments</div>
                             </div>
                         </div>
@@ -224,9 +224,9 @@ export default function DebugMergedReportsPage() {
                         <CardTitle className="flex items-center justify-between">
                             <div className="flex items-center">
                                 <AlertTriangle className="w-5 h-5 mr-2 text-orange-600" />
-                                Missing Merged Reports ({missingReports.totalMissingReports})
+                                Missing Merged Reports ({missingReports.totalMissingReports || 0})
                             </div>
-                            {missingReports.totalMissingReports > 0 && (
+                            {(missingReports.totalMissingReports || 0) > 0 && (
                                 <Badge className="bg-orange-100 text-orange-800">
                                     Action Required
                                 </Badge>
@@ -234,7 +234,7 @@ export default function DebugMergedReportsPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {missingReports.totalMissingReports === 0 ? (
+                        {(missingReports.totalMissingReports || 0) === 0 ? (
                             <div className="text-center py-8 text-green-600">
                                 <CheckCircle className="w-12 h-12 mx-auto mb-3" />
                                 <h3 className="text-lg font-medium">All Good!</h3>
@@ -245,15 +245,15 @@ export default function DebugMergedReportsPage() {
                                 <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                                     <h4 className="font-medium text-orange-900 mb-2">Issues Found:</h4>
                                     <ul className="text-sm text-orange-800 space-y-1">
-                                        <li>• {missingReports.totalPoliciesWithBothSubmissions} policies have both AMMC and NIA submissions</li>
-                                        <li>• {missingReports.totalExistingMergedReports} merged reports already exist</li>
-                                        <li>• {missingReports.totalMissingReports} policies are missing merged reports</li>
+                                        <li>• {missingReports.totalPoliciesWithBothSubmissions || 0} policies have both AMMC and NIA submissions</li>
+                                        <li>• {missingReports.totalExistingMergedReports || 0} merged reports already exist</li>
+                                        <li>• {missingReports.totalMissingReports || 0} policies are missing merged reports</li>
                                     </ul>
                                 </div>
 
                                 <div className="space-y-3">
                                     <h5 className="font-medium">Policies Missing Merged Reports:</h5>
-                                    {missingReports.missingReportPolicies.map((policy: { _id: string; policyNumber: string; status: string; propertyDetails: { address: string } }) => (
+                                    {missingReports.missingReportPolicies?.map((policy: { _id: string; policyNumber: string; status: string; propertyDetails: { address: string } }) => (
                                         <div key={policy._id} className="flex items-center justify-between p-3 border rounded-lg">
                                             <div>
                                                 <div className="font-medium">Policy: {policy._id.substring(0, 8)}...</div>
