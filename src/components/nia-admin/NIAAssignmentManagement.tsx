@@ -28,7 +28,8 @@ interface NIASurveyorForAssignment {
 }
 
 // Use types from api.types.ts
-import { DualAssignment, AssignmentManagementProps } from '@/types/api.types';
+import { DualAssignment } from '@/types/api.types';
+import { AssignmentManagementProps } from '@/types/component.types';
 
 interface NIAAssignmentManagementProps extends AssignmentManagementProps {
   assignment: DualAssignment;

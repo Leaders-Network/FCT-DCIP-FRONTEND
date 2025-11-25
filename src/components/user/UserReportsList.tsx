@@ -40,6 +40,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
 
             if (response.success && response.data) {
                 const formattedReports: UserReport[] = response.data.reports.map((report: UserReport) => ({
+                    _id: report._id || report.reportId,
                     reportId: report.reportId,
                     policyId: report.policyId,
                     propertyAddress: report.propertyAddress,
@@ -276,7 +277,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                                             onClick={async () => {
                                                 try {
                                                     const { userReportAPI } = await import('@/services/api');
-                                                    const response = await userReportAPI.downloadReport(report.reportId);
+                                                    const response = await userReportAPI.downloadReport((report.reportId || report._id) as string);
 
                                                     if (response.success) {
                                                         // For now, just show success message

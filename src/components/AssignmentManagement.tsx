@@ -32,7 +32,7 @@ import {
   completeAssignment,
 } from '@/services/api';
 import { adminApi } from '@/services/api';
-import { Assignment, Surveyor, ContactLogEntry, DocumentFile } from '@/types/api.types';
+import { Assignment, Surveyor, ContactLogEntry, DocumentFile, PolicyRequest } from '@/types/api.types';
 import { useAuth } from '../context/useAuth';
 import DocumentManager from './FileUpload/DocumentManager';
 import AssignSurveyorModal from './admin/AssignSurveyorModal';

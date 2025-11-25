@@ -14,7 +14,7 @@ export default function AdminSurveyorAvailability() {
     firstname: string;
     lastname: string;
     email: string;
-    availability: string;
+    availability?: string;
     specializations?: string[];
   } | null>(null);
   const [newAvailability, setNewAvailability] = useState('available');
@@ -74,7 +74,7 @@ export default function AdminSurveyorAvailability() {
             <option value="">Select Surveyor</option>
             {surveyors.map(s => (
               <option key={s._id} value={s._id}>
-                {s.userId?.firstname} {s.userId?.lastname} ({s.profile?.availability})
+                {s.firstname} {s.lastname} ({s.profile?.availability})
               </option>
             ))}
           </select>

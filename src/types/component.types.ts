@@ -14,12 +14,7 @@ import {
     NIASurveyor,
     NIASurveyorForManagement
 } from './api.types';
-
-// Base Component Props
-export interface BaseComponentProps {
-    className?: string;
-    children?: React.ReactNode;
-}
+import { BaseComponentProps } from './utility.types';
 
 // Assignment Management Component Props
 export interface AssignmentManagementProps {
