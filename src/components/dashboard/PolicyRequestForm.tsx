@@ -10,19 +10,24 @@ import {
   ADDITIONAL_COVERAGE_OPTIONS
 } from "@/constants/policyConstants";
 
+interface PropertyDetailWithContact {
+  _id: string;
+  address: string;
+  propertyType: string;
+  buildingValue: number;
+  yearBuilt: number;
+  squareFootage: number;
+  constructionMaterial: string;
+  phonenumber?: string;
+  category?: { category: string };
+  status?: string;
+}
+
 interface PolicyRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePolicyRequestData) => Promise<void>;
-  property?: {
-    _id: string;
-    address: string;
-    propertyType: string;
-    buildingValue: number;
-    yearBuilt: number;
-    squareFootage: number;
-    constructionMaterial: string;
-  };
+  property?: PropertyDetailWithContact | null;
 }
 
 const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
@@ -89,10 +94,10 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     if (isOpen) {
       let userEmail = "";
 
-      const storUser = localStorage.getItem("user");
-      if (storUser) {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
         try {
-          const userData = JSON.parse(storUser);
+          const userData = JSON.parse(storedUser);
           userEmail = userData.email || "";
         } catch (error) {
           console.error('Error parsing user data:', error);
@@ -122,7 +127,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         },
         contactDetails: {
           ...prev.contactDetails,
-          phoneNumber: property.phonenumber,
+          phoneNumber: property.phonenumber || "",
           // Preserve user's email from stored user data
           email: (() => {
             const storedUser = localStorage.getItem("user");
@@ -160,7 +165,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     setFormData((prev) => ({
       ...prev,
       [section]: {
-        ...((prev[section] as any) || {}),
+        ...(prev[section] as Record<string, unknown> || {}),
         [field]: value,
       },
     }));

@@ -28,17 +28,17 @@ const BrokerAdminSidebar = () => {
         setIsCollapsed(!isCollapsed);
     };
 
-  
+
 
     const menuItems = [
         {
-            href: "/brokerAdmin/BrokerDashboardStats",
+            href: "/broker-admin/dashboard",
             label: "Dashboard",
             icon: Home,
             description: "Overview and statistics"
         },
         {
-            href: "#",
+            href: "/broker-admin/claims",
             label: "Claims",
             icon: FileText,
             description: "View Claims"
@@ -50,6 +50,12 @@ const BrokerAdminSidebar = () => {
             description: "Performance analytics"
         },
         {
+            href: "/broker-admin/administrators",
+            label: "Administrators",
+            icon: Users,
+            description: "Manage broker admins"
+        },
+        {
             href: "#",
             label: "Settings",
             icon: Settings,
@@ -58,22 +64,22 @@ const BrokerAdminSidebar = () => {
     ];
 
     return (
-        
+
         <aside
             className={`bg-white shadow-lg transition-all duration-300 flex flex-col border-r border-gray-200 ${isCollapsed ? "w-16" : "w-64"
                 }`}
-                
+
         >
 
-           
+
             {/* Header */}
             <div className="p-4 border-b border-gray-200">
-            <section id="animation" 
-                className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center items-center md:justify-start py-7 mx-5">
+                <section id="animation"
+                    className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center items-center md:justify-start py-7 mx-5">
                     <div className="size-4 rounded-full bg-green-200"></div>
                     <div className="size-8 rounded-full bg-blue-600 animate-bounce"></div>
                     <div className="size-4 rounded-full bg-red-200 "></div>
-                    </section>
+                </section>
                 <div className="flex items-center justify-between space-y-4">
                     {!isCollapsed ? (
                         <div className="flex items-center space-x-3 space-y-4">
@@ -164,7 +170,18 @@ const BrokerAdminSidebar = () => {
                                     Administrator
                                 </p>
                                 <p className="text-xs text-gray-500 truncate">
-                                    {JSON.parse(localStorage.getItem('') || '{}').email || 'admin@faithtrust.org'}
+                                    {(() => {
+                                        try {
+                                            const userData = localStorage.getItem('brokerAdminInfo');
+                                            if (userData) {
+                                                const parsed = JSON.parse(userData) as { email?: string };
+                                                return parsed.email || 'admin@faithtrust.org';
+                                            }
+                                            return 'admin@faithtrust.org';
+                                        } catch {
+                                            return 'admin@faithtrust.org';
+                                        }
+                                    })()}
                                 </p>
                             </div>
                         </div>
@@ -172,7 +189,7 @@ const BrokerAdminSidebar = () => {
                 )}
 
                 <button
-                                        className={`flex items-center w-full px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${isCollapsed ? "justify-center" : ""
+                    className={`flex items-center w-full px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${isCollapsed ? "justify-center" : ""
                         }`}
                     title={isCollapsed ? "Logout" : ""}
                 >

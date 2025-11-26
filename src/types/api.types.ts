@@ -1,3 +1,7 @@
+
+import { ApiResponse, ApiSuccessResponse, ApiErrorResponse, RecommendationAction, PaginationData } from './utility.types';
+export type { ApiResponse, RecommendationAction, PaginationData };
+
 // User related types
 export interface User {
   _id: string;
@@ -62,6 +66,13 @@ export interface EmployeeLoginResponse {
   success: boolean;
   employee: Employee;
   token: string;
+  organization?: 'AMMC' | 'NIA';
+  surveyorInfo?: {
+    _id: string;
+    specialization: string[];
+    experience: number;
+    availability: string;
+  };
 }
 
 export interface AvailableRolesResponse {
@@ -82,6 +93,20 @@ export interface PolicyRequest {
   _id: string;
   userId: string;
   policyNumber?: string;
+  ammcId?: string | {
+    _id: string;
+    propertyDetails?: {
+      address: string;
+      propertyType: string;
+      buildingValue: number;
+    };
+    requestDetails?: {
+      coverageType: string;
+    };
+    contactDetails?: {
+      fullName: string;
+    };
+  };
   propertyDetails: {
     address: string;
     propertyType: string;
@@ -103,7 +128,7 @@ export interface PolicyRequest {
     additionalCoverage?: string[];
     specialRequests?: string;
   };
-  status: 'pending' | 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed' | 'under_review' | 'revision_required';
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   assignedSurveyors?: string[];
   surveyDocument?: string | {
@@ -113,6 +138,7 @@ export interface PolicyRequest {
   };
   surveyNotes?: string;
   adminNotes?: string;
+  rejectionReason?: string;
   documents?: DocumentFile[];
   statusHistory?: Array<{
     status: string;
@@ -162,6 +188,11 @@ export interface Surveyor extends Employee {
   notes?: string;
   status?: 'active' | 'inactive' | 'suspended';
   role?: string;
+  experience?: number;
+  maxAssignments?: number;
+  dateOfBirth?: string;
+  qualifications?: string[];
+  availability?: 'available' | 'busy' | 'unavailable';
   profile?: {
     availability: 'available' | 'busy' | 'unavailable';
     specialization: string[];
@@ -234,7 +265,7 @@ export interface PolicyReview {
 // Assignment Management Types
 export interface Assignment {
   _id: string;
-  ammcId: string;
+  ammcId: string | PolicyRequest;
   surveyorId: string;
   assignedBy: string;
   assignedAt: string;
@@ -320,6 +351,10 @@ export interface Assignment {
   };
   createdAt: string;
   updatedAt: string;
+  dualAssignmentId?: string;
+  organization?: string;
+  isDualSurveyor?: boolean;
+  dualAssignmentInfo?: DualAssignment;
 }
 
 // Document File Interface
@@ -455,15 +490,31 @@ export interface DualAssignment {
     overallDeadline: string;
   };
   createdAt: string;
+  currentSurveyorInfo?: {
+    assignmentId: Assignment;
+  };
+  partnerSurveyorInfo?: SurveyorContact;
+  policyDetails?: {
+    address: string;
+    propertyType?: string;
+    buildingValue?: number;
+  };
+  currentSurveyorOrganization?: string;
 }
 
 export interface SurveyorContact {
-  name: string;
+  _id?: string;
+  fullname?: string;
+  name?: string;
   email: string;
-  phone: string;
+  phone?: string;
+  phoneNumber?: string;
   licenseNumber?: string;
+  license?: string;
+  rating?: number;
   experience?: number;
   specialization?: string[];
+  organization?: 'AMMC' | 'NIA';
 }
 
 // Contact Management Types
@@ -504,7 +555,7 @@ export interface AdminContactInfo {
   name: string;
   email: string;
   phone: string;
-  organization?: 'AMMC' | 'NIA';
+  organization: 'AMMC' | 'NIA';
   title?: string;
   department?: string;
   officeHours?: string;
@@ -689,6 +740,7 @@ export interface SurveyorFilters {
   availability?: string;
   specialization?: string;
   search?: string;
+  organization?: string;
   page?: number;
   limit?: number;
 }
@@ -702,53 +754,27 @@ export interface AssignmentFilters {
   limit?: number;
 }
 
-// Re-export component props from component.types.ts
-export type {
-  AssignmentManagementProps,
-  SurveyorManagementProps,
-  PolicyDetailsProps,
-  ContactManagementProps,
-  ReportListProps,
-  ReportDetailsProps,
-  AssignmentDetailProps,
-  SurveySubmissionProps,
-  SurveySubmissionData,
-  BaseComponentProps,
-  ModalComponentProps,
-  FormComponentProps,
-  TableComponentProps,
-  SearchComponentProps,
-  FilterComponentProps,
-  PaginationComponentProps,
-  DashboardCardProps,
-  StatusBadgeProps,
-  FileUploadComponentProps,
-  DropdownComponentProps,
-  NavigationProps,
-  SidebarProps,
-  HeaderProps,
-  LoadingComponentProps,
-  ErrorComponentProps,
-  EmptyStateProps,
-  ConfirmationDialogProps,
-  ToastProps,
-  ChartComponentProps
-} from './component.types';
+
 
 // Report Types
 export interface UserReport {
-  reportId: string;
+  _id?: string;
+  reportId?: string;
   policyId: string;
-  propertyAddress: string;
-  propertyType: string;
-  status: 'pending' | 'released' | 'withheld';
+  propertyAddress?: string;
+  propertyType?: string;
+  status: 'pending' | 'released' | 'withheld' | string;
   createdAt: string;
-  downloadCount: number;
-  canDownload: boolean;
+  downloadCount?: number;
+  canDownload?: boolean;
   isMerged?: boolean;
   finalRecommendation?: 'approve' | 'reject' | 'request_more_info';
   paymentEnabled?: boolean;
   conflictDetected?: boolean;
+  estimatedValue?: number;
+  surveyDetails?: {
+    estimatedValue?: number;
+  };
 }
 
 export interface ReportSectionData {
@@ -794,7 +820,7 @@ export interface ReportDetails {
     [key: string]: unknown;
   };
   status: 'pending' | 'released' | 'withheld';
-  finalRecommendation: 'approve' | 'reject' | 'request_more_info';
+  finalRecommendation: string;
   paymentEnabled: boolean;
   conflictDetected: boolean;
   conflictResolved: boolean;
@@ -831,426 +857,6 @@ export interface ReportStatus {
   };
 }
 
-// API Response Types
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
-
-export interface PaginationData {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  itemsPerPage: number;
-}
-
-export interface UserReportsResponse extends ApiResponse<{
-  reports: UserReport[];
-  pagination: PaginationData;
-}> { }
-
-export interface ReportSummaryResponse extends ApiResponse<{
-  totalReports: number;
-  releasedReports: number;
-  pendingReports: number;
-  withheldReports: number;
-  completedReports: number;
-}> { }
-
-export interface ReportDetailsResponse extends ApiResponse<ReportDetails> { }
-
-export interface ReportStatusResponse extends ApiResponse<ReportStatus> { }
-
-export interface DownloadReportResponse extends ApiResponse<{
-  reportId: string;
-  downloadCount: number;
-  propertyDetails: ReportDetails['propertyDetails'];
-  finalRecommendation: string;
-  paymentEnabled: boolean;
-  conflictDetected: boolean;
-  reportSections: ReportDetails['reportSections'];
-  mergingMetadata: ReportDetails['mergingMetadata'];
-  releasedAt: string;
-}> { }
-
-// Additional interfaces for better type safety
-// ProcessingMonitorData uses types from processingMonitor service
-export interface ProcessingMonitorData {
-  overview: import('@/services/processingMonitor').ProcessingOverview | null;
-  activeProcessing: import('@/services/processingMonitor').ActiveProcessing | null;
-  performanceMetrics: import('@/services/processingMonitor').PerformanceMetrics | null;
-  systemHealth: import('@/services/processingMonitor').SystemHealth | null;
-  recentActivity: import('@/services/processingMonitor').RecentActivity | null;
-}
-
-// Component Props Types
-export interface ComponentProps {
-  className?: string;
-  children?: React.ReactNode;
-}
-
-// Generic API Response Handler
-export interface ApiErrorDetails {
-  code?: string;
-  field?: string;
-  message: string;
-}
-
-// Enhanced Error Response
-export interface EnhancedApiErrorResponse {
-  success: false;
-  error: string;
-  message: string;
-  code?: string;
-  details?: ApiErrorDetails[] | Record<string, unknown>;
-  timestamp?: string;
-  path?: string;
-}
-
-// Error handling utility types
-export interface ValidationError {
-  field: string;
-  message: string;
-  code?: string;
-}
-
-export interface NetworkError {
-  type: 'network';
-  message: string;
-  status?: number;
-  statusText?: string;
-}
-
-export interface ServerError {
-  type: 'server';
-  message: string;
-  code?: string;
-  details?: Record<string, unknown>;
-}
-
-export type AppError = ValidationError | NetworkError | ServerError;
-
-// Form Data Types
-export interface FormData {
-  [key: string]: FormFieldValue<unknown> | FormData;
-}
-
-// Navigation and UI Types
-export interface NavItem {
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  badge?: string | number;
-}
-
-export interface DropdownOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
-
-// Modal and Dialog Types
-export interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: React.ReactNode;
-}
-
-// Table and List Types
-export interface TableColumn<T = unknown> {
-  key: keyof T | string;
-  label: string;
-  sortable?: boolean;
-  render?: (value: unknown, item: T) => React.ReactNode;
-}
-
-export interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  itemsPerPage?: number;
-  totalItems?: number;
-}
-
-// Search and Filter Types
-export interface SearchFilters {
-  search?: string;
-  status?: string;
-  category?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  [key: string]: string | undefined;
-}
-
-// File Upload Types
-export interface FileUploadProps {
-  accept?: string;
-  multiple?: boolean;
-  maxSize?: number;
-  onUpload: (files: File[]) => void;
-  onError?: (error: string) => void;
-}
-
-export interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  url: string;
-  uploadedAt: string;
-}
-
-// Dashboard and Analytics Types
-export interface DashboardCard {
-  title: string;
-  value: string | number;
-  change?: number;
-  trend?: 'up' | 'down' | 'neutral';
-  icon?: React.ComponentType<{ className?: string }>;
-}
-
-export interface ChartDataPoint {
-  label: string;
-  value: number;
-  color?: string;
-}
-
-// Notification Types
-export interface NotificationItem {
-  id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  title: string;
-  message: string;
-  timestamp: string;
-  read: boolean;
-  actions?: Array<{
-    label: string;
-    action: () => void;
-  }>;
-}
-
-// Strict typing for status values
-export type AssignmentStatus = 'unassigned' | 'partially_assigned' | 'fully_assigned';
-export type CompletionStatus = 0 | 50 | 100;
-export type ReleaseStatus = 'pending' | 'withheld' | 'released';
-export type ConflictSeverity = 'low' | 'medium' | 'high' | 'critical';
-export type SystemHealthStatus = 'healthy' | 'warning' | 'critical';
-export type RecommendationAction = 'approve' | 'reject' | 'request_more_info';
-
-// Survey Data Interface for proper typing
-export interface SurveyData {
-  propertyCondition?: string;
-  structuralAssessment?: string;
-  riskFactors?: string;
-  recommendations?: string;
-  estimatedValue?: number;
-  photos?: Array<{
-    url: string;
-    description: string;
-    timestamp: string;
-  }>;
-}
-
-// Individual Report Download Response
-export interface IndividualReportDownloadResponse {
-  submissionId: string;
-  organization: string;
-  downloadUrl?: string;
-  documents?: Array<{
-    cloudinaryUrl: string;
-    fileName: string;
-    isMainReport: boolean;
-  }>;
-  surveyData: SurveyData;
-  submittedAt: string;
-  surveyorNotes: string;
-}
-
-// Enhanced API Response types with better error handling
-export interface ApiErrorResponse {
-  success: false;
-  error: string;
-  message: string;
-  code?: string;
-  details?: Record<string, unknown>;
-}
-
-export interface ApiSuccessResponse<T = unknown> {
-  success: true;
-  data: T;
-  message?: string;
-  pagination?: PaginationData;
-}
-
-export type ApiResponseUnion<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
-
-// Utility type for API method return types
-export type ApiMethod<T = unknown> = Promise<ApiResponse<T>>;
-
-// Generic utility types
-export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
-export type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
-
-// Event handler types
-export type EventHandler<T = Event> = (event: T) => void;
-export type AsyncEventHandler<T = Event> = (event: T) => Promise<void>;
-
-// Form types
-export type FormFieldError = string | null;
-export type FormFieldValue<T = unknown> = {
-  value: T;
-  error: FormFieldError;
-  touched: boolean;
-};
-
-// API status types
-export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
-export type RequestStatus = 'pending' | 'fulfilled' | 'rejected';
-
-// Date and time types
-export type DateString = string; // ISO date string
-export type TimestampString = string; // ISO timestamp string
-
-// ID types for better type safety
-export type UserId = string;
-export type PolicyId = string;
-export type AssignmentId = string;
-export type SurveyorId = string;
-export type ReportId = string;
-export type DocumentId = string;
-
-// Processing Monitor Types (matching processingMonitor service)
-export interface ProcessingOverview {
-  timeframe: string;
-  organization: string;
-  overview: {
-    totalDualAssignments: number;
-    totalMergedReports: number;
-    totalConflictFlags: number;
-    totalUserInquiries: number;
-    averageProcessingTime?: number;
-  };
-  assignmentStatus?: {
-    unassigned: number;
-    partially_assigned: number;
-    fully_assigned: number;
-  };
-  completionStatus?: {
-    0: number;
-    50: number;
-    100: number;
-  };
-  releaseStatus?: {
-    pending: number;
-    withheld: number;
-    released: number;
-  };
-  activeConflictsBySeverity: {
-    low: number;
-    medium: number;
-    high: number;
-    critical: number;
-  };
-  generatedAt?: string;
-}
-
-export interface ActiveProcessing {
-  activeAssignments: Array<{
-    _id: string;
-    policyId: string;
-    assignmentStatus: string;
-    completionStatus: number;
-    ammcSurveyorContact?: {
-      name: string;
-      email: string;
-      phone: string;
-    };
-    niaSurveyorContact?: {
-      name: string;
-      email: string;
-      phone: string;
-    };
-  }>;
-  pendingReports: Array<{
-    _id: string;
-    policyId: string;
-    releaseStatus: string;
-    createdAt: string;
-  }>;
-  recentSubmissions?: Array<{
-    _id: string;
-    policyId: string;
-    organization: string;
-    createdAt: string;
-  }>;
-  lastUpdated?: string;
-}
-
-export interface PerformanceMetrics {
-  timeframe?: string;
-  processingPerformance: {
-    avgProcessingTime: number;
-    minProcessingTime?: number;
-    maxProcessingTime?: number;
-    totalReports: number;
-  };
-  successRates: {
-    pending?: number;
-    withheld?: number;
-    released: number;
-  } | number;
-  conflictDetectionRates?: {
-    low: number;
-    medium: number;
-    high: number;
-    critical: number;
-  };
-  assignmentCompletion?: {
-    avgCompletionTime: number;
-    minCompletionTime: number;
-    maxCompletionTime: number;
-  };
-  dailyVolume?: Array<{
-    _id: string;
-    count: number;
-  }>;
-  generatedAt?: string;
-}
-
-export interface SystemHealth {
-  systemStatus: 'healthy' | 'warning' | 'critical';
-  alerts?: string[];
-  metrics?: {
-    recentActivity: number;
-    stuckProcessing: number;
-  };
-  lastChecked?: string;
-}
-
-export interface RecentActivity {
-  activities: Array<{
-    type: string;
-    details: string;
-    propertyAddress: string;
-    timestamp: string;
-  }>;
-  lastUpdated?: string;
-}
-
-// Type guards for API responses
-export const isApiSuccessResponse = <T>(response: ApiResponseUnion<T>): response is ApiSuccessResponse<T> => {
-  return response.success === true;
-};
-
-export const isApiErrorResponse = <T>(response: ApiResponseUnion<T>): response is ApiErrorResponse => {
-  return response.success === false;
-};
 
 export interface ReportDetailsExtended {
   reportId: string;
@@ -1271,5 +877,358 @@ export interface ReportDetailsExtended {
   individualReports?: {
     ammcReportId?: string;
     niaReportId?: string;
+    ammcSubmission?: EnhancedSurveySubmission;
+    niaSubmission?: EnhancedSurveySubmission;
   };
 }
+
+// Conflict Inquiry Interface
+export interface ConflictInquiry {
+  _id?: string;
+  policyId?: string;
+  mergedReportId?: string;
+  conflictType: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  contactPreference: 'email' | 'phone';
+  additionalInfo?: string;
+  status?: 'pending' | 'in_progress' | 'resolved';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Inquiry Response Interface
+export interface InquiryResponse {
+  success: boolean;
+  inquiry: ConflictInquiry;
+  message?: string;
+}
+
+// Download Response Interface
+export interface DownloadResponse {
+  reportId: string;
+  downloadCount: number;
+  downloadUrl?: string;
+  propertyDetails: ReportDetails['propertyDetails'];
+  finalRecommendation: string;
+  paymentEnabled: boolean;
+  conflictDetected: boolean;
+  reportSections: ReportDetails['reportSections'];
+  mergingMetadata: MergingMetadata;
+  releasedAt: string;
+}
+
+// Report Photo Interface
+export interface ReportPhoto {
+  url: string;
+  description: string;
+  timestamp: string;
+  publicId?: string;
+}
+
+// Merged Report Interface
+export interface MergedReport extends ReportDetails {
+  individualReports: {
+    ammcReportId: string;
+    niaReportId: string;
+    ammcSubmission?: EnhancedSurveySubmission;
+    niaSubmission?: EnhancedSurveySubmission;
+  };
+}
+
+// Recent Report Interface
+export interface RecentReport {
+  reportId: string;
+  policyId: string;
+  propertyAddress: string;
+  propertyType: string;
+  status: 'pending' | 'released' | 'withheld';
+  createdAt: string;
+  finalRecommendation: string;
+  conflictDetected: boolean;
+  downloadCount: number;
+  canDownload: boolean;
+  isMerged?: boolean;
+  paymentEnabled: boolean;
+}
+
+// Report Summary Interface
+export interface ReportSummary {
+  totalReports: number;
+  releasedReports: number;
+  pendingReports: number;
+  withheldReports: number;
+  completedReports: number;
+}
+
+// Dual Assignment Data Interface
+export interface DualAssignmentData {
+  _id?: string;
+  policyId: string | {
+    _id: string;
+    propertyDetails: {
+      propertyType: string;
+      address: string;
+      buildingValue: number;
+      yearBuilt?: string;
+      squareFootage?: number;
+      constructionMaterial?: string;
+    };
+    contactDetails: {
+      fullName: string;
+      email: string;
+      phoneNumber: string;
+      alternatePhone?: string;
+    };
+    requestDetails: {
+      coverageType: string;
+      policyStartDate: string;
+      policyEndDate: string;
+    };
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  ammcSurveyorId?: string;
+  niaSurveyorId?: string;
+  ammcSurveyorContact?: SurveyorContact;
+  niaSurveyorContact?: SurveyorContact;
+  assignmentStatus?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent' | string;
+  deadline?: string;
+  instructions?: string;
+  completionStatus: 0 | 50 | 100 | number;
+  conflictDetected?: boolean;
+  estimatedCompletion?: {
+    ammc: string;
+    nia: string;
+  };
+}
+
+// Admin Contact Interface
+export interface AdminContact {
+  name: string;
+  email: string;
+  phone: string;
+  organization: 'AMMC' | 'NIA';
+  title: string;
+  department: string;
+  officeHours?: string;
+  emergencyContact?: boolean;
+}
+
+// Broker Admin Types
+export interface BrokerAdmin {
+  _id: string;
+  userId: string;
+  organization: 'Broker';
+  brokerFirmName: string;
+  brokerFirmLicense: string;
+  permissions: {
+    canViewClaims: boolean;
+    canUpdateClaimStatus: boolean;
+    canViewReports: boolean;
+    canAccessAnalytics: boolean;
+    canManageAdmins: boolean;
+  };
+  profile: {
+    department: string;
+    position: string;
+    licenseNumber: string;
+  };
+  settings: {
+    notifications: {
+      email: boolean;
+      sms: boolean;
+    };
+    dashboard: {
+      defaultView: 'claims' | 'analytics' | 'reports';
+      autoRefresh: boolean;
+    };
+  };
+  status: 'active' | 'inactive' | 'suspended';
+  lastLogin?: string;
+  loginHistory: Array<{
+    timestamp: string;
+    ipAddress: string;
+    userAgent: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BrokerAdminLoginResponse {
+  success: boolean;
+  message: string;
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    fullname: string;
+    organization: 'Broker';
+    role: string;
+    tokenType: 'broker-admin';
+  };
+  brokerAdmin: {
+    id: string;
+    brokerFirmName: string;
+    permissions: BrokerAdmin['permissions'];
+    settings: BrokerAdmin['settings'];
+  };
+}
+
+export interface BrokerAdminVerifyResponse {
+  success: boolean;
+  user: {
+    id: string;
+    fullname: string;
+    organization: 'Broker';
+    role: string;
+    tokenType: 'broker-admin';
+  };
+  brokerAdmin: {
+    id: string;
+    brokerFirmName: string;
+    permissions: BrokerAdmin['permissions'];
+    settings: BrokerAdmin['settings'];
+    status: 'active' | 'inactive' | 'suspended';
+  };
+}
+
+export interface BrokerClaimStatusHistory {
+  status: 'pending' | 'under_review' | 'rejected' | 'completed';
+  changedAt: string;
+  changedBy?: string;
+  reason?: string;
+  notes?: string;
+}
+
+export interface BrokerPolicyRequest extends PolicyRequest {
+  brokerStatus: 'pending' | 'under_review' | 'approved' | 'rejected' | 'completed';
+  brokerNotes?: string;
+  brokerAssignedTo?: string;
+  brokerStatusHistory: BrokerClaimStatusHistory[];
+  claimRequested?: boolean;
+  claimRequestedAt?: string;
+  claimReason?: string;
+}
+
+export interface BrokerDashboardData {
+  statistics: {
+    pending: number;
+    under_review: number;
+    rejected: number;
+    completed: number;
+    total: number;
+  };
+  averageProcessingTime: number;
+  recentActivity: Array<{
+    claimId: string;
+    policyNumber?: string;
+    action: string;
+    timestamp: string;
+    performedBy: string;
+  }>;
+}
+
+export interface BrokerClaimFilters {
+  status?: 'all' | 'pending' | 'under_review' | 'rejected' | 'completed';
+  dateFrom?: string;
+  dateTo?: string;
+  policyNumber?: string;
+  sortBy?: 'submissionDate' | 'priority' | 'policyNumber';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface BrokerClaimsResponse {
+  success: boolean;
+  claims: BrokerPolicyRequest[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  pagination?: {
+    total: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+  };
+}
+
+export interface BrokerClaimDetailResponse {
+  success: boolean;
+  claim: BrokerPolicyRequest;
+}
+
+export interface BrokerStatusUpdateRequest {
+  status: 'under_review' | 'rejected' | 'completed';
+  reason?: string;
+  notes?: string;
+}
+
+export interface BrokerStatusUpdateResponse {
+  success: boolean;
+  message: string;
+  claim: BrokerPolicyRequest;
+}
+
+export type UserReportsResponse = ApiSuccessResponse<{
+    reports: UserReport[];
+    pagination: PaginationData;
+}> | ApiErrorResponse;
+
+export type ReportSummaryResponse = ApiSuccessResponse<{
+    totalReports: number;
+    releasedReports: number;
+    pendingReports: number;
+    withheldReports: number;
+    completedReports: number;
+}> | ApiErrorResponse;
+
+export type ReportDetailsResponse = ApiSuccessResponse<ReportDetails> | ApiErrorResponse;
+
+export type ReportStatusResponse = ApiSuccessResponse<ReportStatus> | ApiErrorResponse;
+
+export type DownloadReportResponse = ApiSuccessResponse<{
+    reportId: string;
+    downloadCount: number;
+    propertyDetails: ReportDetails['propertyDetails'];
+    finalRecommendation: RecommendationAction;
+    paymentEnabled: boolean;
+    conflictDetected: boolean;
+    reportSections: ReportDetails['reportSections'];
+    mergingMetadata: MergingMetadata;
+    releasedAt: string;
+}> | ApiErrorResponse;
+
+export interface SurveyData {
+    propertyCondition?: string;
+    structuralAssessment?: string;
+    riskFactors?: string;
+    recommendations?: string;
+    estimatedValue?: number;
+    photos?: Array<{
+        url: string;
+        description: string;
+        timestamp: string;
+    }>;
+}
+
+export interface IndividualReportDownloadResponse {
+  submissionId: string;
+  organization: string;
+  downloadUrl?: string;
+  documents?: Array<{
+    cloudinaryUrl: string;
+    fileName: string;
+    isMainReport: boolean;
+  }>;
+  surveyData: SurveyData;
+  submittedAt: string;
+  surveyorNotes: string;
+}
+
+// Export SurveySubmissionData from component.types
+export type { SurveySubmissionData } from './component.types';

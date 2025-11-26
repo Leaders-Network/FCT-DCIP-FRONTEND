@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NIAAdminHeader = () => {
-    const [adminInfo, setAdminInfo] = useState<any>(null);
+    const [adminInfo, setAdminInfo] = useState<{
+        fullname: string;
+        email: string;
+        organization: string;
+    } | null>(null);
     const [notifications, setNotifications] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,9 +42,7 @@ const NIAAdminHeader = () => {
         console.log("Searching for:", searchQuery);
     };
 
-    const adminName = adminInfo?.name || adminInfo?.firstname
-        ? `${adminInfo.firstname} ${adminInfo.lastname}`
-        : "NIA Admin";
+    const adminName = adminInfo?.fullname || "NIA Admin";
 
     const initials = adminName
         .split(" ")

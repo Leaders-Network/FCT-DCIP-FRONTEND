@@ -11,10 +11,11 @@ const SubmissionsList = () => {
   const [loading, setLoading] = useState(true);
   const filteredSubmissions = (submissions || []).filter(submission => {
     if (filter === 'all') return submission?.status !== 'assigned';
-    if (filter === 'pending') return (submission?.status as any) === 'submitted' || (submission?.status as any) === 'under_review';
+    if (filter === 'pending') return submission?.status === 'submitted' || submission?.status === 'under_review';
     if (filter === 'approved') return submission?.status === 'approved';
     if (filter === 'rejected') return submission?.status === 'rejected';
-    if (filter === 'revision_required') return (submission?.status as any) === 'revision_required';
+    if (filter === 'revision_required') return submission?.status === 'revision_required';
+    return false;
   });
 
   useEffect(() => {
@@ -130,14 +131,14 @@ const SubmissionsList = () => {
         <nav className="-mb-px flex space-x-8">
           {[
             { key: 'all', label: 'All Submissions', count: submissions.filter(s => s.status !== 'assigned').length },
-            { key: 'pending', label: 'Pending Review', count: submissions.filter(s => (s.status as any) === 'submitted' || (s.status as any) === 'under_review').length },
+            { key: 'pending', label: 'Pending Review', count: submissions.filter(s => s.status === 'submitted' || s.status === 'under_review').length },
             { key: 'approved', label: 'Approved', count: submissions.filter(s => s.status === 'approved').length },
             { key: 'rejected', label: 'Rejected', count: submissions.filter(s => s.status === 'rejected').length },
-            { key: 'revision_required', label: 'Revision Required', count: submissions.filter(s => (s.status as any) === 'revision_required').length }
+            { key: 'revision_required', label: 'Revision Required', count: submissions.filter(s => s.status === 'revision_required').length }
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => setFilter(tab.key as any)}
+              onClick={() => setFilter(tab.key as 'all' | 'pending' | 'approved' | 'rejected' | 'revision_required')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${filter === tab.key
                 ? 'border-[#028835] text-[#028835]'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -160,9 +161,9 @@ const SubmissionsList = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {(submission as any).ammcId.propertyDetails.propertyType}
+                    {typeof submission.ammcId === 'object' && submission.ammcId?.propertyDetails?.propertyType || 'Property'}
                   </h3>
-                  <p className="text-gray-600 mt-1">{(submission as any).ammcId.propertyDetails.address}</p>
+                  <p className="text-gray-600 mt-1">{typeof submission.ammcId === 'object' && submission.ammcId?.propertyDetails?.address || 'Address not available'}</p>
                   <div className="flex items-center text-sm text-gray-500 mt-2">
                     <Calendar className="h-4 w-4 mr-1" />
                     Submitted: {new Date(submission.updatedAt).toLocaleDateString()}
@@ -177,9 +178,9 @@ const SubmissionsList = () => {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-2">Property Details</h4>
                   <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Value:</span> ₦{(submission as any).ammcId.propertyDetails.buildingValue.toLocaleString()}</p>
-                    <p><span className="font-medium">Coverage:</span> {(submission as any).ammcId.requestDetails.coverageType}</p>
-                    <p><span className="font-medium">Owner:</span> {(submission as any).ammcId.contactDetails.fullName}</p>
+                    <p><span className="font-medium">Value:</span> ₦{typeof submission.ammcId === 'object' && submission.ammcId?.propertyDetails?.buildingValue ? submission.ammcId.propertyDetails.buildingValue.toLocaleString() : 'N/A'}</p>
+                    <p><span className="font-medium">Coverage:</span> {typeof submission.ammcId === 'object' && submission.ammcId?.requestDetails?.coverageType || 'N/A'}</p>
+                    <p><span className="font-medium">Owner:</span> {typeof submission.ammcId === 'object' && submission.ammcId?.contactDetails?.fullName || 'N/A'}</p>
                   </div>
                 </div>
 
@@ -194,10 +195,10 @@ const SubmissionsList = () => {
                         : 'Not available'
                     }</p>
                     <p><span className="font-medium">Status:</span>
-                      {(submission.status as any) === 'submitted' || (submission.status as any) === 'under_review' ? 'Under Review' :
+                      {submission.status === 'submitted' || submission.status === 'under_review' ? 'Under Review' :
                         submission.status === 'approved' ? 'Approved by Admin' :
                           submission.status === 'rejected' ? 'Rejected by Admin' :
-                            (submission.status as any) === 'revision_required' ? 'Revision Required by Admin' : submission.status}
+                            submission.status === 'revision_required' ? 'Revision Required by Admin' : submission.status}
                     </p>
                   </div>
                 </div>

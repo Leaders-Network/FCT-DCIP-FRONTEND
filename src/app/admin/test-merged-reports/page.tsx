@@ -17,8 +17,8 @@ import {
 
 export default function TestMergedReportsPage() {
     const [loading, setLoading] = useState(false);
-    const [testResults, setTestResults] = useState<any>(null);
-    const [mergedReports, setMergedReports] = useState<any[]>([]);
+    const [testResults, setTestResults] = useState<import('@/types/survey.types').TestResultsType | null>(null);
+    const [mergedReports, setMergedReports] = useState<import('@/types/survey.types').MergedReportType[]>([]);
 
     const runTest = async (testType: string) => {
         try {
@@ -261,10 +261,10 @@ export default function TestMergedReportsPage() {
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
                                             <h4 className="font-medium">
-                                                Policy: {report.policyId?.policyNumber || report.policyId?._id?.substring(0, 8)}
+                                                Policy: {typeof report.policyId === 'object' && report.policyId !== null ? ((report.policyId as any).policyNumber || (report.policyId as any)._id?.substring(0, 8)) : (report.policyId as string)?.substring(0, 8)}
                                             </h4>
                                             <p className="text-sm text-gray-600">
-                                                {report.policyId?.propertyDetails?.address || 'No address'}
+                                                {typeof report.policyId === 'object' && report.policyId !== null ? ((report.policyId as any).propertyDetails?.address || 'No address') : 'No address'}
                                             </p>
                                         </div>
                                         <div className="flex items-center space-x-2">

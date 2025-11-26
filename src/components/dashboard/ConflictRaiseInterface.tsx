@@ -12,19 +12,17 @@ import {
     CheckCircle
 } from 'lucide-react';
 
+import { ConflictInquiryData } from '@/types/api.types';
+
 interface ConflictRaiseInterfaceProps {
     isOpen: boolean;
     onClose: () => void;
     policyId?: string;
     mergedReportId?: string;
-    onSubmit?: (conflictData: ConflictInquiry) => void;
+    onSubmit?: (conflictData: ConflictInquiryData) => void;
 }
 
-interface ConflictInquiry {
-    conflictType: string;
-    description: string;
-    contactPreference: 'email' | 'phone' | 'both';
-    urgency: 'low' | 'medium' | 'high';
+interface ConflictInquiryForm extends ConflictInquiryData {
     userContact: {
         email: string;
         phone: string;
@@ -39,11 +37,13 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
     mergedReportId,
     onSubmit
 }) => {
-    const [formData, setFormData] = useState<ConflictInquiry>({
+    const [formData, setFormData] = useState<ConflictInquiryForm>({
         conflictType: '',
         description: '',
         contactPreference: 'email',
-        urgency: 'medium',
+        priority: 'medium',
+        policyId,
+        mergedReportId,
         userContact: {
             email: '',
             phone: '',
@@ -64,7 +64,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
         { value: 'other', label: 'Other Concerns' }
     ];
 
-    const urgencyLevels = [
+    const priorityLevels = [
         { value: 'low', label: 'Low - General inquiry', color: 'green' },
         { value: 'medium', label: 'Medium - Important concern', color: 'yellow' },
         { value: 'high', label: 'High - Urgent issue', color: 'red' }
@@ -97,7 +97,16 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             if (onSubmit) {
-                onSubmit(formData);
+                const submitData: ConflictInquiryData = {
+                    conflictType: formData.conflictType,
+                    description: formData.description,
+                    priority: formData.priority,
+                    contactPreference: formData.contactPreference,
+                    additionalInfo: `Email: ${formData.userContact.email}, Phone: ${formData.userContact.phone}, Preferred Time: ${formData.userContact.preferredTime || 'Not specified'}`,
+                    policyId: policyId,
+                    mergedReportId: mergedReportId
+                };
+                onSubmit(submitData);
             }
 
             setSubmitted(true);
@@ -110,7 +119,9 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                     conflictType: '',
                     description: '',
                     contactPreference: 'email',
-                    urgency: 'medium',
+                    priority: 'medium',
+                    policyId,
+                    mergedReportId,
                     userContact: {
                         email: '',
                         phone: '',
@@ -129,7 +140,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
         return formData.conflictType &&
             formData.description.trim() &&
             formData.userContact.email.trim() &&
-            (formData.contactPreference !== 'phone' && formData.contactPreference !== 'both' || formData.userContact.phone.trim());
+            (formData.contactPreference !== 'phone' || formData.userContact.phone.trim());
     };
 
     if (!isOpen) return null;
@@ -219,20 +230,20 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                 </p>
                             </div>
 
-                            {/* Urgency Level */}
+                            {/* Priority Level */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Urgency Level
+                                    Priority Level
                                 </label>
                                 <div className="space-y-2">
-                                    {urgencyLevels.map(level => (
+                                    {priorityLevels.map(level => (
                                         <label key={level.value} className="flex items-center space-x-3">
                                             <input
                                                 type="radio"
-                                                name="urgency"
+                                                name="priority"
                                                 value={level.value}
-                                                checked={formData.urgency === level.value}
-                                                onChange={(e) => handleInputChange('urgency', e.target.value)}
+                                                checked={formData.priority === level.value}
+                                                onChange={(e) => handleInputChange('priority', e.target.value)}
                                                 className="text-orange-600 focus:ring-orange-500"
                                             />
                                             <div className="flex items-center space-x-2">
@@ -325,20 +336,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                             <span className="text-sm text-gray-900">Phone call only</span>
                                         </div>
                                     </label>
-                                    <label className="flex items-center space-x-3">
-                                        <input
-                                            type="radio"
-                                            name="contactPreference"
-                                            value="both"
-                                            checked={formData.contactPreference === 'both'}
-                                            onChange={(e) => handleInputChange('contactPreference', e.target.value)}
-                                            className="text-orange-600 focus:ring-orange-500"
-                                        />
-                                        <div className="flex items-center space-x-2">
-                                            <MessageCircle className="w-4 h-4 text-gray-400" />
-                                            <span className="text-sm text-gray-900">Both email and phone</span>
-                                        </div>
-                                    </label>
+
                                 </div>
                             </div>
 

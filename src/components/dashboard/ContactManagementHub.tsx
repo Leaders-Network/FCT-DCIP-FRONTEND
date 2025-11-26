@@ -170,8 +170,8 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                     {expandedSections.surveyors && (
                         <div className="p-6 border-t border-gray-200">
                             <SurveyorContactsDisplay
-                                ammcSurveyor={ammcSurveyor}
-                                niaSurveyor={niaSurveyor}
+                                ammcSurveyor={ammcSurveyor as any}
+                                niaSurveyor={niaSurveyor as any}
                                 assignmentStatus={assignmentStatus}
                                 showContactActions={showContactActions}
                             />
@@ -211,8 +211,18 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                     {expandedSections.admins && (
                         <div className="p-6 border-t border-gray-200">
                             <AdminContactDisplay
-                                ammcAdmin={ammcAdmin}
-                                niaAdmin={niaAdmin}
+                                ammcAdmin={ammcAdmin ? {
+                                    ...ammcAdmin,
+                                    organization: ammcAdmin.organization || 'AMMC',
+                                    title: ammcAdmin.title || '',
+                                    department: ammcAdmin.department || ''
+                                } : undefined}
+                                niaAdmin={niaAdmin ? {
+                                    ...niaAdmin,
+                                    organization: niaAdmin.organization || 'NIA',
+                                    title: niaAdmin.title || '',
+                                    department: niaAdmin.department || ''
+                                } : undefined}
                                 showContactActions={showContactActions}
                                 showConflictRaiseButton={true}
                                 onRaiseConflict={() => setShowConflictModal(true)}

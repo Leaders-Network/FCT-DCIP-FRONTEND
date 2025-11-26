@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 // Using alert for notifications to match existing codebase
 import Link from 'next/link';
+import { UserReport } from '@/types/api.types';
 
 interface ReportSummary {
     totalReports: number;
@@ -27,9 +28,10 @@ interface ReportSummary {
 }
 
 interface RecentReport {
-    reportId: string;
+    reportId?: string;
     policyId: string;
-    propertyAddress: string;
+    propertyAddress?: string;
+    propertyType?: string;
     status: string;
     finalRecommendation: string;
     paymentEnabled: boolean;
@@ -53,14 +55,21 @@ const MergedReportsSummary: React.FC = () => {
 
             // Fetch summary statistics
             const summaryResponse = await userReportAPI.getReportSummary();
-            if (summaryResponse.success) {
+            if (summaryResponse.success && summaryResponse.data) {
                 setSummary(summaryResponse.data);
             }
 
             // Fetch recent reports (first 3)
             const reportsResponse = await userReportAPI.getUserReports(1, 3);
-            if (reportsResponse.success) {
-                setRecentReports(reportsResponse.data.reports);
+            if (reportsResponse.success && reportsResponse.data?.reports) {
+                setRecentReports(reportsResponse.data.reports.map((report: UserReport) => ({
+                    ...report,
+                    reportId: (report.reportId || report._id) as string,
+                    finalRecommendation: report.finalRecommendation || 'pending',
+                    paymentEnabled: report.paymentEnabled || false,
+                    conflictDetected: report.conflictDetected || false,
+                    canDownload: report.canDownload || false
+                })));
             }
 
         } catch (error) {

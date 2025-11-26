@@ -56,7 +56,11 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   // Check if this is a dual-surveyor assignment
   const isDualSurveyor = assignment?.dualAssignmentId || assignment?.isDualSurveyor;
   const otherOrganization = surveyorOrganization === 'AMMC' ? 'NIA' : 'AMMC';
-  const otherSurveyorContact = assignment?.dualAssignmentInfo?.otherSurveyor;
+  const otherSurveyorContact = assignment?.dualAssignmentInfo ?
+    (surveyorOrganization === 'AMMC'
+      ? ('niaSurveyorContact' in assignment.dualAssignmentInfo ? assignment.dualAssignmentInfo.niaSurveyorContact : undefined)
+      : ('ammcSurveyorContact' in assignment.dualAssignmentInfo ? assignment.dualAssignmentInfo.ammcSurveyorContact : undefined))
+    : undefined;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -237,7 +241,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
                     <label className="block text-sm font-medium text-gray-700 mb-1">Method</label>
                     <select
                       value={newContact.method}
-                      onChange={(e) => setNewContact({ ...newContact, method: e.target.value as any })}
+                      onChange={(e) => setNewContact({ ...newContact, method: e.target.value as 'phone' | 'email' | 'sms' | 'visit' })}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="phone">📞 Phone</option>
@@ -560,7 +564,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
                       name="recommendation"
                       value={option.value}
                       checked={recommendedAction === option.value}
-                      onChange={(e) => setRecommendedAction(e.target.value as any)}
+                      onChange={(e) => setRecommendedAction(e.target.value as 'approve' | 'reject' | 'request_more_info')}
                       className="sr-only"
                     />
                     <div className="text-center">
@@ -658,8 +662,8 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={loading || !uploadedDocument || !surveyNotes.trim() ||
-                  (isDualSurveyor && contactLog.length === 0)}
+                disabled={Boolean(loading || !uploadedDocument || !surveyNotes.trim() ||
+                  (isDualSurveyor && contactLog.length === 0))}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

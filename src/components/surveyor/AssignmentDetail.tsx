@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw } from "lucide-react";
-import { Assignment, SurveySubmissionData, SurveySubmissionResult } from "@/types/api.types";
+import { Assignment, SurveySubmissionData, SurveySubmissionResult, DualAssignment } from "@/types/api.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionModal from "./SurveySubmissionModal";
 import SurveySubmissionConfirmation from "./SurveySubmissionConfirmation";
@@ -57,9 +57,13 @@ interface DualAssignmentInfo {
   otherSurveyor?: OtherSurveyorInfo;
 }
 
-interface EnhancedAssignment extends Omit<Assignment, 'ammcId'> {
+// Helper type: DualAssignmentInfo | DualAssignment union,
+// but we need a common base that allows otherSurveyor for render time access
+type DualAssignmentLike = DualAssignmentInfo | (DualAssignment & { otherSurveyor?: OtherSurveyorInfo });
+
+interface EnhancedAssignment extends Omit<Assignment, 'ammcId' | 'dualAssignmentInfo'> {
   ammcId: PolicyDetails | string;
-  dualAssignmentInfo?: DualAssignmentInfo;
+  dualAssignmentInfo?: DualAssignmentLike;
 }
 
 const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => {
@@ -451,10 +455,10 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
             </div>
 
-            {assignment.dualAssignmentInfo.otherSurveyor && (
+            {assignment.dualAssignmentInfo && 'otherSurveyor' in assignment.dualAssignmentInfo && (
               <div className="bg-white rounded-lg border border-indigo-100 p-4">
                 <h3 className="text-sm font-medium text-indigo-900 mb-3">
-                  Partner Surveyor ({assignment.dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'})
+                  Partner Surveyor ({(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.organization || 'Unknown'})
                 </h3>
 
 
@@ -464,12 +468,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       <User className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          {assignment.dualAssignmentInfo.otherSurveyor?.name ||
-                            assignment.dualAssignmentInfo.otherSurveyor?.fullName ||
+                          {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.name ||
+                            (assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.fullName ||
                             'Name not available'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {assignment.dualAssignmentInfo.otherSurveyor?.organization || 'Unknown'} Surveyor
+                          {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.organization || 'Unknown'} Surveyor
                         </p>
                       </div>
                     </div>
@@ -478,8 +482,8 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       <Phone className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-gray-900">
-                          {assignment.dualAssignmentInfo.otherSurveyor?.phone ||
-                            assignment.dualAssignmentInfo.otherSurveyor?.phonenumber ||
+                          {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.phone ||
+                            (assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.phonenumber ||
                             'Phone not available'}
                         </p>
                         <p className="text-xs text-gray-500">Primary Contact</p>
@@ -490,18 +494,18 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       <Mail className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-gray-900">
-                          {assignment.dualAssignmentInfo.otherSurveyor?.email || 'Email not available'}
+                          {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.email || 'Email not available'}
                         </p>
                         <p className="text-xs text-gray-500">Email Address</p>
                       </div>
                     </div>
 
-                    {assignment.dualAssignmentInfo.otherSurveyor?.licenseNumber && (
+                    {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.licenseNumber && (
                       <div className="flex items-center">
                         <FileText className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
                         <div>
                           <p className="text-sm text-gray-900">
-                            {assignment.dualAssignmentInfo.otherSurveyor.licenseNumber}
+                            {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor!.licenseNumber}
                           </p>
                           <p className="text-xs text-gray-500">License Number</p>
                         </div>
@@ -514,8 +518,8 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                     <div className="space-y-2">
                       <button
                         onClick={() => {
-                          const phone = assignment.dualAssignmentInfo?.otherSurveyor?.phone ||
-                            assignment.dualAssignmentInfo?.otherSurveyor?.phonenumber;
+                          const phone = (assignment.dualAssignmentInfo as DualAssignmentInfo)?.otherSurveyor?.phone ||
+                            (assignment.dualAssignmentInfo as DualAssignmentInfo)?.otherSurveyor?.phonenumber;
                           if (phone) {
                             window.open(`tel:${phone}`);
                           } else {
@@ -529,7 +533,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       </button>
                       <button
                         onClick={() => {
-                          const email = assignment.dualAssignmentInfo?.otherSurveyor?.email;
+                          const email = (assignment.dualAssignmentInfo as DualAssignmentInfo)?.otherSurveyor?.email;
                           if (email) {
                             window.open(`mailto:${email}`);
                           } else {

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { ReportViewer } from '@/components/LazyComponents';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { ReportId } from '@/types/api.types';
+import { ReportId } from '@/types/utility.types';
 
 interface ReportPageParams {
     reportId: ReportId;

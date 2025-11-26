@@ -5,6 +5,7 @@ import ReportProcessingStatus from '@/components/user/ReportProcessingStatus';
 import UserReportsList from '@/components/user/UserReportsList';
 import EnhancedPaymentDecisionHub from '@/components/user/EnhancedPaymentDecisionHub';
 import { FileText, Clock, CheckCircle, AlertTriangle, CreditCard } from 'lucide-react';
+import { UserReport } from '@/types/api.types';
 
 interface ReportSectionProps {
     userPolicies: Array<{
@@ -14,6 +15,7 @@ interface ReportSectionProps {
             address: string;
             propertyType: string;
         };
+        reportId?: string;
     }>;
 }
 
@@ -40,13 +42,12 @@ const ReportSection: React.FC<ReportSectionProps> = ({ userPolicies }) => {
             const response = await userReportAPI.getUserReports(1, 100);
 
             if (response.success) {
-                const reports = response.data.reports || [];
+                const reports = response.data?.reports || [];
 
                 const stats = {
-                    processing: reports.filter((r) => r.status === 'pending').length,
-                    available: reports.filter((r) => r.status === 'released').length,
-                    underReview: reports.filter((r) => r.status === 'withheld').length,
-                    total: reports.length
+                                         processing: reports.filter((r: UserReport) => r.status === 'pending').length,
+                                         available: reports.filter((r: UserReport) => r.status === 'released').length,
+                                         underReview: reports.filter((r: UserReport) => r.status === 'withheld').length,                    total: reports.length
                 };
 
                 setReportStats(stats);

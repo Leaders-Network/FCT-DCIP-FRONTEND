@@ -71,23 +71,23 @@ const AMMCProcessingMonitorPage = () => {
                 processingMonitorService.getRecentActivity(50, filters.organization)
             ]);
 
-            if (overviewResponse.success) {
+            if (overviewResponse.success && overviewResponse.data) {
                 setOverview(overviewResponse.data);
             }
 
-            if (activeResponse.success) {
+            if (activeResponse.success && activeResponse.data) {
                 setActiveProcessing(activeResponse.data);
             }
 
-            if (performanceResponse.success) {
+            if (performanceResponse.success && performanceResponse.data) {
                 setPerformanceMetrics(performanceResponse.data);
             }
 
-            if (healthResponse.success) {
+            if (healthResponse.success && healthResponse.data) {
                 setSystemHealth(healthResponse.data);
             }
 
-            if (activityResponse.success) {
+            if (activityResponse.success && activityResponse.data) {
                 setRecentActivity(activityResponse.data);
             }
 
@@ -238,7 +238,7 @@ const AMMCProcessingMonitorPage = () => {
                             <h3 className={`text-sm font-medium ${getSystemStatusColor(systemHealth?.systemStatus)}`}>
                                 System Status: {systemHealth?.systemStatus?.toUpperCase() || 'UNKNOWN'}
                             </h3>
-                            {systemHealth?.alerts?.length > 0 && (
+                            {systemHealth?.alerts && systemHealth.alerts.length > 0 && (
                                 <div className="mt-2">
                                     <ul className="text-sm text-gray-600 space-y-1">
                                         {systemHealth.alerts.map((alert, index) => (
@@ -332,7 +332,9 @@ const AMMCProcessingMonitorPage = () => {
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">Released Reports:</span>
                                 <span className="text-sm font-medium text-green-600">
-                                    {performanceMetrics?.successRates?.released || 0}
+                                    {typeof performanceMetrics?.successRates === 'object' && performanceMetrics.successRates.released
+                                        ? performanceMetrics.successRates.released
+                                        : 0}
                                 </span>
                             </div>
                         </div>

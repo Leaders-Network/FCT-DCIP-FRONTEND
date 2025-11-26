@@ -32,7 +32,7 @@ import {
   completeAssignment,
 } from '@/services/api';
 import { adminApi } from '@/services/api';
-import { Assignment, Surveyor, ContactLogEntry } from '@/types/api.types';
+import { Assignment, Surveyor, ContactLogEntry, DocumentFile, PolicyRequest } from '@/types/api.types';
 import { useAuth } from '../context/useAuth';
 import DocumentManager from './FileUpload/DocumentManager';
 import AssignSurveyorModal from './admin/AssignSurveyorModal';
@@ -61,11 +61,11 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [policies, setPolicies] = useState<any[]>([]);
+  const [policies, setPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [selectedPolicy, setSelectedPolicy] = useState<any | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<PolicyRequest | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [isReassignMode, setIsReassignMode] = useState(false);
 
@@ -76,7 +76,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     search: ''
   });
 
-  const [assignedPolicies, setAssignedPolicies] = useState<any[]>([]);
+  const [assignedPolicies, setAssignedPolicies] = useState<PolicyRequest[]>([]);
 
   const fetchAssignedPolicies = async () => {
     try {
@@ -138,7 +138,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
           surveyorId: filters.surveyorId !== 'all' ? filters.surveyorId : undefined,
           page: 1,
           limit: 50
-        } as any);
+        });
       } else {
         assignmentsResponse = await getSurveyorAssignmentsNew({
           status: filters.status !== 'all' ? filters.status : undefined,
@@ -362,10 +362,16 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All AMMC Surveyors</option>
-              {(surveyors || []).map((surveyor) => (
-                <option key={surveyor?._id} value={surveyor?._id}>
-                  {(surveyor?.userId as any)?.firstname} {(surveyor?.userId as any)?.lastname}
-                </option>))}
+              {(surveyors || []).map((surveyor: Surveyor) => {
+                const user = typeof surveyor?.userId === 'object' && surveyor.userId ? surveyor.userId as { firstname?: string; lastname?: string; email?: string } : null;
+                const firstName = user?.firstname || surveyor.firstname || '';
+                const lastName = user?.lastname || surveyor.lastname || '';
+                return (
+                  <option key={surveyor?._id} value={surveyor?._id}>
+                    {firstName} {lastName}
+                  </option>
+                );
+              })}
             </select>
 
             <button
@@ -752,7 +758,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Assignment Details</h3>
               <p className="text-sm text-gray-500 mt-1">
-                Policy #{typeof assignment.ammcId === 'object' ? (assignment.ammcId as any)._id : assignment.ammcId}
+                Policy #{typeof assignment.ammcId === 'object' && assignment.ammcId?._id ? assignment.ammcId._id : String(assignment.ammcId)}
               </p>
             </div>
             <button
@@ -983,7 +989,7 @@ const AssignmentDetailsTab: React.FC<{ assignment: Assignment }> = ({ assignment
 // Survey Results Tab Component
 const AssignmentSurveyTab: React.FC<{ assignment: Assignment }> = ({ assignment }) => {
   // We need to fetch the survey submission data for this assignment
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -1178,7 +1184,7 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
   assignment,
   viewMode
 }) => {
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -1201,7 +1207,7 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
     fetchSurveyData();
   }, [assignment._id, assignment.status]);
 
-  const handleDocumentsChange = (documents: File[]) => {
+  const handleDocumentsChange = (documents: DocumentFile[]) => {
     console.log('Documents updated:', documents);
     // Handle document updates
   }
@@ -1313,7 +1319,7 @@ const AssignmentCommunicationTab: React.FC<{
   assignment: Assignment;
   formatTimeAgo: (date: string) => string;
 }> = ({ assignment, formatTimeAgo }) => {
-  const [surveyData, setSurveyData] = useState<any>(null);
+  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

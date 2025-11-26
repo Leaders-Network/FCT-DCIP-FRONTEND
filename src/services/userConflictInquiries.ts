@@ -136,7 +136,7 @@ export const getConflictInquiries = async (filters: InquiryFilters = {}): Promis
             throw new Error(response.message || 'Failed to fetch conflict inquiries');
         }
 
-        return response.data;
+        return response.data as InquiryResponse;
     } catch (error) {
         console.error('Error fetching conflict inquiries:', error);
         throw error;
@@ -152,7 +152,7 @@ export const getConflictInquiryDetails = async (inquiryId: string): Promise<Conf
             throw new Error(response.message || 'Failed to fetch inquiry details');
         }
 
-        return response.data;
+        return response.data as ConflictInquiry;
     } catch (error) {
         console.error('Error fetching inquiry details:', error);
         throw error;

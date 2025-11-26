@@ -3,20 +3,14 @@ import React, { useState, useEffect } from "react";
 import {
   Users,
   Star,
-  Clock,
   MapPin,
   Phone,
   Mail,
-  Calendar,
-  CheckCircle,
-  AlertCircle,
   Plus,
-  Filter,
   Search,
   MoreVertical,
   Eye,
-  Edit,
-  Trash2
+  Edit
 } from "lucide-react";
 import { Surveyor as BaseSurveyor, Assignment, PolicyRequest } from "@/types/api.types";
 
@@ -52,7 +46,18 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSurveyor, setSelectedSurveyor] = useState<Surveyor | null>(null);
-  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [performanceData, setPerformanceData] = useState<{
+    totalSurveys: number;
+    completedSurveys: number;
+    currentAssignments: number;
+    rejectedSurveys: number;
+    successRate: number;
+    avgCompletionTime: number;
+    recentActivity: number;
+    rating: number;
+    joinDate: string;
+    lastActive: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -495,7 +500,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <div>
                     <p className="text-xs text-gray-600 mb-1">Qualifications:</p>
                     <div className="flex flex-wrap gap-1">
-                      {surveyor.qualifications.slice(0, 2).map((qual, index) => (
+                      {surveyor.qualifications.slice(0, 2).map((qual: string, index: number) => (
                         <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
                           {qual}
                         </span>
@@ -817,7 +822,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                       type="text"
                       placeholder="Enter qualification"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           const input = e.target as HTMLInputElement;
@@ -1030,7 +1035,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Qualifications</h4>
                   <div className="space-y-1">
-                    {selectedSurveyor.qualifications.map((qual, index) => (
+                    {selectedSurveyor.qualifications.map((qual: string, index: number) => (
                       <div key={index} className="flex items-center px-3 py-2 bg-gray-50 rounded-lg">
                         <span className="text-sm text-gray-900">{qual}</span>
                       </div>

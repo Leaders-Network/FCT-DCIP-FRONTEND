@@ -13,7 +13,10 @@ interface PropertyDetailsModalProps {
     yearBuilt: number;
     squareFootage: number;
     constructionMaterial: string;
-  };
+    phonenumber?: string;
+    category?: { category: string };
+    status?: string;
+  } | null;
 }
 
 const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({

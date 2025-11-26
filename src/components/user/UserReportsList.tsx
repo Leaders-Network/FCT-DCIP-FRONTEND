@@ -40,6 +40,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
 
             if (response.success && response.data) {
                 const formattedReports: UserReport[] = response.data.reports.map((report: UserReport) => ({
+                    _id: report._id || report.reportId,
                     reportId: report.reportId,
                     policyId: report.policyId,
                     propertyAddress: report.propertyAddress,
@@ -196,7 +197,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                     <div key={report.reportId} className="bg-white rounded-lg shadow-sm border p-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-3">
-                                {getStatusIcon(report.status, report.conflictDetected)}
+                                {getStatusIcon(report.status, report.conflictDetected || false)}
                                 <div>
                                     <div className="flex items-center">
                                         <h3 className="font-medium text-gray-900">Policy {report.policyId}</h3>
@@ -210,8 +211,8 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                             </div>
 
                             <div className="flex items-center space-x-2">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status, report.conflictDetected)}`}>
-                                    {getStatusText(report.status, report.conflictDetected)}
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status, report.conflictDetected || false)}`}>
+                                    {getStatusText(report.status, report.conflictDetected || false)}
                                 </span>
 
                                 {report.finalRecommendation && (
@@ -276,7 +277,7 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                                             onClick={async () => {
                                                 try {
                                                     const { userReportAPI } = await import('@/services/api');
-                                                    const response = await userReportAPI.downloadReport(report.reportId);
+                                                    const response = await userReportAPI.downloadReport((report.reportId || report._id) as string);
 
                                                     if (response.success) {
                                                         // For now, just show success message

@@ -2,7 +2,7 @@
  * Error handling utilities for the FCT-DCIP application
  */
 
-import { AppError, ValidationError, NetworkError, ServerError } from '@/types/api.types';
+import { AppError, ValidationError, NetworkError, ServerError } from '@/types/utility.types';
 
 /**
  * Type guard to check if error is a ValidationError
@@ -140,6 +140,7 @@ export const withErrorHandling = <T extends unknown[], R>(
             return await fn(...args);
         } catch (error) {
             handleApiError(error);
+            throw error; // Re-throw after handling
         }
     };
 };
@@ -185,4 +186,5 @@ export const retryWithBackoff = async <T>(
     }
 
     handleApiError(lastError);
+    throw lastError; // Throw after all retries exhausted
 };

@@ -22,11 +22,12 @@ import {
 
 
 // Constants
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
 import { getAuthToken } from "@/utils/auth";
+import { getCookie, deleteCookie } from "@/utils/cookies";
 
 
 
@@ -44,25 +45,42 @@ api.interceptors.request.use(
     // Ensure API key is always present (lowercase to match validation middleware)
     config.headers['apikey'] = API_KEY;
 
-    // Determine the appropriate token type based on the request URL
-    let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor' | undefined;
+    // Determine the appropriate token type based on current page context AND request URL
+    // Page context takes priority since API endpoints like /policy can be used by multiple user types
+    let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor' | undefined;
 
-    if (config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor')) {
+    // First check the current page path to determine context
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+
+    // Page context takes priority
+    if (currentPath.includes('/broker-admin')) {
+      tokenType = 'broker-admin';
+    } else if (currentPath.includes('/nia-admin')) {
       tokenType = 'nia-admin';
-    } else if (config.url?.includes('/surveyor') || config.url?.includes('/dual-assignment')) {
-      tokenType = 'surveyor';
-    } else if (config.url?.includes('/admin') && !config.url?.includes('/nia-admin')) {
-      // AMMC admin endpoints (exclude nia-admin)
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
       tokenType = 'admin';
+    } else if (currentPath.includes('/surveyor')) {
+      tokenType = 'surveyor';
+    } else if (currentPath.includes('/super-admin')) {
+      tokenType = 'super-admin';
+    }
+    // If page context didn't determine type, check the API URL
+    else if (config.url?.includes('/broker-admin')) {
+      tokenType = 'broker-admin';
+    } else if (config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor')) {
+      tokenType = 'nia-admin';
     } else if (config.url?.includes('/super-admin')) {
       tokenType = 'super-admin';
+    } else if (config.url?.includes('/admin')) {
+      tokenType = 'admin';
+    } else if (config.url?.startsWith('/surveyor') || config.url?.includes('/dual-assignment')) {
+      tokenType = 'surveyor';
     } else if (config.url?.includes('/user') ||
       config.url?.includes('/policy') ||
       config.url?.includes('/payment') ||
       config.url?.includes('/report-release') ||
       config.url?.includes('/auth/login') ||
       config.url?.includes('/auth/register')) {
-      // User-specific endpoints
       tokenType = 'user';
     }
     // If no specific type detected, getAuthToken will use fallback priority
@@ -1076,6 +1094,11 @@ export const adminApi = {
     return response.data;
   },
 
+  deleteEmployee: async (employeeId: string) => {
+    const response = await api.delete(`/admin/employees/${employeeId}`);
+    return response.data;
+  },
+
   createAdministrator: async (adminData: EmployeeRegistrationData) => {
     const response = await api.post('/admin/administrators', adminData);
     return response.data;
@@ -1266,6 +1289,26 @@ export const adminApi = {
     return response.data;
   },
 
+  // Generic HTTP methods for dynamic API calls
+  get: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
+    const response = await api.get<T>(url, config);
+    return response.data;
+  },
+
+  post: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
+    const response = await api.post<T>(url, data, config);
+    return response.data;
+  },
+
+  patch: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
+    const response = await api.patch<T>(url, data, config);
+    return response.data;
+  },
+
+  delete: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
+    const response = await api.delete<T>(url, config);
+    return response.data;
+  },
 
 };
 
@@ -1441,17 +1484,17 @@ export const tokenManager = {
     if (typeof window === 'undefined') return null;
 
     if (userType === 'nia') {
-      return localStorage.getItem('niaAdminToken');
+      return getCookie('niaAdminToken');
     } else if (userType === 'ammc') {
-      return localStorage.getItem('adminToken') ||
-        localStorage.getItem('token') ||
-        localStorage.getItem('authToken');
+      return getCookie('adminToken') ||
+        getCookie('token') ||
+        getCookie('authToken');
     } else {
       // Try all possible token sources
-      return localStorage.getItem('niaAdminToken') ||
-        localStorage.getItem('adminToken') ||
-        localStorage.getItem('token') ||
-        localStorage.getItem('authToken');
+      return getCookie('niaAdminToken') ||
+        getCookie('adminToken') ||
+        getCookie('token') ||
+        getCookie('authToken');
     }
   },
 
@@ -1465,10 +1508,10 @@ export const tokenManager = {
   clearAllTokens: (): void => {
     if (typeof window === 'undefined') return;
 
-    localStorage.removeItem('niaAdminToken');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('token');
-    localStorage.removeItem('authToken');
+    deleteCookie('niaAdminToken');
+    deleteCookie('adminToken');
+    deleteCookie('token');
+    deleteCookie('authToken');
   }
 };
 
@@ -1518,3 +1561,82 @@ export const userReportAPI = {
 };
 
 export default api;
+
+// Broker Admin API functions
+export const brokerAdminAPI = {
+  // Login broker admin
+  login: async (email: string, password: string): Promise<import("../types/api.types").BrokerAdminLoginResponse> => {
+    const response = await api.post('/broker-admin/auth/login', { email, password });
+    return response.data;
+  },
+
+  // Verify broker admin token
+  verify: async (): Promise<import("../types/api.types").BrokerAdminVerifyResponse> => {
+    const response = await api.get('/broker-admin/auth/verify');
+    return response.data;
+  },
+
+  // Logout broker admin
+  logout: async (): Promise<ApiResponse> => {
+    const response = await api.post('/broker-admin/auth/logout');
+    return response.data;
+  },
+
+  // Get broker dashboard data
+  getDashboardData: async (): Promise<ApiResponse<import("../types/api.types").BrokerDashboardData>> => {
+    const response = await api.get('/broker-admin/dashboard');
+    return response.data;
+  },
+
+  // Get all claims with filters
+  getClaims: async (filters?: import("../types/api.types").BrokerClaimFilters): Promise<import("../types/api.types").BrokerClaimsResponse> => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== 'all') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/broker-admin/claims${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  // Get all claims with filters (alias for consistency)
+  getAllClaims: async (filters?: import("../types/api.types").BrokerClaimFilters): Promise<import("../types/api.types").BrokerClaimsResponse> => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== 'all') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/broker-admin/claims${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  // Get claim by ID
+  getClaimById: async (claimId: string): Promise<import("../types/api.types").BrokerClaimDetailResponse> => {
+    const response = await api.get(`/broker-admin/claims/${claimId}`);
+    return response.data;
+  },
+
+  // Update claim status
+  updateClaimStatus: async (
+    claimId: string,
+    statusUpdate: import("../types/api.types").BrokerStatusUpdateRequest
+  ): Promise<import("../types/api.types").BrokerStatusUpdateResponse> => {
+    const response = await api.patch(`/broker-admin/claims/${claimId}/status`, statusUpdate);
+    return response.data;
+  },
+
+  // Get claim analytics
+  getAnalytics: async (period?: string): Promise<ApiResponse> => {
+    const endpoint = `/broker-admin/analytics${period ? `?period=${period}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  }
+};

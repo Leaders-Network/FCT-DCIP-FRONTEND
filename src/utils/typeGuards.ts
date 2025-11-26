@@ -9,13 +9,15 @@ import {
     ApiResponse,
     ApiSuccessResponse,
     ApiErrorResponse,
+} from '@/types/utility.types';
+import {
     PolicyRequest,
     Assignment,
     DualAssignment,
     Surveyor,
     NIASurveyor,
     UserReport,
-    MergedReport
+    ReportDetails
 } from '@/types/api.types';
 
 /**
@@ -120,16 +122,15 @@ export function isUserReport(value: unknown): value is UserReport {
 }
 
 /**
- * Type guard to check if a value is a MergedReport object
+ * Type guard to check if a value is a ReportDetails object
  */
-export function isMergedReport(value: unknown): value is MergedReport {
+export function isReportDetails(value: unknown): value is ReportDetails {
     return (
         typeof value === 'object' &&
         value !== null &&
-        'policyId' in value &&
-        'dualAssignmentId' in value &&
-        'ammcReportId' in value &&
-        'niaReportId' in value
+        'reportId' in value &&
+        'propertyDetails' in value &&
+        'reportSections' in value
     );
 }
 
@@ -315,7 +316,7 @@ export default {
     isSurveyor,
     isNIASurveyor,
     isUserReport,
-    isMergedReport,
+    isReportDetails,
     isNonEmptyString,
     isValidNumber,
     isValidDateString,

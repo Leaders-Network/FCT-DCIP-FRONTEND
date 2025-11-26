@@ -61,7 +61,8 @@ interface AMMCSurveyorApiResponse {
 }
 
 // Use types from api.types.ts
-import { DualAssignment, AssignmentManagementProps } from '@/types/api.types';
+import { DualAssignment } from '@/types/api.types';
+import { AssignmentManagementProps } from '@/types/component.types';
 
 interface AMMCAssignmentManagementProps extends AssignmentManagementProps {
     assignment: DualAssignment;
@@ -241,8 +242,8 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
             if (data.success) {
                 console.log('Assignment successful');
-                onAssignmentComplete();
-                onClose();
+                onAssignmentComplete?.();
+                onClose?.();
             } else {
                 throw new Error(data.message || 'Failed to assign surveyor');
             }

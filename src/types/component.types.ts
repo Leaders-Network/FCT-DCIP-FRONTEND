@@ -14,12 +14,7 @@ import {
     NIASurveyor,
     NIASurveyorForManagement
 } from './api.types';
-
-// Base Component Props
-export interface BaseComponentProps {
-    className?: string;
-    children?: React.ReactNode;
-}
+import { BaseComponentProps } from './utility.types';
 
 // Assignment Management Component Props
 export interface AssignmentManagementProps {
@@ -314,36 +309,3 @@ export interface ChartComponentProps extends BaseComponentProps {
     height?: number;
     loading?: boolean;
 }
-
-// Export all types for easy importing
-export type {
-    BaseComponentProps,
-    AssignmentManagementProps,
-    SurveyorManagementProps,
-    PolicyDetailsProps,
-    ContactManagementProps,
-    ReportListProps,
-    ReportDetailsProps,
-    AssignmentDetailProps,
-    SurveySubmissionProps,
-    SurveySubmissionData,
-    ModalComponentProps,
-    FormComponentProps,
-    TableComponentProps,
-    SearchComponentProps,
-    FilterComponentProps,
-    PaginationComponentProps,
-    DashboardCardProps,
-    StatusBadgeProps,
-    FileUploadComponentProps,
-    DropdownComponentProps,
-    NavigationProps,
-    SidebarProps,
-    HeaderProps,
-    LoadingComponentProps,
-    ErrorComponentProps,
-    EmptyStateProps,
-    ConfirmationDialogProps,
-    ToastProps,
-    ChartComponentProps
-};
