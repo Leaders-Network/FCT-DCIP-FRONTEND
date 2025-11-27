@@ -423,8 +423,8 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <button className="text-gray-400 hover:text-gray-600">
                     <MoreVertical className="h-4 w-4" />
                   </button>
-                  {typeof surveyor.userId === "object" && (surveyor.userId as any)?.phonenumber
-                    ? (surveyor.userId as any).phonenumber
+                  {typeof surveyor.userId === "object" && surveyor.userId?.phonenumber
+                    ? surveyor.userId.phonenumber
                     : surveyor.phonenumber || 'N/A'}
                 </div>
               </div>

@@ -85,7 +85,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       setPolicies(prev =>
         prev.map(p =>
           p._id === selectedPolicy._id
-            ? { ...p, status: decision as any }
+            ? { ...p, status: decision as PolicyRequest['status'] }
             : p
         )
       );
@@ -107,7 +107,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       setPolicies(prev =>
         prev.map(p =>
           p._id === ammcId
-            ? { ...p, status: 'sent_to_user' as any }
+            ? { ...p, status: 'completed' as PolicyRequest['status'] }
             : p
         )
       );
@@ -139,7 +139,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       setPolicies(prev =>
         prev.map(p =>
           p._id === policy._id
-            ? { ...p, status: 'completed' as any }
+            ? { ...p, status: 'completed' as PolicyRequest['status'] }
             : p
         )
       );
@@ -201,12 +201,12 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             { key: 'submitted', label: 'Submitted', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'submitted').length : 0 },
             { key: 'assigned', label: 'Assigned', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'assigned').length : 0 },
             { key: 'surveyed', label: 'Surveyed', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'surveyed').length : 0 },
-            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => (p?.status as any) === 'requires_more_info').length : 0 },
+            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'revision_required').length : 0 },
             { key: 'rejected', label: 'Rejected', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'rejected').length : 0 }
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => setActiveTab(tab.key as typeof activeTab)}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.key
                 ? 'border-[#028835] text-[#028835]'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -956,7 +956,7 @@ const PolicyDocumentsTab: React.FC<{
       <h4 className="font-medium text-gray-900">Policy Documents</h4>
 
       {/* Survey Document */}
-      {(surveyData as any)?.surveyDocument && (
+      {surveyData?.surveyDocument && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -971,7 +971,7 @@ const PolicyDocumentsTab: React.FC<{
             </div>
             <div className="flex space-x-2">
               <a
-                href={(surveyData as any)?.surveyDocument || '#'}
+                href={typeof surveyData.surveyDocument === 'string' ? surveyData.surveyDocument : '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -979,7 +979,7 @@ const PolicyDocumentsTab: React.FC<{
                 View PDF
               </a>
               <a
-                href={(surveyData as any)?.surveyDocument || '#'}
+                href={typeof surveyData.surveyDocument === 'string' ? surveyData.surveyDocument : '#'}
                 download
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
               >

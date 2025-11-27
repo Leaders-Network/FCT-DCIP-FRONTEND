@@ -18,6 +18,7 @@ import {
     AlertTriangle,
     Download
 } from 'lucide-react';
+import { ReportDetails } from '@/types/api.types';
 
 interface PolicyDetailsWithDualSurveyorProps {
     policyId: string;
@@ -278,31 +279,81 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                 console.warn('⚠️ No status data available, using default values:', { assignmentStatus, completionStatus });
             }
 
+            // Try to fetch surveyor details from assignments
+            let ammcSurveyorContact = undefined;
+            let niaSurveyorContact = undefined;
+
+            try {
+                // Fetch AMMC surveyor details if available
+                if (statusData?.ammcSurveyorId) {
+                    const ammcResponse = await fetch(`${API_BASE_URL}/surveyor/${statusData.ammcSurveyorId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (ammcResponse.ok) {
+                        const ammcData = await ammcResponse.json();
+                        if (ammcData.success && ammcData.data) {
+                            ammcSurveyorContact = {
+                                name: `${ammcData.data.firstname} ${ammcData.data.lastname}`,
+                                email: ammcData.data.email,
+                                phone: ammcData.data.phonenumber,
+                                licenseNumber: ammcData.data.licenseNumber,
+                                specialization: ammcData.data.specializations || [],
+                                experience: ammcData.data.experience,
+                                rating: ammcData.data.rating,
+                                lastActive: ammcData.data.updatedAt
+                            };
+                        }
+                    }
+                }
+
+                // Fetch NIA surveyor details if available
+                if (statusData?.niaSurveyorId) {
+                    const niaResponse = await fetch(`${API_BASE_URL}/surveyor/${statusData.niaSurveyorId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (niaResponse.ok) {
+                        const niaData = await niaResponse.json();
+                        if (niaData.success && niaData.data) {
+                            niaSurveyorContact = {
+                                name: `${niaData.data.firstname} ${niaData.data.lastname}`,
+                                email: niaData.data.email,
+                                phone: niaData.data.phonenumber,
+                                licenseNumber: niaData.data.licenseNumber,
+                                specialization: niaData.data.specializations || [],
+                                experience: niaData.data.experience,
+                                rating: niaData.data.rating,
+                                lastActive: niaData.data.updatedAt
+                            };
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Could not fetch surveyor details:', error);
+            }
+
             const mockDualAssignment: DualAssignmentData = {
                 _id: `dual_${policyId}`,
                 policyId: mockPolicy,
                 assignmentStatus,
                 completionStatus,
-                ammcSurveyorContact: {
-                    name: 'John Adebayo',
-                    email: 'j.adebayo@ammc.gov.ng',
-                    phone: '+234 803 123 4567',
-                    licenseNumber: 'AMMC/2023/001',
-                    specialization: ['residential', 'commercial'],
-                    experience: 8,
-                    rating: 4.7,
-                    lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-                },
-                niaSurveyorContact: {
-                    name: 'Sarah Okafor',
-                    email: 's.okafor@nia.gov.ng',
-                    phone: '+234 807 654 3210',
-                    licenseNumber: 'NIA/2023/002',
-                    specialization: ['structural', 'residential'],
-                    experience: 6,
-                    rating: 4.5,
-                    lastActive: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-                },
+                ammcSurveyorContact: ammcSurveyorContact || (statusData?.ammcSurveyorId ? {
+                    name: 'AMMC Surveyor',
+                    email: 'surveyor@ammc.gov.ng',
+                    phone: 'Not available',
+                    licenseNumber: statusData.ammcSurveyorId
+                } : undefined),
+                niaSurveyorContact: niaSurveyorContact || (statusData?.niaSurveyorId ? {
+                    name: 'NIA Surveyor',
+                    email: 'surveyor@nia.gov.ng',
+                    phone: 'Not available',
+                    licenseNumber: statusData.niaSurveyorId
+                } : undefined),
                 priority: 'medium',
                 estimatedCompletion: {
                     overallDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -747,7 +798,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
 
                                                     if (response.success && response.data) {
                                                         // Generate HTML report
-                                                        const reportData = response.data as any;
+                                                        const reportData = response.data as ReportDetails;
                                                         const htmlContent = `
 <!DOCTYPE html>
 <html>

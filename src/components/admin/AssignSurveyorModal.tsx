@@ -146,7 +146,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded-full focus:ring-indigo-500"
                   />
                   <label htmlFor={`surveyor-${s._id}`} className="ml-3 text-sm text-gray-700">
-                    {(s.userId as any)?.firstname || 'N/A'} {(s.userId as any)?.lastname || 'N/A'} ({(s.userId as any)?.email || 'N/A'}) - {s.profile?.specialization?.join(', ') || 'N/A'}
+                    {s.firstname || 'N/A'} {s.lastname || 'N/A'} ({s.email || 'N/A'}) - {s.profile?.specialization?.join(', ') || 'N/A'}
                   </label>
                 </div>
               ))}
