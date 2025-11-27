@@ -170,8 +170,28 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                     {expandedSections.surveyors && (
                         <div className="p-6 border-t border-gray-200">
                             <SurveyorContactsDisplay
-                                ammcSurveyor={ammcSurveyor as any}
-                                niaSurveyor={niaSurveyor as any}
+                                ammcSurveyor={ammcSurveyor ? {
+                                    name: ammcSurveyor.name,
+                                    email: ammcSurveyor.email,
+                                    phone: ammcSurveyor.phone || '',
+                                    organization: ammcSurveyor.organization || 'AMMC',
+                                    licenseNumber: ammcSurveyor.licenseNumber,
+                                    specialization: ammcSurveyor.specialization,
+                                    experience: ammcSurveyor.experience,
+                                    rating: ammcSurveyor.rating,
+                                    lastActive: ammcSurveyor.lastActive
+                                } : undefined}
+                                niaSurveyor={niaSurveyor ? {
+                                    name: niaSurveyor.name,
+                                    email: niaSurveyor.email,
+                                    phone: niaSurveyor.phone || '',
+                                    organization: niaSurveyor.organization || 'NIA',
+                                    licenseNumber: niaSurveyor.licenseNumber,
+                                    specialization: niaSurveyor.specialization,
+                                    experience: niaSurveyor.experience,
+                                    rating: niaSurveyor.rating,
+                                    lastActive: niaSurveyor.lastActive
+                                } : undefined}
                                 assignmentStatus={assignmentStatus}
                                 showContactActions={showContactActions}
                             />

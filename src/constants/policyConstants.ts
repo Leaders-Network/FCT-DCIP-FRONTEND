@@ -18,10 +18,10 @@ export const CONSTRUCTION_MATERIALS = [
 
 export const COVERAGE_TYPES = [
   "Contract Works Coverage",
-  "Public Liability Coverage",
-  "Employer's Liability Coverage",
-  "Contractor's Plant and Equipment Coverage",
-  "Professional Indemnity",
+    "Public Liability Coverage",
+    "Employers Liability Coverage",
+    "Contractors Plant and Equipment Coverage",
+    "Professional Indemnity",
 ] as const;
 
 export const POLICY_DURATIONS = [

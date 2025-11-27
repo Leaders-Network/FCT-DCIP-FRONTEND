@@ -185,7 +185,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                 formData
             );
 
-            if ((response as any)?.success) {
+            if (response?.success) {
                 alert('Broker admin updated successfully!');
                 setShowEditModal(false);
                 setSelectedBrokerAdmin(null);
@@ -209,7 +209,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
 
             const response = await adminApi.delete(`/broker-admin/management/${id}`);
 
-            if ((response as any)?.success) {
+            if (response?.success) {
                 alert('Broker admin deactivated successfully!');
                 fetchBrokerAdmins();
                 fetchStats();

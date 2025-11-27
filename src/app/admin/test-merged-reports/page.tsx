@@ -261,10 +261,14 @@ export default function TestMergedReportsPage() {
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
                                             <h4 className="font-medium">
-                                                Policy: {typeof report.policyId === 'object' && report.policyId !== null ? ((report.policyId as any).policyNumber || (report.policyId as any)._id?.substring(0, 8)) : (report.policyId as string)?.substring(0, 8)}
+                                                Policy: {typeof report.policyId === 'object' && report.policyId !== null
+                                                    ? (report.policyId.policyNumber || report.policyId._id?.substring(0, 8))
+                                                    : (report.policyId as string)?.substring(0, 8)}
                                             </h4>
                                             <p className="text-sm text-gray-600">
-                                                {typeof report.policyId === 'object' && report.policyId !== null ? ((report.policyId as any).propertyDetails?.address || 'No address') : 'No address'}
+                                                {typeof report.policyId === 'object' && report.policyId !== null
+                                                    ? (report.policyId.propertyDetails?.address || 'No address')
+                                                    : 'No address'}
                                             </p>
                                         </div>
                                         <div className="flex items-center space-x-2">

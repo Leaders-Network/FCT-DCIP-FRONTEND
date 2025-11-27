@@ -222,10 +222,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   ];
 
   const policyDurations = [
-    "3 Months (Short-term Project)",
-    "6 Months",
     "1 Year",
-    "Project-Based (Until Completion)",
   ];
 
   const additionalCoverageOptions = [
