@@ -74,7 +74,7 @@ export default function SignUp() {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 md:px-10 text-white">
           <div className="max-w-md">
             <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">
-              Welcome to FCT-DCIP
+              Welcome to Builders-Liability-AMMC
             </h2>
             <p className="text-sm md:text-[1.1rem] leading-relaxed fade-in-text mt-2">
               Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
@@ -314,7 +314,7 @@ function SignUpButton({
     const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
     try {
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
       const response = await fetch(
         `${apiBaseUrl}/auth/request-otp`,
         {

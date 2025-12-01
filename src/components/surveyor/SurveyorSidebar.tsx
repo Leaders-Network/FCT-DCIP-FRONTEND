@@ -39,7 +39,7 @@ const SurveyorSidebar = () => {
         {!isCollapsed ? (
           <Image
             src="/logoblack.svg"
-            alt="FCT-DCIP Logo"
+            alt="Builders-Liability-AMMC Logo"
             className="cursor-pointer"
             width={120}
             height={40}

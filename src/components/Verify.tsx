@@ -73,7 +73,7 @@ export default function Verify() {
 
       // toast.loading("Verifying OTP...");
       // Verify OTP
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
       const verifyResponse = await fetch(
         `${apiBaseUrl}/auth/verify-otp`,
         {

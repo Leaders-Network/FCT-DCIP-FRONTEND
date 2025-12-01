@@ -1,5 +1,5 @@
 /**
- * Error handling utilities for the FCT-DCIP application
+ * Error handling utilities for the Builders-Liability-AMMC application
  */
 
 import { AppError, ValidationError, NetworkError, ServerError } from '@/types/utility.types';

@@ -178,26 +178,30 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
             }
 
             // Try to get dual assignment data (only for admins, will fail gracefully for users)
-            try {
-                const dualAssignmentResponse = await fetch(`${API_BASE_URL}/dual-assignment/policy/${policyId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+            // Skip this call for regular users to avoid 401 errors in console
+            const userRole = getCookie('userRole');
+            if (userRole === 'admin' || userRole === 'superadmin') {
+                try {
+                    const dualAssignmentResponse = await fetch(`${API_BASE_URL}/dual-assignment/policy/${policyId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
 
-                if (dualAssignmentResponse.ok) {
-                    const dualAssignmentResult = await dualAssignmentResponse.json();
-                    if (dualAssignmentResult.success && dualAssignmentResult.data) {
-                        setDualAssignmentData(dualAssignmentResult.data);
-                        console.log('✅ Dual assignment data fetched successfully');
-                        return;
+                    if (dualAssignmentResponse.ok) {
+                        const dualAssignmentResult = await dualAssignmentResponse.json();
+                        if (dualAssignmentResult.success && dualAssignmentResult.data) {
+                            setDualAssignmentData(dualAssignmentResult.data);
+                            console.log('✅ Dual assignment data fetched successfully');
+                            return;
+                        }
+                    } else {
+                        console.log('Dual assignment endpoint not accessible, using policy data');
                     }
-                } else if (dualAssignmentResponse.status === 401 || dualAssignmentResponse.status === 403) {
-                    console.log('Dual assignment endpoint not accessible (user role), using policy data');
+                } catch (error) {
+                    console.log('Dual assignment endpoint not accessible, using policy data');
                 }
-            } catch (error) {
-                console.log('Dual assignment endpoint not accessible, using policy data');
             }
 
             // If we have real policy data, use it; otherwise create mock data
@@ -266,12 +270,23 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                 } else if (statusData.stage === 'processing' || statusData.stage === 'completed' || statusData.stage === 'under_review') {
                     assignmentStatus = 'fully_assigned';
                     completionStatus = 100;
+                } else if (statusData.stage === 'conflict_resolution' || statusData.status === 'processing_delayed') {
+                    // Handle conflict resolution stage - surveys are complete but processing is delayed
+                    assignmentStatus = 'fully_assigned';
+                    completionStatus = 100; // Surveys are done, just processing is delayed
+                }
+
+                // Also check the main status field for additional context
+                if (statusData.status === 'completed') {
+                    assignmentStatus = 'fully_assigned';
+                    completionStatus = 100;
                 }
 
                 console.log('✅ Calculated status:', {
                     assignmentStatus,
                     completionStatus,
                     stage: statusData.stage,
+                    status: statusData.status,
                     progress: statusData.progress,
                     surveyStatus: statusData.surveyStatus
                 });
@@ -615,7 +630,19 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
             {/* Report Downloads */}
             {dualAssignmentData.completionStatus === 100 && (
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Survey Reports</h2>
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-bold text-gray-900">Survey Reports</h2>
+                        <button
+                            onClick={() => {
+                                // Navigate to claims or open claim modal
+                                window.location.href = `/dashboard/policies?action=claim&policyId=${policyId}`;
+                            }}
+                            className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Request Claim
+                        </button>
+                    </div>
                     <div className="space-y-4">
                         <p className="text-sm text-gray-600 mb-4">
                             Both surveys have been completed. You can download the individual reports and the merged final report below.
@@ -830,7 +857,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
         <div class="info-row"><span class="label">Policy ID:</span><span class="value">${reportData.policyId || 'N/A'}</span></div>
         <div class="info-row"><span class="label">Property Address:</span><span class="value">${reportData.propertyDetails?.address || 'N/A'}</span></div>
         <div class="info-row"><span class="label">Property Type:</span><span class="value">${reportData.propertyDetails?.propertyType || 'N/A'}</span></div>
-        <div class="info-row"><span class="label">Report Status:</span><span class="value">${reportData.status || reportData.releaseStatus || 'N/A'}</span></div>
+        <div class="info-row"><span class="label">Report Status:</span><span class="value">${reportData.status || 'N/A'}</span></div>
         <div class="info-row"><span class="label">Released Date:</span><span class="value">${reportData.releasedAt ? new Date(reportData.releasedAt).toLocaleString() : 'N/A'}</span></div>
         <div class="info-row"><span class="label">Download Count:</span><span class="value">${reportData.downloadCount || 0}</span></div>
     </div>
@@ -850,15 +877,15 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
 
     <div class="section">
         <h2>Report Sections</h2>
-        ${reportData.reportSections ? Object.entries(reportData.reportSections).map(([key, value]: [string, any]) => `
+        ${reportData.reportSections ? Object.entries(reportData.reportSections).map(([key, value]: [string, unknown]) => `
             <h3>${key.replace(/([A-Z])/g, ' $1').trim()}</h3>
-            <p>${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</p>
+            <p>${typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}</p>
         `).join('') : '<p>No report sections available</p>'}
     </div>
 
     <div class="footer">
         <p>Generated on ${new Date().toLocaleString()}</p>
-        <p>FCT-DCIP - Dual Survey Report System</p>
+        <p>Builders-Liability-AMMC - Dual Survey Report System</p>
     </div>
 </body>
 </html>`;

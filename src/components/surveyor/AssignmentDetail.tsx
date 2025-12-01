@@ -95,25 +95,22 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     fetchAssignment();
   }, [assignmentId]);
 
-  const handleSurveySubmission = async (submission: SurveySubmissionData) => {
+  const handleSurveySubmission = async (submission: FormData) => {
     try {
+      if (!assignment) {
+        throw new Error("No assignment selected for submission.");
+      }
+
       const { submitSurvey } = await import("@/services/api");
 
-      const formData = new FormData();
-      formData.append('ammcId', typeof assignment!.ammcId === 'object' ? (assignment!.ammcId as PolicyDetails)._id : assignment!.ammcId);
-      formData.append('assignmentId', assignmentId || '');
-      formData.append('surveyNotes', submission.surveyNotes);
-      formData.append('recommendedAction', submission.recommendedAction);
-      formData.append('contactLog', JSON.stringify(submission.contactLog));
-      formData.append('surveyDetails', JSON.stringify(submission.surveyDetails));
-      if (submission.expenses) {
-        formData.append('expenses', JSON.stringify(submission.expenses));
-      }
-      if (submission.surveyDocument) {
-        formData.append('surveyDocument', submission.surveyDocument);
-      }
+      const ammcId = typeof assignment.ammcId === 'object' ? (assignment.ammcId as PolicyDetails)._id : assignment.ammcId;
 
-      const result = await submitSurvey(formData);
+      submission.append('ammcId', ammcId);
+      submission.append('assignmentId', assignmentId || '');
+      
+      // The 'submission' FormData object now also includes the files from the modal
+
+      const result = await submitSurvey(submission);
 
       // Store submission result for confirmation display
       setSubmissionResult(result.data);

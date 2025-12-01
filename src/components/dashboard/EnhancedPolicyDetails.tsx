@@ -146,6 +146,19 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
                 </div>
 
                 <div className="flex items-center space-x-3">
+                    {/* Request Claim Button - Only show for completed policies */}
+                    {enhancedStatus?.currentStatus?.toLowerCase() === 'completed' && (
+                        <button
+                            onClick={() => {
+                                window.location.href = `/dashboard/policies?action=claim&policyId=${policyId}`;
+                            }}
+                            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                        >
+                            <Bell className="h-4 w-4 mr-2" />
+                            Request Claim
+                        </button>
+                    )}
+
                     <div className="flex items-center space-x-2">
                         <input
                             type="checkbox"
@@ -173,8 +186,20 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-gray-900">{enhancedStatus.currentStatus}</div>
+                            <div className={`text-2xl font-bold ${enhancedStatus.currentStatus?.toLowerCase() === 'completed'
+                                    ? 'text-green-600'
+                                    : 'text-gray-900'
+                                }`}>
+                                {enhancedStatus.currentStatus}
+                            </div>
                             <div className="text-sm text-gray-600">Current Status</div>
+                            {enhancedStatus.currentStatus?.toLowerCase() === 'completed' && (
+                                <div className="mt-2">
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        ✓ Ready for Claims
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <div className="text-center">
                             <div className="text-2xl font-bold text-blue-600">

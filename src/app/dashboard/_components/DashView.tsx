@@ -21,9 +21,9 @@ const Dashview = () => {
     pending: 0,
     collaborators: 0
   });
-  const [recentInsurances, setRecentInsurances] = useState<any[]>([]);
-  const [surveyedPolicies, setSurveyedPolicies] = useState<any[]>([]);
-  const [allPolicies, setAllPolicies] = useState<any[]>([]);
+  const [recentInsurances, setRecentInsurances] = useState<PolicyRequest[]>([]);
+  const [surveyedPolicies, setSurveyedPolicies] = useState<PolicyRequest[]>([]);
+  const [allPolicies, setAllPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<'overview' | 'reports'>('overview');
 

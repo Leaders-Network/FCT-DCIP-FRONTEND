@@ -179,11 +179,11 @@ export default function UserReportsPage() {
                                                     <br />
                                                     {new Date(report.createdAt).toLocaleDateString()}
                                                 </div>
-                                                <div>
+                                              { /* <div>
                                                     <span className="font-medium">Downloads:</span>
                                                     <br />
                                                     {report.downloadCount}
-                                                </div>
+                                                </div> */}
                                             </div>
 
                                             {report.isMerged && (

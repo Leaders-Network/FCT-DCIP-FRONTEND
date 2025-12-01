@@ -41,7 +41,7 @@ const PrivacyPolicy = () => {
             1. Introduction
           </h2>
           <p>
-            At <strong>FCT-DCIP</strong>, we value your privacy and are
+            At <strong>Builders-Liability-AMMC</strong>, we value your privacy and are
             committed to protecting your personal data. This Privacy Policy
             explains how we collect, use, store, and safeguard your information
             when you visit our website or use our services.

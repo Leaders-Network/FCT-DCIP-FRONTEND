@@ -1,4 +1,4 @@
-# TypeScript Verification Script for FCT-DCIP-FRONTEND (PowerShell)
+# TypeScript Verification Script for Builders-Liability-AMMC-FRONTEND (PowerShell)
 # This script verifies that all TypeScript types are properly defined
 
 Write-Host "🔍 Starting TypeScript Verification..." -ForegroundColor Cyan

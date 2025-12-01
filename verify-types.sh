@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# TypeScript Verification Script for FCT-DCIP-FRONTEND
+# TypeScript Verification Script for Builders-Liability-AMMC-FRONTEND
 # This script verifies that all TypeScript types are properly defined
 
 echo "🔍 Starting TypeScript Verification..."

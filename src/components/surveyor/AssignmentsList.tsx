@@ -98,25 +98,24 @@ const AssignmentsList = () => {
     setShowSurveyModal(true);
   };
 
-  const handleSurveySubmission = async (submission: SurveySubmissionData) => {
+  const handleSurveySubmission = async (submission: FormData) => {
     try {
-      const { submitSurvey } = await import("@/services/api");
-
-      const formData = new FormData();
-      const ammcId = typeof selectedAssignment!.ammcId === 'object' && selectedAssignment!.ammcId?._id
-        ? selectedAssignment!.ammcId._id
-        : selectedAssignment!.ammcId;
-      formData.append('ammcId', ammcId as string);
-      formData.append('assignmentId', selectedAssignment!._id);
-      formData.append('surveyNotes', submission.surveyNotes);
-      formData.append('recommendedAction', submission.recommendedAction);
-      formData.append('contactLog', JSON.stringify(submission.contactLog));
-      formData.append('surveyDetails', JSON.stringify(submission.surveyDetails));
-      if (submission.surveyDocument) {
-        formData.append('surveyDocument', submission.surveyDocument);
+      if (!selectedAssignment) {
+        throw new Error("No assignment selected for submission.");
       }
 
-      await submitSurvey(formData);
+      const { submitSurvey } = await import("@/services/api");
+
+      const ammcId = typeof selectedAssignment.ammcId === 'object' && selectedAssignment.ammcId?._id
+        ? selectedAssignment.ammcId._id
+        : selectedAssignment.ammcId;
+
+      submission.append('ammcId', ammcId as string);
+      submission.append('assignmentId', selectedAssignment._id);
+      
+      // The 'submission' FormData object now also includes the files from the modal
+
+      await submitSurvey(submission);
       alert("Survey submitted successfully!");
       setShowSurveyModal(false);
       setSelectedAssignment(null);

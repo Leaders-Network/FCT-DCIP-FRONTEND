@@ -3,7 +3,7 @@
 /**
  * TypeScript Type Checking Script
  * 
- * This script performs comprehensive type checking across the FCT-DCIP-FRONTEND project
+ * This script performs comprehensive type checking across the Builders-Liability-AMMC-FRONTEND project
  * and generates a report of any type issues found.
  */
 

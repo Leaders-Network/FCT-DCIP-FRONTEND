@@ -37,7 +37,7 @@ const InsuranceOptions = () => {
             </div>
 
             <p className="text-gray-600 mt-6">
-              The FCT-DCIP is a partnership program that enables insurance
+              The Builders-Liability-AMMC is a partnership program that enables insurance
               cooperation among homeowners, builders, surveyors, and the
               Development Control Department. This program aims to protect home
               owners from losses that may arise from building collapse, safety,

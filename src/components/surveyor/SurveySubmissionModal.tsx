@@ -7,7 +7,7 @@ interface SurveySubmissionModalProps {
     policy: PolicyRequest;
     assignment: Assignment;
     isOpen: boolean;
-    onSubmit: (submission: SurveySubmissionData) => Promise<void>;
+    onSubmit: (submission: FormData) => Promise<void>;
     onClose: () => void;
 }
 
@@ -39,9 +39,23 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const submissionData = new FormData();
+
+        // Append non-file data. Note that complex objects are stringified.
+        submissionData.append('surveyNotes', formData.surveyNotes);
+        submissionData.append('recommendedAction', formData.recommendedAction);
+        submissionData.append('contactLog', JSON.stringify(formData.contactLog));
+        submissionData.append('surveyDetails', JSON.stringify(formData.surveyDetails));
+        
+        // Append files
+        uploadedFiles.forEach(file => {
+            submissionData.append('documents', file);
+        });
+
+
         try {
             setLoading(true);
-            await onSubmit(formData);
+            await onSubmit(submissionData);
         } catch (error) {
             console.error('Error submitting survey:', error);
             alert('Failed to submit survey. Please try again.');

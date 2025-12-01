@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the TypeScript type analysis for the broker admin module in the FCT-DCIP-FRONTEND project. All files have been analyzed and verified to have **zero TypeScript compilation errors**.
+This document summarizes the TypeScript type analysis for the broker admin module in the Builders-Liability-AMMC-FRONTEND project. All files have been analyzed and verified to have **zero TypeScript compilation errors**.
 
 ## Analysis Scope
 

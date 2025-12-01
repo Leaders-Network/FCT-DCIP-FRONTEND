@@ -101,7 +101,7 @@ const SettingsPage = () => {
               Hello {lastName}
             </h1>
             <p className="text-gray-700 text-[1.2rem] mb-6">
-              Manage your <span className="font-extrabold">FCT-DCIP</span> account settings and preferences
+              Manage your <span className="font-extrabold">Builders-Liability-AMMC</span> account settings and preferences
             </p>
 
             {/* Settings Tabs */}

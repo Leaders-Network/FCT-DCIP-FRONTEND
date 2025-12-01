@@ -141,7 +141,7 @@ const ContactPage = () => {
               </div>
               <div>
                 <h4 className="font-semibold text-green-700">Email</h4>
-                <p>info@fct-dcip.ng</p>
+                <p>info@Builders-Liability-AMMC.ng</p>
               </div>
               <div>
                 <h4 className="font-semibold text-green-700">Office Hours</h4>

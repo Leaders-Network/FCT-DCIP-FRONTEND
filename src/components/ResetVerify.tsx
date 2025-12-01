@@ -42,7 +42,7 @@ export default function ResetVerify() {
 
     try {
       // Step 2: Verify reset password OTP
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
       const response = await fetch(
         `${apiBaseUrl}/auth/verify-otp-user`,
         {
