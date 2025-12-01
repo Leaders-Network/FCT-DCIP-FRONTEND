@@ -1,6 +1,6 @@
 /**
  * Utility Types for Type-Safe Development
- * Reusable type utilities for the FCT-DCIP application
+ * Reusable type utilities for the Builders-Liability-AMMC application
  */
 
 // ============================================================================

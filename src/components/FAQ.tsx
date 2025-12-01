@@ -10,24 +10,24 @@ import Link from "next/link";
 
 const faqItems = [
   {
-    question: "What is FCT-DCIP?",
+    question: "What is Builders-Liability-AMMC?",
     answer:
-      "FCT-DCIP stands for Federal Capital Territory Development Control Insurance Program. It is a comprehensive insurance solution for property builders and contractors in Abuja.",
+      "Builders-Liability-AMMC stands for Federal Capital Territory Development Control Insurance Program. It is a comprehensive insurance solution for property builders and contractors in Abuja.",
   },
   {
-    question: "What are the benefits of the FCT-DCIP?",
+    question: "What are the benefits of the Builders-Liability-AMMC?",
     answer:
-      "The FCT-DCIP provides protection against property damage, liability coverage, and ensures compliance with local regulations.",
+      "The Builders-Liability-AMMC provides protection against property damage, liability coverage, and ensures compliance with local regulations.",
   },
   {
-    question: "Who are the stakeholders in the FCT-DCIP?",
+    question: "Who are the stakeholders in the Builders-Liability-AMMC?",
     answer:
       "Stakeholders include property builders/contractors, developers, insurance providers, and the FCT Development Control Department.",
   },
   {
-    question: "What is the advantage of the FCT-DCIP?",
+    question: "What is the advantage of the Builders-Liability-AMMC?",
     answer:
-      "The FCT-DCIP offers tailored insurance solutions, streamlined processes, and enhanced protection for property investments in Abuja.",
+      "The Builders-Liability-AMMC offers tailored insurance solutions, streamlined processes, and enhanced protection for property investments in Abuja.",
   },
 ];
 

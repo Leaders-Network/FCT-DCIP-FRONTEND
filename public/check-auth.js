@@ -55,7 +55,7 @@
     if (!hasValidToken) {
         console.log('❌ NO TOKENS FOUND\n');
         console.log('To fix this:');
-        console.log('1. Run: cd FCT-DCIP-BACKEND && npm run generate-tokens');
+        console.log('1. Run: cd Builders-Liability-AMMC-BACKEND && npm run generate-tokens');
         console.log('2. Copy the localStorage command from output');
         console.log('3. Paste it here and press Enter');
         console.log('4. Refresh the page\n');

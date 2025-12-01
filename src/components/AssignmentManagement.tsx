@@ -1308,6 +1308,8 @@ const AssignmentDocumentsTab: React.FC<{ assignment: Assignment; viewMode: 'admi
             onDocumentsChange={handleDocumentsChange}
             title="Survey Documents"
             showCategories={true}
+            assignmentId={assignment._id}
+            ammcId={typeof assignment.ammcId === 'string' ? assignment.ammcId : assignment.ammcId?._id}
           />
         </div>
       )}

@@ -4,6 +4,7 @@ import PolicyCompletion from "@/components/dashboard/PolicyCompletion";
 import PolicyDetailsWithDualSurveyor from "@/components/dashboard/PolicyDetailsWithDualSurveyor";
 import EnhancedPolicyDetails from "@/components/dashboard/EnhancedPolicyDetails";
 import DualSurveyorProgress from "@/components/dashboard/DualSurveyorProgress";
+
 import {
   FileText,
   Clock,
@@ -79,12 +80,17 @@ export default function PoliciesPage() {
 
   const fetchRejectedPolicies = async () => {
     try {
+      console.log('🔍 Fetching rejected policies...');
       const response = await getUserPolicyRequests("rejected", 1, 100);
-      const rejected = response.data.policyRequests || [];
+      console.log('📊 Rejected policies response:', response);
+      const rejected = response.data?.policyRequests || [];
+      console.log(`✅ Found ${rejected.length} rejected policies`);
       setRejectedPolicies(rejected);
       setRejectedCount(rejected.length);
     } catch (error) {
-      console.error("Failed to fetch rejected policies:", error);
+      console.error("❌ Failed to fetch rejected policies:", error);
+      setRejectedPolicies([]);
+      setRejectedCount(0);
     }
   };
 

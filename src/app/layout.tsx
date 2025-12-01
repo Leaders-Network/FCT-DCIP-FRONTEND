@@ -9,22 +9,22 @@ import { Toaster} from "sonner"
 
 
 export const metadata: Metadata = {
-  title: "FCT-DCIP - Digital Claims & Insurance Platform",
+  title: "Builders-Liability-AMMC - Digital Claims & Insurance Platform",
   description: "Comprehensive digital platform for managing insurance claims, property surveys, and policy administration for FCT builders.",
   icons: {
     icon: "/logo.svg"
   },
   openGraph: {
-    title: "FCT-DCIP - Digital Claims & Insurance Platform",
+    title: "Builders-Liability-AMMC - Digital Claims & Insurance Platform",
     description: "Comprehensive digital platform for managing insurance claims, property surveys, and policy administration for FCT builders.",
     url: "https://www.fctbuilders.gladfaith.com",
-    siteName: "FCT-DCIP",
+    siteName: "Builders-Liability-AMMC",
     images: [
       {
         url: "/logo.svg",
         width: 1200,
         height: 630,
-        alt: "FCT-DCIP Platform",
+        alt: "Builders-Liability-AMMC Platform",
       },
     ],
     locale: "en_US",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FCT-DCIP - Digital Claims & Insurance Platform",
+    title: "Builders-Liability-AMMC - Digital Claims & Insurance Platform",
     description: "Comprehensive digital platform for managing insurance claims, property surveys, and policy administration for FCT builders.",
     images: ["/logo.svg"],
   },

@@ -118,13 +118,13 @@ const SurveyorLogin = () => {
           <div className=" flex justify-center mb-2">
             <Image
               src="/logo.png"
-              alt="FCT-DCIP Logo"
+              alt="Builders-Liability-AMMC Logo"
               width={180}
               height={180}
               className="mx-auto"
             />
           </div>
-          <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">FCT-DCIP Surveyor Portal</h2>
+          <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">Builders-Liability-AMMC Surveyor Portal</h2>
           <p className="text-sm md:text-[1.1rem] leading-relaxed fade-in-text mt-2">
             Empowering surveyors with tools to manage inspections, update
             reports, and ensure safety compliance across the FCT region.
@@ -139,7 +139,7 @@ const SurveyorLogin = () => {
           <div className="md:hidden flex justify-center mb-2">
             <Image
               src="/logoblack.svg"
-              alt="FCT-DCIP Logo"
+              alt="Builders-Liability-AMMC Logo"
               width={120}
               height={120}
               className="mx-auto"

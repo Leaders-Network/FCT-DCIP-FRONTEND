@@ -218,7 +218,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
 
     <div class="footer">
         <p>Generated on ${new Date().toLocaleString()}</p>
-        <p>FCT-DCIP - Dual Survey Report System</p>
+        <p>Builders-Liability-AMMC - Dual Survey Report System</p>
     </div>
 </body>
 </html>`;

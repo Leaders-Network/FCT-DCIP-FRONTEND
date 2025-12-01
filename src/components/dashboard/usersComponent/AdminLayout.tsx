@@ -276,7 +276,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
                 fill="#333F4D"
               />
             </svg>
-            {sidebarOpen && <span className="font-bold text-lg">FCT-DCIP</span>}
+            {sidebarOpen && <span className="font-bold text-lg">Builders-Liability-AMMC</span>}
           </div>
         </div>
 

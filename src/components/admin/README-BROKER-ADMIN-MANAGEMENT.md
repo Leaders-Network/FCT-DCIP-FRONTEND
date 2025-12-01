@@ -1,6 +1,6 @@
 # Broker Admin Management Component
 
-A comprehensive management interface for creating, viewing, editing, and managing broker administrator accounts in the FCT-DCIP platform.
+A comprehensive management interface for creating, viewing, editing, and managing broker administrator accounts in the Builders-Liability-AMMC platform.
 
 ## Features
 

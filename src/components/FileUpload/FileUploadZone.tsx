@@ -11,6 +11,8 @@ interface FileUploadZoneProps {
   onError: (error: string) => void;
   category: 'survey_report' | 'photos' | 'receipts' | 'legal_documents' | 'inspection_forms' | 'general' | 'application_documents' | 'identification' | 'property_documents' | 'supporting_documents' | 'survey_reports';
   documentType: 'survey_document' | 'photo' | 'receipt' | 'report' | 'form' | 'other' | 'application_form' | 'id_document' | 'property_deed' | 'main_report' | 'supporting_doc';
+  assignmentId?: string;
+  ammcId?: string;
   multiple?: boolean;
   maxFiles?: number;
   maxSize?: number; // in MB
@@ -33,6 +35,8 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   onError,
   category,
   documentType,
+  assignmentId,
+  ammcId,
   multiple = true,
   maxFiles = 10,
   maxSize = 50, // 50MB default
@@ -87,6 +91,8 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       const uploadData = {
         category,
         documentType,
+        assignmentId,
+        ammcId,
         ...(description && { description })
       };
 

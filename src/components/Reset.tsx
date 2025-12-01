@@ -36,7 +36,7 @@ export default function Reset() {
 
     try {
       // Step 1: Request OTP for password reset
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
       const response = await fetch(
         `${apiBaseUrl}/auth/send-reset-password-otp`,
         {

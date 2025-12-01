@@ -6,26 +6,26 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 const faqs = [
-  // === Existing FCT-DCIP-focused FAQs ===
+  // === Existing Builders-Liability-AMMC-focused FAQs ===
   {
-    question: "What is the FCT-DCIP program about?",
+    question: "What is the Builders-Liability-AMMC program about?",
     answer:
-      "The Federal Capital Territory Development Control Insurance Program (FCT-DCIP) is a partnership initiative that promotes collaboration among homeowners, builders, surveyors, and the Development Control Department. The program ensures compliance with compulsory insurance laws and provides financial protection against risks such as building collapse, property damage, and construction-related liabilities.",
+      "The Federal Capital Territory Development Control Insurance Program (Builders-Liability-AMMC) is a partnership initiative that promotes collaboration among homeowners, builders, surveyors, and the Development Control Department. The program ensures compliance with compulsory insurance laws and provides financial protection against risks such as building collapse, property damage, and construction-related liabilities.",
   },
   {
-    question: "Who is required to participate in the FCT-DCIP program?",
+    question: "Who is required to participate in the Builders-Liability-AMMC program?",
     answer:
       "Participation is mandatory for property owners, builders, and contractors within the Federal Capital Territory. Under Sections 64 and 65 of the Insurance Act 2003, all public buildings and construction projects must be adequately insured to safeguard lives, property, and public safety.",
   },
   {
-    question: "What types of insurance are covered under the FCT-DCIP?",
+    question: "What types of insurance are covered under the Builders-Liability-AMMC?",
     answer:
       "The program includes key coverage types such as Builders’ Liability Insurance (for ongoing construction projects) and Occupiers’ Liability Insurance (for existing buildings). These policies protect against accidents, structural failure, and loss of life or property.",
   },
   {
-    question: "How can I register or verify compliance under FCT-DCIP?",
+    question: "How can I register or verify compliance under Builders-Liability-AMMC?",
     answer:
-      "You can register through the official FCT-DCIP online portal or at designated registration centers in Abuja. Builders and property owners must provide valid documentation of their insurance coverage, which will be verified in partnership with recognized insurance providers.",
+      "You can register through the official Builders-Liability-AMMC online portal or at designated registration centers in Abuja. Builders and property owners must provide valid documentation of their insurance coverage, which will be verified in partnership with recognized insurance providers.",
   },
   {
     question: "What happens if a builder or property owner fails to insure their building?",
@@ -33,12 +33,12 @@ const faqs = [
       "Non-compliance with Sections 64 and 65 of the Insurance Act 2003 attracts legal and regulatory consequences. Beyond penalties, failure to insure exposes property owners and builders to financial loss in the event of accidents or building collapse.",
   },
   {
-    question: "How does the FCT-DCIP benefit homeowners and the public?",
+    question: "How does the Builders-Liability-AMMC benefit homeowners and the public?",
     answer:
       "It provides peace of mind, promotes safer building practices, ensures accountability among professionals, and strengthens the protection of lives and investments in the FCT. It also supports the Development Control Department’s effort to enforce safety and compliance standards across Abuja.",
   },
   {
-    question: "Who manages or oversees the FCT-DCIP program?",
+    question: "Who manages or oversees the Builders-Liability-AMMC program?",
     answer:
       "The program is supervised by the Abuja Metropolitan Management Council (AMMC) through the Department of Development Control, in collaboration with the Nigerian Insurers Association (NIA), accredited insurance companies, and technology partners.",
   },
@@ -75,24 +75,24 @@ const faqs = [
       "Yes. We offer attractive multi-property and loyalty discounts for clients who insure more than one property with us.",
   },
   {
-    question: "What is FCT-DCIP?",
+    question: "What is Builders-Liability-AMMC?",
     answer:
-      "FCT-DCIP stands for Federal Capital Territory Development Control Insurance Program. It is a comprehensive insurance solution for property owners in Abuja.",
+      "Builders-Liability-AMMC stands for Federal Capital Territory Development Control Insurance Program. It is a comprehensive insurance solution for property owners in Abuja.",
   },
   {
-    question: "What are the benefits of the FCT-DCIP?",
+    question: "What are the benefits of the Builders-Liability-AMMC?",
     answer:
-      "The FCT-DCIP provides protection against property damage, liability coverage, and ensures compliance with local regulations.",
+      "The Builders-Liability-AMMC provides protection against property damage, liability coverage, and ensures compliance with local regulations.",
   },
   {
-    question: "Who are the stakeholders in the FCT-DCIP?",
+    question: "Who are the stakeholders in the Builders-Liability-AMMC?",
     answer:
       "Stakeholders include property owners, developers, insurance providers, and the FCT Development Control Department.",
   },
   {
-    question: "What is the advantage of the FCT-DCIP?",
+    question: "What is the advantage of the Builders-Liability-AMMC?",
     answer:
-      "The FCT-DCIP offers tailored insurance solutions, streamlined processes, and enhanced protection for property investments in Abuja.",
+      "The Builders-Liability-AMMC offers tailored insurance solutions, streamlined processes, and enhanced protection for property investments in Abuja.",
   },
 ];
 
@@ -118,7 +118,7 @@ const FAQPage = () => {
             Frequently Asked Questions
           </h1>
           <p className="max-w-2xl mx-auto text-lg">
-            Get clear answers about the FCT-DCIP program, compulsory building
+            Get clear answers about the Builders-Liability-AMMC program, compulsory building
             insurance, and property protection services.
           </p>
         </div>
@@ -169,7 +169,7 @@ const FAQPage = () => {
         </h2>
         <p className="max-w-2xl mx-auto mb-6 text-lg">
           Our team is available to assist with inquiries about registration,
-          insurance verification, or compliance under the FCT-DCIP program.
+          insurance verification, or compliance under the Builders-Liability-AMMC program.
         </p>
         <Link
           href="/contact"

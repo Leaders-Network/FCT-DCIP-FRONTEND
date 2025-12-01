@@ -217,7 +217,7 @@ const EnhancedSurveyorDashboard = () => {
                             // Fetch dual assignment info if it exists
                             if (assignment.dualAssignmentId) {
                                 try {
-                                    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+                                    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
                                     const dualResponse = await fetch(`${API_BASE_URL}/dual-assignment/${assignment.dualAssignmentId}`, {
                                         headers: {
                                             'Authorization': `Bearer ${localStorage.getItem('token')}`
