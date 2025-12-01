@@ -126,40 +126,42 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                     <button
                         onClick={onBack}
-                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-fit"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Policies
+                        <span className="hidden sm:inline">Back to Policies</span>
+                        <span className="sm:hidden">Back</span>
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Enhanced Policy Details</h1>
-                        <p className="text-gray-600 mt-1">
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Policy Details</h1>
+                        <p className="text-sm text-gray-600 mt-1 hidden sm:block">
                             Comprehensive view of your policy status and progress
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     {/* Request Claim Button - Only show for completed policies */}
                     {enhancedStatus?.currentStatus?.toLowerCase() === 'completed' && (
                         <button
                             onClick={() => {
                                 window.location.href = `/dashboard/policies?action=claim&policyId=${policyId}`;
                             }}
-                            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                            className="flex items-center px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
                         >
-                            <Bell className="h-4 w-4 mr-2" />
-                            Request Claim
+                            <Bell className="h-4 w-4 mr-1 sm:mr-2" />
+                            <span className="hidden sm:inline">Request Claim</span>
+                            <span className="sm:hidden">Claim</span>
                         </button>
                     )}
 
-                    <div className="flex items-center space-x-2">
+                    <div className="hidden sm:flex items-center space-x-2">
                         <input
                             type="checkbox"
                             id="autoRefresh"
@@ -173,49 +175,49 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
                     </div>
                     <button
                         onClick={fetchEnhancedStatus}
-                        className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                     >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
+                        <RefreshCw className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Refresh</span>
                     </button>
                 </div>
             </div>
 
             {/* Status Summary */}
             {enhancedStatus && (
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
                         <div className="text-center">
-                            <div className={`text-2xl font-bold ${enhancedStatus.currentStatus?.toLowerCase() === 'completed'
-                                    ? 'text-green-600'
-                                    : 'text-gray-900'
+                            <div className={`text-lg sm:text-2xl font-bold ${enhancedStatus.currentStatus?.toLowerCase() === 'completed'
+                                ? 'text-green-600'
+                                : 'text-gray-900'
                                 }`}>
                                 {enhancedStatus.currentStatus}
                             </div>
-                            <div className="text-sm text-gray-600">Current Status</div>
+                            <div className="text-xs sm:text-sm text-gray-600">Status</div>
                             {enhancedStatus.currentStatus?.toLowerCase() === 'completed' && (
-                                <div className="mt-2">
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        ✓ Ready for Claims
+                                <div className="mt-1 sm:mt-2">
+                                    <span className="inline-flex items-center px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium bg-green-100 text-green-800">
+                                        ✓ Ready
                                     </span>
                                 </div>
                             )}
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-blue-600">
+                            <div className="text-lg sm:text-2xl font-bold text-blue-600">
                                 {enhancedStatus.assignmentProgress ? Object.values(enhancedStatus.assignmentProgress).filter(Boolean).length : 0}/6
                             </div>
-                            <div className="text-sm text-gray-600">Progress Steps</div>
+                            <div className="text-xs sm:text-sm text-gray-600">Progress</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-orange-600">{getUnreadNotificationCount()}</div>
-                            <div className="text-sm text-gray-600">New Notifications</div>
+                            <div className="text-lg sm:text-2xl font-bold text-orange-600">{getUnreadNotificationCount()}</div>
+                            <div className="text-xs sm:text-sm text-gray-600">Notifications</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">
+                            <div className="text-lg sm:text-2xl font-bold text-green-600">
                                 {enhancedStatus.estimatedTimeline?.confidence || 'N/A'}
                             </div>
-                            <div className="text-sm text-gray-600">Timeline Confidence</div>
+                            <div className="text-xs sm:text-sm text-gray-600">Confidence</div>
                         </div>
                     </div>
                 </div>

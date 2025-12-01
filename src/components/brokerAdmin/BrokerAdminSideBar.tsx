@@ -16,10 +16,21 @@ import {
     UserCheck,
     AlertTriangle,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    X
 } from "lucide-react";
 
-const BrokerAdminSidebar = () => {
+interface BrokerAdminSidebarProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+    isMobile?: boolean;
+}
+
+const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
+    isOpen = true,
+    onClose,
+    isMobile = false
+}) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
@@ -27,6 +38,8 @@ const BrokerAdminSidebar = () => {
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed);
     };
+
+    const showExpanded = isMobile || !isCollapsed;
 
 
 
@@ -64,30 +77,32 @@ const BrokerAdminSidebar = () => {
     ];
 
     return (
-
         <aside
-            className={`bg-white shadow-lg transition-all duration-300 flex flex-col border-r border-gray-200 ${isCollapsed ? "w-16" : "w-64"
-                }`}
-
+            className={`bg-white shadow-lg transition-all duration-300 flex flex-col border-r border-gray-200 fixed md:relative z-30 h-full
+                ${isMobile
+                    ? (isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64")
+                    : (isCollapsed ? "w-16" : "w-64")
+                }
+                md:translate-x-0`}
         >
-
-
             {/* Header */}
             <div className="p-4 border-b border-gray-200">
-                <section id="animation"
-                    className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center items-center md:justify-start py-7 mx-5">
-                    <div className="size-4 rounded-full bg-green-200"></div>
-                    <div className="size-8 rounded-full bg-blue-600 animate-bounce"></div>
-                    <div className="size-4 rounded-full bg-red-200 "></div>
-                </section>
-                <div className="flex items-center justify-between space-y-4">
-                    {!isCollapsed ? (
-                        <div className="flex items-center space-x-3 space-y-4">
+                {showExpanded && (
+                    <section id="animation"
+                        className="flex flex-row space-x-4 justify-center items-center py-4">
+                        <div className="size-4 rounded-full bg-green-200"></div>
+                        <div className="size-8 rounded-full bg-blue-600 animate-bounce"></div>
+                        <div className="size-4 rounded-full bg-red-200"></div>
+                    </section>
+                )}
+                <div className="flex items-center justify-between">
+                    {showExpanded ? (
+                        <div className="flex items-center space-x-3">
                             <div className="bg-blue-600 p-2 rounded-lg">
                                 <Building className="h-6 w-6 text-white" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900">Broker Firm Portal</h2>
+                                <h2 className="text-lg font-bold text-gray-900">Broker Portal</h2>
                                 <p className="text-xs text-gray-500">Admin Dashboard</p>
                             </div>
                         </div>
@@ -97,21 +112,30 @@ const BrokerAdminSidebar = () => {
                         </div>
                     )}
 
-                    <button
-                        onClick={toggleSidebar}
-                        className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                        {isCollapsed ? (
-                            <ChevronRight className="h-4 w-4 text-gray-500" />
-                        ) : (
-                            <ChevronLeft className="h-4 w-4 text-gray-500" />
-                        )}
-                    </button>
+                    {isMobile ? (
+                        <button
+                            onClick={onClose}
+                            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                        >
+                            <X className="h-5 w-5 text-gray-500" />
+                        </button>
+                    ) : (
+                        <button
+                            onClick={toggleSidebar}
+                            className="p-1 rounded-full hover:bg-gray-100 transition-colors hidden md:block"
+                        >
+                            {isCollapsed ? (
+                                <ChevronRight className="h-4 w-4 text-gray-500" />
+                            ) : (
+                                <ChevronLeft className="h-4 w-4 text-gray-500" />
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
 
             {/* Organization Badge */}
-            {!isCollapsed && (
+            {showExpanded && (
                 <div className="px-4 py-2 bg-blue-50 border-b border-gray-200">
                     <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -135,15 +159,15 @@ const BrokerAdminSidebar = () => {
                                 href={item.href}
                                 className={`flex items-center px-3 py-2 rounded-lg transition-colors group ${isActive
                                     ? "bg-blue-100 text-blue-700 border border-blue-200"
-                                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 group-hover:scale-110 duration-200"
-                                    } ${isCollapsed ? "justify-center" : ""}`}
-                                title={isCollapsed ? item.label : ""}
+                                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    } ${!showExpanded ? "justify-center" : ""}`}
+                                title={!showExpanded ? item.label : ""}
                             >
                                 <Icon
-                                    className={`w-5 h-5 ${isCollapsed ? "" : "mr-3"} ${isActive ? "text-blue-600" : "text-gray-500 group-hover:text-gray-700"
+                                    className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"} ${isActive ? "text-blue-600" : "text-gray-500 group-hover:text-gray-700"
                                         }`}
                                 />
-                                {!isCollapsed && (
+                                {showExpanded && (
                                     <div className="flex-1">
                                         <div className="font-medium">{item.label}</div>
                                         <div className="text-xs text-gray-500 group-hover:text-gray-600">
@@ -159,7 +183,7 @@ const BrokerAdminSidebar = () => {
 
             {/* User Info & Logout */}
             <div className="border-t border-gray-200 p-4">
-                {!isCollapsed && (
+                {showExpanded && (
                     <div className="mb-3">
                         <div className="flex items-center space-x-3">
                             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -170,7 +194,7 @@ const BrokerAdminSidebar = () => {
                                     Administrator
                                 </p>
                                 <p className="text-xs text-gray-500 truncate">
-                                    {(() => {
+                                    {typeof window !== 'undefined' ? (() => {
                                         try {
                                             const userData = localStorage.getItem('brokerAdminInfo');
                                             if (userData) {
@@ -181,7 +205,7 @@ const BrokerAdminSidebar = () => {
                                         } catch {
                                             return 'admin@faithtrust.org';
                                         }
-                                    })()}
+                                    })() : 'admin@faithtrust.org'}
                                 </p>
                             </div>
                         </div>
@@ -189,12 +213,12 @@ const BrokerAdminSidebar = () => {
                 )}
 
                 <button
-                    className={`flex items-center w-full px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${isCollapsed ? "justify-center" : ""
+                    className={`flex items-center w-full px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${!showExpanded ? "justify-center" : ""
                         }`}
-                    title={isCollapsed ? "Logout" : ""}
+                    title={!showExpanded ? "Logout" : ""}
                 >
-                    <LogOut className={`w-5 h-5 ${isCollapsed ? "" : "mr-3"}`} />
-                    {!isCollapsed && <span>Logout</span>}
+                    <LogOut className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"}`} />
+                    {showExpanded && <span>Logout</span>}
                 </button>
             </div>
         </aside>
