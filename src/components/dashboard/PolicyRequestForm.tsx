@@ -27,7 +27,7 @@ interface PolicyRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePolicyRequestData) => Promise<void>;
-  property?: PropertyDetailWithContact;
+  property?: PropertyDetailWithContact | null;
 }
 
 const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
@@ -165,7 +165,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     setFormData((prev) => ({
       ...prev,
       [section]: {
-        ...((prev[section] as any) || {}),
+        ...(prev[section] as Record<string, unknown> || {}),
         [field]: value,
       },
     }));
@@ -222,10 +222,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   ];
 
   const policyDurations = [
-    "3 Months (Short-term Project)",
-    "6 Months",
     "1 Year",
-    "Project-Based (Until Completion)",
   ];
 
   const additionalCoverageOptions = [

@@ -10,7 +10,8 @@ import {
   Mail,
   X
 } from 'lucide-react';
-import { DualAssignment, AssignmentManagementProps } from '@/types/api.types';
+import { DualAssignment } from '@/types/api.types';
+import { AssignmentManagementProps } from '@/types/component.types';
 
 interface SharedAssignmentManagementProps extends AssignmentManagementProps {
   assignment: DualAssignment;

@@ -63,7 +63,7 @@ export const ClaimsList: React.FC = () => {
         await fetchClaims();
     };
 
-    const getStatusConfig = (status: 'pending' | 'under_review' | 'rejected' | 'completed') => {
+    const getStatusConfig = (status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'completed') => {
         const configs = {
             pending: {
                 bg: 'bg-yellow-50',
@@ -80,6 +80,14 @@ export const ClaimsList: React.FC = () => {
                 icon: FileText,
                 label: 'Under Review',
                 description: 'Your claim is currently being reviewed'
+            },
+            approved: {
+                bg: 'bg-green-50',
+                border: 'border-green-200',
+                text: 'text-green-800',
+                icon: CheckCircle,
+                label: 'Approved',
+                description: 'Your claim has been approved'
             },
             rejected: {
                 bg: 'bg-red-50',

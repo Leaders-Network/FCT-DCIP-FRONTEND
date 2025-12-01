@@ -120,7 +120,7 @@ const PolicyNotificationsComponent: React.FC<PolicyNotificationsProps> = ({
         }
     };
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = notifications?.filter(n => !n.read).length || 0;
 
     if (!notifications || notifications.length === 0) {
         return (

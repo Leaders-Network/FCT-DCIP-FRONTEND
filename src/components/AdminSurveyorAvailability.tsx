@@ -3,11 +3,20 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+import { Surveyor } from '@/types/api.types';
+
 export default function AdminSurveyorAvailability() {
-  const [surveyors, setSurveyors] = useState<any[]>([]);
+  const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedSurveyor, setSelectedSurveyor] = useState<any>(null);
+  const [selectedSurveyor, setSelectedSurveyor] = useState<{
+    _id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    availability?: string;
+    specializations?: string[];
+  } | null>(null);
   const [newAvailability, setNewAvailability] = useState('available');
   const [updating, setUpdating] = useState(false);
 
@@ -65,7 +74,7 @@ export default function AdminSurveyorAvailability() {
             <option value="">Select Surveyor</option>
             {surveyors.map(s => (
               <option key={s._id} value={s._id}>
-                {s.userId?.firstname} {s.userId?.lastname} ({s.profile?.availability})
+                {s.firstname} {s.lastname} ({s.profile?.availability})
               </option>
             ))}
           </select>

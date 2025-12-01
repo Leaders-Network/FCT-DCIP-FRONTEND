@@ -52,7 +52,17 @@ const DualAssignmentCoordination: React.FC<DualAssignmentCoordinationProps> = ({
     dualAssignmentId,
     currentSurveyorOrg
 }) => {
-    const [dualAssignmentData, setDualAssignmentData] = useState<any>(null);
+    const [dualAssignmentData, setDualAssignmentData] = useState<{
+        _id: string;
+        policyId: string;
+        assignmentStatus: string;
+        completionStatus: number;
+        ammcSurveyorContact?: SurveyorInfo;
+        niaSurveyorContact?: SurveyorInfo;
+        priority: string;
+        conflictDetected?: boolean;
+        estimatedCompletion: { overallDeadline: string };
+    } | null>(null);
     const [partnerSurveyor, setPartnerSurveyor] = useState<SurveyorInfo | null>(null);
     const [currentSurveyor, setCurrentSurveyor] = useState<SurveyorInfo | null>(null);
     const [messages, setMessages] = useState<CoordinationMessage[]>([]);

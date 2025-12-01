@@ -213,7 +213,7 @@ export default function UserReportsPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => handleViewDetails(report.reportId)}
+                                                onClick={() => handleViewDetails((report.reportId || report._id) as string)}
                                             >
                                                 <Eye className="w-4 h-4 mr-1" />
                                                 View Details

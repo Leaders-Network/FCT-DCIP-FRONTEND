@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { brokerAdminAPI } from '@/services/api';
 import {
     FileText,
@@ -9,12 +8,20 @@ import {
     Search,
     Filter,
     Eye,
-    RefreshCw
+    RefreshCw,
+    X,
+    Calendar,
+    User,
+    CheckCircle,
+    Clock
 } from 'lucide-react';
-import type { BrokerPolicyRequest, BrokerClaimFilters } from '@/types/api.types';
+import type {
+    BrokerPolicyRequest,
+    BrokerClaimFilters,
+    BrokerStatusUpdateRequest
+} from '@/types/api.types';
 
 export default function BrokerClaimsListPage() {
-    const router = useRouter();
     const [claims, setClaims] = useState<BrokerPolicyRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,6 +31,15 @@ export default function BrokerClaimsListPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalClaims, setTotalClaims] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
+
+    // Modal state
+    const [selectedClaim, setSelectedClaim] = useState<BrokerPolicyRequest | null>(null);
+    const [modalLoading, setModalLoading] = useState(false);
+    const [modalError, setModalError] = useState<string | null>(null);
+    const [updating, setUpdating] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [notes, setNotes] = useState('');
+    const [reason, setReason] = useState('');
 
     useEffect(() => {
         fetchClaims();
@@ -47,8 +63,8 @@ export default function BrokerClaimsListPage() {
             const response = await brokerAdminAPI.getClaims(filters);
             if (response.success) {
                 setClaims(response.claims);
-                setTotalPages(response.pagination?.totalPages || 1);
-                setTotalClaims(response.pagination?.total || 0);
+                setTotalPages(response.totalPages || 1);
+                setTotalClaims(response.total || 0);
             }
         } catch (err) {
             console.error('Failed to fetch claims:', err);
@@ -97,6 +113,75 @@ export default function BrokerClaimsListPage() {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
         }
+    };
+
+    const handleViewClaim = async (claimId: string) => {
+        console.log('🔍 handleViewClaim called with claimId:', claimId);
+        setModalLoading(true);
+        setModalError(null);
+        try {
+            console.log('📡 Fetching claim details...');
+            const res = await brokerAdminAPI.getClaimById(claimId);
+            console.log('✅ Claim fetched:', res);
+            if (res && res.claim) {
+                setSelectedClaim(res.claim);
+                setNotes(res.claim.brokerNotes || '');
+                console.log('✅ Modal should open now');
+            } else {
+                setModalError('Claim not found');
+            }
+        } catch (err) {
+            console.error('❌ Error fetching claim:', err);
+            setModalError(err instanceof Error ? err.message : 'Failed to load claim');
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const handleCloseModal = () => {
+        setSelectedClaim(null);
+        setModalError(null);
+        setSuccessMessage(null);
+        setNotes('');
+        setReason('');
+    };
+
+    const updateStatus = async (status: 'under_review' | 'rejected' | 'completed') => {
+        if (!selectedClaim) return;
+
+        if (status === 'rejected' && !reason.trim()) {
+            setModalError('Please provide a reason for rejection');
+            return;
+        }
+
+        setUpdating(true);
+        setModalError(null);
+        try {
+            const payload: BrokerStatusUpdateRequest = { status };
+            if (notes.trim()) payload.notes = notes.trim();
+            if (reason.trim()) payload.reason = reason.trim();
+
+            const res = await brokerAdminAPI.updateClaimStatus(selectedClaim._id, payload);
+            if (res && res.claim) {
+                setSelectedClaim(res.claim);
+                setSuccessMessage(res.message || 'Status updated successfully');
+                setReason('');
+                setTimeout(() => setSuccessMessage(null), 4000);
+                // Refresh the claims list
+                fetchClaims();
+            } else {
+                setModalError('Failed to update status');
+            }
+        } catch (err) {
+            setModalError(err instanceof Error ? err.message : 'Failed to update status');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const formatCurrency = (amount?: number) => {
+        if (amount == null) return 'N/A';
+        return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
     };
 
     if (loading) {
@@ -236,7 +321,12 @@ export default function BrokerClaimsListPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button
-                                                onClick={() => router.push(`/broker-admin/claims/${claim._id}`)}
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleViewClaim(claim._id);
+                                                }}
                                                 className="inline-flex items-center text-indigo-600 hover:text-indigo-900"
                                             >
                                                 <Eye className="w-4 h-4 mr-1" />
@@ -282,6 +372,185 @@ export default function BrokerClaimsListPage() {
                     </div>
                 )}
             </div>
+
+            {/* Claim Detail Modal */}
+            {selectedClaim && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                            <h2 className="text-2xl font-bold text-gray-900">Claim Details</h2>
+                            <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            {modalLoading && (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
+                                </div>
+                            )}
+
+                            {successMessage && (
+                                <div className="mb-4 rounded-md bg-green-50 border border-green-200 p-4">
+                                    <div className="flex items-center gap-3">
+                                        <CheckCircle className="w-5 h-5 text-green-400" />
+                                        <p className="text-green-800">{successMessage}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {modalError && (
+                                <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4">
+                                    <div className="flex items-center gap-3">
+                                        <AlertCircle className="w-5 h-5 text-red-400" />
+                                        <p className="text-red-800">{modalError}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!modalLoading && (
+                                <>
+                                    {/* Claim Information */}
+                                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                            <FileText className="w-5 h-5" />
+                                            Claim Information
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <p className="text-sm text-gray-600">Claim ID</p>
+                                                <p className="font-medium">{selectedClaim._id}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-600">Policy Number</p>
+                                                <p className="font-medium">{selectedClaim.policyNumber || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-600">Status</p>
+                                                <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusBadge(selectedClaim.brokerStatus || 'pending')}`}>
+                                                    {(selectedClaim.brokerStatus || 'pending').replace('_', ' ').toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-600 flex items-center gap-1">
+                                                    <Calendar className="w-4 h-4" /> Submitted
+                                                </p>
+                                                <p className="font-medium">{formatDate(selectedClaim.createdAt)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-600">Coverage Type</p>
+                                                <p className="font-medium">{selectedClaim.requestDetails.coverageType}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-600">Building Value</p>
+                                                <p className="font-medium">{formatCurrency(selectedClaim.propertyDetails.buildingValue)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contact Information */}
+                                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                            <User className="w-5 h-5" />
+                                            Contact Information
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <p className="text-sm text-gray-600">Name</p>
+                                                <p className="font-medium">{selectedClaim.contactDetails.fullName}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-600">Email</p>
+                                                <p className="font-medium">{selectedClaim.contactDetails.email}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-600">Phone</p>
+                                                <p className="font-medium">{selectedClaim.contactDetails.phoneNumber}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-600">Property Address</p>
+                                                <p className="font-medium">{selectedClaim.propertyDetails.address}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Status Update Section */}
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                            <Clock className="w-5 h-5" />
+                                            Update Status
+                                        </h3>
+
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Notes (Optional)
+                                            </label>
+                                            <textarea
+                                                value={notes}
+                                                onChange={(e) => setNotes(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                rows={2}
+                                                placeholder="Add any notes..."
+                                            />
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Rejection Reason {selectedClaim.brokerStatus === 'pending' && '(Required for rejection)'}
+                                            </label>
+                                            <textarea
+                                                value={reason}
+                                                onChange={(e) => setReason(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                                rows={2}
+                                                placeholder="Provide reason if rejecting..."
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-2 flex-wrap">
+                                            {selectedClaim.brokerStatus === 'pending' && (
+                                                <button
+                                                    onClick={() => updateStatus('under_review')}
+                                                    disabled={updating}
+                                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                                                >
+                                                    {updating ? 'Updating...' : 'Start Review'}
+                                                </button>
+                                            )}
+
+                                            {selectedClaim.brokerStatus === 'under_review' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => updateStatus('completed')}
+                                                        disabled={updating}
+                                                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                                                    >
+                                                        {updating ? 'Updating...' : 'Complete'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => updateStatus('rejected')}
+                                                        disabled={updating}
+                                                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                                                    >
+                                                        {updating ? 'Updating...' : 'Reject'}
+                                                    </button>
+                                                </>
+                                            )}
+
+                                            {(selectedClaim.brokerStatus === 'completed' || selectedClaim.brokerStatus === 'rejected') && (
+                                                <p className="text-gray-600 italic text-sm">
+                                                    This claim has been {selectedClaim.brokerStatus}. No further actions available.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

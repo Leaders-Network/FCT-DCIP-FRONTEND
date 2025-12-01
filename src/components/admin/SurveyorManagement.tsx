@@ -46,7 +46,18 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSurveyor, setSelectedSurveyor] = useState<Surveyor | null>(null);
-  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [performanceData, setPerformanceData] = useState<{
+    totalSurveys: number;
+    completedSurveys: number;
+    currentAssignments: number;
+    rejectedSurveys: number;
+    successRate: number;
+    avgCompletionTime: number;
+    recentActivity: number;
+    rating: number;
+    joinDate: string;
+    lastActive: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -412,8 +423,8 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <button className="text-gray-400 hover:text-gray-600">
                     <MoreVertical className="h-4 w-4" />
                   </button>
-                  {typeof surveyor.userId === "object" && (surveyor.userId as any)?.phonenumber
-                    ? (surveyor.userId as any).phonenumber
+                  {typeof surveyor.userId === "object" && surveyor.userId?.phonenumber
+                    ? surveyor.userId.phonenumber
                     : surveyor.phonenumber || 'N/A'}
                 </div>
               </div>

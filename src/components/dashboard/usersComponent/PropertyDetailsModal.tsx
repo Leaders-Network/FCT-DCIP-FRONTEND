@@ -16,7 +16,7 @@ interface PropertyDetailsModalProps {
     phonenumber?: string;
     category?: { category: string };
     status?: string;
-  };
+  } | null;
 }
 
 const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({

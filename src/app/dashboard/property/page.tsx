@@ -9,15 +9,15 @@ import PropertyDetailsModal from "@/components/dashboard/usersComponent/Property
 import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty";
 
 const PropertyPage = () => {
-  const [properties, setProperties] = useState<any[]>([]);
+  const [properties, setProperties] = useState<import('@/types/survey.types').PropertyType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [selectedProperty, setSelectedProperty] = useState<import('@/types/survey.types').PropertyType | null>(null);
   const [showPolicyRequest, setShowPolicyRequest] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedPropertyForView, setSelectedPropertyForView] = useState<any>(null);
+  const [selectedPropertyForView, setSelectedPropertyForView] = useState<import('@/types/survey.types').PropertyType | null>(null);
   const [showAddNewProperty, setShowAddNewProperty] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [propertyToDelete, setPropertyToDelete] = useState<any>(null);
+  const [propertyToDelete, setPropertyToDelete] = useState<import('@/types/survey.types').PropertyType | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
 
   // Get user name from localStorage with SSR safety
@@ -66,15 +66,7 @@ const PropertyPage = () => {
     fetchProperties();
   };
 
-  interface Property {
-    _id: string;
-    status: string;
-    address: string;
-    propertyType: string;
-    buildingValue: number;
-  }
-
-  const handleDeleteProperty = async (property: Property) => {
+  const handleDeleteProperty = async (property: import('@/types/survey.types').PropertyType) => {
     // Safety check: Only allow deletion of unverified properties
     if (property.status !== "Unverified") {
       alert('Only unverified properties can be deleted.');
@@ -95,12 +87,12 @@ const PropertyPage = () => {
     }
   };
 
-  const handleInsureClick = (property: Property) => {
+  const handleInsureClick = (property: import('@/types/survey.types').PropertyType) => {
     setSelectedProperty(property);
     setShowPolicyRequest(true);
   };
 
-  const handleViewClick = (property: Property) => {
+  const handleViewClick = (property: import('@/types/survey.types').PropertyType) => {
     setSelectedPropertyForView(property);
     setShowViewModal(true);
   };

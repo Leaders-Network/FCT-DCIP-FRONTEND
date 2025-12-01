@@ -245,7 +245,8 @@ const EnhancedSurveyorDashboard = () => {
                 if (dashboardResponse.status !== 'fulfilled' || !dashboardResponse.value?.data?.statistics) {
                     const dualAssignments = enhancedAssignments.filter(a => a.isDualSurveyor).length;
                     const conflictsDetected = enhancedAssignments.filter(a =>
-                        a.dualAssignmentInfo && 'conflictDetected' in a.dualAssignmentInfo && (a.dualAssignmentInfo as any).conflictDetected
+                        a.dualAssignmentInfo && 'conflictDetected' in a.dualAssignmentInfo &&
+                        (a.dualAssignmentInfo as { conflictDetected?: boolean }).conflictDetected
                     ).length;
 
                     setStats(prev => ({

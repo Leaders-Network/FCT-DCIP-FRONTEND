@@ -13,7 +13,9 @@ import {
   Building,
   Calendar,
   MapPin,
-  TrendingUp
+  TrendingUp,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { getUserPolicyRequests } from "@/services/api";
 
@@ -39,36 +41,50 @@ interface PolicyRequest {
 }
 
 export default function PoliciesPage() {
-  const [activeTab, setActiveTab] = useState<'in-progress' | 'completed'>('in-progress');
+  const [activeTab, setActiveTab] = useState<'in-progress' | 'completed' | 'rejected'>('in-progress');
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
   const [showEnhancedView, setShowEnhancedView] = useState(false);
   const [inProgressPolicies, setInProgressPolicies] = useState<PolicyRequest[]>([]);
+  const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
+  const [rejectedPolicies, setRejectedPolicies] = useState<PolicyRequest[]>([]);
   const [completedCount, setCompletedCount] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchInProgressPolicies();
-    fetchCompletedCount();
+    fetchCompletedPolicies();
+    fetchRejectedPolicies();
   }, []);
 
-  const fetchCompletedCount = async () => {
+  const fetchCompletedPolicies = async () => {
     try {
-      const [approvedResponse, surveyedResponse, rejectedResponse, completedResponse] = await Promise.all([
-        getUserPolicyRequests("approved", 1, 1),
-        getUserPolicyRequests("surveyed", 1, 1),
-        getUserPolicyRequests("rejected", 1, 1),
-        getUserPolicyRequests("completed", 1, 1),
+      const [approvedResponse, surveyedResponse, completedResponse] = await Promise.all([
+        getUserPolicyRequests("approved", 1, 100),
+        getUserPolicyRequests("surveyed", 1, 100),
+        getUserPolicyRequests("completed", 1, 100),
       ]);
 
-      const total =
-        (approvedResponse.data.pagination?.totalRecords || 0) +
-        (surveyedResponse.data.pagination?.totalRecords || 0) +
-        (rejectedResponse.data.pagination?.totalRecords || 0) +
-        (completedResponse.data.pagination?.totalRecords || 0);
+      const approved = approvedResponse.data.policyRequests || [];
+      const surveyed = surveyedResponse.data.policyRequests || [];
+      const completed = completedResponse.data.policyRequests || [];
 
-      setCompletedCount(total);
+      const allCompleted = [...approved, ...surveyed, ...completed];
+      setCompletedPolicies(allCompleted);
+      setCompletedCount(allCompleted.length);
     } catch (error) {
-      console.error("Failed to fetch completed count:", error);
+      console.error("Failed to fetch completed policies:", error);
+    }
+  };
+
+  const fetchRejectedPolicies = async () => {
+    try {
+      const response = await getUserPolicyRequests("rejected", 1, 100);
+      const rejected = response.data.policyRequests || [];
+      setRejectedPolicies(rejected);
+      setRejectedCount(rejected.length);
+    } catch (error) {
+      console.error("Failed to fetch rejected policies:", error);
     }
   };
 
@@ -159,36 +175,79 @@ export default function PoliciesPage() {
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Policy Management</h1>
-        <p className="text-gray-600">
-          Track your policy requests through the dual-surveyor assessment process
-        </p>
+      {/* Header with Stats */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Policies</h1>
+            <p className="text-gray-600">
+              Track your insurance policy requests and survey progress
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <div className="bg-blue-50 rounded-lg px-6 py-4 text-center">
+              <div className="text-2xl font-bold text-blue-600">{inProgressPolicies.length}</div>
+              <div className="text-xs text-blue-600 font-medium">In Progress</div>
+            </div>
+            <div className="bg-green-50 rounded-lg px-6 py-4 text-center">
+              <div className="text-2xl font-bold text-green-600">{completedCount}</div>
+              <div className="text-xs text-green-600 font-medium">Completed</div>
+            </div>
+            <div className="bg-red-50 rounded-lg px-6 py-4 text-center">
+              <div className="text-2xl font-bold text-red-600">{rejectedCount}</div>
+              <div className="text-xs text-red-600 font-medium">Rejected</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('in-progress')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'in-progress'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-          >
-            In Progress ({inProgressPolicies.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('completed')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'completed'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-          >
-            Completed ({completedCount})
-          </button>
-        </nav>
+      {/* Enhanced Tabs */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1 mb-6 inline-flex">
+        <button
+          onClick={() => setActiveTab('in-progress')}
+          className={`px-6 py-3 rounded-md font-medium text-sm transition-all ${activeTab === 'in-progress'
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            In Progress
+            <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === 'in-progress' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
+              {inProgressPolicies.length}
+            </span>
+          </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('completed')}
+          className={`px-6 py-3 rounded-md font-medium text-sm transition-all ${activeTab === 'completed'
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" />
+            Completed
+            <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === 'completed' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
+              {completedCount}
+            </span>
+          </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('rejected')}
+          className={`px-6 py-3 rounded-md font-medium text-sm transition-all ${activeTab === 'rejected'
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+        >
+          <div className="flex items-center gap-2">
+            <XCircle className="w-4 h-4" />
+            Rejected
+            <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === 'rejected' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
+              {rejectedCount}
+            </span>
+          </div>
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -242,25 +301,16 @@ export default function PoliciesPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <button
-                            onClick={() => setSelectedPolicyId(policy._id)}
-                            className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedPolicyId(policy._id);
-                              setShowEnhancedView(true);
-                            }}
-                            className="flex items-center px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-                          >
-                            <TrendingUp className="w-4 h-4 mr-2" />
-                            Enhanced View
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedPolicyId(policy._id);
+                            setShowEnhancedView(true);
+                          }}
+                          className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                        >
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          View Progress
+                        </button>
                       </div>
 
                       {/* Dual Surveyor Progress - Compact Version */}
@@ -360,8 +410,114 @@ export default function PoliciesPage() {
             </div>
           )}
         </div>
+      ) : activeTab === 'completed' ? (
+        <div className="space-y-6">
+          {completedPolicies.length > 0 ? (
+            completedPolicies.map((policy) => (
+              <div key={policy._id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {policy.propertyDetails.propertyType}
+                      </h3>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        {policy.status}
+                      </span>
+                    </div>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span>{policy.propertyDetails.address}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Building className="w-4 h-4 mr-2" />
+                        <span>₦{policy.propertyDetails.buildingValue.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>Completed {new Date(policy.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedPolicyId(policy._id);
+                      setShowEnhancedView(true);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Report
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <CheckCircle className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No completed policies</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Completed policies will appear here.
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
-        <PolicyCompletion />
+        <div className="space-y-6">
+          {rejectedPolicies.length > 0 ? (
+            rejectedPolicies.map((policy) => (
+              <div key={policy._id} className="bg-white rounded-lg border border-red-200 shadow-sm p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {policy.propertyDetails.propertyType}
+                      </h3>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <XCircle className="w-3 h-3 mr-1" />
+                        Rejected
+                      </span>
+                    </div>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span>{policy.propertyDetails.address}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Building className="w-4 h-4 mr-2" />
+                        <span>₦{policy.propertyDetails.buildingValue.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>Rejected {new Date(policy.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedPolicyId(policy._id);
+                      setShowEnhancedView(true);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <XCircle className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No rejected policies</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Rejected policies will appear here.
+              </p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
