@@ -180,12 +180,14 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.patch(
+            const response = await adminApi.patch<{ success: boolean }>(
                 `/broker-admin/management/${selectedBrokerAdmin._id}`,
                 formData
             );
 
-            if (response?.success) {
+            const data = (response as unknown as { data?: { success?: boolean } }).data;
+
+            if (data?.success) {
                 alert('Broker admin updated successfully!');
                 setShowEditModal(false);
                 setSelectedBrokerAdmin(null);
@@ -207,9 +209,11 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.delete(`/broker-admin/management/${id}`);
+            const response = await adminApi.delete<{ success: boolean }>(`/broker-admin/management/${id}`);
 
-            if (response?.success) {
+            const data = (response as unknown as { data?: { success?: boolean } }).data;
+
+            if (data?.success) {
                 alert('Broker admin deactivated successfully!');
                 fetchBrokerAdmins();
                 fetchStats();
