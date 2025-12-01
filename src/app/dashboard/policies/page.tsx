@@ -160,7 +160,7 @@ export default function PoliciesPage() {
 
   if (selectedPolicyId) {
     return (
-      <div className="p-6">
+      <div className="p-0">
         {showEnhancedView ? (
           <EnhancedPolicyDetails
             policyId={selectedPolicyId}
@@ -180,76 +180,77 @@ export default function PoliciesPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-0">
       {/* Header with Stats */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Policies</h1>
-            <p className="text-gray-600">
-              Track your insurance policy requests and survey progress
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">My Policies</h1>
+            <p className="text-sm sm:text-base text-gray-600">
+              Track your insurance policy requests
             </p>
           </div>
-          <div className="flex gap-4">
-            <div className="bg-blue-50 rounded-lg px-6 py-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">{inProgressPolicies.length}</div>
-              <div className="text-xs text-blue-600 font-medium">In Progress</div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="bg-blue-50 rounded-lg px-3 sm:px-6 py-2 sm:py-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-blue-600">{inProgressPolicies.length}</div>
+              <div className="text-[10px] sm:text-xs text-blue-600 font-medium">In Progress</div>
             </div>
-            <div className="bg-green-50 rounded-lg px-6 py-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{completedCount}</div>
-              <div className="text-xs text-green-600 font-medium">Completed</div>
+            <div className="bg-green-50 rounded-lg px-3 sm:px-6 py-2 sm:py-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-green-600">{completedCount}</div>
+              <div className="text-[10px] sm:text-xs text-green-600 font-medium">Completed</div>
             </div>
-            <div className="bg-red-50 rounded-lg px-6 py-4 text-center">
-              <div className="text-2xl font-bold text-red-600">{rejectedCount}</div>
-              <div className="text-xs text-red-600 font-medium">Rejected</div>
+            <div className="bg-red-50 rounded-lg px-3 sm:px-6 py-2 sm:py-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-red-600">{rejectedCount}</div>
+              <div className="text-[10px] sm:text-xs text-red-600 font-medium">Rejected</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Enhanced Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1 mb-6 inline-flex">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1 mb-4 sm:mb-6 flex flex-wrap sm:inline-flex">
         <button
           onClick={() => setActiveTab('in-progress')}
-          className={`px-6 py-3 rounded-md font-medium text-sm transition-all ${activeTab === 'in-progress'
+          className={`flex-1 sm:flex-none px-3 sm:px-6 py-2 sm:py-3 rounded-md font-medium text-xs sm:text-sm transition-all ${activeTab === 'in-progress'
             ? 'bg-blue-600 text-white shadow-sm'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
         >
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            In Progress
-            <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === 'in-progress' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
+            <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">In Progress</span>
+            <span className="sm:hidden">Progress</span>
+            <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs ${activeTab === 'in-progress' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
               {inProgressPolicies.length}
             </span>
           </div>
         </button>
         <button
           onClick={() => setActiveTab('completed')}
-          className={`px-6 py-3 rounded-md font-medium text-sm transition-all ${activeTab === 'completed'
+          className={`flex-1 sm:flex-none px-3 sm:px-6 py-2 sm:py-3 rounded-md font-medium text-xs sm:text-sm transition-all ${activeTab === 'completed'
             ? 'bg-blue-600 text-white shadow-sm'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
         >
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" />
-            Completed
-            <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === 'completed' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
+            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Completed</span>
+            <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs ${activeTab === 'completed' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
               {completedCount}
             </span>
           </div>
         </button>
         <button
           onClick={() => setActiveTab('rejected')}
-          className={`px-6 py-3 rounded-md font-medium text-sm transition-all ${activeTab === 'rejected'
+          className={`flex-1 sm:flex-none px-3 sm:px-6 py-2 sm:py-3 rounded-md font-medium text-xs sm:text-sm transition-all ${activeTab === 'rejected'
             ? 'bg-blue-600 text-white shadow-sm'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
         >
-          <div className="flex items-center gap-2">
-            <XCircle className="w-4 h-4" />
-            Rejected
-            <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === 'rejected' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
+            <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Rejected</span>
+            <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs ${activeTab === 'rejected' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
               {rejectedCount}
             </span>
           </div>
@@ -258,25 +259,25 @@ export default function PoliciesPage() {
 
       {/* Tab Content */}
       {activeTab === 'in-progress' ? (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white p-6 rounded-lg border border-gray-200 animate-pulse">
+                <div key={i} className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 animate-pulse">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <div className="h-6 bg-gray-300 rounded w-1/3 mb-2"></div>
+                      <div className="h-5 sm:h-6 bg-gray-300 rounded w-1/3 mb-2"></div>
                       <div className="h-4 bg-gray-300 rounded w-2/3 mb-2"></div>
                       <div className="h-4 bg-gray-300 rounded w-1/2"></div>
                     </div>
-                    <div className="h-6 bg-gray-300 rounded w-24"></div>
+                    <div className="h-6 bg-gray-300 rounded w-20 sm:w-24"></div>
                   </div>
-                  <div className="h-32 bg-gray-300 rounded"></div>
+                  <div className="h-24 sm:h-32 bg-gray-300 rounded"></div>
                 </div>
               ))}
             </div>
           ) : inProgressPolicies.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {inProgressPolicies.map((policy) => {
                 const dualSurveyorData = getMockDualSurveyorData(policy);
 

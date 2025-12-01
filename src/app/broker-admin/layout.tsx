@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getAuthToken } from '@/utils/auth';
 import BrokerAdminSidebar from '@/components/brokerAdmin/BrokerAdminSideBar';
@@ -13,6 +13,30 @@ export default function BrokerAdminLayout({
 }) {
     const router = useRouter();
     const pathname = usePathname();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Handle responsive sidebar
+    useEffect(() => {
+        const checkMobile = () => {
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+            if (!mobile) {
+                setSidebarOpen(true);
+            }
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // Close sidebar on route change (mobile only)
+    useEffect(() => {
+        if (isMobile) {
+            setSidebarOpen(false);
+        }
+    }, [pathname, isMobile]);
 
     useEffect(() => {
         // Skip auth check for login page
@@ -37,12 +61,24 @@ export default function BrokerAdminLayout({
     // Render with sidebar and header for authenticated pages
     return (
         <div className="flex h-screen bg-gray-50">
-            <BrokerAdminSidebar />
+            {/* Mobile Overlay */}
+            {isMobile && sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            <BrokerAdminSidebar
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+                isMobile={isMobile}
+            />
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                <BrokerHeader />
+                <BrokerHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
                     {children}
                 </main>
             </div>

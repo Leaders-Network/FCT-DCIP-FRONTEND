@@ -4,7 +4,7 @@ import type React from "react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, Search, LogOut, Menu, ChevronDown, User } from "lucide-react"
+import { Bell, Search, LogOut, Menu, ChevronDown, User, X } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface AdminLayoutProps {
@@ -21,9 +21,34 @@ import { useAuth } from "@/context/useAuth";
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
   const { logout } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [propertiesOpen, setPropertiesOpen] = useState(false)
   const pathname = usePathname()
+
+  // Handle responsive sidebar
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      if (!mobile) {
+        setSidebarOpen(true)
+      } else {
+        setSidebarOpen(false)
+      }
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Close sidebar on route change (mobile only)
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false)
+    }
+  }, [pathname, isMobile])
 
   // Get user name and role
   const userName = user?.firstname && user?.lastname ? `${user.firstname} ${user.lastname}` : "Paul Blessing"
@@ -223,24 +248,32 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
 
   return (
     <div className="flex h-screen bg-gray-100">
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`bg-white h-full transition-all duration-300 ease-in-out fixed md:relative z-30 border-gray-200 ${sidebarOpen ? "w-64" : "w-20"
+        className={`bg-white h-full transition-all duration-300 ease-in-out border-r border-gray-200 z-30
+          ${isMobile
+            ? `fixed ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-64`
+            : `relative ${sidebarOpen ? "w-64" : "w-20"}`
           }`}
       >
         {/* Logo */}
-        <div
-          className="h-16 flex items-center justify-center border-gray-200 cursor-pointer"
-          onClick={toggleSidebar}
-        >
-          <div className="flex items-center">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
+          <div className="flex items-center cursor-pointer" onClick={() => !isMobile && toggleSidebar()}>
             <svg
               width="35"
               height="25"
               viewBox="0 0 45 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="mr-2"
+              className="mr-2 flex-shrink-0"
             >
               <path
                 d="M8.25807 27.8996H8.21777L8.85317 30.1912L15.3693 31.1403L14.9389 27.1307C12.7278 27.4867 10.498 27.7432 8.25807 27.8996Z"
@@ -276,8 +309,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
                 fill="#333F4D"
               />
             </svg>
-            {sidebarOpen && <span className="font-bold text-lg">Builders-Liability-AMMC</span>}
+            {(sidebarOpen || isMobile) && <span className="font-bold text-lg truncate">Builders-Liability</span>}
           </div>
+          {/* Close button for mobile */}
+          {isMobile && sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -327,11 +369,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
                 ) : (
                   <Link
                     href={item.path}
+                    onClick={() => isMobile && setSidebarOpen(false)}
                     className={`flex items-center px-4 py-3 rounded-lg transition-colors ${pathname === item.path ? "bg-[#028835] text-white" : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                      } ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
                   >
                     {item.icon}
-                    {sidebarOpen && <span className="ml-3 whitespace-nowrap">{item.name}</span>}
+                    {(sidebarOpen || isMobile) && <span className="ml-3 whitespace-nowrap">{item.name}</span>}
                   </Link>
                 )}
               </li>
@@ -343,46 +386,60 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
           <button
             onClick={onLogout}
-            className="flex items-center w-full px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+            className={`flex items-center w-full px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
           >
             <LogOut className="w-5 h-5" />
-            {sidebarOpen && <span className="ml-3">Logout</span>}
+            {(sidebarOpen || isMobile) && <span className="ml-3">Logout</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300">
         {/* Header */}
-        <header className="h-16 bg-white border-gray-200 flex items-center justify-between px-4 sticky top-0 z-10">
-          <div className="">
-            <button className="md:hidden mr-4 text-gray-500" onClick={toggleSidebar}>
-              <Menu size={24} />
+        <header className="h-14 sm:h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 sticky top-0 z-10">
+          <div className="flex items-center flex-1 gap-2 sm:gap-4">
+            {/* Mobile menu button */}
+            <button
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 md:hidden"
+              onClick={toggleSidebar}
+            >
+              <Menu size={22} />
             </button>
-            <div className="flex-1 w-[500px] h-[40px] bg-white border border-[#817e7e]/50 rounded-[5px] flex items-center px-2 sm:px-4">
-              <Search className="text-gray-400 mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+            {/* Desktop collapse button */}
+            <button
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hidden md:block"
+              onClick={toggleSidebar}
+            >
+              <Menu size={22} />
+            </button>
+            <div className="flex-1 max-w-[200px] sm:max-w-[300px] md:max-w-[400px] lg:max-w-[500px] h-9 sm:h-10 bg-white border border-gray-300 rounded-lg flex items-center px-3">
+              <Search className="text-gray-400 mr-2 w-4 h-4 flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Search Insurance available"
-                className="w-full bg-transparent outline-none text-[10px] sm:text-[14px] md:text-[17px]"
+                placeholder="Search..."
+                className="w-full bg-transparent outline-none text-sm"
               />
             </div>
           </div>
 
-          <div className="flex items-center">
-            <Bell className="mr-2 sm:mr-4 text-[#028835] w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button className="p-2 rounded-lg hover:bg-gray-100 relative">
+              <Bell className="text-[#028835] w-5 h-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
             <div className="flex items-center">
-              <div className="mr-2 text-right hidden md:block">
-                <div className="font-medium">{userName}</div>
+              <div className="mr-2 text-right hidden lg:block">
+                <div className="font-medium text-sm truncate max-w-[120px]">{userName}</div>
                 <div className="text-xs text-gray-500">{userRole}</div>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-8 h-8 sm:w-10 sm:h-10 bg-[#028835] rounded-[7px] flex items-center justify-center text-white text-base sm:text-xl font-bold">
+                  <button className="w-8 h-8 sm:w-9 sm:h-9 bg-[#028835] rounded-lg flex items-center justify-center text-white text-sm sm:text-base font-bold">
                     {initials}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
@@ -398,7 +455,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, user }) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-[#f8f8f8] p-6">{children}</main>
+        <main className="flex-1 overflow-auto bg-[#f8f8f8] p-3 sm:p-4 md:p-6">{children}</main>
       </div>
     </div>
   )
