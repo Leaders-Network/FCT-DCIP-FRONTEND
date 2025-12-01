@@ -9,6 +9,7 @@ import {
   POLICY_DURATIONS,
   ADDITIONAL_COVERAGE_OPTIONS
 } from "@/constants/policyConstants";
+import { useAuth } from "@/context/useAuth";
 
 interface PropertyDetailWithContact {
   _id: string;
@@ -36,28 +37,26 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   onSubmit,
   property,
 }) => {
+  const { user } = useAuth();
+
   // Initialize form with user data from localStorage
   const initializeFormData = () => {
-    let userEmail = "";
+    // Prefer authenticated user from context
+    let userEmail = user?.email || "";
 
-    if (typeof window !== 'undefined') {
-      // Get user data from localStorage
-      const storedUser = localStorage.getItem("user");
-
-      if (storedUser) {
-        try {
+    // Fallback to browser storage only if auth context is not yet populated
+    if (!userEmail && typeof window !== "undefined") {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
           const userData = JSON.parse(storedUser);
-
-          // Only get email from user data
           userEmail = userData.email || "";
-        } catch (error) {
-          console.error('Error parsing user data:', error);
         }
-      }
-
-      // Fallback to direct localStorage keys if user object doesn't exist
-      if (!userEmail) {
-        userEmail = localStorage.getItem("email") || "";
+        if (!userEmail) {
+          userEmail = localStorage.getItem("email") || "";
+        }
+      } catch (error) {
+        console.error("Error reading stored user email:", error);
       }
     }
 
@@ -92,20 +91,23 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   // Auto-populate user email when form opens
   useEffect(() => {
     if (isOpen) {
-      let userEmail = "";
+      let userEmail = user?.email || "";
 
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
+      // Fallback to storage if auth context not ready yet
+      if (!userEmail && typeof window !== "undefined") {
         try {
-          const userData = JSON.parse(storedUser);
-          userEmail = userData.email || "";
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            userEmail = userData.email || "";
+          }
+          if (!userEmail) {
+            userEmail = localStorage.getItem("email") || "";
+          }
         } catch (error) {
-          console.error('Error parsing user data:', error);
+          console.error("Error reading stored user email:", error);
         }
       }
-
-      // Fallback to direct localStorage keys
-      if (!userEmail) userEmail = localStorage.getItem("email") || "";
 
       setFormData(prev => ({
         ...prev,
@@ -115,7 +117,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         }
       }));
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   useEffect(() => {
     if (property) {
@@ -128,23 +130,24 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         contactDetails: {
           ...prev.contactDetails,
           phoneNumber: property.phonenumber || "",
-          // Preserve user's email from stored user data
-          email: (() => {
-            const storedUser = localStorage.getItem("user");
-            if (storedUser) {
-              try {
+          // Preserve user's email from auth context or stored user data
+          email: user?.email || (() => {
+            try {
+              const storedUser = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+              if (storedUser) {
                 const userData = JSON.parse(storedUser);
                 return userData.email || "";
-              } catch (error) {
-                return localStorage.getItem("email") || "";
               }
+              return typeof window !== "undefined" ? localStorage.getItem("email") || "" : "";
+            } catch (error) {
+              console.error("Error reading stored user email:", error);
+              return "";
             }
-            return localStorage.getItem("email") || "";
           })(),
         }
       }));
     }
-  }, [property]);
+  }, [property, user]);
 
   useEffect(() => {
     if (!isOpen) {
