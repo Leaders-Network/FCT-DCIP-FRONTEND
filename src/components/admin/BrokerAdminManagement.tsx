@@ -114,7 +114,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.get('/broker-admin/management', {
+            const response = await adminApi.get<{ success: boolean; data: BrokerAdminWithUser[] }>('/broker-admin/management', {
                 params: {
                     status: statusFilter !== "all" ? statusFilter : undefined,
                     search: searchTerm || undefined,
@@ -123,8 +123,8 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                 }
             });
 
-            if ((response as any)?.success && (response as any)?.data) {
-                setBrokerAdmins((response as any).data);
+            if (response && typeof response === 'object' && 'success' in response && response.success && 'data' in response && response.data) {
+                setBrokerAdmins(response.data);
             } else {
                 setBrokerAdmins([]);
             }
@@ -140,10 +140,10 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.get('/broker-admin/management/stats');
+            const response = await adminApi.get<{ success: boolean; data: typeof stats }>('/broker-admin/management/stats');
 
-            if ((response as any)?.success && (response as any)?.data) {
-                setStats((response as any).data);
+            if (response && 'success' in response && response.success && 'data' in response && response.data) {
+                setStats(response.data);
             }
         } catch (error) {
             console.error("Failed to fetch stats:", error);
@@ -156,9 +156,9 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.post('/broker-admin/management', formData);
+            const response = await adminApi.post<{ success: boolean; data: BrokerAdmin }>('/broker-admin/management', formData);
 
-            if ((response as any)?.success) {
+            if (response && 'success' in response && response.success) {
                 alert('Broker admin created successfully!');
                 setShowCreateModal(false);
                 resetForm();
@@ -185,7 +185,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
                 formData
             );
 
-            if ((response as any)?.success) {
+            if (response?.success) {
                 alert('Broker admin updated successfully!');
                 setShowEditModal(false);
                 setSelectedBrokerAdmin(null);
@@ -209,7 +209,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
 
             const response = await adminApi.delete(`/broker-admin/management/${id}`);
 
-            if ((response as any)?.success) {
+            if (response?.success) {
                 alert('Broker admin deactivated successfully!');
                 fetchBrokerAdmins();
                 fetchStats();

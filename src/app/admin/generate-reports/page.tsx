@@ -14,7 +14,7 @@ import {
 
 export default function GenerateReportsPage() {
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<import('@/types/survey.types').TestResultsType | null>(null);
 
     const generateAllReports = async () => {
         try {
@@ -207,7 +207,7 @@ export default function GenerateReportsPage() {
                                                     Policy: {report.policyId.substring(0, 8)}...
                                                 </div>
                                                 <div className="text-xs text-gray-600">
-                                                    {(report as any).propertyAddress || 'No address'}
+                                                    {report.propertyDetails?.address || 'No address'}
                                                 </div>
                                             </div>
                                             <Badge className="bg-green-100 text-green-800">

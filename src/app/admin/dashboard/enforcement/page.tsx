@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import { 
-  Shield, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle, 
-  Eye, 
+import {
+  Shield,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Eye,
   FileText,
   User,
   MapPin,
@@ -142,18 +142,18 @@ const EnforcementPage = () => {
     try {
       // TODO: Replace with actual API call to approve policy
       // This should update the policy status in the backend and sync with user dashboard
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setPolicies(prev => 
-        prev.map(policy => 
-          policy.policyId === policyId 
+
+      setPolicies(prev =>
+        prev.map(policy =>
+          policy.policyId === policyId
             ? { ...policy, status: 'approved' as const }
             : policy
         )
       );
-      
+
       alert('Policy approved successfully! This will now appear as approved in the user dashboard.');
     } catch (error) {
       console.error('Failed to approve policy:', error);
@@ -167,18 +167,18 @@ const EnforcementPage = () => {
     setLoading(true);
     try {
       // TODO: Replace with actual API call to reject policy
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setPolicies(prev => 
-        prev.map(policy => 
-          policy.policyId === policyId 
+
+      setPolicies(prev =>
+        prev.map(policy =>
+          policy.policyId === policyId
             ? { ...policy, status: 'rejected' as const }
             : policy
         )
       );
-      
+
       alert('Policy rejected successfully!');
     } catch (error) {
       console.error('Failed to reject policy:', error);
@@ -188,8 +188,8 @@ const EnforcementPage = () => {
     }
   };
 
-  const filteredPolicies = filter === 'all' 
-    ? policies 
+  const filteredPolicies = filter === 'all'
+    ? policies
     : policies.filter(policy => policy.status === filter);
 
   const stats = {
@@ -214,7 +214,7 @@ const EnforcementPage = () => {
               Manage paid policies from third-party platform requiring approval
             </p>
           </div>
-          
+
           <button
             onClick={() => window.location.reload()}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -302,12 +302,11 @@ const EnforcementPage = () => {
               ].map(({ key, label }) => (
                 <button
                   key={key}
-                  onClick={() => setFilter(key as any)}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    filter === key
+                  onClick={() => setFilter(key as typeof filter)}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === key
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   {label}
                 </button>
@@ -323,7 +322,7 @@ const EnforcementPage = () => {
               Paid Policies ({filteredPolicies.length})
             </h3>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -423,7 +422,7 @@ const EnforcementPage = () => {
                           <Eye className="w-4 h-4 mr-1" />
                           View
                         </button>
-                        
+
                         {policy.status === 'awaiting_approval' && (
                           <>
                             <button
@@ -434,7 +433,7 @@ const EnforcementPage = () => {
                               <CheckCircle className="w-4 h-4 mr-1" />
                               Approve
                             </button>
-                            
+
                             <button
                               onClick={() => handleRejectPolicy(policy.policyId)}
                               disabled={loading}
@@ -452,7 +451,7 @@ const EnforcementPage = () => {
               </tbody>
             </table>
           </div>
-          
+
           {filteredPolicies.length === 0 && (
             <div className="text-center py-12">
               <Shield className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -480,7 +479,7 @@ const EnforcementPage = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="p-6 space-y-6">
                 {/* Customer Information */}
                 <div>
@@ -588,7 +587,7 @@ const EnforcementPage = () => {
                       <CheckCircle className="w-4 h-4 mr-2" />
                       Approve Permit
                     </button>
-                    
+
                     <button
                       onClick={() => {
                         handleRejectPolicy(selectedPolicy.policyId);

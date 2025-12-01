@@ -47,7 +47,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
       const response = await userReportAPI.getReportDetails(reportId);
 
       if (response.success && response.data) {
-        setReportDetails(response.data as any);
+        setReportDetails(response.data as ReportDetailsExtended);
       } else {
         setError(response.message || 'Failed to fetch report details');
       }
@@ -187,7 +187,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
 
     <div class="info-row">
       <span class="label">Policy ID:</span>
-      <span class="value">${(reportData as any).policyId || 'N/A'}</span>
+      <span class="value">${'policyId' in reportData ? (reportData as Record<string, unknown>).policyId as string : 'N/A'}</span>
     </div>
 
     <div class="info-row">
@@ -202,7 +202,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
 
     <div class="info-row">
       <span class="label">Report Status:</span>
-      <span class="value">${(reportData as any).status || 'N/A'}</span>
+      <span class="value">${'status' in reportData ? (reportData as Record<string, unknown>).status as string : 'N/A'}</span>
     </div>
 
     <div class="info-row">
@@ -241,11 +241,11 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
             ? `
       <div class="conflict">
         <h3>⚠️ Conflict Detected</h3>
-        <p>Status: ${(reportData as any).conflictResolved ? 'Resolved' : 'Pending Resolution'
+        <p>Status: ${'conflictResolved' in reportData && (reportData as Record<string, unknown>).conflictResolved ? 'Resolved' : 'Pending Resolution'
             }</p>
 
-        ${(reportData as any).conflictDetails
-              ? `<p>Details: ${JSON.stringify((reportData as any).conflictDetails)}</p>`
+        ${'conflictDetails' in reportData && (reportData as Record<string, unknown>).conflictDetails
+              ? `<p>Details: ${JSON.stringify((reportData as Record<string, unknown>).conflictDetails)}</p>`
               : ''
             }
       </div>

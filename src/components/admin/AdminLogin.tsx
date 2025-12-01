@@ -24,15 +24,17 @@ const AdminLogin: React.FC = () => {
     try {
       await login(email, password, 'employee');
       toast.success("Login successful!");
-      router.push("/admin/dashboard");
+      // Navigation happens in AuthProvider, no need to call router.push here
     } catch (error) {
+      setIsLoading(false);
       if (axios.isAxiosError(error) && error.response) {
-        toast.error(`Login failed: ${error.response.data.message}`);
+        const errorMessage = error.response.data.message || "Invalid credentials";
+        setError(errorMessage);
+        toast.error(`Login failed: ${errorMessage}`);
       } else {
+        setError("Login failed. Please check your credentials.");
         toast.error("Login failed. Please try again.");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -67,9 +69,9 @@ const AdminLogin: React.FC = () => {
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <div className="flex items-center justify-between mb-6">
-          <Button 
-            title="Log-in" 
-            onClick={() => {}} 
+          <Button
+            title="Log-in"
+            onClick={() => { }}
             isLoading={isLoading}
             isDisabled={!email || !password}
           />

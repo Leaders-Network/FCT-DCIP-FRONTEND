@@ -56,10 +56,10 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
   // Check if this is a dual-surveyor assignment
   const isDualSurveyor = assignment?.dualAssignmentId || assignment?.isDualSurveyor;
   const otherOrganization = surveyorOrganization === 'AMMC' ? 'NIA' : 'AMMC';
-  const otherSurveyorContact = assignment?.dualAssignmentInfo ? 
-    (surveyorOrganization === 'AMMC' 
-      ? (assignment.dualAssignmentInfo as any).niaSurveyorContact 
-      : (assignment.dualAssignmentInfo as any).ammcSurveyorContact)
+  const otherSurveyorContact = assignment?.dualAssignmentInfo ?
+    (surveyorOrganization === 'AMMC'
+      ? ('niaSurveyorContact' in assignment.dualAssignmentInfo ? assignment.dualAssignmentInfo.niaSurveyorContact : undefined)
+      : ('ammcSurveyorContact' in assignment.dualAssignmentInfo ? assignment.dualAssignmentInfo.ammcSurveyorContact : undefined))
     : undefined;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,7 +241,7 @@ const SurveySubmissionForm: React.FC<SurveySubmissionFormProps> = ({
                     <label className="block text-sm font-medium text-gray-700 mb-1">Method</label>
                     <select
                       value={newContact.method}
-                      onChange={(e) => setNewContact({ ...newContact, method: e.target.value as any })}
+                      onChange={(e) => setNewContact({ ...newContact, method: e.target.value as 'phone' | 'email' | 'sms' | 'visit' })}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="phone">📞 Phone</option>

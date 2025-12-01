@@ -4,17 +4,11 @@ import {
     ArrowLeft,
     RefreshCw,
     Bell,
-    Clock,
-    TrendingUp,
     AlertTriangle,
-    CheckCircle,
-    Eye,
-    EyeOff
+    Eye
 } from 'lucide-react';
 import { policyStatusService, EnhancedPolicyStatus } from '@/services/policyStatus';
-import PolicyStatusHistoryComponent from './PolicyStatusHistory';
 import PolicyNotificationsComponent from './PolicyNotifications';
-import EstimatedTimelineComponent from './EstimatedTimeline';
 import PolicyDetailsWithDualSurveyor from './PolicyDetailsWithDualSurveyor';
 
 interface EnhancedPolicyDetailsProps {
@@ -29,7 +23,7 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
     const [enhancedStatus, setEnhancedStatus] = useState<EnhancedPolicyStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notifications' | 'timeline'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'notifications'>('overview');
     const [autoRefresh, setAutoRefresh] = useState(true);
 
     useEffect(() => {
@@ -71,7 +65,7 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
             await policyStatusService.markNotificationAsRead(notificationId);
 
             // Update local state
-            if (enhancedStatus) {
+            if (enhancedStatus && enhancedStatus.notifications) {
                 const updatedNotifications = enhancedStatus.notifications.map(n =>
                     n._id === notificationId ? { ...n, read: true } : n
                 );
@@ -89,19 +83,15 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
         switch (tab) {
             case 'overview':
                 return <Eye className="h-4 w-4" />;
-            case 'history':
-                return <Clock className="h-4 w-4" />;
             case 'notifications':
                 return <Bell className="h-4 w-4" />;
-            case 'timeline':
-                return <TrendingUp className="h-4 w-4" />;
             default:
                 return <Eye className="h-4 w-4" />;
         }
     };
 
     const getUnreadNotificationCount = () => {
-        return enhancedStatus?.notifications.filter(n => !n.read).length || 0;
+        return enhancedStatus?.notifications?.filter(n => !n.read).length || 0;
     };
 
     if (loading) {
@@ -188,7 +178,7 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
                         </div>
                         <div className="text-center">
                             <div className="text-2xl font-bold text-blue-600">
-                                {Object.values(enhancedStatus.assignmentProgress).filter(Boolean).length}/6
+                                {enhancedStatus.assignmentProgress ? Object.values(enhancedStatus.assignmentProgress).filter(Boolean).length : 0}/6
                             </div>
                             <div className="text-sm text-gray-600">Progress Steps</div>
                         </div>
@@ -198,7 +188,7 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
                         </div>
                         <div className="text-center">
                             <div className="text-2xl font-bold text-green-600">
-                                {enhancedStatus.estimatedTimeline.confidence}
+                                {enhancedStatus.estimatedTimeline?.confidence || 'N/A'}
                             </div>
                             <div className="text-sm text-gray-600">Timeline Confidence</div>
                         </div>
@@ -210,17 +200,15 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
             <div className="border-b border-gray-200">
                 <nav className="-mb-px flex space-x-8">
                     {[
-                        { key: 'overview', label: 'Overview' },
-                        { key: 'history', label: 'Status History' },
-                        { key: 'notifications', label: 'Notifications' },
-                        { key: 'timeline', label: 'Timeline' }
+                        { key: 'overview' as const, label: 'Overview' },
+                        { key: 'notifications' as const, label: 'Notifications' }
                     ].map((tab) => (
                         <button
                             key={tab.key}
-                            onClick={() => setActiveTab(tab.key as any)}
+                            onClick={() => setActiveTab(tab.key)}
                             className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.key
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             {getTabIcon(tab.key)}
@@ -245,22 +233,10 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
                     />
                 )}
 
-                {activeTab === 'history' && enhancedStatus && (
-                    <PolicyStatusHistoryComponent
-                        history={enhancedStatus.statusHistory}
-                    />
-                )}
-
                 {activeTab === 'notifications' && enhancedStatus && (
                     <PolicyNotificationsComponent
                         notifications={enhancedStatus.notifications}
                         onMarkAsRead={handleMarkNotificationAsRead}
-                    />
-                )}
-
-                {activeTab === 'timeline' && enhancedStatus && (
-                    <EstimatedTimelineComponent
-                        timeline={enhancedStatus.estimatedTimeline}
                     />
                 )}
             </div>

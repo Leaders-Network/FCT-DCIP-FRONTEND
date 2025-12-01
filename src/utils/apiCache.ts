@@ -10,7 +10,7 @@ interface CacheEntry<T> {
 }
 
 class APICache {
-    private cache: Map<string, CacheEntry<any>> = new Map();
+    private cache: Map<string, CacheEntry<unknown>> = new Map();
 
     /**
      * Get cached data if available and not expired

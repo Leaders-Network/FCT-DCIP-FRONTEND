@@ -10,7 +10,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const BrokerHeader = () => {
-    const [adminInfo, setAdminInfo] = useState<any>(null);
+    const [adminInfo, setAdminInfo] = useState<{
+        fullname: string;
+        email: string;
+        organization: string;
+        brokerFirmName?: string;
+    } | null>(null);
     const [notifications, setNotifications] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -25,7 +30,7 @@ const BrokerHeader = () => {
         setNotifications(3); // Mock data
     }, []);
 
-   
+
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,9 +38,7 @@ const BrokerHeader = () => {
         console.log("Searching for:", searchQuery);
     };
 
-    const adminName = adminInfo?.name || adminInfo?.firstname
-        ? `${adminInfo.firstname} ${adminInfo.lastname}`
-        : "Broker Admin";
+    const adminName = adminInfo?.fullname || "Broker Admin";
 
     const initials = adminName
         .split(" ")
@@ -129,7 +132,7 @@ const BrokerHeader = () => {
 
                                 <DropdownMenuSeparator />
 
-                                <DropdownMenuItem   className="text-red-600">
+                                <DropdownMenuItem className="text-red-600">
                                     <LogOut className="mr-2 h-4 w-4" />
                                     <span>Logout</span>
                                 </DropdownMenuItem>
