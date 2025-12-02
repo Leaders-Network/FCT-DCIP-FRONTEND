@@ -49,25 +49,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-
-       {/*  OPEN SIDEBAR BUTTON (mobile only) */}
-{isMobile && !sidebarOpen && (
-  <button
-    onClick={() => setSidebarOpen(true)}
-    className="
-      fixed top-20 left-4 z-30 
-      p-2 rounded-md 
-      bg-white shadow-md 
-      border border-gray-200 
-      active:scale-95 
-      transition
-      md:hidden
-    "
-  >
-    ☰
-  </button>
-)}
+        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
           {children}

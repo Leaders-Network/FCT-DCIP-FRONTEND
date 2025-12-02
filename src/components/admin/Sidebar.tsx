@@ -20,18 +20,20 @@ const NavItem = ({
   href,
   icon: Icon,
   label,
-  collapsed
+  collapsed,
+  onClick
 }: {
   href: string;
   icon: LucideIcon;
   label: string;
   collapsed: boolean;
+  onClick?: () => void;
 }) => {
   const pathname = usePathname();
   const isActive = pathname === href;
 
   return (
-    <Link href={href}>
+    <Link href={href} onClick={onClick}>
       <div
         className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors 
         ${isActive ? "bg-[#028835] text-white" : "text-gray-600 hover:bg-gray-100"}
@@ -95,16 +97,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
 
       {/* NAV */}
       <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <NavItem collapsed={collapsed} href="/admin/dashboard" icon={Home} label="Dashboard" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/property" icon={Building} label="Property" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/policies" icon={FileText} label="Policies" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/dual-assignments" icon={UserCheck} label="Assignments" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/enforcement" icon={Shield} label="Enforcement" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/surveyors" icon={Users} label="Surveyors" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/administrators" icon={ClipboardList} label="Administrators" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/user-inquiries" icon={AlertTriangle} label="User Inquiries" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/processing-monitor" icon={FileText} label="Processing Monitor" />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/settings" icon={Settings} label="Settings" />
+        <NavItem collapsed={collapsed} href="/admin/dashboard" icon={Home} label="Dashboard" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/property" icon={Building} label="Property" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/policies" icon={FileText} label="Policies" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/dual-assignments" icon={UserCheck} label="Assignments" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/enforcement" icon={Shield} label="Enforcement" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/surveyors" icon={Users} label="Surveyors" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/administrators" icon={ClipboardList} label="Administrators" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/user-inquiries" icon={AlertTriangle} label="User Inquiries" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/processing-monitor" icon={FileText} label="Processing Monitor" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/settings" icon={Settings} label="Settings" onClick={isMobile ? onClose : undefined} />
       </div>
 
       {/* LOGOUT */}
