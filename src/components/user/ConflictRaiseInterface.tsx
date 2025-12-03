@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     MessageSquare,
     AlertTriangle,
@@ -12,13 +12,15 @@ import {
     FileText,
     Clock
 } from 'lucide-react';
+import { getCookie } from '@/utils/cookies';
 
 interface ConflictRaiseInterfaceProps {
-    policyId: string;
+    policyId?: string;
     reportId?: string;
+    mergedReportId?: string;
     isOpen: boolean;
     onClose: () => void;
-    onSubmit?: (inquiryId: string) => void;
+    onSubmit?: (data: ConflictInquirySubmitData) => void;
     conflictContext?: {
         type: string;
         severity: string;
@@ -26,7 +28,19 @@ interface ConflictRaiseInterfaceProps {
     };
 }
 
+export interface ConflictInquirySubmitData {
+    policyId?: string;
+    mergedReportId?: string;
+    conflictType: string;
+    description: string;
+    priority: 'low' | 'medium' | 'high';
+    contactPreference: 'email' | 'phone';
+    additionalInfo?: string;
+}
+
 interface ConflictInquiry {
+    policyId: string;
+    reportId: string;
     conflictType: string;
     description: string;
     urgency: 'low' | 'medium' | 'high';
@@ -38,28 +52,95 @@ interface ConflictInquiry {
     };
 }
 
+interface PolicyOption {
+    _id: string;
+    policyNumber?: string;
+    propertyDetails?: {
+        address: string;
+        propertyType?: string;
+    };
+    status?: string;
+}
+
 const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
     policyId,
     reportId,
+    mergedReportId,
     isOpen,
     onClose,
     onSubmit,
     conflictContext
 }) => {
+    // Use mergedReportId if reportId is not provided
+    const effectiveReportId = reportId || mergedReportId;
     const [formData, setFormData] = useState<ConflictInquiry>({
+        policyId: '',
+        reportId: '',
         conflictType: conflictContext?.type || '',
         description: '',
         urgency: 'medium',
         contactPreference: 'email',
         userContact: {
-            email: localStorage.getItem('email') || '',
+            email: '',
             phone: '',
-            name: localStorage.getItem('fullname') || ''
+            name: ''
         }
     });
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [inquiryId, setInquiryId] = useState<string>('');
+    const [policies, setPolicies] = useState<PolicyOption[]>([]);
+    const [loadingPolicies, setLoadingPolicies] = useState(false);
+
+    // Load user info from cookies and fetch policies on mount
+    useEffect(() => {
+        const email = getCookie('userEmail') || getCookie('email') || '';
+        const name = getCookie('fullname') || getCookie('userName') || '';
+        setFormData(prev => ({
+            ...prev,
+            userContact: {
+                ...prev.userContact,
+                email,
+                name
+            }
+        }));
+
+        if (isOpen) {
+            fetchUserPolicies();
+        }
+    }, [isOpen]);
+
+    const fetchUserPolicies = async () => {
+        try {
+            setLoadingPolicies(true);
+            const { getUserPolicyRequests } = await import('@/services/api');
+
+            // Fetch completed, approved, and surveyed policies
+            const [completedRes, approvedRes, surveyedRes] = await Promise.all([
+                getUserPolicyRequests('completed', 1, 100).catch(() => ({ data: { policyRequests: [] } })),
+                getUserPolicyRequests('approved', 1, 100).catch(() => ({ data: { policyRequests: [] } })),
+                getUserPolicyRequests('surveyed', 1, 100).catch(() => ({ data: { policyRequests: [] } }))
+            ]);
+
+            const allPolicies = [
+                ...(completedRes?.data?.policyRequests || []),
+                ...(approvedRes?.data?.policyRequests || []),
+                ...(surveyedRes?.data?.policyRequests || [])
+            ];
+
+            // Remove duplicates by _id
+            const uniquePolicies = allPolicies.filter((policy, index, self) =>
+                index === self.findIndex((p) => p._id === policy._id)
+            );
+
+            setPolicies(uniquePolicies);
+        } catch (error) {
+            console.error('Error fetching policies:', error);
+            setPolicies([]);
+        } finally {
+            setLoadingPolicies(false);
+        }
+    };
 
     const conflictTypes = [
         { value: 'recommendation_mismatch', label: 'Surveyor Recommendations Differ' },
@@ -82,33 +163,48 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
         setSubmitting(true);
 
         try {
-            const response = await fetch('/api/v1/user-conflict-inquiries', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    policyId,
-                    reportId,
-                    ...formData
-                })
+            // Use the API service for proper token handling
+            const { default: api } = await import('@/services/api');
+
+            const response = await api.post('/user-conflict-inquiries', {
+                policyId: formData.policyId || undefined,
+                mergedReportId: formData.reportId || undefined,
+                conflictType: formData.conflictType,
+                description: formData.description,
+                urgency: formData.urgency,
+                contactPreference: formData.contactPreference,
+                userContact: {
+                    email: formData.userContact.email,
+                    phone: formData.userContact.phone || '',
+                    preferredTime: ''
+                }
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to submit conflict inquiry');
-            }
+            if (response.data?.success) {
+                setInquiryId(response.data.data.referenceId);
+                setSubmitted(true);
 
-            const data = await response.json();
-            setInquiryId(data.data.referenceId);
-            setSubmitted(true);
-
-            if (onSubmit) {
-                onSubmit(data.data.referenceId);
+                if (onSubmit) {
+                    // Map form data to ConflictInquirySubmitData format
+                    const submitData: ConflictInquirySubmitData = {
+                        policyId: formData.policyId || undefined,
+                        mergedReportId: formData.reportId || undefined,
+                        conflictType: formData.conflictType,
+                        description: formData.description,
+                        priority: formData.urgency,
+                        contactPreference: formData.contactPreference === 'both' ? 'email' : formData.contactPreference,
+                        additionalInfo: formData.userContact.phone || undefined
+                    };
+                    onSubmit(submitData);
+                }
+            } else {
+                throw new Error(response.data?.message || 'Failed to submit conflict inquiry');
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Failed to submit inquiry:', error);
-            alert('Failed to submit inquiry. Please try again.');
+            const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+            const errorMessage = axiosError?.response?.data?.message || axiosError?.message || 'Failed to submit inquiry. Please try again.';
+            alert(errorMessage);
         } finally {
             setSubmitting(false);
         }
@@ -220,21 +316,32 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                     ) : (
                         /* Form State */
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Policy Information */}
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <h4 className="font-medium text-gray-900 mb-2">Policy Information</h4>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <span className="text-gray-600">Policy ID:</span>
-                                        <span className="ml-2 font-mono">{policyId.substring(0, 8).toUpperCase()}</span>
-                                    </div>
-                                    {reportId && (
-                                        <div>
-                                            <span className="text-gray-600">Report ID:</span>
-                                            <span className="ml-2 font-mono">{reportId.substring(0, 8).toUpperCase()}</span>
-                                        </div>
-                                    )}
-                                </div>
+                            {/* Policy Selection */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Related Policy *
+                                </label>
+                                <select
+                                    value={formData.policyId}
+                                    onChange={(e) => handleInputChange('policyId', e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    required
+                                    disabled={loadingPolicies}
+                                >
+                                    <option value="">
+                                        {loadingPolicies ? 'Loading policies...' : 'Select a policy'}
+                                    </option>
+                                    {policies.map((policy) => (
+                                        <option key={policy._id} value={policy._id}>
+                                            {policy.propertyDetails?.propertyType || 'Property'} - {policy.propertyDetails?.address?.substring(0, 40) || 'No address'}...
+                                        </option>
+                                    ))}
+                                </select>
+                                {policies.length === 0 && !loadingPolicies && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        No completed policies found. You can only raise inquiries for completed policies.
+                                    </p>
+                                )}
                             </div>
 
                             {/* Conflict Context */}

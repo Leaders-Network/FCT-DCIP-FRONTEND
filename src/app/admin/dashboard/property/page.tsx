@@ -8,9 +8,22 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { getAdminProperties } from "@/services/api";
 
+interface AdminProperty {
+  _id: string;
+  address: string;
+  propertyType: string;
+  buildingValue: number;
+  status: string;
+  createdAt?: string;
+  ownedBy?: {
+    firstname: string;
+    lastname: string;
+  };
+}
+
 export default function PropertiesPage() {
   const [showPropertySidebar, setShowPropertySidebar] = useState(false)
-  const [properties, setProperties] = useState<any[]>([])
+  const [properties, setProperties] = useState<AdminProperty[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false)
@@ -18,19 +31,10 @@ export default function PropertiesPage() {
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   const [searchKeyword, setSearchKeyword] = useState("")
-  const [filteredProperties, setFilteredProperties] = useState<any[]>([])
+  const [filteredProperties, setFilteredProperties] = useState<AdminProperty[]>([])
   const [selectedProperties, setSelectedProperties] = useState<string[]>([])
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null)
-
-  interface AdminProperty {
-    _id: string;
-    address: string;
-    propertyType: string;
-    buildingValue: number;
-    status: string;
-  }
-
   const [propertyToDelete, setPropertyToDelete] = useState<AdminProperty | null>(null)
 
   const statusOptions = ["Active", "Expired", "Blacklisted", "Processing", "Inactive", "Pending", "Cancelled"]
