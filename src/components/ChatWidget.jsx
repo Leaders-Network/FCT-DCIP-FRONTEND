@@ -63,7 +63,7 @@ export default function ChatWidget() {
   ];
 
   return (
-    <div className="fixed bottom-1 right-6 z-50 flex flex-col items-end space-y-3 font-sans">
+    <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 md:bottom-6 md:right-6 z-50 flex flex-col items-end space-y-2 sm:space-y-3 font-sans">
       {/* 💬 Show Prompt only on md+ screens */}
       {showPrompt && !open && (
         <div
@@ -176,10 +176,10 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Floating Button (always visible) */}
+      {/* Floating Button (always visible) - smaller on mobile */}
       <button
         onClick={() => setOpen(!open)}
-        className="text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
+        className="text-white w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
         style={{ backgroundColor: brandColor }}
         onMouseEnter={(e) =>
           (e.currentTarget.style.backgroundColor = brandHover)
@@ -188,7 +188,7 @@ export default function ChatWidget() {
           (e.currentTarget.style.backgroundColor = brandColor)
         }
       >
-        <MessageCircle size={26} />
+        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
       </button>
     </div>
   );

@@ -22,9 +22,28 @@ import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
+interface Administrator {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phonenumber: string;
+  employeeRole?: {
+    _id: string;
+    role: string;
+  };
+  employeeStatus?: {
+    _id: string;
+    status: string;
+  };
+  deleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export default function AdministratorsPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
-  const [administrators, setAdministrators] = useState<any[]>([])
+  const [administrators, setAdministrators] = useState<Administrator[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -195,7 +214,7 @@ export default function AdministratorsPage() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{`${admin.firstname} ${admin.lastname}`}</div>
-                        <div className="text-sm text-gray-500">{admin.employeeRole.role}</div>
+                        <div className="text-sm text-gray-500">{admin.employeeRole?.role || 'N/A'}</div>
                       </div>
                     </div>
                   </TableCell>
@@ -203,11 +222,11 @@ export default function AdministratorsPage() {
                   <TableCell>{admin.phonenumber}</TableCell>
                   <TableCell>
                     <Switch
-                      checked={admin.employeeStatus.status === 'Active'}
-                      onCheckedChange={() => handleToggleStatus(admin._id, admin.employeeStatus.status)}
+                      checked={admin.employeeStatus?.status === 'Active'}
+                      onCheckedChange={() => handleToggleStatus(admin._id, admin.employeeStatus?.status || 'Inactive')}
                     />
                   </TableCell>
-                  <TableCell>{new Date(admin.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

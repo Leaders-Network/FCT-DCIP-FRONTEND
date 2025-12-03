@@ -265,8 +265,6 @@ const ContactsPage: React.FC = () => {
                     assignmentStatus={contactData.assignmentStatus}
                     ammcAdmin={contactData.ammcAdmin}
                     niaAdmin={contactData.niaAdmin}
-                    policyId={contactData.policyId || undefined}
-                    mergedReportId={contactData.mergedReportId || undefined}
                     hasConflicts={contactData.hasConflicts}
                     showContactActions={true}
                     defaultExpandedSection="both"

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import PaymentDecisionDisplay from './PaymentDecisionDisplay';
-import ConflictRaiseInterface from './ConflictRaiseInterface';
+import ConflictRaiseInterface, { ConflictInquirySubmitData } from './ConflictRaiseInterface';
 import PolicyEditInterface from './PolicyEditInterface';
 
 interface EnhancedPaymentDecisionHubProps {
@@ -29,8 +29,8 @@ const EnhancedPaymentDecisionHub: React.FC<EnhancedPaymentDecisionHubProps> = ({
         setShowEditInterface(true);
     };
 
-    const handleConflictSubmitted = (inquiryId: string) => {
-        console.log('Conflict inquiry submitted:', inquiryId);
+    const handleConflictSubmitted = (data: ConflictInquirySubmitData) => {
+        console.log('Conflict inquiry submitted:', data);
         setShowConflictInterface(false);
         // Optionally refresh the payment decision display
     };

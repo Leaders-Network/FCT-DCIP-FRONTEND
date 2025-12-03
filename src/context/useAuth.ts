@@ -1,29 +1,14 @@
 import { useContext } from "react";
 import { AuthContext } from "./AuthProvider";
+import { User, Employee } from "@/types/api.types";
 
-export interface User {
-  _id: string;
-  firstname: string;
-  lastname: string;
-  email: string;
-  phonenumber: string;
-  employeeRole: {
-    _id: string;
-    role: string;
-  };
-  employeeStatus: {
-    _id: string;
-    status: string;
-  };
-  deleted: boolean;
-}
+export type AuthenticatedUser = User | Employee;
 
 export interface AuthContextType {
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (email: string, password: string, userType: 'user' | 'employee') => Promise<void>;
   logout: () => void;
-  user: User | null;
-  token: string | null;
+  user: AuthenticatedUser | null;
 }
 
 export const useAuth = () => {
@@ -33,3 +18,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Re-export types for convenience
+export type { User, Employee } from "@/types/api.types";

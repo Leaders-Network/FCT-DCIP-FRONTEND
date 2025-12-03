@@ -16,8 +16,10 @@ import {
     Clock,
     CheckCircle,
     AlertTriangle,
-    Download
+    Download,
+    MessageSquare
 } from 'lucide-react';
+import ConflictRaiseInterface from '@/components/user/ConflictRaiseInterface';
 import { ReportDetails } from '@/types/api.types';
 
 interface PolicyDetailsWithDualSurveyorProps {
@@ -91,6 +93,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
     const [dualAssignmentData, setDualAssignmentData] = useState<DualAssignmentData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showConflictModal, setShowConflictModal] = useState(false);
 
     useEffect(() => {
         fetchDualAssignmentData();
@@ -630,18 +633,27 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
             {/* Report Downloads */}
             {dualAssignmentData.completionStatus === 100 && (
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                         <h2 className="text-xl font-bold text-gray-900">Survey Reports</h2>
-                        <button
-                            onClick={() => {
-                                // Navigate to claims or open claim modal
-                                window.location.href = `/dashboard/policies?action=claim&policyId=${policyId}`;
-                            }}
-                            className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
-                        >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Request Claim
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={() => setShowConflictModal(true)}
+                                className="flex items-center px-4 py-2 text-sm font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+                            >
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Raise Inquiry
+                            </button>
+                            <button
+                                onClick={() => {
+                                    // Navigate to claims or open claim modal
+                                    window.location.href = `/dashboard/policies?action=claim&policyId=${policyId}`;
+                                }}
+                                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                                <FileText className="w-4 h-4 mr-2" />
+                                Request Claim
+                            </button>
+                        </div>
                     </div>
                     <div className="space-y-4">
                         <p className="text-sm text-gray-600 mb-4">
@@ -925,6 +937,17 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                 </div>
             )}
 
+            {/* Conflict Raise Modal */}
+            <ConflictRaiseInterface
+                policyId={policyId}
+                isOpen={showConflictModal}
+                onClose={() => setShowConflictModal(false)}
+                onSubmit={(referenceId) => {
+                    console.log('Inquiry submitted:', referenceId);
+                    setShowConflictModal(false);
+                    alert(`Your inquiry has been submitted successfully!\nReference ID: ${referenceId}\n\nYou can track your inquiry in the "My Inquiries" section.`);
+                }}
+            />
         </div>
     );
 };
