@@ -1248,6 +1248,64 @@ export const adminApi = {
     return response.data;
   },
 
+  // User Conflict Inquiries
+  getUserConflictInquiries: async (filters?: {
+    status?: string;
+    urgency?: string;
+    conflictType?: string;
+    organization?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== 'all') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/user-conflict-inquiries/admin${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    console.log('API: Calling endpoint:', endpoint);
+    console.log('API: Full URL:', `${API_BASE_URL}${endpoint}`);
+    console.log('API: Filters:', filters);
+    const response = await api.get(endpoint);
+    console.log('API: Response status:', response.status);
+    console.log('API: Response data:', response.data);
+    return response.data;
+  },
+
+  getUserConflictInquiryById: async (inquiryId: string) => {
+    const response = await api.get(`/user-conflict-inquiries/admin/${inquiryId}`);
+    return response.data;
+  },
+
+  assignConflictInquiry: async (inquiryId: string, organization: string = 'AMMC') => {
+    const response = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/assign`, { organization });
+    return response.data;
+  },
+
+  respondToConflictInquiry: async (inquiryId: string, response: string, method: string = 'email') => {
+    const res = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/respond`, { response, method });
+    return res.data;
+  },
+
+  addConflictInquiryNote: async (inquiryId: string, note: string, noteType: string = 'general') => {
+    const response = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/add-note`, { note, noteType });
+    return response.data;
+  },
+
+  escalateConflictInquiry: async (inquiryId: string, escalatedTo: string, reason: string) => {
+    const response = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/escalate`, { escalatedTo, reason });
+    return response.data;
+  },
+
+  closeConflictInquiry: async (inquiryId: string, closureReason?: string) => {
+    const response = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/close`, { closureReason });
+    return response.data;
+  },
+
   downloadFile: async (fileId: string) => {
     const response = await api.get(`/files/download/${fileId}`, { responseType: 'blob' });
     return response;
