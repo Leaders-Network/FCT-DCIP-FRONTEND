@@ -78,29 +78,30 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     availability: "available" as "available" | "busy" | "unavailable"
   });
 
-  useEffect(() => {
-    fetchSurveyors();
-    fetchAssignments();
-  }, []);
-
   const fetchSurveyors = async () => {
     setLoading(true);
     try {
       const { adminApi } = await import("@/services/api");
 
-      // Fetch AMMC surveyors from the API
-      const response = await adminApi.getSurveyors({
+      const filters = {
         status: statusFilter !== "all" ? statusFilter : undefined,
         specialization: specializationFilter !== "all" ? specializationFilter : undefined,
         organization: "AMMC", // Filter for AMMC surveyors only
         search: searchTerm || undefined
-      });
+      };
+
+      console.log("Fetching surveyors with filters:", filters);
+
+      // Fetch AMMC surveyors from the API
+      const response = await adminApi.getSurveyors(filters);
 
       console.log("Surveyor API response:", response);
+      console.log("Surveyors count:", response?.data?.length || 0);
 
       if (response?.success && response?.data) {
         setSurveyors(response.data);
       } else {
+        console.warn("No surveyors data in response");
         setSurveyors([]);
       }
     } catch (error) {
@@ -110,6 +111,21 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       setLoading(false);
     }
   };
+
+  // Fetch on filter changes
+  useEffect(() => {
+    fetchSurveyors();
+    fetchAssignments();
+  }, [statusFilter, specializationFilter]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      fetchSurveyors();
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
 
   const fetchAssignments = async () => {
     try {
@@ -204,25 +220,8 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }
   };
 
-  const filteredSurveyors = (surveyors || []).filter(surveyor => {
-    const matchesSearch =
-      (surveyor?.firstname || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-      (surveyor?.lastname || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-      (surveyor?.email || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-      (surveyor?.licenseNumber || '').toLowerCase().includes((searchTerm || '').toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" ||
-      (surveyor?.employeeStatus?.status || '').toLowerCase() === (statusFilter || '').toLowerCase();
-
-    const matchesSpecialization =
-      specializationFilter === "all" ||
-      (surveyor?.specializations || []).some(spec =>
-        (spec || '').toLowerCase().includes((specializationFilter || '').toLowerCase())
-      );
-
-    return matchesSearch && matchesStatus && matchesSpecialization;
-  });
+  // Backend now handles all filtering, so we just use the surveyors directly
+  const filteredSurveyors = surveyors || [];
 
   const getStatusBadge = (status: string) => {
     const colors = {

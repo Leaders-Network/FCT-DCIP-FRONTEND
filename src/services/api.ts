@@ -1267,12 +1267,7 @@ export const adminApi = {
       });
     }
     const endpoint = `/user-conflict-inquiries/admin${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    console.log('API: Calling endpoint:', endpoint);
-    console.log('API: Full URL:', `${API_BASE_URL}${endpoint}`);
-    console.log('API: Filters:', filters);
     const response = await api.get(endpoint);
-    console.log('API: Response status:', response.status);
-    console.log('API: Response data:', response.data);
     return response.data;
   },
 
