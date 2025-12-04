@@ -102,7 +102,6 @@ const AMMCUserConflictInbox: React.FC = () => {
     closed: 0
   });
   const [loading, setLoading] = useState(true);
-  const [forceUpdate, setForceUpdate] = useState(0);
   const [selectedInquiry, setSelectedInquiry] = useState<ConflictInquiry | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showResponseModal, setShowResponseModal] = useState(false);
@@ -130,23 +129,23 @@ const AMMCUserConflictInbox: React.FC = () => {
 
   useEffect(() => {
     fetchInquiries();
-  }, [filters, currentPage, searchTerm]);
+  }, [filters, currentPage]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (currentPage === 1) {
+        fetchInquiries();
+      } else {
+        setCurrentPage(1); // Reset to page 1 when searching
+      }
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
 
   const fetchInquiries = async () => {
     try {
-      console.log('=== FETCHING INQUIRIES ===');
-      console.log('Filters:', filters);
-      console.log('Current page:', currentPage);
-      console.log('Search term:', searchTerm);
-      console.log('Current path:', window.location.pathname);
-
-      // Check authentication
-      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
-      console.log('Token present:', !!token);
-      if (token) {
-        console.log('Token preview:', token.substring(0, 20) + '...');
-      }
-
       setLoading(true);
 
       const { adminApi } = await import('@/services/api');
@@ -158,44 +157,19 @@ const AMMCUserConflictInbox: React.FC = () => {
         search: searchTerm || undefined
       });
 
-      console.log('=== API RESPONSE ===');
-      console.log('Full response:', JSON.stringify(data, null, 2));
-      console.log('Success:', data.success);
-      console.log('Inquiries count:', data.data?.inquiries?.length || 0);
-      console.log('Stats:', data.data?.stats);
-
       if (data.success) {
         const inquiriesData = data.data?.inquiries || [];
-        console.log('=== SETTING STATE ===');
-        console.log('Inquiries data to set:', inquiriesData);
-        console.log('Inquiries data length:', inquiriesData.length);
-        console.log('Is array?:', Array.isArray(inquiriesData));
-        console.log('First inquiry:', inquiriesData[0]);
-
-        // Force a new array reference to trigger re-render
-        setInquiries([...inquiriesData]);
+        setInquiries(inquiriesData);
         setStats(data.data?.stats || { open: 0, in_progress: 0, resolved: 0, closed: 0 });
         setTotalPages(data.data?.pagination?.pages || 1);
-
-        console.log('State set complete');
       } else {
-        console.error('API returned success=false:', data.message);
-        alert(`Failed to fetch inquiries: ${data.message}`);
+        console.error('Failed to fetch inquiries:', data.message);
         setInquiries([]);
         setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
         setTotalPages(1);
       }
     } catch (error: any) {
-      console.error('=== ERROR FETCHING INQUIRIES ===');
-      console.error('Error:', error);
-      console.error('Error response:', error.response);
-      console.error('Error data:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error message:', error.message);
-
-      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
-      alert(`Error fetching inquiries: ${errorMsg}`);
-
+      console.error('Error fetching inquiries:', error);
       setInquiries([]);
       setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
       setTotalPages(1);
@@ -318,39 +292,7 @@ const AMMCUserConflictInbox: React.FC = () => {
               All user inquiries or conflicts raised will be managed on this page.
             </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                console.log('Manual refresh triggered');
-                fetchInquiries();
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Refresh
-            </button>
-            <button
-              onClick={() => {
-                console.log('Force update triggered');
-                console.log('Current inquiries:', inquiries);
-                setForceUpdate(prev => prev + 1);
-              }}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-            >
-              Debug ({inquiries.length})
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Debug Panel */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-        <h3 className="font-semibold text-yellow-900 mb-2">Debug Info (Remove in production)</h3>
-        <div className="text-sm text-yellow-800 space-y-1">
-          <p><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</p>
-          <p><strong>Inquiries Count:</strong> {inquiries.length}</p>
-          <p><strong>Inquiries Array:</strong> {JSON.stringify(inquiries.map(i => ({ id: i._id, ref: i.referenceId })))}</p>
-          <p><strong>Stats:</strong> Open: {stats.open}, In Progress: {stats.in_progress}, Resolved: {stats.resolved}, Closed: {stats.closed}</p>
-          <p><strong>Force Update Counter:</strong> {forceUpdate}</p>
         </div>
       </div>
 
@@ -458,14 +400,6 @@ const AMMCUserConflictInbox: React.FC = () => {
       </div>
       {/* Inquiries List */}
       <div className="bg-white rounded-lg shadow">
-        {(() => {
-          console.log('=== RENDER CHECK ===');
-          console.log('Loading:', loading);
-          console.log('Inquiries array:', inquiries);
-          console.log('Inquiries length:', inquiries.length);
-          console.log('Inquiries is array:', Array.isArray(inquiries));
-          return null;
-        })()}
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
