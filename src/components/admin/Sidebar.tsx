@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
         <NavItem collapsed={collapsed} href="/admin/dashboard/surveyors" icon={Users} label="Surveyors" onClick={isMobile ? onClose : undefined} />
         <NavItem collapsed={collapsed} href="/admin/dashboard/administrators" icon={ClipboardList} label="Administrators" onClick={isMobile ? onClose : undefined} />
         <NavItem collapsed={collapsed} href="/admin/dashboard/user-inquiries" icon={AlertTriangle} label="User Inquiries" onClick={isMobile ? onClose : undefined} />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/processing-monitor" icon={FileText} label="Processing Monitor" onClick={isMobile ? onClose : undefined} />
+        {/* <NavItem collapsed={collapsed} href="/admin/dashboard/processing-monitor" icon={FileText} label="Processing Monitor" onClick={isMobile ? onClose : undefined} /> */}
         <NavItem collapsed={collapsed} href="/admin/dashboard/settings" icon={Settings} label="Settings" onClick={isMobile ? onClose : undefined} />
       </div>
 
