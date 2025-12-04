@@ -63,18 +63,18 @@ const NIAAdminSidebar: React.FC<NIAAdminSidebarProps> = ({
             icon: ClipboardList,
             description: "Dual-surveyor assignments"
         },
-        {
-            href: "/nia-admin/user-inquiries",
-            label: "User Inquiries",
-            icon: AlertTriangle,
-            description: "Handle user conflict inquiries"
-        },
-        {
-            href: "/nia-admin/processing-monitor",
-            label: "Processing Monitor",
-            icon: FileText,
-            description: "Monitor automatic report processing"
-        },
+        // {
+        //     href: "/nia-admin/user-inquiries",
+        //     label: "User Inquiries",
+        //     icon: AlertTriangle,
+        //     description: "Handle user conflict inquiries"
+        // },
+        // {
+        //     href: "/nia-admin/processing-monitor",
+        //     label: "Processing Monitor",
+        //     icon: FileText,
+        //     description: "Monitor automatic report processing"
+        // },
         {
             href: "/nia-admin/administrators",
             label: "Administrators",
