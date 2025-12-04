@@ -94,18 +94,42 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
 
     // Load user info from cookies and fetch policies on mount
     useEffect(() => {
-        const email = getCookie('userEmail') || getCookie('email') || '';
-        const name = getCookie('fullname') || getCookie('userName') || '';
-        setFormData(prev => ({
-            ...prev,
-            userContact: {
-                ...prev.userContact,
-                email,
-                name
-            }
-        }));
-
         if (isOpen) {
+            // Try to get from cookies first
+            let email = getCookie('userEmail') || getCookie('email') || '';
+            let firstname = getCookie('firstname') || '';
+            let lastname = getCookie('lastname') || '';
+            let fullname = getCookie('fullname') || getCookie('userName') || '';
+
+            // Fallback to localStorage if cookies are empty
+            if (!email) {
+                try {
+                    const userDataStr = localStorage.getItem('userData');
+                    if (userDataStr) {
+                        const userData = JSON.parse(userDataStr);
+                        email = userData.email || '';
+                        firstname = userData.firstname || '';
+                        lastname = userData.lastname || '';
+                        fullname = userData.fullname || '';
+                    }
+                } catch (e) {
+                    console.error('Error parsing user data from localStorage:', e);
+                }
+            }
+
+            const name = fullname || `${firstname} ${lastname}`.trim() || '';
+
+            console.log('Loading user data:', { email, name, firstname, lastname, fullname });
+
+            setFormData(prev => ({
+                ...prev,
+                userContact: {
+                    ...prev.userContact,
+                    email,
+                    name
+                }
+            }));
+
             fetchUserPolicies();
         }
     }, [isOpen]);
@@ -143,12 +167,12 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
     };
 
     const conflictTypes = [
-        { value: 'recommendation_mismatch', label: 'Surveyor Recommendations Differ' },
-        { value: 'value_discrepancy', label: 'Property Value Discrepancy' },
-        { value: 'assessment_quality', label: 'Assessment Quality Concerns' },
-        { value: 'decision_dispute', label: 'Dispute Insurance Decision' },
-        { value: 'process_issue', label: 'Process or Procedure Issue' },
-        { value: 'technical_error', label: 'Technical Error or Bug' },
+        { value: 'disagreement_findings', label: 'Disagreement with Findings' },
+        { value: 'recommendation_concern', label: 'Recommendation Concern' },
+        { value: 'surveyor_conduct', label: 'Surveyor Conduct Issue' },
+        { value: 'technical_error', label: 'Technical Error' },
+        { value: 'missing_information', label: 'Missing Information' },
+        { value: 'clarification_needed', label: 'Clarification Needed' },
         { value: 'other', label: 'Other Concern' }
     ];
 
@@ -166,19 +190,30 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
             // Use the API service for proper token handling
             const { default: api } = await import('@/services/api');
 
-            const response = await api.post('/user-conflict-inquiries', {
-                policyId: formData.policyId || undefined,
-                mergedReportId: formData.reportId || undefined,
+            // Build the payload with only non-empty fields
+            const payload: Record<string, unknown> = {
                 conflictType: formData.conflictType,
                 description: formData.description,
                 urgency: formData.urgency,
                 contactPreference: formData.contactPreference,
                 userContact: {
                     email: formData.userContact.email,
-                    phone: formData.userContact.phone || '',
-                    preferredTime: ''
+                    name: formData.userContact.name
                 }
-            });
+            };
+
+            // Only add optional fields if they have values
+            if (formData.policyId) {
+                payload.policyId = formData.policyId;
+            }
+            if (formData.reportId) {
+                payload.mergedReportId = formData.reportId;
+            }
+            if (formData.userContact.phone) {
+                (payload.userContact as Record<string, string>).phone = formData.userContact.phone;
+            }
+
+            const response = await api.post('/user-conflict-inquiries', payload);
 
             if (response.data?.success) {
                 setInquiryId(response.data.data.referenceId);
@@ -202,8 +237,38 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
             }
         } catch (error: unknown) {
             console.error('Failed to submit inquiry:', error);
-            const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
-            const errorMessage = axiosError?.response?.data?.message || axiosError?.message || 'Failed to submit inquiry. Please try again.';
+            const axiosError = error as {
+                response?: {
+                    data?: {
+                        message?: string;
+                        error?: string;
+                        errors?: Record<string, string[]>;
+                    }
+                };
+                message?: string
+            };
+
+            // Extract detailed error message
+            let errorMessage = 'Failed to submit inquiry. Please try again.';
+
+            if (axiosError?.response?.data) {
+                const errorData = axiosError.response.data;
+
+                // Check for validation errors
+                if (errorData.errors) {
+                    const errorFields = Object.entries(errorData.errors)
+                        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+                        .join('\n');
+                    errorMessage = `Validation errors:\n${errorFields}`;
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (errorData.error) {
+                    errorMessage = errorData.error;
+                }
+            } else if (axiosError?.message) {
+                errorMessage = axiosError.message;
+            }
+
             alert(errorMessage);
         } finally {
             setSubmitting(false);
