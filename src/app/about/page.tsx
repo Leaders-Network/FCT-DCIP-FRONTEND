@@ -19,7 +19,7 @@ const AboutPage = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-3">
             About FCT-DCIP
           </h1>
-          <p className="max-w-2xl mx-auto text-lg">
+          <p className="max-w-2xl mx-auto text-lg text-[1.21rem]">
             Building safer communities through partnership, protection, and
             accountability.
           </p>
@@ -33,7 +33,7 @@ const AboutPage = () => {
             <h2 className="text-3xl font-semibold mb-4 text-gray-900">
               Who We Are
             </h2>
-            <p className="text-gray-600 leading-relaxed mb-6">
+            <p className="text-gray-600 leading-relaxed mb-6 text-[1.2rem]">
               The <strong>Federal Capital Territory Development Control
               Insurance Program (FCT-DCIP)</strong> is a strategic partnership
               initiative designed to foster collaboration between homeowners,
@@ -43,7 +43,7 @@ const AboutPage = () => {
               construction safety, and enhance insurance coverage within the
               FCT.
             </p>
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-gray-600 leading-relaxed text-[1.2rem]">
               Through this partnership, the FCT-DCIP safeguards homeowners
               against potential losses arising from building collapse and other
               related incidents — strengthening public confidence in building
@@ -93,7 +93,7 @@ const AboutPage = () => {
               <h3 className="text-2xl font-semibold mb-3 text-green-600">
                 Our Mission
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 leading-relaxed text-[1.13rem]">
                 To create a sustainable and secure built environment by ensuring
                 every property and construction project in the FCT is properly
                 insured, protecting lives, assets, and investments from
@@ -104,7 +104,7 @@ const AboutPage = () => {
               <h3 className="text-2xl font-semibold mb-3 text-green-600">
                 Our Vision
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 leading-relaxed text-[1.13rem]">
                 To establish Abuja as a model city for compliance-driven,
                 insurance-backed development, where every structure stands as a
                 symbol of safety, accountability, and collective progress.
@@ -150,7 +150,7 @@ const AboutPage = () => {
                     <h3 className="text-xl font-semibold mb-3 text-green-600">
                       {value.title}
                     </h3>
-                    <p className="text-gray-600">{value.desc}</p>
+                    <p className="text-gray-600 text-[1.12rem]">{value.desc}</p>
                   </div>
 
                   {/* Back Side */}
@@ -158,7 +158,7 @@ const AboutPage = () => {
                     <h3 className="text-xl font-semibold mb-3">
                       {value.title}
                     </h3>
-                    <p className="text-center text-sm">{value.back}</p>
+                    <p className="text-center">{value.back}</p>
                   </div>
                 </div>
               </div>

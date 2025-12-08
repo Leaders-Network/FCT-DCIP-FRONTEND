@@ -42,8 +42,8 @@ const HowItWorks = () => {
               className="bg-white p-6 rounded-lg shadow-md text-center"
             >
               <div className="flex justify-center mb-4">{step.icon}</div>
-              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-              <p className="text-gray-600">{step.description}</p>
+              <h3 className="text-[1.3rem] font-semibold mb-2">{step.title}</h3>
+              <p className="text-gray-600 text-[1.1rem]">{step.description}</p>
             </div>
           ))}
         </div>
