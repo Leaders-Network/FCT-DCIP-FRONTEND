@@ -36,7 +36,7 @@ const InsuranceOptions = () => {
               </div>
             </div>
 
-            <p className="text-gray-600 mt-6">
+            <p className="text-gray-600 mt-6 text-[1.1rem]">
               The FCT-DCIP is a partnership program that enables insurance
               cooperation among homeowners, builders, surveyors, and the
               Development Control Department. This program aims to protect home
@@ -56,7 +56,7 @@ const InsuranceOptions = () => {
             <h2 className="text-3xl font-bold text-green-600 mb-4">
               Our Insurance Option
             </h2>
-            <p className="text-gray-600 mb-8 max-w-lg">
+            <p className="text-gray-600 mb-8 max-w-lg text-[1.1rem]">
               Discover the compulsory insurance products you need to stay legally compliant and fully protected. Safeguard your assets, secure your investments, and ensure the safety of the people who matter—so you can focus on growth without fear of unexpected risks
             </p>
             <Link href="/insurance-options">
@@ -78,11 +78,11 @@ const InsuranceOptions = () => {
               <h3 className="text-xl font-bold text-green-600 mb-2">
                 Occupier Liability Insurance
               </h3>
-              <p className="text-gray-600 mb-2">
+              <p className="text-gray-600 mb-2 text-[1.1rem]">
                 Safety for occupiers of public building under section 65 of the
                 insurance Act 2003
               </p>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-[1.1rem]">
                 Safety for Occupiers is our priority. Our comprehensive coverage
                 ensures your home and personal property are protected.
               </p>
@@ -98,10 +98,10 @@ const InsuranceOptions = () => {
               <h3 className="text-xl font-bold text-green-600 mb-2">
                 Builders Liability Insurance
               </h3>
-              <p className="text-gray-600 mb-2">
+              <p className="text-gray-600 mb-2 text-[1.1rem]">
                 Coverage for builders and contractors
               </p>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-[1.1rem]">
                 Cover for builders under The Builders Liability insurance under
                 Section 64 of the insurance Act 2003
               </p>

@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import Image from "next/image";
 
 const Footer = () => {
   return (
@@ -8,8 +9,17 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-2xl font-bold mb-4">FCT-DCIP</h3>
-            <p className="text-sm">
+            <Link href="/" className="text-2xl flex gap-1 font-bold">
+            <Image
+            src="/logo.svg" 
+            height={32}
+            width={32}
+            alt="FCT-DCIP Logo"
+            priority
+            />
+              FCT-DCIP
+            </Link>
+            <p className="text-[1rem]">
               Protecting properties, and investments with comprehensive insurance solutions for a safer future.
             </p>
           </div>

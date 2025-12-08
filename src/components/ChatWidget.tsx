@@ -188,11 +188,11 @@ export default function ChatWidget() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message..."
-              className="flex-1 border border-gray-300 rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-1"
+              className="flex-1 border border-gray-300 rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-600"
             />
             <button
               onClick={() => sendMessage(message)}
-              className="bg-green-500 text-white px-4 py-2 rounded-full shadow-sm"
+              className="bg-green-500 text-white px-4 py-2 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-green-300"
             >
               Send
             </button>
