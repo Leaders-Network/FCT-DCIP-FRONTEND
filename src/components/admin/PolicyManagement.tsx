@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign, Search, Filter, X } from 'lucide-react';
-import { PolicyRequest, Surveyor, EnhancedSurveySubmission } from '@/types/api.types';
-import { adminApi, reviewSubmission, deletePolicyRequest } from '@/services/api';
+import { PolicyRequest, Surveyor, EnhancedSurveySubmission, Assignment } from '@/types/api.types';
+import { adminApi, reviewSubmission, deletePolicyRequest, getSubmissionByAssignment } from '@/services/api';
 import { useAuth } from '@/context/useAuth';
 import { useRouter } from 'next/navigation';
 import AssignSurveyorModal from './AssignSurveyorModal';
@@ -799,29 +799,41 @@ interface PolicyDetailsModalProps {
 }
 
 const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, getStatusBadge, onClose }) => {
-  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
-  const [assignmentData, setAssignmentData] = useState<import('@/types/survey.types').AssignmentDataType | null>(null);
+  const [surveyData, setSurveyData] = useState<EnhancedSurveySubmission | null>(null);
+  const [assignmentData, setAssignmentData] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'survey' | 'documents'>('details');
 
   useEffect(() => {
     const fetchPolicyData = async () => {
+      setLoading(true);
       try {
         // If policy has been surveyed, fetch survey data
-        if (policy.status === 'surveyed' || policy.status === 'approved' || policy.status === 'rejected') {
+        if (policy.status === 'surveyed' || policy.status === 'approved' || policy.status === 'rejected' || policy.status === 'revision_required') {
+          console.log('Fetching survey data for policy:', policy._id);
+
           // First get the assignment for this policy
           const assignmentResponse = await adminApi.getAssignmentByAmmcId(policy._id);
+          console.log('Assignment response:', assignmentResponse);
 
           if (assignmentResponse.success && assignmentResponse.data) {
             const assignment = assignmentResponse.data;
             setAssignmentData(assignment);
 
-            // Then get the survey submission
-            const { getSubmissionByAssignment } = await import('@/services/api');
+            // Then get the survey submission using the assignment ID
             const surveyResponse = await getSubmissionByAssignment(assignment._id);
-            if (surveyResponse.success && surveyResponse.data.submission) {
-              setSurveyData(surveyResponse.data.submission);
+            console.log('Survey submission response:', surveyResponse);
+
+            if (surveyResponse.success && surveyResponse.data) {
+              // Handle both possible response structures
+              const submission = surveyResponse.data.submission || surveyResponse.data;
+              console.log('Setting survey data:', submission);
+              setSurveyData(submission);
+            } else {
+              console.log('No survey submission found');
             }
+          } else {
+            console.log('No assignment found for policy');
           }
         }
       } catch (error) {
@@ -927,16 +939,7 @@ const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, getStat
 };
 
 // Policy Details Tab
-interface AssignmentData {
-  _id: string;
-  surveyorId: string | null;
-  status: string;
-  assignedAt?: string;
-  deadline?: string;
-  priority?: string;
-}
-
-const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: AssignmentData | null }> = ({
+const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: Assignment | null }> = ({
   policy,
   assignmentData
 }) => (
@@ -1093,34 +1096,9 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: Assign
 );
 
 // Policy Survey Tab
-interface SurveyData {
-  surveyDetails?: {
-    propertyCondition?: string;
-    structuralAssessment?: string;
-    riskFactors?: string;
-    recommendations?: string;
-    estimatedValue?: number;
-  };
-  surveyNotes?: string;
-  recommendedAction?: string;
-  contactLog?: Array<{
-    date: string;
-    method: string;
-    notes: string;
-    successful: boolean;
-  }>;
-  documents?: Array<{
-    fileName: string;
-    cloudinaryUrl: string;
-    category: string;
-  }>;
-  surveyDocument?: string;
-  submissionTime?: string;
-}
-
 const PolicySurveyTab: React.FC<{
   policy: PolicyRequest;
-  surveyData: SurveyData | null;
+  surveyData: EnhancedSurveySubmission | null;
   loading: boolean;
 }> = ({ policy, surveyData, loading }) => {
   if (policy.status === 'submitted' || policy.status === 'assigned') {
@@ -1247,9 +1225,15 @@ const PolicySurveyTab: React.FC<{
 // Policy Documents Tab
 const PolicyDocumentsTab: React.FC<{
   policy: PolicyRequest;
-  surveyData: SurveyData | null;
+  surveyData: EnhancedSurveySubmission | null;
   loading: boolean;
 }> = ({ policy, surveyData, loading }) => {
+  // Debug logging
+  console.log('PolicyDocumentsTab - Survey Data:', surveyData);
+  console.log('PolicyDocumentsTab - Documents:', surveyData?.documents);
+  console.log('PolicyDocumentsTab - Survey Document:', surveyData?.surveyDocument);
+  console.log('PolicyDocumentsTab - Survey Details Photos:', surveyData?.surveyDetails?.photos);
+
   if (loading && (policy.status === 'surveyed' || policy.status === 'approved' || policy.status === 'rejected')) {
     return (
       <div className="text-center py-8">
@@ -1259,36 +1243,73 @@ const PolicyDocumentsTab: React.FC<{
     );
   }
 
+  // Get all documents from the survey submission
+  const documents = surveyData?.documents || [];
+  console.log('Documents array length:', documents.length);
+
+  const mainReport = documents.find(doc => doc.isMainReport || doc.documentType === 'main_report');
+  console.log('Main report found:', mainReport);
+
+  const otherDocuments = documents.filter(doc => !doc.isMainReport && doc.documentType !== 'main_report');
+  console.log('Other documents count:', otherDocuments.length);
+
   return (
     <div className="space-y-6">
-      <h4 className="font-medium text-gray-900">Policy Documents</h4>
+      <h4 className="font-medium text-gray-900">Survey Documents</h4>
 
-      {/* Survey Document */}
-      {surveyData?.surveyDocument && (
+      {/* Debug Info - Remove after testing */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-xs space-y-1">
+        <p className="font-semibold mb-2">Debug Info (check console for full details):</p>
+        <p>✓ Survey Data exists: {surveyData ? 'Yes' : 'No'}</p>
+        <p>✓ Survey submission documents: {documents.length}</p>
+        <p>✓ Policy documents: {policy.documents?.length || 0}</p>
+        <p>✓ Main report found: {mainReport ? 'Yes' : 'No'}</p>
+        <p>✓ Other documents: {otherDocuments.length}</p>
+        <p>✓ Survey Document field: {surveyData?.surveyDocument ? 'Exists' : 'None'}</p>
+        <p>✓ Survey Document type: {typeof surveyData?.surveyDocument}</p>
+        <p>✓ Policy surveyDocument: {policy.surveyDocument ? 'Exists' : 'None'}</p>
+        <p>✓ Policy surveyDocument type: {typeof policy.surveyDocument}</p>
+        <p>✓ Policy surveyNotes: {policy.surveyNotes ? 'Exists' : 'None'}</p>
+        <p>✓ Photos: {surveyData?.surveyDetails?.photos?.length || 0}</p>
+        <details className="mt-2">
+          <summary className="cursor-pointer font-semibold">Raw Data (click to expand)</summary>
+          <pre className="mt-2 text-xs overflow-auto max-h-40 bg-white p-2 rounded">
+            {JSON.stringify({
+              surveyDocument: surveyData?.surveyDocument,
+              policyDocument: policy.surveyDocument,
+              documentsCount: documents.length,
+              policyDocsCount: policy.documents?.length
+            }, null, 2)}
+          </pre>
+        </details>
+      </div>
+
+      {/* Main Survey Report */}
+      {mainReport && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Eye className="h-6 w-6 text-blue-600 mr-3" />
               <div>
-                <h5 className="font-medium text-blue-900">Survey Report</h5>
-                <p className="text-sm text-blue-700">Completed survey document (PDF)</p>
+                <h5 className="font-medium text-blue-900">Main Survey Report</h5>
+                <p className="text-sm text-blue-700">{mainReport.fileName}</p>
                 <p className="text-xs text-blue-600 mt-1">
-                  Submitted: {surveyData?.submissionTime ? new Date(surveyData.submissionTime).toLocaleDateString() : 'N/A'}
+                  Uploaded: {new Date(mainReport.uploadedAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
             <div className="flex space-x-2">
               <a
-                href={typeof surveyData.surveyDocument === 'string' ? surveyData.surveyDocument : '#'}
+                href={mainReport.cloudinaryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
-                View PDF
+                View
               </a>
               <a
-                href={typeof surveyData.surveyDocument === 'string' ? surveyData.surveyDocument : '#'}
-                download
+                href={mainReport.cloudinaryUrl}
+                download={mainReport.fileName}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
               >
                 Download
@@ -1298,14 +1319,241 @@ const PolicyDocumentsTab: React.FC<{
         </div>
       )}
 
-      {/* No Documents Message */}
-      {!surveyData?.surveyDocument && (
-        <div className="text-center py-8 text-gray-500">
-          <Eye className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No documents available</p>
-          <p className="text-sm">Documents will appear here once the survey is completed.</p>
+      {/* Legacy Survey Document (for backward compatibility) */}
+      {!mainReport && surveyData?.surveyDocument && typeof surveyData.surveyDocument === 'object' && 'cloudinaryUrl' in surveyData.surveyDocument && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Eye className="h-6 w-6 text-blue-600 mr-3" />
+              <div>
+                <h5 className="font-medium text-blue-900">Survey Report</h5>
+                <p className="text-sm text-blue-700">{surveyData.surveyDocument.fileName || 'Survey Document'}</p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Submitted: {surveyData.submissionTime ? new Date(surveyData.submissionTime).toLocaleDateString() : 'N/A'}
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <a
+                href={surveyData.surveyDocument.cloudinaryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                View
+              </a>
+              <a
+                href={surveyData.surveyDocument.cloudinaryUrl}
+                download={surveyData.surveyDocument.fileName}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Download
+              </a>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Other Documents */}
+      {otherDocuments.length > 0 && (
+        <div>
+          <h5 className="font-medium text-gray-900 mb-3">Supporting Documents</h5>
+          <div className="space-y-3">
+            {otherDocuments.map((doc, index) => (
+              <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1">
+                    <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center mr-3">
+                      <Eye className="h-5 w-5 text-gray-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h6 className="font-medium text-gray-900 text-sm">{doc.fileName}</h6>
+                      <p className="text-xs text-gray-500">
+                        {doc.category} • {(doc.fileSize / 1024).toFixed(2)} KB
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <a
+                      href={doc.cloudinaryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1 border border-blue-600 rounded hover:bg-blue-50"
+                    >
+                      View
+                    </a>
+                    <a
+                      href={doc.cloudinaryUrl}
+                      download={doc.fileName}
+                      className="text-green-600 hover:text-green-800 text-sm font-medium px-3 py-1 border border-green-600 rounded hover:bg-green-50"
+                    >
+                      Download
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Policy Survey Document (from policy object) */}
+      {!mainReport && !surveyData?.surveyDocument && policy.surveyDocument && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Eye className="h-6 w-6 text-green-600 mr-3" />
+              <div>
+                <h5 className="font-medium text-green-900">Survey Document (from Policy)</h5>
+                <p className="text-sm text-green-700">
+                  {typeof policy.surveyDocument === 'object' && 'name' in policy.surveyDocument
+                    ? policy.surveyDocument.name
+                    : 'Survey Document'}
+                </p>
+                {policy.surveyNotes && (
+                  <p className="text-xs text-green-600 mt-1">Notes: {policy.surveyNotes.substring(0, 100)}...</p>
+                )}
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <a
+                href={
+                  typeof policy.surveyDocument === 'string'
+                    ? policy.surveyDocument
+                    : typeof policy.surveyDocument === 'object' && 'url' in policy.surveyDocument
+                      ? policy.surveyDocument.url
+                      : '#'
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                View
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Policy Documents Array */}
+      {policy.documents && policy.documents.length > 0 && (
+        <div>
+          <h5 className="font-medium text-gray-900 mb-3">Policy Documents</h5>
+          <div className="space-y-3">
+            {policy.documents.map((doc, index) => (
+              <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1">
+                    <div className="h-10 w-10 bg-purple-100 rounded flex items-center justify-center mr-3">
+                      <Eye className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h6 className="font-medium text-gray-900 text-sm">{doc.fileName}</h6>
+                      <p className="text-xs text-gray-500">
+                        {doc.category} • {(doc.fileSize / 1024).toFixed(2)} KB
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <a
+                      href={doc.cloudinaryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-600 hover:text-purple-800 text-sm font-medium px-3 py-1 border border-purple-600 rounded hover:bg-purple-50"
+                    >
+                      View
+                    </a>
+                    <a
+                      href={doc.cloudinaryUrl}
+                      download={doc.fileName}
+                      className="text-green-600 hover:text-green-800 text-sm font-medium px-3 py-1 border border-green-600 rounded hover:bg-green-50"
+                    >
+                      Download
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Survey Photos */}
+      {surveyData?.surveyDetails?.photos && surveyData.surveyDetails.photos.length > 0 && (
+        <div>
+          <h5 className="font-medium text-gray-900 mb-3">Survey Photos</h5>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {surveyData.surveyDetails.photos.map((photo, index) => (
+              <div key={index} className="relative group">
+                <img
+                  src={photo.url}
+                  alt={photo.description || `Survey photo ${index + 1}`}
+                  className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
+                  <a
+                    href={photo.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="opacity-0 group-hover:opacity-100 bg-white text-gray-900 px-3 py-1 rounded text-sm font-medium"
+                  >
+                    View Full Size
+                  </a>
+                </div>
+                {photo.description && (
+                  <p className="text-xs text-gray-600 mt-1">{photo.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Raw Survey Document Display (if it's a string URL) */}
+      {!mainReport && !policy.surveyDocument && surveyData?.surveyDocument && typeof surveyData.surveyDocument === 'string' && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Eye className="h-6 w-6 text-indigo-600 mr-3" />
+              <div>
+                <h5 className="font-medium text-indigo-900">Survey Document (String URL)</h5>
+                <p className="text-sm text-indigo-700 truncate max-w-md">{surveyData.surveyDocument}</p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <a
+                href={surveyData.surveyDocument}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+              >
+                View
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No Documents Message */}
+      {!mainReport &&
+        !surveyData?.surveyDocument &&
+        !policy.surveyDocument &&
+        (!policy.documents || policy.documents.length === 0) &&
+        otherDocuments.length === 0 &&
+        (!surveyData?.surveyDetails?.photos || surveyData.surveyDetails.photos.length === 0) && (
+          <div className="text-center py-8 text-gray-500">
+            <Eye className="w-12 w-12 mx-auto mb-3 opacity-30" />
+            <p>No documents available</p>
+            <p className="text-sm">Documents will appear here once the survey is completed.</p>
+            <p className="text-xs mt-2 text-gray-400">Check the debug info above to see what data is available</p>
+          </div>
+        )}
     </div>
   );
 };
