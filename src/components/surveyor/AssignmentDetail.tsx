@@ -10,35 +10,8 @@ interface AssignmentDetailProps {
   assignmentId: string;
 }
 
-interface PolicyPropertyDetails {
-  propertyType: string;
-  address: string;
-  buildingValue: number;
-  yearBuilt: number;
-  squareFootage: number;
-  constructionMaterial: string;
-}
-
-interface PolicyContactDetails {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  alternatePhone?: string;
-  rcNumber: string;
-}
-
-interface PolicyRequestDetails {
-  coverageType: string;
-  policyDuration: string;
-  additionalCoverage?: string[];
-  specialRequests?: string;
-}
-
-interface PolicyDetails extends Omit<import('@/types/api.types').PolicyRequest, 'propertyDetails' | 'contactDetails' | 'requestDetails'> {
-  propertyDetails: PolicyPropertyDetails;
-  contactDetails: PolicyContactDetails;
-  requestDetails: PolicyRequestDetails;
-}
+// Use PolicyRequest directly from types
+type PolicyDetails = import('@/types/api.types').PolicyRequest;
 
 interface OtherSurveyorInfo {
   name?: string;
@@ -107,7 +80,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
       submission.append('ammcId', ammcId);
       submission.append('assignmentId', assignmentId || '');
-      
+
       // The 'submission' FormData object now also includes the files from the modal
 
       const result = await submitSurvey(submission);
