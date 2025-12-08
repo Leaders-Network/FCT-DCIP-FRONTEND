@@ -980,8 +980,11 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     propertyDetails: {
+      plotNumber: policy.propertyDetails?.plotNumber || '',
+      cadastralZone: policy.propertyDetails?.cadastralZone || '',
+      district: policy.propertyDetails?.district || '',
+      fullAddress: policy.propertyDetails?.fullAddress || policy.propertyDetails?.address || '',
       propertyType: policy.propertyDetails?.propertyType || '',
-      address: policy.propertyDetails?.address || '',
       buildingValue: policy.propertyDetails?.buildingValue || 0,
       yearBuilt: policy.propertyDetails?.yearBuilt || '',
       squareFootage: policy.propertyDetails?.squareFootage || 0,
@@ -1115,11 +1118,44 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
                       />
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Plot Number</label>
+                      <input
+                        type="text"
+                        value={formData.propertyDetails.plotNumber}
+                        onChange={(e) => handleInputChange('propertyDetails', 'plotNumber', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Cadastral Zone</label>
+                      <input
+                        type="text"
+                        value={formData.propertyDetails.cadastralZone}
+                        onChange={(e) => handleInputChange('propertyDetails', 'cadastralZone', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">District</label>
+                      <input
+                        type="text"
+                        value={formData.propertyDetails.district}
+                        onChange={(e) => handleInputChange('propertyDetails', 'district', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Property Address</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Property Address</label>
                       <textarea
-                        value={formData.propertyDetails.address}
-                        onChange={(e) => handleInputChange('propertyDetails', 'address', e.target.value)}
+                        value={formData.propertyDetails.fullAddress}
+                        onChange={(e) => handleInputChange('propertyDetails', 'fullAddress', e.target.value)}
                         rows={3}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required

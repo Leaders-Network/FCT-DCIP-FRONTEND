@@ -12,7 +12,11 @@ interface ReportSectionProps {
         _id: string;
         status: string;
         propertyDetails: {
-            address: string;
+            plotNumber?: string;
+            cadastralZone?: string;
+            district?: string;
+            fullAddress?: string;
+            address?: string;
             propertyType: string;
         };
         reportId?: string;
@@ -45,9 +49,9 @@ const ReportSection: React.FC<ReportSectionProps> = ({ userPolicies }) => {
                 const reports = response.data?.reports || [];
 
                 const stats = {
-                                         processing: reports.filter((r: UserReport) => r.status === 'pending').length,
-                                         available: reports.filter((r: UserReport) => r.status === 'released').length,
-                                         underReview: reports.filter((r: UserReport) => r.status === 'withheld').length,                    total: reports.length
+                    processing: reports.filter((r: UserReport) => r.status === 'pending').length,
+                    available: reports.filter((r: UserReport) => r.status === 'released').length,
+                    underReview: reports.filter((r: UserReport) => r.status === 'withheld').length, total: reports.length
                 };
 
                 setReportStats(stats);
