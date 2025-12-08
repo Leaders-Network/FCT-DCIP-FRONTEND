@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign } from 'lucide-react';
+import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign, Search, Filter, X } from 'lucide-react';
 import { PolicyRequest, Surveyor, EnhancedSurveySubmission } from '@/types/api.types';
 import { adminApi, reviewSubmission, deletePolicyRequest } from '@/services/api';
 import { useAuth } from '@/context/useAuth';
@@ -27,6 +27,21 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    propertyType: "",
+    coverageType: "",
+    minValue: "",
+    maxValue: "",
+    dateFrom: "",
+    dateTo: "",
+    plotNumber: "",
+    cadastralZone: "",
+    district: ""
+  });
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -72,8 +87,73 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   }, []);
 
   const filteredPolicies = Array.isArray(policies)
-    ? policies.filter(policy => activeTab === 'all' ? true : policy.status === activeTab)
+    ? policies.filter(policy => {
+      // Tab filter
+      const tabMatch = activeTab === 'all' ? true : policy.status === activeTab;
+
+      // Search filter
+      const searchLower = searchQuery.toLowerCase();
+      const searchMatch = !searchQuery ||
+        policy.propertyDetails.propertyType.toLowerCase().includes(searchLower) ||
+        (policy.propertyDetails.fullAddress || policy.propertyDetails.address || '').toLowerCase().includes(searchLower) ||
+        (policy.propertyDetails.plotNumber || '').toLowerCase().includes(searchLower) ||
+        (policy.propertyDetails.cadastralZone || '').toLowerCase().includes(searchLower) ||
+        (policy.propertyDetails.district || '').toLowerCase().includes(searchLower) ||
+        policy.contactDetails.fullName.toLowerCase().includes(searchLower) ||
+        policy.contactDetails.email.toLowerCase().includes(searchLower) ||
+        policy.contactDetails.phoneNumber.includes(searchQuery) ||
+        policy._id.toLowerCase().includes(searchLower);
+
+      // Property type filter
+      const propertyTypeMatch = !filters.propertyType ||
+        policy.propertyDetails.propertyType === filters.propertyType;
+
+      // Coverage type filter
+      const coverageTypeMatch = !filters.coverageType ||
+        policy.requestDetails.coverageType === filters.coverageType;
+
+      // Value range filter
+      const minValueMatch = !filters.minValue ||
+        policy.propertyDetails.buildingValue >= parseFloat(filters.minValue);
+      const maxValueMatch = !filters.maxValue ||
+        policy.propertyDetails.buildingValue <= parseFloat(filters.maxValue);
+
+      // Date range filter
+      const dateFromMatch = !filters.dateFrom ||
+        new Date(policy.createdAt) >= new Date(filters.dateFrom);
+      const dateToMatch = !filters.dateTo ||
+        new Date(policy.createdAt) <= new Date(filters.dateTo);
+
+      // Location filters
+      const plotNumberMatch = !filters.plotNumber ||
+        (policy.propertyDetails.plotNumber || '').toLowerCase().includes(filters.plotNumber.toLowerCase());
+      const cadastralZoneMatch = !filters.cadastralZone ||
+        (policy.propertyDetails.cadastralZone || '').toLowerCase().includes(filters.cadastralZone.toLowerCase());
+      const districtMatch = !filters.district ||
+        (policy.propertyDetails.district || '').toLowerCase().includes(filters.district.toLowerCase());
+
+      return tabMatch && searchMatch && propertyTypeMatch && coverageTypeMatch &&
+        minValueMatch && maxValueMatch && dateFromMatch && dateToMatch &&
+        plotNumberMatch && cadastralZoneMatch && districtMatch;
+    })
     : [];
+
+  const clearFilters = () => {
+    setFilters({
+      propertyType: "",
+      coverageType: "",
+      minValue: "",
+      maxValue: "",
+      dateFrom: "",
+      dateTo: "",
+      plotNumber: "",
+      cadastralZone: "",
+      district: ""
+    });
+    setSearchQuery("");
+  };
+
+  const hasActiveFilters = searchQuery || Object.values(filters).some(v => v !== "");
 
   const handleReviewSubmission = async (decision: 'approved' | 'rejected' | 'requires_more_info') => {
     try {
@@ -194,6 +274,189 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
         <h2 className="text-2xl font-bold">Policy Management</h2>
       </div>
 
+      {/* Search and Filter Bar */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Input */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by plot, zone, district, address, builder, email, phone, or policy ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${showFilters || hasActiveFilters
+              ? 'bg-[#028835] text-white border-[#028835]'
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+            {hasActiveFilters && !showFilters && (
+              <span className="ml-2 bg-white text-[#028835] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                !
+              </span>
+            )}
+          </button>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Advanced Filters Panel */}
+        {showFilters && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+            {/* Property Type Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+              <select
+                value={filters.propertyType}
+                onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              >
+                <option value="">All Types</option>
+                <option value="Residential">Residential</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Industrial">Industrial</option>
+                <option value="Mixed-Use">Mixed-Use</option>
+              </select>
+            </div>
+
+            {/* Coverage Type Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
+              <select
+                value={filters.coverageType}
+                onChange={(e) => setFilters({ ...filters, coverageType: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              >
+                <option value="">All Coverage</option>
+                <option value="Basic">Basic</option>
+                <option value="Standard">Standard</option>
+                <option value="Comprehensive">Comprehensive</option>
+                <option value="Premium">Premium</option>
+              </select>
+            </div>
+
+            {/* Min Value Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Min Value (₦)</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={filters.minValue}
+                onChange={(e) => setFilters({ ...filters, minValue: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              />
+            </div>
+
+            {/* Max Value Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Value (₦)</label>
+              <input
+                type="number"
+                placeholder="∞"
+                value={filters.maxValue}
+                onChange={(e) => setFilters({ ...filters, maxValue: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              />
+            </div>
+
+            {/* Date From Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              />
+            </div>
+
+            {/* Date To Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              />
+            </div>
+
+            {/* Plot Number Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Plot Number</label>
+              <input
+                type="text"
+                placeholder="Search plot number"
+                value={filters.plotNumber}
+                onChange={(e) => setFilters({ ...filters, plotNumber: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              />
+            </div>
+
+            {/* Cadastral Zone Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cadastral Zone</label>
+              <input
+                type="text"
+                placeholder="Search cadastral zone"
+                value={filters.cadastralZone}
+                onChange={(e) => setFilters({ ...filters, cadastralZone: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              />
+            </div>
+
+            {/* District Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">District</label>
+              <input
+                type="text"
+                placeholder="Search district"
+                value={filters.district}
+                onChange={(e) => setFilters({ ...filters, district: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Results Count */}
+        <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-200">
+          <span>
+            Showing <span className="font-semibold text-gray-900">{filteredPolicies.length}</span> of{' '}
+            <span className="font-semibold text-gray-900">{policies.length}</span> policies
+          </span>
+          {hasActiveFilters && (
+            <span className="text-[#028835] font-medium">Filters active</span>
+          )}
+        </div>
+      </div>
+
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           {[
@@ -235,125 +498,154 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPolicies?.map((policy) => (
-                <tr key={policy._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{policy.propertyDetails.propertyType}</p>
-                      <p className="text-sm text-gray-500 truncate max-w-xs">{policy.propertyDetails.address}</p>
-                      <p className="text-xs text-gray-400">₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{policy.contactDetails.fullName}</p>
-                      <p className="text-sm text-gray-500">{policy.contactDetails.email}</p>
-                      <p className="text-sm text-gray-500">{policy.contactDetails.phoneNumber}</p>
-                      <p className="text-xs text-gray-400">RC: {policy.contactDetails.rcNumber || 'N/A'}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{policy.requestDetails.coverageType}</p>
-                      <p className="text-sm text-gray-500">{policy.requestDetails.policyDuration}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">{getStatusBadge(policy.status)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{new Date(policy.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-sm font-medium">
-                    <div className="relative dropdown-container">
-                      <button
-                        onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
-                        className="p-2 hover:bg-gray-100 rounded-full"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                      {showActionsDropdown === policy._id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
-                          <div className="py-1">
-                            <button
-                              onClick={() => {
-                                setSelectedPolicy(policy);
-                                setShowDetailsModal(true);
-                                setShowActionsDropdown(null);
-                              }}
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                            >
-                              <Eye className="mr-3 h-4 w-4" />
-                              View Details
-                            </button>
-                            {policy.status === 'submitted' && (
-                              <button
-                                onClick={() => {
-                                  setSelectedPolicy(policy);
-                                  setShowAssignModal(true);
-                                  setShowActionsDropdown(null);
-                                }}
-                                className="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"
-                              >
-                                <Users className="mr-3 h-4 w-4" />
-                                Assign Surveyor
-                              </button>
-                            )}
-                            {policy.status === 'surveyed' && (
-                              <button
-                                onClick={async () => {
-                                  setSelectedPolicy(policy);
-                                  const response = await adminApi.getSurveySubmissions({ ammcId: policy._id });
-                                  setSelectedPolicySubmissions(response.data.submissions);
-                                  setShowReviewModal(true);
-                                  setShowActionsDropdown(null);
-                                }}
-                                className="flex items-center px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 w-full text-left"
-                              >
-                                <CheckCircle className="mr-3 h-4 w-4" />
-                                Review Submission
-                              </button>
-                            )}
-                            {policy.status === 'approved' && (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    handleSendToUser(policy._id);
-                                    setShowActionsDropdown(null);
-                                  }}
-                                  className="flex items-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"
-                                >
-                                  <CheckCircle className="mr-3 h-4 w-4" />
-                                  Send to User
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleConfirmPayment(policy);
-                                    setShowActionsDropdown(null);
-                                  }}
-                                  className="flex items-center px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 w-full text-left"
-                                >
-                                  <DollarSign className="mr-3 h-4 w-4" />
-                                  Confirm Payment
-                                </button>
-                              </>
-                            )}
-                            {['submitted', 'assigned', 'rejected'].includes(policy.status) && (
-                              <button
-                                onClick={() => {
-                                  setPolicyToDelete(policy);
-                                  setShowDeleteModal(true);
-                                  setShowActionsDropdown(null);
-                                }}
-                                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                              >
-                                <Trash2 className="mr-3 h-4 w-4" />
-                                Delete Policy
-                              </button>
-                            )}
-                          </div>
-                        </div>
+              {filteredPolicies.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <Search className="h-12 w-12 mb-3 opacity-30" />
+                      <p className="text-lg font-medium">No policies found</p>
+                      <p className="text-sm mt-1">
+                        {hasActiveFilters
+                          ? "Try adjusting your search or filters"
+                          : "No policies have been submitted yet"}
+                      </p>
+                      {hasActiveFilters && (
+                        <button
+                          onClick={clearFilters}
+                          className="mt-4 px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          Clear Filters
+                        </button>
                       )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredPolicies?.map((policy) => (
+                  <tr key={policy._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{policy.propertyDetails.propertyType}</p>
+                        {policy.propertyDetails.plotNumber && (
+                          <p className="text-xs text-gray-600">
+                            Plot: {policy.propertyDetails.plotNumber} | Zone: {policy.propertyDetails.cadastralZone} | {policy.propertyDetails.district}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-500 truncate max-w-xs">{policy.propertyDetails.fullAddress || policy.propertyDetails.address}</p>
+                        <p className="text-xs text-gray-400">₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{policy.contactDetails.fullName}</p>
+                        <p className="text-sm text-gray-500">{policy.contactDetails.email}</p>
+                        <p className="text-sm text-gray-500">{policy.contactDetails.phoneNumber}</p>
+                        <p className="text-xs text-gray-400">RC: {policy.contactDetails.rcNumber || 'N/A'}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{policy.requestDetails.coverageType}</p>
+                        <p className="text-sm text-gray-500">{policy.requestDetails.policyDuration}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">{getStatusBadge(policy.status)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{new Date(policy.createdAt).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm font-medium">
+                      <div className="relative dropdown-container">
+                        <button
+                          onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
+                          className="p-2 hover:bg-gray-100 rounded-full"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                        {showActionsDropdown === policy._id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                            <div className="py-1">
+                              <button
+                                onClick={() => {
+                                  setSelectedPolicy(policy);
+                                  setShowDetailsModal(true);
+                                  setShowActionsDropdown(null);
+                                }}
+                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                              >
+                                <Eye className="mr-3 h-4 w-4" />
+                                View Details
+                              </button>
+                              {policy.status === 'submitted' && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedPolicy(policy);
+                                    setShowAssignModal(true);
+                                    setShowActionsDropdown(null);
+                                  }}
+                                  className="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"
+                                >
+                                  <Users className="mr-3 h-4 w-4" />
+                                  Assign Surveyor
+                                </button>
+                              )}
+                              {policy.status === 'surveyed' && (
+                                <button
+                                  onClick={async () => {
+                                    setSelectedPolicy(policy);
+                                    const response = await adminApi.getSurveySubmissions({ ammcId: policy._id });
+                                    setSelectedPolicySubmissions(response.data.submissions);
+                                    setShowReviewModal(true);
+                                    setShowActionsDropdown(null);
+                                  }}
+                                  className="flex items-center px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 w-full text-left"
+                                >
+                                  <CheckCircle className="mr-3 h-4 w-4" />
+                                  Review Submission
+                                </button>
+                              )}
+                              {policy.status === 'approved' && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      handleSendToUser(policy._id);
+                                      setShowActionsDropdown(null);
+                                    }}
+                                    className="flex items-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 w-full text-left"
+                                  >
+                                    <CheckCircle className="mr-3 h-4 w-4" />
+                                    Send to User
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleConfirmPayment(policy);
+                                      setShowActionsDropdown(null);
+                                    }}
+                                    className="flex items-center px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 w-full text-left"
+                                  >
+                                    <DollarSign className="mr-3 h-4 w-4" />
+                                    Confirm Payment
+                                  </button>
+                                </>
+                              )}
+                              {['submitted', 'assigned', 'rejected'].includes(policy.status) && (
+                                <button
+                                  onClick={() => {
+                                    setPolicyToDelete(policy);
+                                    setShowDeleteModal(true);
+                                    setShowActionsDropdown(null);
+                                  }}
+                                  className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                >
+                                  <Trash2 className="mr-3 h-4 w-4" />
+                                  Delete Policy
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -658,6 +950,22 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: Assign
             <span className="text-gray-600">Type:</span>
             <span className="font-medium text-gray-900">{policy.propertyDetails.propertyType}</span>
           </div>
+          {policy.propertyDetails.plotNumber && (
+            <>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Plot Number:</span>
+                <span className="font-medium text-gray-900">{policy.propertyDetails.plotNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Cadastral Zone:</span>
+                <span className="font-medium text-gray-900">{policy.propertyDetails.cadastralZone}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">District:</span>
+                <span className="font-medium text-gray-900">{policy.propertyDetails.district}</span>
+              </div>
+            </>
+          )}
           <div className="flex justify-between">
             <span className="text-gray-600">Value:</span>
             <span className="font-medium text-gray-900">₦{policy.propertyDetails.buildingValue.toLocaleString()}</span>
@@ -676,8 +984,8 @@ const PolicyDetailsTab: React.FC<{ policy: PolicyRequest; assignmentData: Assign
           </div>
         </div>
         <div className="mt-3">
-          <span className="text-gray-600 text-sm">Address:</span>
-          <p className="text-sm text-gray-900 mt-1">{policy.propertyDetails.address}</p>
+          <span className="text-gray-600 text-sm">Full Address:</span>
+          <p className="text-sm text-gray-900 mt-1">{policy.propertyDetails.fullAddress || policy.propertyDetails.address}</p>
         </div>
       </div>
 
