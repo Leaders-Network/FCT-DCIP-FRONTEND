@@ -116,6 +116,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   useEffect(() => {
     fetchSurveyors();
     fetchAssignments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, specializationFilter]);
 
   // Debounced search effect
@@ -125,6 +126,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }, 500); // Wait 500ms after user stops typing
 
     return () => clearTimeout(debounceTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   const fetchAssignments = async () => {
@@ -405,6 +407,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           </button>
         </div>
       </div>
+
 
       {/* Surveyors Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

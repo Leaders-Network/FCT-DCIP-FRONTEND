@@ -63,7 +63,10 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     return {
       propertyId: undefined,
       propertyDetails: {
-        address: "",
+        plotNumber: "",
+        cadastralZone: "",
+        district: "",
+        fullAddress: "",
         propertyType: "",
         buildingValue: 0,
         yearBuilt: new Date().getFullYear(),
@@ -125,7 +128,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
         ...prev,
         propertyDetails: {
           ...prev.propertyDetails,
-          address: property.address,
+          fullAddress: property.address,
         },
         contactDetails: {
           ...prev.contactDetails,
@@ -306,19 +309,69 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                 </div>
               )}
 
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Plot Number *
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    value={formData.propertyDetails.plotNumber}
+                    onChange={(e) =>
+                      handleInputChange("propertyDetails", "plotNumber", e.target.value)
+                    }
+                    placeholder="e.g., 123"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cadastral Zone *
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    value={formData.propertyDetails.cadastralZone}
+                    onChange={(e) =>
+                      handleInputChange("propertyDetails", "cadastralZone", e.target.value)
+                    }
+                    placeholder="e.g., A01"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    District *
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    value={formData.propertyDetails.district}
+                    onChange={(e) =>
+                      handleInputChange("propertyDetails", "district", e.target.value)
+                    }
+                    placeholder="e.g., Maitama"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Property Address *
+                  Full Property Address *
                 </label>
                 <textarea
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
                   rows={3}
-                  value={formData.propertyDetails.address}
+                  value={formData.propertyDetails.fullAddress}
                   onChange={(e) =>
-                    handleInputChange("propertyDetails", "address", e.target.value)
+                    handleInputChange("propertyDetails", "fullAddress", e.target.value)
                   }
-                  placeholder="Enter complete property address"
+                  placeholder="Enter complete property address including street name, landmarks, etc."
                 />
                 <p className="text-xs text-gray-500 mt-1 hidden sm:block">
                   Provide the full address where the property is located.

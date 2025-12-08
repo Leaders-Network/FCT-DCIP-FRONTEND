@@ -108,7 +108,11 @@ export interface PolicyRequest {
     };
   };
   propertyDetails: {
-    address: string;
+    plotNumber: string;
+    cadastralZone: string;
+    district: string;
+    fullAddress: string;
+    address?: string; // Legacy field for backward compatibility
     propertyType: string;
     buildingValue: number;
     yearBuilt: number;
@@ -153,7 +157,11 @@ export interface PolicyRequest {
 export interface CreatePolicyRequestData {
   propertyId?: string;
   propertyDetails: {
-    address: string;
+    plotNumber: string;
+    cadastralZone: string;
+    district: string;
+    fullAddress: string;
+    address?: string; // Legacy field for backward compatibility
     propertyType: string;
     buildingValue: number;
     yearBuilt: number;
@@ -470,8 +478,12 @@ export interface DualAssignment {
   policyId: {
     _id: string;
     propertyDetails: {
+      plotNumber?: string;
+      cadastralZone?: string;
+      district?: string;
+      fullAddress?: string;
       propertyType: string;
-      address: string;
+      address?: string; // Legacy field
       buildingValue: number;
     };
     contactDetails: {
@@ -495,7 +507,11 @@ export interface DualAssignment {
   };
   partnerSurveyorInfo?: SurveyorContact;
   policyDetails?: {
-    address: string;
+    plotNumber?: string;
+    cadastralZone?: string;
+    district?: string;
+    fullAddress?: string;
+    address?: string; // Legacy field
     propertyType?: string;
     buildingValue?: number;
   };
@@ -967,8 +983,12 @@ export interface DualAssignmentData {
   policyId: string | {
     _id: string;
     propertyDetails: {
+      plotNumber?: string;
+      cadastralZone?: string;
+      district?: string;
+      fullAddress?: string;
       propertyType: string;
-      address: string;
+      address?: string; // Legacy field
       buildingValue: number;
       yearBuilt?: string;
       squareFootage?: number;
@@ -1175,16 +1195,16 @@ export interface BrokerStatusUpdateResponse {
 }
 
 export type UserReportsResponse = ApiSuccessResponse<{
-    reports: UserReport[];
-    pagination: PaginationData;
+  reports: UserReport[];
+  pagination: PaginationData;
 }> | ApiErrorResponse;
 
 export type ReportSummaryResponse = ApiSuccessResponse<{
-    totalReports: number;
-    releasedReports: number;
-    pendingReports: number;
-    withheldReports: number;
-    completedReports: number;
+  totalReports: number;
+  releasedReports: number;
+  pendingReports: number;
+  withheldReports: number;
+  completedReports: number;
 }> | ApiErrorResponse;
 
 export type ReportDetailsResponse = ApiSuccessResponse<ReportDetails> | ApiErrorResponse;
@@ -1192,28 +1212,28 @@ export type ReportDetailsResponse = ApiSuccessResponse<ReportDetails> | ApiError
 export type ReportStatusResponse = ApiSuccessResponse<ReportStatus> | ApiErrorResponse;
 
 export type DownloadReportResponse = ApiSuccessResponse<{
-    reportId: string;
-    downloadCount: number;
-    propertyDetails: ReportDetails['propertyDetails'];
-    finalRecommendation: RecommendationAction;
-    paymentEnabled: boolean;
-    conflictDetected: boolean;
-    reportSections: ReportDetails['reportSections'];
-    mergingMetadata: MergingMetadata;
-    releasedAt: string;
+  reportId: string;
+  downloadCount: number;
+  propertyDetails: ReportDetails['propertyDetails'];
+  finalRecommendation: RecommendationAction;
+  paymentEnabled: boolean;
+  conflictDetected: boolean;
+  reportSections: ReportDetails['reportSections'];
+  mergingMetadata: MergingMetadata;
+  releasedAt: string;
 }> | ApiErrorResponse;
 
 export interface SurveyData {
-    propertyCondition?: string;
-    structuralAssessment?: string;
-    riskFactors?: string;
-    recommendations?: string;
-    estimatedValue?: number;
-    photos?: Array<{
-        url: string;
-        description: string;
-        timestamp: string;
-    }>;
+  propertyCondition?: string;
+  structuralAssessment?: string;
+  riskFactors?: string;
+  recommendations?: string;
+  estimatedValue?: number;
+  photos?: Array<{
+    url: string;
+    description: string;
+    timestamp: string;
+  }>;
 }
 
 export interface IndividualReportDownloadResponse {
