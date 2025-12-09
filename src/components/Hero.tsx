@@ -66,36 +66,38 @@ useEffect(() => {
         className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
         />
       ))}
-      <div className="absolute inset-0 bg-black/65"></div>
+      <div className="absolute inset-0 bg-black/75"></div>
 
       {/* Hero content */}
       <div className="absolute inset-0 flex items-center">
         <div data-aos="zoom-in" className="container mx-auto px-4">
-          <h1 className="text-5xl font-bold text-white mb-4">
-            Protect Your Properties <br /> with Confidence
-          </h1>
-          <p className="text-xl text-white mb-8">
-            Comprehensive insurance solutions tailored to your needs. <br />
-            Get started today and secure your peace of mind.
-          </p>
+          {/* Content wrapper with professional background */}
+          <div className="max-w-3xl backdrop-blur-lg bg-white/10 p-8 md:p-12 rounded-2xl border border-white/20 shadow-2xl">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+              Protect Your Properties <br /> with Confidence
+            </h1>
+            <p className="text-lg md:text-xl text-white/95 mb-8 leading-relaxed">
+              Comprehensive insurance solutions tailored to your needs. <br />
+              Get started today and secure your peace of mind.
+            </p>
 
-          <div className="flex space-x-4">
-            <Link href="/signup">
-            <button
-              className="bg-green-600 text-white px-6 py-3 font-semibold rounded-lg shadow-md hover:bg-green-700 transition"
-            >
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/signup">
+                <button
+                  className="w-full sm:w-auto bg-green-600 text-white px-8 py-3 font-semibold rounded-lg shadow-lg hover:bg-green-700 hover:shadow-xl transition-all duration-300 hover:scale-105"
+                >
+                  Register Now<span className="ml-2">→</span>
+                </button>
+              </Link>
               
-              Register Now<span className="ml-2">→</span>
-            </button>
-             </Link>
-            
-            <Link href="/login">
-            <button
-              className="bg-white text-green-600 px-6 font-semibold py-3 rounded-lg shadow-md hover:bg-gray-100 transition"
-            >
-              Login
-            </button>
-            </Link>
+              <Link href="/login">
+                <button
+                  className="w-full sm:w-auto bg-white text-green-600 px-8 font-semibold py-3 rounded-lg shadow-lg hover:bg-gray-50 hover:shadow-xl transition-all duration-300 hover:scale-105"
+                >
+                  Login
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -157,7 +159,7 @@ useEffect(() => {
                   Contact Us
                 </h2>
                 <p className="text-center text-gray-600 mb-8">
-                  We'd love to hear from you. Fill out the form below and we’ll get back to you shortly.
+                  We'd love to hear from you. Fill out the form below and we'll get back to you shortly.
                 </p>
 
                 <form className="space-y-5">

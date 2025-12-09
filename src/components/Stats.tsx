@@ -48,7 +48,7 @@ const stats = [
 
 const Stats = () => {
   return (
-    <section className="bg-[#004C3F] py-12 relative">
+    <section className="bg-green-700 py-12 relative">
       <div className="container mx-auto px-4">
         <Carousel
           responsive={responsive}
@@ -71,7 +71,7 @@ const Stats = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-sm text-gray-100">{stat.label}</div>
+                <div className="text-sm text-gray-100 text-[1.21rem]">{stat.label}</div>
               </div>
             </div>
           ))}
