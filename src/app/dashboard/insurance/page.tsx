@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { Search, Filter, X } from "lucide-react";
 import InsuranceSidebar from "@/components/dashboard/usersComponent/InsuranceSidebar";
 import { getUserPolicyRequests } from "@/services/api";
 
@@ -17,6 +18,16 @@ const InsurancePage = () => {
   const [showInsuranceSidebar, setShowInsuranceSidebar] = useState(false);
   const [policies, setPolicies] = useState<InsurancePolicy[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: "",
+    coverageType: "",
+    dateFrom: "",
+    dateTo: ""
+  });
 
   // Get user name from localStorage with SSR safety
   const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
@@ -42,6 +53,43 @@ const InsurancePage = () => {
   const toggleInsuranceSidebar = () => {
     setShowInsuranceSidebar(!showInsuranceSidebar);
   };
+
+  // Filter policies based on search and filters
+  const filteredPolicies = policies.filter(policy => {
+    // Search filter
+    const searchLower = searchQuery.toLowerCase();
+    const searchMatch = !searchQuery ||
+      policy._id?.toLowerCase().includes(searchLower) ||
+      policy.requestDetails?.coverageType?.toLowerCase().includes(searchLower) ||
+      policy.status?.toLowerCase().includes(searchLower);
+
+    // Status filter
+    const statusMatch = !filters.status || policy.status === filters.status;
+
+    // Coverage Type filter
+    const coverageMatch = !filters.coverageType ||
+      policy.requestDetails?.coverageType === filters.coverageType;
+
+    // Date range filter
+    const dateFromMatch = !filters.dateFrom ||
+      (policy.updatedAt && new Date(policy.updatedAt) >= new Date(filters.dateFrom));
+    const dateToMatch = !filters.dateTo ||
+      (policy.updatedAt && new Date(policy.updatedAt) <= new Date(filters.dateTo));
+
+    return searchMatch && statusMatch && coverageMatch && dateFromMatch && dateToMatch;
+  });
+
+  const clearFilters = () => {
+    setFilters({
+      status: "",
+      coverageType: "",
+      dateFrom: "",
+      dateTo: ""
+    });
+    setSearchQuery("");
+  };
+
+  const hasActiveFilters = searchQuery || Object.values(filters).some(v => v !== "");
 
   return (
     <>
@@ -100,6 +148,129 @@ const InsurancePage = () => {
 
       {/* Main Content */}
       <main className="flex-1 px-4 sm:px-8 pb-8 overflow-y-auto">
+        {/* Search and Filter Bar */}
+        <div className="w-full bg-white rounded-xl p-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            {/* Search Input */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by ID, coverage type, or status..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Toggle Button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${showFilters || hasActiveFilters
+                ? 'bg-[#028835] text-white border-[#028835]'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+              {hasActiveFilters && !showFilters && (
+                <span className="ml-2 bg-white text-[#028835] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                  !
+                </span>
+              )}
+            </button>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Advanced Filters Panel */}
+          {showFilters && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                >
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="expired">Expired</option>
+                  <option value="pending">Pending</option>
+                  <option value="assigned">Assigned</option>
+                </select>
+              </div>
+
+              {/* Coverage Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
+                <select
+                  value={filters.coverageType}
+                  onChange={(e) => setFilters({ ...filters, coverageType: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                >
+                  <option value="">All Types</option>
+                  <option value="Comprehensive">Comprehensive</option>
+                  <option value="Basic">Basic</option>
+                  <option value="Premium">Premium</option>
+                </select>
+              </div>
+
+              {/* Date From Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                <input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                />
+              </div>
+
+              {/* Date To Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                <input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Results Count */}
+          <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t border-gray-200 mt-3">
+            <span>
+              Showing <span className="font-semibold text-gray-900">{filteredPolicies.length}</span> of{' '}
+              <span className="font-semibold text-gray-900">{policies.length}</span> insurance policies
+            </span>
+            {hasActiveFilters && (
+              <span className="text-[#028835] font-medium">Filters active</span>
+            )}
+          </div>
+        </div>
+
         {/* Insurance Table */}
         <div className="w-full bg-white rounded-xl p-4 overflow-x-auto">
           <table className="w-full min-w-[720px]">
@@ -161,8 +332,30 @@ const InsurancePage = () => {
                     </td>
                   </tr>
                 ))
-              ) : (policies || []).length > 0 ? (
-                (policies || []).map((item, index) => (
+              ) : filteredPolicies.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center">
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <Search className="h-12 w-12 mb-3 opacity-30" />
+                      <p className="text-lg font-medium">No insurance policies found</p>
+                      <p className="text-sm mt-1">
+                        {hasActiveFilters
+                          ? "Try adjusting your search or filters"
+                          : "No insurance policies have been added yet"}
+                      </p>
+                      {hasActiveFilters && (
+                        <button
+                          onClick={clearFilters}
+                          className="mt-4 px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          Clear Filters
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredPolicies.map((item, index) => (
                   <tr key={item._id || index} className="border-b">
                     <td className="py-4 px-4">
                       <div className="w-5 h-5 opacity-30 bg-white rounded-[3px] border border-black">
@@ -188,12 +381,12 @@ const InsurancePage = () => {
                     <td className="py-4">
                       <span
                         className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium capitalize ${item.status === "active"
-                            ? "bg-[#028835]"
-                            : item.status === "inactive" || item.status === "expired"
-                              ? "bg-[#2a2a29]"
-                              : item.status === "pending" || item.status === "assigned"
-                                ? "bg-[#ffc52b]"
-                                : "bg-[#bd2721]"
+                          ? "bg-[#028835]"
+                          : item.status === "inactive" || item.status === "expired"
+                            ? "bg-[#2a2a29]"
+                            : item.status === "pending" || item.status === "assigned"
+                              ? "bg-[#ffc52b]"
+                              : "bg-[#bd2721]"
                           }`}
                       >
                         {item.status || "Unknown"}
@@ -218,19 +411,6 @@ const InsurancePage = () => {
                     </td>
                   </tr>
                 ))
-              ) : (
-                // Empty state
-                <tr className="border-b">
-                  <td colSpan={6} className="py-8 text-center text-gray-500">
-                    <div className="flex flex-col items-center">
-                      <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p className="font-medium">No insurance policies found</p>
-                      <p className="text-sm">Your insurance policies will appear here once you have some.</p>
-                    </div>
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>

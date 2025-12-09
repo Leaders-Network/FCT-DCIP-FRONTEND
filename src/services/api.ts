@@ -1109,6 +1109,11 @@ export const adminApi = {
     return response.data;
   },
 
+  updateAdministrator: async (adminId: string, adminData: Partial<EmployeeRegistrationData>) => {
+    const response = await api.patch(`/admin/administrators/${adminId}`, adminData);
+    return response.data;
+  },
+
   updateAdministratorStatus: async (adminId: string, status: string) => {
     const response = await api.patch(`/admin/administrators/${adminId}/status`, { status });
     return response.data;

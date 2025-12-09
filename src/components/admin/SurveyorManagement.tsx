@@ -39,6 +39,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [specializationFilter, setSpecializationFilter] = useState<string>("all");
@@ -78,84 +79,90 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     availability: "available" as "available" | "busy" | "unavailable"
   });
 
-  const fetchSurveyors = async () => {
-    setLoading(true);
-    try {
-      const { adminApi } = await import("@/services/api");
+  // Initial load
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      try {
+        const { adminApi, getPolicyRequests } = await import("@/services/api");
 
-      const filters = {
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        specialization: specializationFilter !== "all" ? specializationFilter : undefined,
-        organization: "AMMC", // Filter for AMMC surveyors only
-        search: searchTerm || undefined
-      };
+        // Fetch surveyors
+        const surveyorResponse = await adminApi.getSurveyors({
+          organization: "AMMC"
+        });
 
-      console.log("Fetching surveyors with filters:", filters);
+        if (surveyorResponse?.success && surveyorResponse?.data) {
+          setSurveyors(surveyorResponse.data);
+        }
 
-      // Fetch AMMC surveyors from the API
-      const response = await adminApi.getSurveyors(filters);
-
-      console.log("Surveyor API response:", response);
-      console.log("Surveyors count:", response?.data?.length || 0);
-
-      if (response?.success && response?.data) {
-        setSurveyors(response.data);
-      } else {
-        console.warn("No surveyors data in response");
-        setSurveyors([]);
+        // Fetch assignments
+        const assignmentResponse = await getPolicyRequests('all', 1, 100);
+        if (assignmentResponse?.data && Array.isArray(assignmentResponse.data)) {
+          const assignmentData = assignmentResponse.data?.map((policy: PolicyRequest) => ({
+            _id: policy._id,
+            surveyorId: policy.assignedSurveyors?.[0] || null,
+            ammcId: policy._id,
+            status: policy.status,
+            createdAt: policy.createdAt,
+            updatedAt: policy.updatedAt
+          })) || [];
+          setAssignments(assignmentData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch surveyors:", error);
-      setSurveyors([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  // Fetch on filter changes
-  useEffect(() => {
-    fetchSurveyors();
-    fetchAssignments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, specializationFilter]);
+    fetchInitialData();
+  }, []);
 
-  // Debounced search effect
+  // Fetch on filter/search changes
   useEffect(() => {
+    const fetchSurveyors = async () => {
+      setFetching(true);
+      try {
+        const { adminApi } = await import("@/services/api");
+
+        const filters = {
+          status: statusFilter !== "all" ? statusFilter : undefined,
+          specialization: specializationFilter !== "all" ? specializationFilter : undefined,
+          organization: "AMMC",
+          search: searchTerm || undefined
+        };
+
+        console.log("Fetching surveyors with filters:", filters);
+
+        const response = await adminApi.getSurveyors(filters);
+
+        console.log("Surveyor API response:", response);
+        console.log("Surveyors count:", response?.data?.length || 0);
+
+        if (response?.success && response?.data) {
+          setSurveyors(response.data);
+        } else {
+          console.warn("No surveyors data in response");
+          setSurveyors([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch surveyors:", error);
+        setSurveyors([]);
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    // Skip initial render (handled by initial load effect)
+    if (loading) return;
+
+    // Debounce search
     const debounceTimer = setTimeout(() => {
       fetchSurveyors();
-    }, 500); // Wait 500ms after user stops typing
+    }, searchTerm ? 500 : 0);
 
     return () => clearTimeout(debounceTimer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]);
-
-  const fetchAssignments = async () => {
-    try {
-      const { getPolicyRequests } = await import("@/services/api");
-
-      // Fetch all policy requests with assignments
-      const response = await getPolicyRequests('all', 1, 100);
-
-      if (response?.data && Array.isArray(response.data)) {
-        // Transform policy requests to assignment format if needed
-        const assignmentData = response.data?.map((policy: PolicyRequest) => ({
-          _id: policy._id,
-          surveyorId: policy.assignedSurveyors?.[0] || null,
-          ammcId: policy._id,
-          status: policy.status,
-          createdAt: policy.createdAt,
-          updatedAt: policy.updatedAt
-        })) || [];
-
-        setAssignments(assignmentData);
-      } else {
-        setAssignments([]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch assignments:', error);
-      setAssignments([]);
-    }
-  };
+  }, [statusFilter, specializationFilter, searchTerm, loading]);
 
   const fetchSurveyorAnalytics = async (surveyor: Surveyor) => {
     setSelectedSurveyor(surveyor);
@@ -242,6 +249,33 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     ).length;
   };
 
+  const refetchSurveyors = async () => {
+    setFetching(true);
+    try {
+      const { adminApi } = await import("@/services/api");
+
+      const filters = {
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        specialization: specializationFilter !== "all" ? specializationFilter : undefined,
+        organization: "AMMC",
+        search: searchTerm || undefined
+      };
+
+      const response = await adminApi.getSurveyors(filters);
+
+      if (response?.success && response?.data) {
+        setSurveyors(response.data);
+      } else {
+        setSurveyors([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch surveyors:", error);
+      setSurveyors([]);
+    } finally {
+      setFetching(false);
+    }
+  };
+
   const handleCreateSurveyor = async () => {
     try {
       await onCreateSurveyor({
@@ -268,7 +302,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         qualifications: [],
         availability: "available"
       });
-      fetchSurveyors();
+      refetchSurveyors();
     } catch (error) {
       console.error('Failed to create surveyor:', error);
     }
@@ -282,7 +316,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         status: formData.status as "active" | "inactive" | "suspended"
       });
       setShowEditModal(false);
-      fetchSurveyors();
+      refetchSurveyors();
     } catch (error) {
       console.error('Failed to update surveyor:', error);
     }
@@ -292,7 +326,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     if (window.confirm('Are you sure you want to delete this surveyor?')) {
       try {
         await onDeleteSurveyor(surveyorId);
-        fetchSurveyors();
+        refetchSurveyors();
       } catch (error) {
         console.error('Failed to delete surveyor:', error);
       }
@@ -410,7 +444,13 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
 
       {/* Surveyors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {fetching && (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <span className="ml-3 text-gray-600">Loading surveyors...</span>
+        </div>
+      )}
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${fetching ? 'opacity-50 pointer-events-none' : ''}`}>
         {filteredSurveyors.map((surveyor) => (
           <div key={surveyor._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6">
