@@ -16,7 +16,10 @@ import {
   MapPin,
   TrendingUp,
   CheckCircle,
-  XCircle
+  XCircle,
+  Search,
+  Filter,
+  X
 } from "lucide-react";
 import { getUserPolicyRequests } from "@/services/api";
 
@@ -51,6 +54,18 @@ export default function PoliciesPage() {
   const [completedCount, setCompletedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    propertyType: "",
+    coverageType: "",
+    dateFrom: "",
+    dateTo: "",
+    minValue: "",
+    maxValue: ""
+  });
 
   useEffect(() => {
     fetchInProgressPolicies();
@@ -158,6 +173,62 @@ export default function PoliciesPage() {
     };
   };
 
+  // Filter function
+  const filterPolicies = (policies: PolicyRequest[]) => {
+    return policies.filter(policy => {
+      // Search filter
+      const searchLower = searchQuery.toLowerCase();
+      const searchMatch = !searchQuery ||
+        policy._id?.toLowerCase().includes(searchLower) ||
+        policy.propertyDetails.address?.toLowerCase().includes(searchLower) ||
+        policy.propertyDetails.propertyType?.toLowerCase().includes(searchLower) ||
+        policy.contactDetails.fullName?.toLowerCase().includes(searchLower) ||
+        policy.requestDetails.coverageType?.toLowerCase().includes(searchLower);
+
+      // Property Type filter
+      const propertyTypeMatch = !filters.propertyType ||
+        policy.propertyDetails.propertyType === filters.propertyType;
+
+      // Coverage Type filter
+      const coverageMatch = !filters.coverageType ||
+        policy.requestDetails.coverageType === filters.coverageType;
+
+      // Date range filter
+      const dateFromMatch = !filters.dateFrom ||
+        new Date(policy.createdAt) >= new Date(filters.dateFrom);
+      const dateToMatch = !filters.dateTo ||
+        new Date(policy.createdAt) <= new Date(filters.dateTo);
+
+      // Value range filter
+      const minValueMatch = !filters.minValue ||
+        policy.propertyDetails.buildingValue >= parseFloat(filters.minValue);
+      const maxValueMatch = !filters.maxValue ||
+        policy.propertyDetails.buildingValue <= parseFloat(filters.maxValue);
+
+      return searchMatch && propertyTypeMatch && coverageMatch &&
+        dateFromMatch && dateToMatch && minValueMatch && maxValueMatch;
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      propertyType: "",
+      coverageType: "",
+      dateFrom: "",
+      dateTo: "",
+      minValue: "",
+      maxValue: ""
+    });
+    setSearchQuery("");
+  };
+
+  const hasActiveFilters = searchQuery || Object.values(filters).some(v => v !== "");
+
+  // Apply filters to current tab
+  const filteredInProgressPolicies = filterPolicies(inProgressPolicies);
+  const filteredCompletedPolicies = filterPolicies(completedPolicies);
+  const filteredRejectedPolicies = filterPolicies(rejectedPolicies);
+
   if (selectedPolicyId) {
     return (
       <div className="p-0">
@@ -204,6 +275,159 @@ export default function PoliciesPage() {
               <div className="text-[10px] sm:text-xs text-red-600 font-medium">Rejected</div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="w-full bg-white rounded-xl p-4 mb-4 shadow-sm border border-gray-200">
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          {/* Search Input */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by ID, address, property type, or coverage..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${showFilters || hasActiveFilters
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+            {hasActiveFilters && !showFilters && (
+              <span className="ml-2 bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                !
+              </span>
+            )}
+          </button>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Advanced Filters Panel */}
+        {showFilters && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+            {/* Property Type Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+              <select
+                value={filters.propertyType}
+                onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Types</option>
+                <option value="Residential">Residential</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Industrial">Industrial</option>
+              </select>
+            </div>
+
+            {/* Coverage Type Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
+              <select
+                value={filters.coverageType}
+                onChange={(e) => setFilters({ ...filters, coverageType: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Coverage</option>
+                <option value="Comprehensive">Comprehensive</option>
+                <option value="Basic">Basic</option>
+                <option value="Premium">Premium</option>
+              </select>
+            </div>
+
+            {/* Date From Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Date To Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Min Value Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Min Value (₦)</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={filters.minValue}
+                onChange={(e) => setFilters({ ...filters, minValue: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Max Value Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Value (₦)</label>
+              <input
+                type="number"
+                placeholder="∞"
+                value={filters.maxValue}
+                onChange={(e) => setFilters({ ...filters, maxValue: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Results Count */}
+        <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t border-gray-200 mt-3">
+          <span>
+            Showing <span className="font-semibold text-gray-900">
+              {activeTab === 'in-progress' ? filteredInProgressPolicies.length :
+                activeTab === 'completed' ? filteredCompletedPolicies.length :
+                  filteredRejectedPolicies.length}
+            </span> of{' '}
+            <span className="font-semibold text-gray-900">
+              {activeTab === 'in-progress' ? inProgressPolicies.length :
+                activeTab === 'completed' ? completedPolicies.length :
+                  rejectedPolicies.length}
+            </span> policies
+          </span>
+          {hasActiveFilters && (
+            <span className="text-blue-600 font-medium">Filters active</span>
+          )}
         </div>
       </div>
 
@@ -276,9 +500,9 @@ export default function PoliciesPage() {
                 </div>
               ))}
             </div>
-          ) : inProgressPolicies.length > 0 ? (
+          ) : filteredInProgressPolicies.length > 0 ? (
             <div className="space-y-4 sm:space-y-6">
-              {inProgressPolicies.map((policy) => {
+              {filteredInProgressPolicies.map((policy) => {
                 const dualSurveyorData = getMockDualSurveyorData(policy);
 
                 return (
@@ -410,17 +634,29 @@ export default function PoliciesPage() {
               <div className="mx-auto h-12 w-12 text-gray-400">
                 <FileText className="h-full w-full" />
               </div>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No policies in progress</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                {hasActiveFilters ? "No matching policies found" : "No policies in progress"}
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
-                Your submitted policies will appear here as they progress through the dual-surveyor assessment.
+                {hasActiveFilters
+                  ? "Try adjusting your search or filters"
+                  : "Your submitted policies will appear here as they progress through the dual-surveyor assessment."}
               </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           )}
         </div>
       ) : activeTab === 'completed' ? (
         <div className="space-y-6">
-          {completedPolicies.length > 0 ? (
-            completedPolicies.map((policy) => (
+          {filteredCompletedPolicies.length > 0 ? (
+            filteredCompletedPolicies.map((policy) => (
               <div key={policy._id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -464,17 +700,29 @@ export default function PoliciesPage() {
           ) : (
             <div className="text-center py-12">
               <CheckCircle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No completed policies</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                {hasActiveFilters ? "No matching completed policies" : "No completed policies"}
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
-                Completed policies will appear here.
+                {hasActiveFilters
+                  ? "Try adjusting your search or filters"
+                  : "Completed policies will appear here."}
               </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           )}
         </div>
       ) : (
         <div className="space-y-6">
-          {rejectedPolicies.length > 0 ? (
-            rejectedPolicies.map((policy) => (
+          {filteredRejectedPolicies.length > 0 ? (
+            filteredRejectedPolicies.map((policy) => (
               <div key={policy._id} className="bg-white rounded-lg border border-red-200 shadow-sm p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -518,10 +766,22 @@ export default function PoliciesPage() {
           ) : (
             <div className="text-center py-12">
               <XCircle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No rejected policies</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                {hasActiveFilters ? "No matching rejected policies" : "No rejected policies"}
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
-                Rejected policies will appear here.
+                {hasActiveFilters
+                  ? "Try adjusting your search or filters"
+                  : "Rejected policies will appear here."}
               </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           )}
         </div>

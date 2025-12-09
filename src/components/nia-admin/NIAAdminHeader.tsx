@@ -19,8 +19,12 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
         email: string;
         organization: string;
     } | null>(null);
-    const [notifications, setNotifications] = useState(0);
+    const [notificationCount, setNotificationCount] = useState(0);
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [showNotifications, setShowNotifications] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [showSearchResults, setShowSearchResults] = useState(false);
+    const [searchResults, setSearchResults] = useState<any[]>([]);
 
     useEffect(() => {
         // Get admin info from localStorage
@@ -29,9 +33,26 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
             setAdminInfo(JSON.parse(storedAdminInfo));
         }
 
-        // TODO: Fetch notifications count
-        setNotifications(3); // Mock data
+        // Fetch notifications
+        fetchNotifications();
     }, []);
+
+    const fetchNotifications = async () => {
+        try {
+            const response = await fetch('/api/notifications', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setNotifications(data.notifications || []);
+                setNotificationCount(data.unreadCount || 0);
+            }
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem("niaAdminToken");
@@ -40,10 +61,74 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
         window.location.href = "/nia-admin/login";
     };
 
-    const handleSearch = (e: React.FormEvent) => {
+    const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement search functionality
-        console.log("Searching for:", searchQuery);
+        if (!searchQuery.trim()) return;
+
+        try {
+            // Search across multiple resources
+            const [assignmentsRes, surveyorsRes, policiesRes] = await Promise.all([
+                fetch(`/api/nia-admin/assignments?search=${searchQuery}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                }),
+                fetch(`/api/nia-admin/surveyors?search=${searchQuery}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                }),
+                fetch(`/api/nia-admin/policies?search=${searchQuery}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                })
+            ]);
+
+            const results = [];
+
+            if (assignmentsRes.ok) {
+                const data = await assignmentsRes.json();
+                results.push(...(data.data || []).map((item: any) => ({ ...item, type: 'assignment' })));
+            }
+
+            if (surveyorsRes.ok) {
+                const data = await surveyorsRes.json();
+                results.push(...(data.data || []).map((item: any) => ({ ...item, type: 'surveyor' })));
+            }
+
+            if (policiesRes.ok) {
+                const data = await policiesRes.json();
+                results.push(...(data.data || []).map((item: any) => ({ ...item, type: 'policy' })));
+            }
+
+            setSearchResults(results);
+            setShowSearchResults(true);
+        } catch (error) {
+            console.error('Search failed:', error);
+        }
+    };
+
+    const handleNotificationClick = async (notificationId: string) => {
+        try {
+            await fetch(`/api/notifications/${notificationId}/read`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                }
+            });
+            fetchNotifications();
+        } catch (error) {
+            console.error('Failed to mark notification as read:', error);
+        }
+    };
+
+    const markAllAsRead = async () => {
+        try {
+            await fetch('/api/notifications/mark-all-read', {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                }
+            });
+            fetchNotifications();
+        } catch (error) {
+            console.error('Failed to mark all as read:', error);
+        }
     };
 
     const adminName = adminInfo?.fullname || "NIA Admin";
@@ -104,14 +189,81 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
                     </button>
 
                     {/* Notifications */}
-                    <button className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative">
-                        <Bell className="h-5 w-5" />
-                        {notifications > 0 && (
-                            <span className="absolute -top-1 -right-1 block h-4 w-4 rounded-full bg-red-500 text-xs text-white flex items-center justify-center">
-                                {notifications > 9 ? '9+' : notifications}
-                            </span>
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowNotifications(!showNotifications)}
+                            className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative"
+                        >
+                            <Bell className="h-5 w-5" />
+                            {notificationCount > 0 && (
+                                <span className="absolute -top-1 -right-1 block h-4 w-4 rounded-full bg-red-500 text-xs text-white flex items-center justify-center">
+                                    {notificationCount > 9 ? '9+' : notificationCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {/* Notifications Dropdown */}
+                        {showNotifications && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setShowNotifications(false)}
+                                />
+                                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-[500px] overflow-hidden flex flex-col">
+                                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                                        <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                                        {notificationCount > 0 && (
+                                            <button
+                                                onClick={markAllAsRead}
+                                                className="text-xs text-blue-600 hover:text-blue-800"
+                                            >
+                                                Mark all as read
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="overflow-y-auto flex-1">
+                                        {notifications.length === 0 ? (
+                                            <div className="p-8 text-center text-gray-500">
+                                                <Bell className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                                                <p>No notifications</p>
+                                            </div>
+                                        ) : (
+                                            notifications.map((notification) => (
+                                                <div
+                                                    key={notification._id}
+                                                    onClick={() => {
+                                                        handleNotificationClick(notification._id);
+                                                        if (notification.actionUrl) {
+                                                            window.location.href = notification.actionUrl;
+                                                        }
+                                                    }}
+                                                    className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''
+                                                        }`}
+                                                >
+                                                    <div className="flex items-start">
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-medium text-gray-900">
+                                                                {notification.title}
+                                                            </p>
+                                                            <p className="text-sm text-gray-600 mt-1">
+                                                                {notification.message}
+                                                            </p>
+                                                            <p className="text-xs text-gray-400 mt-1">
+                                                                {new Date(notification.createdAt).toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                        {!notification.read && (
+                                                            <div className="w-2 h-2 bg-blue-600 rounded-full ml-2 mt-1"></div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </>
                         )}
-                    </button>
+                    </div>
 
                     {/* User Menu */}
                     <div className="flex items-center space-x-2 sm:space-x-3">
@@ -173,6 +325,80 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
                     />
                 </form>
             </div>
+
+            {/* Search Results Modal */}
+            {showSearchResults && (
+                <>
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                        onClick={() => setShowSearchResults(false)}
+                    />
+                    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-2xl bg-white rounded-lg shadow-xl z-50 max-h-[600px] overflow-hidden flex flex-col mx-4">
+                        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Search Results for "{searchQuery}"
+                            </h3>
+                            <button
+                                onClick={() => setShowSearchResults(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="overflow-y-auto flex-1 p-4">
+                            {searchResults.length === 0 ? (
+                                <div className="text-center py-12 text-gray-500">
+                                    <Search className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                                    <p>No results found</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {searchResults.map((result, index) => (
+                                        <div
+                                            key={index}
+                                            onClick={() => {
+                                                const url = result.type === 'assignment'
+                                                    ? `/nia-admin/assignments/${result._id}`
+                                                    : result.type === 'surveyor'
+                                                        ? `/nia-admin/surveyors`
+                                                        : `/nia-admin/dashboard/policies/${result._id}`;
+                                                window.location.href = url;
+                                            }}
+                                            className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center space-x-2 mb-1">
+                                                        <span className={`px-2 py-1 text-xs rounded-full ${result.type === 'assignment' ? 'bg-blue-100 text-blue-800' :
+                                                                result.type === 'surveyor' ? 'bg-green-100 text-green-800' :
+                                                                    'bg-purple-100 text-purple-800'
+                                                            }`}>
+                                                            {result.type}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm font-medium text-gray-900">
+                                                        {result.type === 'assignment'
+                                                            ? `Assignment ${result._id?.substring(0, 8)}`
+                                                            : result.type === 'surveyor'
+                                                                ? `${result.firstname} ${result.lastname}`
+                                                                : `Policy ${result._id?.substring(0, 8)}`
+                                                        }
+                                                    </p>
+                                                    <p className="text-xs text-gray-600 mt-1">
+                                                        {result.type === 'assignment' && result.location?.address}
+                                                        {result.type === 'surveyor' && result.email}
+                                                        {result.type === 'policy' && result.propertyDetails?.address}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
         </header>
     );
 };
