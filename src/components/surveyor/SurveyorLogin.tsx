@@ -207,7 +207,7 @@ const SurveyorLogin = () => {
                 />
                 <span className="ml-2">Remember me</span>
               </label>
-              <a href="#" className="text-[#028835] hover:text-green-700">
+              <a href="/surveyor/reset-password" className="text-[#028835] hover:text-green-700">
                 Forgot password?
               </a>
             </div>

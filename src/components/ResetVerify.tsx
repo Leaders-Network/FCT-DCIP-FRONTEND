@@ -24,35 +24,33 @@ export default function ResetVerify() {
     e.preventDefault();
     setError(null);
 
-    // Validate OTP length
-    if (otp.length !== 5) {
-      setError("OTP must be 5 digits");
+    // Validate OTP length (updated to 6 digits)
+    if (otp.length !== 6) {
+      setError("OTP must be 6 digits");
       return;
     }
 
     setIsLoading(true);
     const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
-    const token = localStorage.getItem("resetToken");
-
-    if (!token) {
-      setError("Session expired. Please try the reset process again.");
-      setIsLoading(false);
-      return;
-    }
 
     try {
-      // Step 2: Verify reset password OTP
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
+      // Step 2: Verify reset password OTP (using new unified endpoint)
+      const email = localStorage.getItem("resetEmail");
+      if (!email) {
+        setError("Session expired. Please start the reset process again.");
+        return;
+      }
+
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
       const response = await fetch(
-        `${apiBaseUrl}/auth/verify-otp-user`,
+        `${apiBaseUrl}/reset-password/verify-otp`,
         {
           method: "POST",
           headers: {
-            apiKey: ApiKey,
+            apikey: ApiKey, // Note: lowercase 'apikey'
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Use token for authentication
           },
-          body: JSON.stringify({ otp }),
+          body: JSON.stringify({ email, otp }),
         }
       );
 
@@ -60,12 +58,14 @@ export default function ResetVerify() {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      // Store new token and clean up old one
-      localStorage.setItem("resetVerifyToken", data.token);
-      localStorage.removeItem("resetToken"); // Clean up the initial reset token
-      
+      console.log('✅ OTP verified successfully:', data);
+
+      // Store reset token for password change
+      localStorage.setItem("resetToken", data.resetToken);
+      localStorage.setItem("userType", data.userType);
+
       router.push("/change-password");
     } catch (error) {
       console.error("OTP verification error:", error);
@@ -152,17 +152,17 @@ function VerifyTitle() {
   );
 }
 
-function VerifyForm({ 
-  otp, 
-  setOtp, 
-  error, 
-  isLoading, 
-  handleSubmit 
-}: { 
-  otp: string; 
-  setOtp: (otp: string) => void; 
-  error: string | null; 
-  isLoading: boolean; 
+function VerifyForm({
+  otp,
+  setOtp,
+  error,
+  isLoading,
+  handleSubmit
+}: {
+  otp: string;
+  setOtp: (otp: string) => void;
+  error: string | null;
+  isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
 }) {
   return (
@@ -190,9 +190,8 @@ function VerifyForm({
       <button
         type="submit"
         disabled={isLoading}
-        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${
-          isLoading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
       >
         {isLoading ? "Verifying..." : "Verify OTP"}
         {!isLoading && (

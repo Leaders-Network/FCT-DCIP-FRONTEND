@@ -5,19 +5,20 @@ import { Trash2, MoreVertical, Search, Filter, X } from "lucide-react";
 import { getUserProperties, deleteProperty } from "@/services/api";
 import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import { CreatePolicyRequestData } from "@/types/api.types";
+import { PropertyType } from "@/types/survey.types";
 import PropertyDetailsModal from "@/components/dashboard/usersComponent/PropertyDetailsModal";
 import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty";
 
 const PropertyPage = () => {
-  const [properties, setProperties] = useState<import('@/types/survey.types').PropertyType[]>([]);
+  const [properties, setProperties] = useState<PropertyType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProperty, setSelectedProperty] = useState<import('@/types/survey.types').PropertyType | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyType | null>(null);
   const [showPolicyRequest, setShowPolicyRequest] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedPropertyForView, setSelectedPropertyForView] = useState<import('@/types/survey.types').PropertyType | null>(null);
+  const [selectedPropertyForView, setSelectedPropertyForView] = useState<PropertyType | null>(null);
   const [showAddNewProperty, setShowAddNewProperty] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [propertyToDelete, setPropertyToDelete] = useState<import('@/types/survey.types').PropertyType | null>(null);
+  const [propertyToDelete, setPropertyToDelete] = useState<PropertyType | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
 
   // Search and Filter States
@@ -76,7 +77,7 @@ const PropertyPage = () => {
     fetchProperties();
   };
 
-  const handleDeleteProperty = async (property: import('@/types/survey.types').PropertyType) => {
+  const handleDeleteProperty = async (property: PropertyType) => {
     // Safety check: Only allow deletion of unverified properties
     if (property.status !== "Unverified") {
       alert('Only unverified properties can be deleted.');
@@ -97,12 +98,12 @@ const PropertyPage = () => {
     }
   };
 
-  const handleInsureClick = (property: import('@/types/survey.types').PropertyType) => {
+  const handleInsureClick = (property: PropertyType) => {
     setSelectedProperty(property);
     setShowPolicyRequest(true);
   };
 
-  const handleViewClick = (property: import('@/types/survey.types').PropertyType) => {
+  const handleViewClick = (property: PropertyType) => {
     setSelectedPropertyForView(property);
     setShowViewModal(true);
   };

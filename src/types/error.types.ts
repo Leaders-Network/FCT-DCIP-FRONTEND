@@ -1,193 +1,180 @@
 /**
- * Error handling type definitions
+ * Comprehensive error type definitions for the application
  */
 
 // Base error interface
 export interface BaseError {
     message: string;
-    code?: string;
+    code?: string | number;
     timestamp?: string;
 }
 
-// API Error interface
-export interface ApiError extends BaseError {
-    status?: number;
-    statusText?: string;
-    endpoint?: string;
-    method?: string;
+// API Error Response
+export interface ApiErrorResponse {
+    success: false;
+    error: string;
+    message: string;
     details?: Record<string, unknown>;
+    statusCode?: number;
 }
 
-// Validation Error interface
+// HTTP Error with response data
+export interface HttpError extends Error {
+    response?: {
+        data?: {
+            message?: string;
+            error?: string;
+            details?: Record<string, unknown>;
+        };
+        status?: number;
+        statusText?: string;
+    };
+    status?: number;
+    statusCode?: number;
+}
+
+// Validation Error
 export interface ValidationError extends BaseError {
-    field?: string;
+    field: string;
     value?: unknown;
-    constraint?: string;
+    constraints?: string[];
 }
 
-// Network Error interface
+// Form Error State
+export interface FormError {
+    field: string;
+    message: string;
+}
+
+// Error with response (for API calls)
+export interface ErrorWithResponse {
+    response?: {
+        data?: {
+            message?: string;
+            error?: string;
+        };
+        status?: number;
+        statusText?: string;
+    };
+    message?: string;
+}
+
+// Network Error
 export interface NetworkError extends BaseError {
     isNetworkError: true;
     timeout?: boolean;
     offline?: boolean;
 }
 
-// Authentication Error interface
+// Authentication Error
 export interface AuthError extends BaseError {
     isAuthError: true;
-    tokenExpired?: boolean;
-    invalidCredentials?: boolean;
-    insufficientPermissions?: boolean;
+    expired?: boolean;
+    unauthorized?: boolean;
 }
 
-// File Upload Error interface
+// File Upload Error
 export interface FileUploadError extends BaseError {
-    fileName?: string;
-    fileSize?: number;
-    fileType?: string;
-    maxSize?: number;
-    allowedTypes?: string[];
+    file?: File;
+    size?: number;
+    type?: string;
 }
 
-// Form Error interface
-export interface FormError extends BaseError {
-    field: string;
-    value?: unknown;
-    type: 'required' | 'invalid' | 'min' | 'max' | 'pattern' | 'custom';
+// Generic Error Handler Result
+export interface ErrorResult<T = unknown> {
+    success: false;
+    error: string;
+    details?: T;
 }
 
-// Error Handler function type
-export type ErrorHandler = (error: BaseError) => void;
+// Success Result
+export interface SuccessResult<T = unknown> {
+    success: true;
+    data: T;
+}
 
-// Error Recovery function type
-export type ErrorRecovery = () => void | Promise<void>;
+// Combined Result Type
+export type Result<T = unknown> = SuccessResult<T> | ErrorResult;
+
+// Error Severity Levels
+export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+// Error Categories
+export type ErrorCategory =
+    | 'network'
+    | 'validation'
+    | 'authentication'
+    | 'authorization'
+    | 'server'
+    | 'client'
+    | 'unknown';
+
+// Structured Error
+export interface StructuredError extends BaseError {
+    category: ErrorCategory;
+    severity: ErrorSeverity;
+    context?: Record<string, unknown>;
+    stack?: string;
+}
+
+// Error Handler Function Type
+export type ErrorHandler<T = unknown> = (error: unknown) => T;
+
+// Async Error Handler
+export type AsyncErrorHandler<T = unknown> = (error: unknown) => Promise<T>;
 
 // Error Boundary State
 export interface ErrorBoundaryState {
     hasError: boolean;
     error?: Error;
-    errorInfo?: React.ErrorInfo;
+    errorInfo?: {
+        componentStack: string;
+    };
 }
 
-// Error Context
-export interface ErrorContext {
-    errors: BaseError[];
-    addError: (error: BaseError) => void;
-    removeError: (index: number) => void;
-    clearErrors: () => void;
-    hasErrors: boolean;
-}
-
-// Error Notification
-export interface ErrorNotification {
-    id: string;
-    error: BaseError;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    dismissible: boolean;
-    autoHide?: boolean;
-    duration?: number;
-}
-
-// Error Log Entry
-export interface ErrorLogEntry {
-    id: string;
-    error: BaseError;
-    timestamp: string;
-    userId?: string;
-    sessionId?: string;
-    userAgent?: string;
-    url?: string;
-    stackTrace?: string;
-}
-
-// Error Response from API
-export interface ErrorResponse {
-    success: false;
-    error: string;
-    message: string;
-    code?: string;
-    details?: Record<string, unknown>;
-    timestamp?: string;
-}
-
-// Success Response from API
-export interface SuccessResponse<T = unknown> {
-    success: true;
-    data: T;
-    message?: string;
-    timestamp?: string;
-}
-
-// Union type for API responses
-export type ApiResponse<T = unknown> = SuccessResponse<T> | ErrorResponse;
-
-// Error handling utilities
-export const createApiError = (
-    message: string,
-    status?: number,
-    endpoint?: string,
-    method?: string
-): ApiError => ({
-    message,
-    status,
-    endpoint,
-    method,
-    code: `API_ERROR_${status}`,
-    timestamp: new Date().toISOString()
-});
-
-export const createValidationError = (
-    field: string,
-    message: string,
-    value?: unknown
-): ValidationError => ({
-    message,
-    field,
-    value,
-    code: 'VALIDATION_ERROR',
-    timestamp: new Date().toISOString()
-});
-
-export const createNetworkError = (
-    message: string,
-    timeout = false,
-    offline = false
-): NetworkError => ({
-    message,
-    isNetworkError: true,
-    timeout,
-    offline,
-    code: 'NETWORK_ERROR',
-    timestamp: new Date().toISOString()
-});
-
-export const createAuthError = (
-    message: string,
-    tokenExpired = false,
-    invalidCredentials = false,
-    insufficientPermissions = false
-): AuthError => ({
-    message,
-    isAuthError: true,
-    tokenExpired,
-    invalidCredentials,
-    insufficientPermissions,
-    code: 'AUTH_ERROR',
-    timestamp: new Date().toISOString()
-});
-
-export const isApiError = (error: unknown): error is ApiError => {
-    return typeof error === 'object' && error !== null && 'status' in error;
+// Type Guards
+export const isHttpError = (error: unknown): error is HttpError => {
+    return error instanceof Error && 'response' in error;
 };
 
 export const isValidationError = (error: unknown): error is ValidationError => {
-    return typeof error === 'object' && error !== null && 'field' in error;
+    return typeof error === 'object' &&
+        error !== null &&
+        'field' in error &&
+        'message' in error;
 };
 
 export const isNetworkError = (error: unknown): error is NetworkError => {
-    return typeof error === 'object' && error !== null && 'isNetworkError' in error;
+    return typeof error === 'object' &&
+        error !== null &&
+        'isNetworkError' in error;
 };
 
 export const isAuthError = (error: unknown): error is AuthError => {
-    return typeof error === 'object' && error !== null && 'isAuthError' in error;
+    return typeof error === 'object' &&
+        error !== null &&
+        'isAuthError' in error;
+};
+
+// Error Utilities
+export const createError = (
+    message: string,
+    category: ErrorCategory = 'unknown',
+    severity: ErrorSeverity = 'medium'
+): StructuredError => ({
+    message,
+    category,
+    severity,
+    timestamp: new Date().toISOString()
+});
+
+export const extractErrorMessage = (error: unknown): string => {
+    if (typeof error === 'string') return error;
+    if (error instanceof Error) return error.message;
+    if (isHttpError(error)) {
+        return error.response?.data?.message ||
+            error.response?.data?.error ||
+            error.message;
+    }
+    return 'An unknown error occurred';
 };

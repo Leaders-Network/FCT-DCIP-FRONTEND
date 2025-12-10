@@ -161,7 +161,7 @@ const NIAAdminLogin = () => {
                             </div>
 
                             <div className="text-sm">
-                                <Link href="/nia-admin/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                                <Link href="/nia-admin/reset-password" className="font-medium text-blue-600 hover:text-blue-500">
                                     Forgot your password?
                                 </Link>
                             </div>

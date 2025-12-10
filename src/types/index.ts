@@ -1,128 +1,111 @@
 /**
- * Central type exports for the Builders-Liability-AMMC Frontend application
- * This file re-exports all types from various type definition files
- * to provide a single import point for type definitions
+ * Central export file for all type definitions
+ * This file re-exports all types from various type files for easy importing
  */
 
-// Export all API types
+// API Types
 export * from './api.types';
-
-// Export all component types
-export * from './component.types';
-
-// Export all survey types
 export * from './survey.types';
+export * from './component.types';
+export * from './utility.types';
+export * from './common.types';
 
-// Export utility types (excluding conflicting types)
-export {
-    // Generic utility types
-    type Optional,
-    type RequiredFields,
-    type DeepPartial,
-    type DeepRequired,
-    type DeepReadonly,
-    type KeysOfType,
-    type ExcludeKeysOfType,
-    type Nullable,
-    type NonNullableFields,
-    type Awaited,
-    type AsyncFunction,
-    type ArrayElement,
-    // API types
-    type PaginationData,
-    type ApiSuccessResponse,
-    type ApiErrorResponse,
-    type PaginatedResponse,
-    type LoadingState,
-    type RequestStatus,
-    type RecommendationAction,
-    type ServerError,
-    type AppError,
-    // Form types
-    type FormField,
-    type FormState,
-    type ValidationRule,
-    type Validator,
-    // Event handler types
-    type EventHandler,
-    type AsyncEventHandler,
-    type ChangeHandler,
-    type ClickHandler,
-    type SubmitHandler,
-    // Component props types
-    type BaseComponentProps,
-    type WithChildren,
-    type WithOptionalChildren,
-    type WithClassName,
-    type WithStyle,
-    type ClickableProps,
-    type ModalProps,
-    // Data structure types
-    type KeyValuePair,
-    type SelectOption,
-    type TableColumn,
-    type SortConfig,
-    type FilterConfig,
-    // Date types
-    type ISODateString,
-    type Timestamp,
-    type DateRange,
-    // ID types
-    type Brand,
-    type UserId,
-    type PolicyId,
-    type AssignmentId,
-    type SurveyorId,
-    type ReportId,
-    type DocumentId,
-    // Type guards
-    isDefined,
-    isString,
-    isNumber,
-    isArray,
-    isObject,
-    isFunction,
-    isPromise,
-    // Conditional types
-    type IfNever,
-    type IfAny,
-    type IfUnknown,
-    // Tuple types
-    type First,
-    type Last,
-    type Tail,
-    // String types
-    type Capitalize,
-    type Uncapitalize,
-    type KebabCase,
-} from './utility.types';
+// Notification Types
+export * from './notification.types';
 
-// Export error types (excluding conflicting types already in utility.types)
-export {
-    type BaseError,
-    type AuthError,
-    type FileUploadError,
-    type FormError,
-    type ErrorHandler,
-    type ErrorRecovery,
-    type ErrorBoundaryState,
-    type ErrorContext,
-    type ErrorNotification,
-    type ErrorLogEntry,
-    type ErrorResponse,
-    type SuccessResponse,
-    createApiError,
-    createValidationError,
-    createNetworkError,
-    createAuthError,
-    isApiError,
-    isValidationError,
-    isNetworkError,
-    isAuthError,
-} from './error.types';
+// Error Types
+export * from './error.types';
 
-// Export all claims types
-export * from './claims';
+// Re-export commonly used React types
+export type {
+    ReactNode,
+    ReactElement,
+    FC,
+    ComponentType,
+    PropsWithChildren,
+    MouseEvent,
+    ChangeEvent,
+    FormEvent,
+    KeyboardEvent,
+    FocusEvent,
+} from 'react';
 
-// Export all hooks types
-export * from './hooks.types';
+// Common type aliases for convenience
+export type { FC as FunctionComponent } from 'react';
+
+// Error handling types
+export interface ErrorWithResponse {
+    response?: {
+        data?: {
+            message?: string;
+            error?: string;
+        };
+        status?: number;
+        statusText?: string;
+    };
+    message?: string;
+}
+
+// Form types
+export interface FormState<T = Record<string, unknown>> {
+    values: T;
+    errors: Partial<Record<keyof T, string>>;
+    touched: Partial<Record<keyof T, boolean>>;
+    isSubmitting: boolean;
+    isValid: boolean;
+}
+
+// Generic API response types
+export interface SuccessResponse<T = unknown> {
+    success: true;
+    data: T;
+    message?: string;
+}
+
+export interface ErrorResponse {
+    success: false;
+    error: string;
+    message: string;
+    details?: Record<string, unknown>;
+}
+
+export type APIResponse<T = unknown> = SuccessResponse<T> | ErrorResponse;
+
+// Component prop types
+export interface BaseComponentProps {
+    className?: string;
+    children?: ReactNode;
+    id?: string;
+    'data-testid'?: string;
+}
+
+// Event handler types
+export type ClickHandler<T = HTMLElement> = (event: MouseEvent<T>) => void;
+export type ChangeHandler<T = HTMLInputElement> = (event: ChangeEvent<T>) => void;
+export type SubmitHandler<T = HTMLFormElement> = (event: FormEvent<T>) => void;
+
+// Async function types
+export type AsyncVoidFunction = () => Promise<void>;
+export type AsyncFunction<T> = (...args: unknown[]) => Promise<T>;
+
+// Status and state types
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+export type RequestStatus = 'pending' | 'fulfilled' | 'rejected';
+
+// Utility types for better type safety
+export type NonEmptyArray<T> = [T, ...T[]];
+export type AtLeastOne<T> = [T, ...T[]];
+
+// Brand types for ID safety
+export type Brand<K, T> = K & { __brand: T };
+export type ID = Brand<string, 'ID'>;
+
+// Type guards
+export const isString = (value: unknown): value is string => typeof value === 'string';
+export const isNumber = (value: unknown): value is number => typeof value === 'number' && !isNaN(value);
+export const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
+export const isArray = <T>(value: unknown): value is T[] => Array.isArray(value);
+export const isObject = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+export const isDefined = <T>(value: T | null | undefined): value is T =>
+    value !== null && value !== undefined;

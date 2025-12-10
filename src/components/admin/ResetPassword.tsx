@@ -3,30 +3,43 @@ import React, { useState } from 'react'
 import Button from '../Button';
 import Input from '../Input';
 import { useRouter } from 'next/navigation';
-import { initiatePasswordReset } from '@/services/api';
-  
+import { sendResetPasswordOTP } from '@/services/api';
+
 const ResetPassword = () => {
-      const [email, setEmail] = useState("");
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState("");
-      const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-      const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-        try {
-          await initiatePasswordReset(email);
-          localStorage.setItem("resetEmail", email);
-          router.push("/admin/otp");
-        } catch (error) {
-          setError("Failed to initiate password reset. Please try again.");
-          console.error("Password reset error:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
+    try {
+      const response = await sendResetPasswordOTP(email);
+      console.log("✅ Reset password OTP sent:", response.data);
+      localStorage.setItem("resetEmail", email);
+
+      // Determine the correct route based on current path
+      const currentPath = window.location.pathname;
+      let otpRoute = '/admin/otp';
+      if (currentPath.includes('/nia-admin')) {
+        otpRoute = '/nia-admin/otp';
+      } else if (currentPath.includes('/surveyor')) {
+        otpRoute = '/surveyor/otp';
+      }
+      router.push(otpRoute);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to initiate password reset. Please try again.";
+      setError(errorMessage);
+      console.error("Password reset error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div>
       <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
@@ -51,9 +64,9 @@ const ResetPassword = () => {
           )}
 
           <div className="flex items-center justify-between mb-6">
-            <Button 
-              title={loading ? "Sending..." : "Send Code"} 
-              onClick={() => {}}
+            <Button
+              title={loading ? "Sending..." : "Send Code"}
+              onClick={() => { }}
               isDisabled={loading}
             />
           </div>

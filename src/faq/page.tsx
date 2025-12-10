@@ -1,11 +1,11 @@
-import React from 'react'
+import React from 'react';
 
-const FAQPage = () => {
+const FAQPage: React.FC = () => {
   return (
     <div>
-      This is FAQ page 
+      This is FAQ page
     </div>
-  )
-}
+  );
+};
 
-export default FAQPage
+export default FAQPage;

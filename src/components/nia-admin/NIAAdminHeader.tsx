@@ -8,6 +8,30 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Assignment, Surveyor, PolicyRequest } from "@/types/api.types";
+
+interface Notification {
+    _id: string;
+    title: string;
+    message: string;
+    read: boolean;
+    createdAt: string;
+    actionUrl?: string;
+}
+
+interface SearchResult {
+    _id: string;
+    type: 'assignment' | 'surveyor' | 'policy';
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    location?: {
+        address: string;
+    };
+    propertyDetails?: {
+        address: string;
+    };
+}
 
 interface NIAAdminHeaderProps {
     onMenuClick?: () => void;
@@ -20,11 +44,11 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
         organization: string;
     } | null>(null);
     const [notificationCount, setNotificationCount] = useState(0);
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [showSearchResults, setShowSearchResults] = useState(false);
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
     useEffect(() => {
         // Get admin info from localStorage
@@ -83,17 +107,17 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
             if (assignmentsRes.ok) {
                 const data = await assignmentsRes.json();
-                results.push(...(data.data || []).map((item: any) => ({ ...item, type: 'assignment' })));
+                results.push(...(data.data || []).map((item: Assignment) => ({ ...item, type: 'assignment' as const })));
             }
 
             if (surveyorsRes.ok) {
                 const data = await surveyorsRes.json();
-                results.push(...(data.data || []).map((item: any) => ({ ...item, type: 'surveyor' })));
+                results.push(...(data.data || []).map((item: Surveyor) => ({ ...item, type: 'surveyor' as const })));
             }
 
             if (policiesRes.ok) {
                 const data = await policiesRes.json();
-                results.push(...(data.data || []).map((item: any) => ({ ...item, type: 'policy' })));
+                results.push(...(data.data || []).map((item: PolicyRequest) => ({ ...item, type: 'policy' as const })));
             }
 
             setSearchResults(results);
@@ -370,8 +394,8 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
                                                 <div className="flex-1">
                                                     <div className="flex items-center space-x-2 mb-1">
                                                         <span className={`px-2 py-1 text-xs rounded-full ${result.type === 'assignment' ? 'bg-blue-100 text-blue-800' :
-                                                                result.type === 'surveyor' ? 'bg-green-100 text-green-800' :
-                                                                    'bg-purple-100 text-purple-800'
+                                                            result.type === 'surveyor' ? 'bg-green-100 text-green-800' :
+                                                                'bg-purple-100 text-purple-800'
                                                             }`}>
                                                             {result.type}
                                                         </span>

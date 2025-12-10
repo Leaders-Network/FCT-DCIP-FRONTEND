@@ -1,6 +1,6 @@
 "use client";
 
-import { MoveRight } from "lucide-react";
+import { MoveRight, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,29 +20,29 @@ const signUpSchema = z.object({
 });
 
 export default function SignUp() {
-     const [currentImage, setCurrentImage] = useState(0)
-     const backgroundImages = [
-      "/bg-construct-2.webp",
-      "/bg-hero-1.jpg",
-      "/bg-hero-4.jpg",
-      "/bg-hero-5.jpg",
-      "/bg-hero-6.jpg",
-      "/bg-hero-7.jpg",
-      "/bg-hero-8.jpg",
-      "/bg-hero-9.jpg",
-      "/bg-hero-11.jpg",
+  const [currentImage, setCurrentImage] = useState(0)
+  const backgroundImages = [
+    "/bg-construct-2.webp",
+    "/bg-hero-1.jpg",
+    "/bg-hero-4.jpg",
+    "/bg-hero-5.jpg",
+    "/bg-hero-6.jpg",
+    "/bg-hero-7.jpg",
+    "/bg-hero-8.jpg",
+    "/bg-hero-9.jpg",
+    "/bg-hero-11.jpg",
   ]
-  
+
   useEffect(() => {
-    const interval = setInterval(()=> {
+    const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
-    },5000); 
+    }, 5000);
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
 
 
-    
-  
+
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
       <div className="w-full md:w-2/3 flex flex-col p-4 md:p-8">
@@ -61,12 +61,11 @@ export default function SignUp() {
             alt={`Background ${index + 1}`}
             fill
             priority={index === 0}
-            className={`object-cover transition-opacity duration-[2000ms] ${
-              index === currentImage ? "opacity-100" : "opacity-0"
-            }`}
+            className={`object-cover transition-opacity duration-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"
+              }`}
           />
         ))}
-        
+
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/65"></div>
 
@@ -190,7 +189,7 @@ function SignUpForm() {
 
         //Show the first validation error as a red toast
         toast.error(formattedErrors[Object.keys(formattedErrors)[0]]);
-      }else {
+      } else {
         toast.error("Something went wrong. Please try again.")
       }
       return false;
@@ -259,15 +258,19 @@ function InputField({ id, type, label, value, onChange, error }: {
   onChange: (value: string) => void;
   error?: string;
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPasswordField = type === 'password';
+  const inputType = isPasswordField ? (showPassword ? 'text' : 'password') : type;
+
   return (
     <div className="mb-4 relative">
       <input
-        type={type}
+        type={inputType}
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder=" "
-        className="peer w-full h-10 md:h-14 px-4 pt-3 rounded-md bg-gray-100 border border-gray-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        className="peer w-full h-10 md:h-14 px-4 pt-3 pr-12 rounded-md bg-gray-100 border border-gray-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
       />
       <label
         htmlFor={id}
@@ -275,9 +278,26 @@ function InputField({ id, type, label, value, onChange, error }: {
       >
         {label}
       </label>
+
+      {/* Password visibility toggle */}
+      {isPasswordField && (
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+          aria-label={showPassword ? "Hide password" : "Show password"}
+        >
+          {showPassword ? (
+            <EyeOff className="h-4 w-4 md:h-5 md:w-5" />
+          ) : (
+            <Eye className="h-4 w-4 md:h-5 md:w-5" />
+          )}
+        </button>
+      )}
+
       {error && (
-        <p 
-        className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
+        <p
+          className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
           {error}
         </p>
       )}
@@ -314,7 +334,7 @@ function SignUpButton({
     const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
     try {
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
       const response = await fetch(
         `${apiBaseUrl}/auth/request-otp`,
         {
@@ -355,7 +375,7 @@ function SignUpButton({
     } catch (error) {
       console.error("Sign-up error:", error);
 
-          const message =
+      const message =
         error instanceof Error ? error.message : "An unexpected error occurred";
 
       setError(message);
@@ -370,8 +390,8 @@ function SignUpButton({
   return (
     <>
       {error && (
-        <p 
-        className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
+        <p
+          className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
           {error}
         </p>
       )}
