@@ -194,7 +194,20 @@ export const addProperty = async (
   }
 };
 
-// Password Reset APIs
+// Unified Password Reset APIs
+export const sendResetPasswordOTP = (email: string) =>
+  api.post("/reset-password/send-otp", { email });
+
+export const verifyResetPasswordOTP = (email: string, otp: string) =>
+  api.post("/reset-password/verify-otp", { email, otp });
+
+export const resetPasswordWithToken = (email: string, resetToken: string, newPassword: string, confirmPassword: string) =>
+  api.post("/reset-password/reset", { email, resetToken, newPassword, confirmPassword });
+
+export const resendResetPasswordOTP = (email: string) =>
+  api.post("/reset-password/resend-otp", { email });
+
+// Legacy Password Reset APIs (deprecated - use unified APIs above)
 export const initiatePasswordReset = (email: string) =>
   api.post("/auth/reset-password-otp", { email });
 

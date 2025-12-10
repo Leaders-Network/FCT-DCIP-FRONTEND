@@ -168,7 +168,7 @@ const AMMCUserConflictInbox: React.FC = () => {
         setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
         setTotalPages(1);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching inquiries:', error);
       setInquiries([]);
       setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });

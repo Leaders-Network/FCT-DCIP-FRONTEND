@@ -1,5 +1,5 @@
 "use client";
-import { MoveRight } from "lucide-react";
+import { MoveRight, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { z } from "zod";
 
 const passwordSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -18,13 +18,16 @@ const passwordSchema = z.object({
 export default function ChangePassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("resetVerifyToken");
-    if (!token) {
+    const resetToken = localStorage.getItem("resetToken");
+    const email = localStorage.getItem("resetEmail");
+    if (!resetToken || !email) {
       router.push("/reset");
     }
   }, [router]);
@@ -45,27 +48,32 @@ export default function ChangePassword() {
 
     setIsLoading(true);
     const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
-    const token = localStorage.getItem("resetVerifyToken");
+    const resetToken = localStorage.getItem("resetToken");
+    const email = localStorage.getItem("resetEmail");
 
-    if (!token) {
+    if (!resetToken || !email) {
       setError("Session expired. Please try the reset process again.");
       setIsLoading(false);
       return;
     }
 
     try {
-      // Step 3: Set new password
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
+      // Step 3: Set new password (using new unified endpoint)
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
       const response = await fetch(
-        `${apiBaseUrl}/auth/reset-password`,
+        `${apiBaseUrl}/reset-password/reset`,
         {
-          method: "PATCH",
+          method: "POST",
           headers: {
-            apiKey: ApiKey,
+            apikey: ApiKey, // Note: lowercase 'apikey'
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Use verification token
           },
-          body: JSON.stringify({ newpassword: password }),
+          body: JSON.stringify({
+            email,
+            resetToken,
+            newPassword: password,
+            confirmPassword
+          }),
         }
       );
 
@@ -73,12 +81,15 @@ export default function ChangePassword() {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-      
+
+      const data = await response.json();
+      console.log('✅ Password reset successfully:', data);
+
       // Clear all reset-related data after successful password change
       localStorage.removeItem("resetEmail");
       localStorage.removeItem("resetToken");
-      localStorage.removeItem("resetVerifyToken");
-      
+      localStorage.removeItem("userType");
+
       // Redirect to login
       router.push("/login");
     } catch (error) {
@@ -102,6 +113,10 @@ export default function ChangePassword() {
             setPassword={setPassword}
             confirmPassword={confirmPassword}
             setConfirmPassword={setConfirmPassword}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            showConfirmPassword={showConfirmPassword}
+            setShowConfirmPassword={setShowConfirmPassword}
             error={error}
             isLoading={isLoading}
             handleSubmit={handleSubmit}
@@ -201,33 +216,41 @@ function ChangePasswordTitle() {
   );
 }
 
-function ChangePasswordForm({ 
-  password, 
-  setPassword, 
-  confirmPassword, 
-  setConfirmPassword, 
-  error, 
-  isLoading, 
-  handleSubmit 
-}: { 
-  password: string; 
-  setPassword: (password: string) => void; 
-  confirmPassword: string; 
-  setConfirmPassword: (confirmPassword: string) => void; 
-  error: string | null; 
-  isLoading: boolean; 
+function ChangePasswordForm({
+  password,
+  setPassword,
+  confirmPassword,
+  setConfirmPassword,
+  showPassword,
+  setShowPassword,
+  showConfirmPassword,
+  setShowConfirmPassword,
+  error,
+  isLoading,
+  handleSubmit
+}: {
+  password: string;
+  setPassword: (password: string) => void;
+  confirmPassword: string;
+  setConfirmPassword: (confirmPassword: string) => void;
+  showPassword: boolean;
+  setShowPassword: (show: boolean) => void;
+  showConfirmPassword: boolean;
+  setShowConfirmPassword: (show: boolean) => void;
+  error: string | null;
+  isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
 }) {
   return (
     <form className="w-full gap-2" onSubmit={handleSubmit}>
       <div className="mb-4 relative">
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           id="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder=" "
-          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="peer w-full h-14 px-4 pt-5 pr-12 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         <label
           htmlFor="password"
@@ -235,16 +258,28 @@ function ChangePasswordForm({
         >
           New Password
         </label>
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+          aria-label={showPassword ? "Hide password" : "Show password"}
+        >
+          {showPassword ? (
+            <EyeOff className="h-5 w-5" />
+          ) : (
+            <Eye className="h-5 w-5" />
+          )}
+        </button>
       </div>
 
       <div className="mb-8 relative">
         <input
-          type="password"
+          type={showConfirmPassword ? "text" : "password"}
           id="confirmPassword"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder=" "
-          className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="peer w-full h-14 px-4 pt-5 pr-12 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         <label
           htmlFor="confirmPassword"
@@ -252,6 +287,18 @@ function ChangePasswordForm({
         >
           Confirm New Password
         </label>
+        <button
+          type="button"
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+        >
+          {showConfirmPassword ? (
+            <EyeOff className="h-5 w-5" />
+          ) : (
+            <Eye className="h-5 w-5" />
+          )}
+        </button>
       </div>
 
       {error && <p className="text-red-500 text-xs md:text-sm mb-4">{error}</p>}
@@ -259,9 +306,8 @@ function ChangePasswordForm({
       <button
         type="submit"
         disabled={isLoading}
-        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${
-          isLoading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
       >
         {isLoading ? "Changing..." : "Change Password"}
         {!isLoading && (
