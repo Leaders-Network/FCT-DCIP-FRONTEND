@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LogOut, Menu, User, Home, FileText, Shield, Settings, Plus, X, MessageSquare } from "lucide-react"
+import { LogOut, Menu, User, Home, FileText, Shield, Settings, Plus, X, MessageSquare, Bell } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { NotificationProvider } from "@/context/NotificationContext"
 import NotificationBell from "@/components/shared/NotificationBell"
@@ -105,6 +105,11 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
       name: "My Inquiries",
       path: "/dashboard/inquiries",
       icon: <MessageSquare className="w-6 h-6" />,
+    },
+    {
+      name: "Notifications",
+      path: "/dashboard/notifications",
+      icon: <Bell className="w-6 h-6" />,
     },
     {
       name: "Settings",

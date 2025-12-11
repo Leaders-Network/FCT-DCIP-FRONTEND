@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import ReportSection from "@/components/dashboard/ReportSection";
 import MergedReportsSummary from "@/components/user/MergedReportsSummary";
+import NotificationTester from "@/components/shared/NotificationTester";
 import { CreatePolicyRequestData, PolicyRequest } from "@/types/api.types";
 import Image from "next/image";
 import { MoreVertical, Download, CreditCard, Eye, FileText } from "lucide-react";
@@ -175,6 +176,9 @@ const Dashview = () => {
           <main className="flex-1 pb-8 overflow-y-auto">
             {activeSection === 'overview' && (
               <>
+                {/* Notification Tester - Temporary for debugging */}
+                {/* <NotificationTester /> */}
+
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   {[

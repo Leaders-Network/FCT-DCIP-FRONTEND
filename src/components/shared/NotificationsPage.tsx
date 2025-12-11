@@ -109,8 +109,8 @@ const NotificationsPage: React.FC = () => {
                             <button
                                 onClick={() => setFilter('all')}
                                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === 'all'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                             >
                                 All ({notifications.length})
@@ -118,8 +118,8 @@ const NotificationsPage: React.FC = () => {
                             <button
                                 onClick={() => setFilter('unread')}
                                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === 'unread'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                             >
                                 Unread ({unreadCount})
@@ -148,9 +148,13 @@ const NotificationsPage: React.FC = () => {
                     ) : filteredNotifications.length === 0 ? (
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
                             <Bell className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                {notifications.length === 0 ? 'No notifications yet' : 'No matching notifications'}
+                            </h3>
                             <p className="text-gray-600">
-                                {filter === 'unread' ? "You're all caught up!" : 'No notifications to display'}
+                                {filter === 'unread' ? "You're all caught up!" :
+                                    notifications.length === 0 ? 'Notifications will appear here when you have activity on your account.' :
+                                        'Try adjusting your filters to see more notifications.'}
                             </p>
                         </div>
                     ) : (
