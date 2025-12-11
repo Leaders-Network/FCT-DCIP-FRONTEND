@@ -200,7 +200,7 @@ const NotificationBell: React.FC = () => {
                         <div className="p-3 border-t border-gray-200 bg-gray-50">
                             <button
                                 onClick={() => {
-                                    router.push('/notifications');
+                                    router.push('/dashboard/notifications');
                                     setIsOpen(false);
                                 }}
                                 className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium"

@@ -2,7 +2,11 @@
  * Notification system type definitions
  */
 
-export intNotificationType;
+export interface Notification {
+    _id: string;
+    recipientId: string;
+    recipientType: 'user' | 'employee' | 'surveyor' | 'admin' | 'nia-admin' | 'broker-admin';
+    type: NotificationType;
     title: string;
     message: string;
     data?: Record<string, unknown>;
