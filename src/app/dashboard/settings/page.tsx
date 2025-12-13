@@ -66,7 +66,7 @@ export default function UserSettingsPage() {
             }
         } catch (error) {
             console.error('❌ Profile update error:', error);
-            setMessage({ type: 'error', text: getErrorMessage(error) || 'Failed to update profile' });
+            setMessage({ type: 'error', text: extractErrorMessage(error) || 'Failed to update profile' });
         } finally {
             setLoading(false);
         }
