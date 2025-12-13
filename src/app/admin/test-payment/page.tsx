@@ -26,9 +26,10 @@ export default function TestPaymentPage() {
                 status: status
             });
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             setResult({
                 success: false,
-                error: error.message,
+                error: errorMessage,
                 status: status
             });
         } finally {

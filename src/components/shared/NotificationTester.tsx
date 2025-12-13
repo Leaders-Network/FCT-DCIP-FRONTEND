@@ -194,7 +194,8 @@ const NotificationTester: React.FC = () => {
             }
         } catch (error) {
             console.error('Debug info error:', error);
-            addResult(`❌ Error getting debug info: ${error.message || error}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            addResult(`❌ Error getting debug info: ${errorMessage}`);
         }
         setLoading(false);
     };
