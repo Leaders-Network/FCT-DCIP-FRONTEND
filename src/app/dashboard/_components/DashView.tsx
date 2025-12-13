@@ -6,7 +6,35 @@ import MergedReportsSummary from "@/components/user/MergedReportsSummary";
 import NotificationTester from "@/components/shared/NotificationTester";
 import { CreatePolicyRequestData, PolicyRequest } from "@/types/api.types";
 import Image from "next/image";
-import { MoreVertical, Download, CreditCard, Eye, FileText } from "lucide-react";
+import {
+  MoreVertical,
+  Download,
+  CreditCard,
+  Eye,
+  FileText,
+  Search,
+  Filter,
+  Plus,
+  Bell,
+  User,
+  Settings,
+  HelpCircle,
+  ChevronDown,
+  Calendar,
+  MapPin,
+  Building,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  X,
+  RefreshCw,
+  ArrowRight,
+  Shield,
+  Home,
+  BarChart3,
+  Users
+} from "lucide-react";
 import {
   PROPERTY_TYPES,
   CONSTRUCTION_MATERIALS,
@@ -20,13 +48,104 @@ const Dashview = () => {
     active: 0,
     expired: 0,
     pending: 0,
-    collaborators: 0
+    collaborators: 0,
+    completed: 0,
+    paymentPending: 0
   });
   const [recentInsurances, setRecentInsurances] = useState<PolicyRequest[]>([]);
   const [surveyedPolicies, setSurveyedPolicies] = useState<PolicyRequest[]>([]);
   const [allPolicies, setAllPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<'overview' | 'reports'>('overview');
+
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: "all",
+    propertyType: "",
+    dateFrom: "",
+    dateTo: "",
+    sortBy: "newest"
+  });
+  const [filteredPolicies, setFilteredPolicies] = useState<PolicyRequest[]>([]);
+
+  // Apply search and filters to policies
+  useEffect(() => {
+    let filtered = [...allPolicies];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(policy =>
+        policy._id?.toLowerCase().includes(query) ||
+        policy.propertyDetails?.address?.toLowerCase().includes(query) ||
+        policy.propertyDetails?.propertyType?.toLowerCase().includes(query) ||
+        policy.contactDetails?.fullName?.toLowerCase().includes(query) ||
+        policy.requestDetails?.coverageType?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (filters.status !== "all") {
+      filtered = filtered.filter(policy => policy.status === filters.status);
+    }
+
+    // Apply property type filter
+    if (filters.propertyType) {
+      filtered = filtered.filter(policy => policy.propertyDetails?.propertyType === filters.propertyType);
+    }
+
+    // Apply date range filters
+    if (filters.dateFrom) {
+      filtered = filtered.filter(policy =>
+        new Date(policy.createdAt) >= new Date(filters.dateFrom)
+      );
+    }
+    if (filters.dateTo) {
+      filtered = filtered.filter(policy =>
+        new Date(policy.createdAt) <= new Date(filters.dateTo)
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (filters.sortBy) {
+        case "newest":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "oldest":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "value-high":
+          return (b.propertyDetails?.buildingValue || 0) - (a.propertyDetails?.buildingValue || 0);
+        case "value-low":
+          return (a.propertyDetails?.buildingValue || 0) - (b.propertyDetails?.buildingValue || 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredPolicies(filtered);
+  }, [allPolicies, searchQuery, filters]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilters({
+      status: "all",
+      propertyType: "",
+      dateFrom: "",
+      dateTo: "",
+      sortBy: "newest"
+    });
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery ||
+    filters.status !== "all" ||
+    filters.propertyType ||
+    filters.dateFrom ||
+    filters.dateTo ||
+    filters.sortBy !== "newest";
 
   // Get user name from local storage
   const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
@@ -41,7 +160,7 @@ const Dashview = () => {
         const token = localStorage.getItem("token") || localStorage.getItem("authToken");
         if (!token) {
           // Not logged in, set empty state
-          setStats({ active: 0, expired: 0, pending: 0, collaborators: 0 });
+          setStats({ active: 0, expired: 0, pending: 0, collaborators: 0, completed: 0, paymentPending: 0 });
           setRecentInsurances([]);
           setSurveyedPolicies([]);
           setLoading(false);
@@ -51,12 +170,14 @@ const Dashview = () => {
         const { getUserPolicyRequests } = await import("@/services/api");
 
         // Fetch all policy requests to calculate stats
-        const [allPolicies, approvedPolicies, rejectedPolicies, pendingPolicies, surveyedPolicies] = await Promise.all([
+        const [allPolicies, approvedPolicies, rejectedPolicies, pendingPolicies, surveyedPolicies, completedPolicies, paymentPendingPolicies] = await Promise.all([
           getUserPolicyRequests('all', 1, 100),
           getUserPolicyRequests('approved', 1, 100),
           getUserPolicyRequests('rejected', 1, 100),
           getUserPolicyRequests('submitted', 1, 100),
-          getUserPolicyRequests('surveyed', 1, 100)
+          getUserPolicyRequests('surveyed', 1, 100),
+          getUserPolicyRequests('completed', 1, 100),
+          getUserPolicyRequests('payment_pending', 1, 100).catch(() => ({ data: { policyRequests: [] } }))
         ]);
 
         // Calculate collaborators from all policies
@@ -69,14 +190,17 @@ const Dashview = () => {
           active: approvedPolicies?.data?.policyRequests?.length || 0,
           expired: rejectedPolicies?.data?.policyRequests?.length || 0,
           pending: pendingPolicies?.data?.policyRequests?.length || 0,
-          collaborators: collaborators
+          collaborators: collaborators,
+          completed: completedPolicies?.data?.policyRequests?.length || 0,
+          paymentPending: paymentPendingPolicies?.data?.policyRequests?.length || 0
         });
 
         // Set recent insurances (first 5 items from all policies)
-        setRecentInsurances(allPolicies?.data?.policyRequests?.slice(0, 5) || []);
+        setRecentInsurances(allPolicyData.slice(0, 5) || []);
 
-        // Store all policies for report section
+        // Store all policies for report section and filtering
         setAllPolicies(allPolicyData);
+        setFilteredPolicies(allPolicyData);
 
         // Combine surveyed and approved policies for the "Surveyed Policies" table
         const surveyedData = surveyedPolicies?.data?.policyRequests || [];
@@ -91,7 +215,9 @@ const Dashview = () => {
           active: 0,
           expired: 0,
           pending: 0,
-          collaborators: 0
+          collaborators: 0,
+          completed: 0,
+          paymentPending: 0
         });
       } finally {
         setLoading(false);
@@ -284,13 +410,225 @@ const Dashview = () => {
                   ))}
                 </div>
 
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <button
+                    onClick={() => setShowPolicyRequest(true)}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <div className="text-sm font-medium opacity-90">New Request</div>
+                        <div className="text-xs opacity-75">Submit Policy</div>
+                      </div>
+                      <Plus className="w-6 h-6" />
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSection('reports')}
+                    className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <div className="text-sm font-medium opacity-90">View Reports</div>
+                        <div className="text-xs opacity-75">Assessment Details</div>
+                      </div>
+                      <BarChart3 className="w-6 h-6" />
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => window.open('https://niip.ng/', '_blank')}
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <div className="text-sm font-medium opacity-90">Insurance Portal</div>
+                        <div className="text-xs opacity-75">NIIP Website</div>
+                      </div>
+                      <Shield className="w-6 h-6" />
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const helpSection = document.getElementById('help-section');
+                      if (helpSection) {
+                        helpSection.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <div className="text-sm font-medium opacity-90">Need Help?</div>
+                        <div className="text-xs opacity-75">Support Guide</div>
+                      </div>
+                      <HelpCircle className="w-6 h-6" />
+                    </div>
+                  </button>
+                </div>
+
+                {/* Search and Filter Bar */}
+                <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-200">
+                  <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                    {/* Search Input */}
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search policies by ID, address, property type..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filter Toggle Button */}
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className={`flex items-center px-4 py-2.5 border rounded-lg transition-all ${showFilters || hasActiveFilters
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        }`}
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filters
+                      {hasActiveFilters && !showFilters && (
+                        <span className="ml-2 bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                          !
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Clear Filters Button */}
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearFilters}
+                        className="flex items-center px-4 py-2.5 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-all"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Advanced Filters Panel */}
+                  {showFilters && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                      {/* Status Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select
+                          value={filters.status}
+                          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="all">All Statuses</option>
+                          <option value="submitted">Submitted</option>
+                          <option value="assigned">Assigned</option>
+                          <option value="surveyed">Surveyed</option>
+                          <option value="approved">Approved</option>
+                          <option value="payment_pending">Payment Pending</option>
+                          <option value="completed">Completed</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                      </div>
+
+                      {/* Property Type Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                        <select
+                          value={filters.propertyType}
+                          onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="">All Types</option>
+                          <option value="Residential">Residential</option>
+                          <option value="Commercial">Commercial</option>
+                          <option value="Industrial">Industrial</option>
+                        </select>
+                      </div>
+
+                      {/* Sort By Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                        <select
+                          value={filters.sortBy}
+                          onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="newest">Newest First</option>
+                          <option value="oldest">Oldest First</option>
+                          <option value="value-high">Highest Value</option>
+                          <option value="value-low">Lowest Value</option>
+                        </select>
+                      </div>
+
+                      {/* Date From Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                        <input
+                          type="date"
+                          value={filters.dateFrom}
+                          onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      {/* Date To Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                        <input
+                          type="date"
+                          value={filters.dateTo}
+                          onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Results Count */}
+                  <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t border-gray-200 mt-3">
+                    <span>
+                      Showing <span className="font-semibold text-gray-900">{filteredPolicies.length}</span> of{' '}
+                      <span className="font-semibold text-gray-900">{allPolicies.length}</span> policies
+                    </span>
+                    {hasActiveFilters && (
+                      <span className="text-blue-600 font-medium">Filters active</span>
+                    )}
+                  </div>
+                </div>
+
                 {/* Merged Reports Summary */}
                 <MergedReportsSummary />
 
-                {/* Surveyed Policies Table */}
-                <div className="w-full bg-white rounded-xl p-4 overflow-x-auto mt-6">
+                {/* Enhanced Policies Table */}
+                <div className="w-full bg-white rounded-xl p-4 overflow-x-auto mt-6 shadow-sm border border-gray-200">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold">Surveyed Policies</h3>
+                    <h3 className="text-lg font-bold">Recent Policy Activity</h3>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => {
+                          // Refresh data
+                          window.location.reload();
+                        }}
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Refresh"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px]">
@@ -325,8 +663,8 @@ const Dashview = () => {
                               </td>
                             </tr>
                           ))
-                        ) : (surveyedPolicies || []).length > 0 ? (
-                          (surveyedPolicies || []).map((item, index) => (
+                        ) : filteredPolicies.length > 0 ? (
+                          filteredPolicies.slice(0, 10).map((item, index) => (
                             <tr key={item._id || index} className="border-b">
                               <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
                                 {item.requestDetails?.coverageType || "Insurance Policy"}
@@ -358,17 +696,115 @@ const Dashview = () => {
                           <tr className="border-b">
                             <td colSpan={5} className="py-8 text-center text-gray-500">
                               <div className="flex flex-col items-center">
-                                <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <p className="font-medium">No surveyed policies</p>
-                                <p className="text-sm">Your surveyed policies will appear here.</p>
+                                {hasActiveFilters ? (
+                                  <>
+                                    <Search className="w-12 h-12 mb-2 text-gray-400" />
+                                    <p className="font-medium">No policies match your filters</p>
+                                    <p className="text-sm mb-3">Try adjusting your search criteria or clearing filters.</p>
+                                    <button
+                                      onClick={clearFilters}
+                                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                    >
+                                      Clear all filters
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <FileText className="w-12 h-12 mb-2 text-gray-400" />
+                                    <p className="font-medium">No policies yet</p>
+                                    <p className="text-sm mb-3">Start by submitting your first policy request.</p>
+                                    <button
+                                      onClick={() => setShowPolicyRequest(true)}
+                                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                    >
+                                      Submit New Policy
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </td>
                           </tr>
                         )}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+
+                {/* Help Section */}
+                <div id="help-section" className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mt-6 border border-blue-200">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <HelpCircle className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Need Help Getting Started?</h3>
+                      <p className="text-gray-700 mb-4">
+                        Welcome to your insurance dashboard! Here's how to navigate your policy journey:
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="bg-white p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">1</div>
+                            <h4 className="font-medium text-gray-900">Submit Policy Request</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">Click "New Request" to submit your property details for insurance coverage.</p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">2</div>
+                            <h4 className="font-medium text-gray-900">Survey & Assessment</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">Our surveyors will assess your property and provide recommendations.</p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">3</div>
+                            <h4 className="font-medium text-gray-900">Complete Payment</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">Once approved, complete your premium payment to activate your policy.</p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">4</div>
+                            <h4 className="font-medium text-gray-900">Policy Active</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">Download your certificate and access the insurance portal for ongoing support.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={() => setShowPolicyRequest(true)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Start New Policy
+                        </button>
+                        <button
+                          onClick={() => window.open('https://niip.ng/', '_blank')}
+                          className="bg-white text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium flex items-center"
+                        >
+                          <Shield className="w-4 h-4 mr-2" />
+                          Visit NIIP Portal
+                        </button>
+                        <button
+                          onClick={() => {
+                            const email = 'support@ammc.gov.ng';
+                            const subject = 'Insurance Dashboard Support Request';
+                            const body = 'Hello, I need assistance with my insurance dashboard. Please help me with:';
+                            window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                          }}
+                          className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center"
+                        >
+                          <Bell className="w-4 h-4 mr-2" />
+                          Contact Support
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
@@ -381,87 +817,138 @@ const Dashview = () => {
 
           {/* Right Sidebar */}
           <aside className="w-[300px] space-y-6 p-4 hidden lg:block">
-            {/* Collaboration */}
-            <div className="bg-white rounded-xl p-4">
-              <div className="flex border-b pb-2 justify-between items-center mb-4">
-                <h3 className="text-[19px] font-bold">Collaboration</h3>
-                <button className="text-[#2b172b] text-base hover:text-[#028835]">
-                  View All
-                </button>
+            {/* Quick Stats */}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Quick Overview</h3>
+                <TrendingUp className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="space-y-4">
-                {recentInsurances.slice(0, 2).map((policy, index) => (
-                  <div key={policy._id || index} className="flex items-center">
-                    <div className="w-8 h-8 rounded-full mr-2 bg-gray-100 flex items-center justify-center">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 29 29"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M14.5 2C7.59625 2 2 7.59625 2 14.5C2 21.4037 7.59625 27 14.5 27C21.4037 27 27 21.4037 27 14.5C27 7.59625 21.4037 2 14.5 2Z"
-                          stroke="#827E7E"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M4.83789 22.4327C4.83789 22.4327 7.62414 18.8752 14.4991 18.8752C21.3741 18.8752 24.1616 22.4327 24.1616 22.4327M14.4991 14.5002C15.4937 14.5002 16.4475 14.1051 17.1508 13.4018C17.8541 12.6986 18.2491 11.7447 18.2491 10.7502C18.2491 9.75562 17.8541 8.80179 17.1508 8.09853C16.4475 7.39527 15.4937 7.00018 14.4991 7.00018C13.5046 7.00018 12.5508 7.39527 11.8475 8.09853C11.1442 8.80179 10.7491 9.75562 10.7491 10.7502C10.7491 11.7447 11.1442 12.6986 11.8475 13.4018C12.5508 14.1051 13.5046 14.5002 14.4991 14.5002Z"
-                          stroke="#827E7E"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 text-blue-600 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">In Progress</span>
+                  </div>
+                  <span className="text-lg font-bold text-blue-600">{stats.pending + stats.active}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">Completed</span>
+                  </div>
+                  <span className="text-lg font-bold text-green-600">{stats.completed}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg">
+                  <div className="flex items-center">
+                    <CreditCard className="w-4 h-4 text-orange-600 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">Payment Due</span>
+                  </div>
+                  <span className="text-lg font-bold text-orange-600">{stats.paymentPending}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+                <Users className="w-5 h-5 text-gray-600" />
+              </div>
+              <div className="space-y-3">
+                {recentInsurances.slice(0, 3).map((policy, index) => (
+                  <div key={policy._id || index} className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Home className="w-4 h-4 text-blue-600" />
                     </div>
-                    <div>
-                      <div className="text-[15px] font-bold">
-                        {policy.contactDetails?.fullName || 'Policy Holder'}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {policy.propertyDetails?.propertyType || 'Property'}
                       </div>
-                      <div className="text-[13px] text-gray-500">
-                        {policy.contactDetails?.email || 'No email'}
+                      <div className="text-xs text-gray-500 truncate">
+                        {policy.propertyDetails?.address || 'No address'}
                       </div>
+                      <div className="text-xs text-gray-400">
+                        {new Date(policy.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${policy.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      policy.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                        policy.status === 'surveyed' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                      }`}>
+                      {policy.status}
                     </div>
                   </div>
                 ))}
                 {recentInsurances.length === 0 && (
                   <div className="text-center py-4 text-gray-500">
-                    <p className="text-sm">No collaborations yet</p>
+                    <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No recent activity</p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Notifications */}
-            <div className="bg-white rounded-xl p-4 h-full flex flex-col">
-              <div className="flex border-b pb-2 justify-between items-center mb-4">
-                <h3 className="text-lg font-bold">Notifications</h3>
-                <a href="#" className="text-[#2b172b] text-base">
-                  View All
-                </a>
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setShowPolicyRequest(true)}
+                  className="w-full flex items-center justify-between p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <Plus className="w-4 h-4 text-blue-600 mr-3" />
+                    <span className="text-sm font-medium text-blue-900">New Policy Request</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={() => setActiveSection('reports')}
+                  className="w-full flex items-center justify-between p-3 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <BarChart3 className="w-4 h-4 text-green-600 mr-3" />
+                    <span className="text-sm font-medium text-green-900">View Reports</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-green-600 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={() => window.open('https://niip.ng/', '_blank')}
+                  className="w-full flex items-center justify-between p-3 text-left bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <Shield className="w-4 h-4 text-purple-600 mr-3" />
+                    <span className="text-sm font-medium text-purple-900">Insurance Portal</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-purple-600 group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
-              <div className="space-y-4 flex-grow overflow-y-auto">
-                <div className="border-b-2 border-dashed pb-2">
-                  <div className="text-[17px] font-bold">
-                    Insurance Renewal
-                  </div>
-                  <div className="text-xs">
-                    A building with the ID: A012D30 just made a payment on
-                    23rd of sept 2024.
-                  </div>
-                </div>
-                <div className="border-b-2 border-dashed pb-2">
-                  <div className="text-[17px] font-bold">
-                    Expired Insurance
-                  </div>
-                  <div className="text-xs">
-                    A building with the ID: A015D30 just expired 27th of sept
-                    2024
-                  </div>
-                </div>
+            </div>
+
+            {/* Support */}
+            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center mb-3">
+                <HelpCircle className="w-5 h-5 text-orange-600 mr-2" />
+                <h3 className="text-lg font-bold text-orange-900">Need Help?</h3>
               </div>
+              <p className="text-sm text-orange-800 mb-3">
+                Our support team is here to help you with your insurance needs.
+              </p>
+              <button
+                onClick={() => {
+                  const email = 'support@ammc.gov.ng';
+                  const subject = 'Insurance Dashboard Support Request';
+                  const body = 'Hello, I need assistance with my insurance dashboard. Please help me with:';
+                  window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                }}
+                className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium flex items-center justify-center"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Contact Support
+              </button>
             </div>
           </aside>
         </div>
@@ -542,43 +1029,70 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDropdown]);
 
-  const handleInsuranceClick = () => {
-    console.log('Insurance click - Policy status:', policy.status);
-    console.log('Insurance click - Survey data:', surveyData);
-    console.log('Insurance click - Recommended action:', surveyData?.recommendedAction);
+  const handlePaymentClick = async () => {
+    console.log('Payment click - Policy status:', policy.status);
+    console.log('Payment click - Survey data:', surveyData);
+    console.log('Payment click - Recommended action:', surveyData?.recommendedAction);
 
-    // If policy is already approved (admin approved), allow insurance regardless of survey recommendation
-    if (policy.status === 'approved') {
-      window.open('https://askniid.org/verifypolicy.aspx', '_blank');
+    // Calculate premium
+    // const calculatePolicyPremium = (policy: PolicyRequest) => {
+    //   const baseRate = 0.005; // 0.5% of building value
+    //   const buildingValue = policy.propertyDetails.buildingValue || 0;
+    //   return Math.max(buildingValue * baseRate, 25000); // Minimum premium of ₦25,000
+    // };
+
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN'
+      }).format(amount);
+    };
+
+    // Check if policy is eligible for payment
+    const isEligibleForPayment =
+      policy.status === 'approved' ||
+      (policy.status === 'surveyed' && surveyData?.recommendedAction === 'approve') ||
+      (policy.status === 'surveyed' && !surveyData); // Fallback for surveyed without explicit data
+
+    if (!isEligibleForPayment) {
+      if (surveyData?.recommendedAction === 'reject') {
+        alert('❌ Payment Disabled\n\nThis policy request has been rejected by the surveyor. Please review the survey report for details.');
+        return;
+      }
+      if (surveyData?.recommendedAction === 'request_more_info') {
+        alert('⚠️ Payment Disabled\n\nThe surveyor has requested additional information. Please edit and resubmit your policy request before proceeding to payment.');
+        return;
+      }
+      alert('⚠️ Payment Not Available\n\nPayment is not available for this policy at this time. Please check the policy status.');
       return;
     }
 
-    // For surveyed policies, check the surveyor's recommendation
-    if (surveyData?.recommendedAction === 'reject') {
-      alert('❌ Insurance Disabled\n\nThis policy request has been rejected by the surveyor. Please review the survey report for details on why the policy was rejected.');
-      return;
-    }
+    // Show payment confirmation
+    // const premium = calculatePolicyPremium(policy);
+    const confirmed = confirm(
+      `💳 Complete Payment for ${policy.propertyDetails.propertyType}\n\n` +
+      `Property Value: ₦${policy.propertyDetails.buildingValue.toLocaleString()}\n` +
+      `Click OK to proceed to payment gateway.`
+    );
 
-    if (surveyData?.recommendedAction === 'request_more_info') {
-      alert('⚠️ Insurance Disabled\n\nThe surveyor has requested additional information for this policy. Please edit and resubmit your policy request with the required information before proceeding to insurance.');
-      return;
-    }
+    if (confirmed) {
+      try {
+        // Call the payment webhook to simulate payment processing
+        const response = await fetch(`http://localhost:5000/api/v1/admin/enforcement/webhook/test/${policy._id}?status=payment_approved`);
+        const data = await response.json();
 
-    // If we have survey data and surveyor approved, allow insurance
-    if (surveyData?.recommendedAction === 'approve') {
-      window.open('https://niip.ng/', '_blank');
-      return;
+        if (response.ok) {
+          alert('✅ Payment completed successfully!\n\nYour policy is now active and has been moved to the Completed section.');
+          // Refresh the page to show updated status
+          window.location.reload();
+        } else {
+          alert(`❌ Payment failed: ${data.message}`);
+        }
+      } catch (error) {
+        console.error('Payment processing failed:', error);
+        alert('❌ Payment failed: Network error. Please try again.');
+      }
     }
-
-    // Fallback: If no survey data but policy is surveyed, assume it's approved
-    if (policy.status === 'surveyed' && !surveyData) {
-      console.log('No survey data found, but policy is surveyed - allowing insurance');
-      window.open('https://niip.ng/', '_blank');
-      return;
-    }
-
-    // Default case
-    alert('⚠️ Insurance Not Available\n\nInsurance is not available for this policy at this time. Please check the policy status.');
   };
 
   return (
@@ -627,50 +1141,53 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
               </div>
             ) : (
               <>
-                {/* Insurance button - conditional based on recommendation */}
-                <button
-                  onClick={() => {
-                    handleInsuranceClick();
-                    setShowDropdown(false);
-                  }}
-                  className={`flex items-center px-4 py-2 text-sm w-full text-left ${
-                    // Enable if: approved by admin, approved by surveyor, or surveyed without explicit rejection
-                    (policy.status === 'approved' ||
-                      surveyData?.recommendedAction === 'approve' ||
-                      (policy.status === 'surveyed' && !surveyData) ||
-                      (policy.status === 'surveyed' && loadingSurveyData))
-                      ? 'text-gray-700 hover:bg-gray-100'
-                      : 'text-gray-400 cursor-not-allowed'
-                    }`}
-                  disabled={
-                    // Disable only if: explicitly rejected or explicitly requesting more info
-                    surveyData?.recommendedAction === 'reject' ||
-                    surveyData?.recommendedAction === 'request_more_info'
-                  }
-                >
-                  <CreditCard className="mr-3 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span>Proceed to Insure</span>
-                    {policy.status === 'approved' && (
-                      <span className="text-xs text-green-500">Policy Approved</span>
-                    )}
-                    {surveyData?.recommendedAction === 'approve' && policy.status !== 'approved' && (
-                      <span className="text-xs text-blue-500">Survey Approved</span>
-                    )}
-                    {policy.status === 'surveyed' && !surveyData && !loadingSurveyData && (
-                      <span className="text-xs text-green-500">Survey Completed</span>
-                    )}
-                    {loadingSurveyData && (
-                      <span className="text-xs text-gray-500">Loading...</span>
-                    )}
-                    {surveyData?.recommendedAction === 'reject' && (
-                      <span className="text-xs text-red-500">Policy Rejected</span>
-                    )}
-                    {surveyData?.recommendedAction === 'request_more_info' && (
-                      <span className="text-xs text-orange-500">More Info Required</span>
-                    )}
-                  </div>
-                </button>
+                {/* Payment button - conditional based on recommendation and policy status */}
+                {(policy.status === 'approved' ||
+                  policy.status === 'surveyed') && (
+                    <button
+                      onClick={() => {
+                        handlePaymentClick();
+                        setShowDropdown(false);
+                      }}
+                      className={`flex items-center px-4 py-2 text-sm w-full text-left ${
+                        // Enable if: approved by admin, approved by surveyor, or surveyed without explicit rejection
+                        (policy.status === 'approved' ||
+                          surveyData?.recommendedAction === 'approve' ||
+                          (policy.status === 'surveyed' && !surveyData) ||
+                          (policy.status === 'surveyed' && loadingSurveyData))
+                          ? 'text-gray-700 hover:bg-gray-100'
+                          : 'text-gray-400 cursor-not-allowed'
+                        }`}
+                      disabled={
+                        // Disable only if: explicitly rejected or explicitly requesting more info
+                        surveyData?.recommendedAction === 'reject' ||
+                        surveyData?.recommendedAction === 'request_more_info'
+                      }
+                    >
+                      <CreditCard className="mr-3 h-4 w-4" />
+                      <div className="flex flex-col">
+                        <span>Complete Payment</span>
+                        {policy.status === 'approved' && (
+                          <span className="text-xs text-green-500">Policy Approved - Payment Required</span>
+                        )}
+                        {surveyData?.recommendedAction === 'approve' && policy.status !== 'approved' && (
+                          <span className="text-xs text-blue-500">Survey Approved - Payment Required</span>
+                        )}
+                        {policy.status === 'surveyed' && !surveyData && !loadingSurveyData && (
+                          <span className="text-xs text-green-500">Survey Completed - Payment Required</span>
+                        )}
+                        {loadingSurveyData && (
+                          <span className="text-xs text-gray-500">Loading...</span>
+                        )}
+                        {surveyData?.recommendedAction === 'reject' && (
+                          <span className="text-xs text-red-500">Policy Rejected</span>
+                        )}
+                        {surveyData?.recommendedAction === 'request_more_info' && (
+                          <span className="text-xs text-orange-500">More Info Required</span>
+                        )}
+                      </div>
+                    </button>
+                  )}
 
                 {/* Edit Policy - only show if more info is requested */}
                 {surveyData?.recommendedAction === 'request_more_info' && (
@@ -691,21 +1208,42 @@ const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy })
                   </button>
                 )}
 
-                {/* Certificate download - for approved or surveyed policies */}
-                {(surveyData?.recommendedAction === 'approve' ||
-                  policy.status === 'approved' ||
-                  (policy.status === 'surveyed' && surveyData?.recommendedAction !== 'reject' && surveyData?.recommendedAction !== 'request_more_info')) && (
-                    <button
-                      onClick={() => {
-                        // Handle policy certificate download
-                        setShowDropdown(false);
-                      }}
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                    >
-                      <FileText className="mr-3 h-4 w-4" />
-                      Download Certificate
-                    </button>
-                  )}
+                {/* Certificate download - only for completed policies (payment confirmed) */}
+                {policy.status === 'completed' && (
+                  <button
+                    onClick={() => {
+                      // Handle policy certificate download
+                      alert('📄 Certificate Download\n\nYour policy certificate is being prepared. You will receive it via email shortly.');
+                      setShowDropdown(false);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  >
+                    <FileText className="mr-3 h-4 w-4" />
+                    <div className="flex flex-col">
+                      <span>Download Certificate</span>
+                      <span className="text-xs text-green-500">Payment Confirmed</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Insurance portal link - only for completed policies */}
+                {policy.status === 'completed' && (
+                  <button
+                    onClick={() => {
+                      window.open('https://niip.ng/', '_blank');
+                      setShowDropdown(false);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                  >
+                    <svg className="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    <div className="flex flex-col">
+                      <span>View Insurance Portal</span>
+                      <span className="text-xs text-blue-500">Policy Active</span>
+                    </div>
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -750,19 +1288,34 @@ const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose
   useEffect(() => {
     const fetchSurveyData = async () => {
       try {
+        console.log('Fetching survey data for policy:', policy._id);
+
         // Get assignment for this policy
         const { getUserAssignmentByAmmcId } = await import('@/services/api');
         const assignmentResponse = await getUserAssignmentByAmmcId(policy._id);
 
+        console.log('Assignment response:', assignmentResponse);
+
         if (assignmentResponse.success && assignmentResponse.data) {
           const assignment = assignmentResponse.data;
+          console.log('Assignment found:', assignment);
 
           // Get survey submission
           const { getSubmissionByAssignment } = await import('@/services/api');
           const surveyResponse = await getSubmissionByAssignment(assignment._id);
-          if (surveyResponse.success && surveyResponse.data.submission) {
-            setSurveyData(surveyResponse.data.submission);
+
+          console.log('Survey response:', surveyResponse);
+
+          if (surveyResponse.success && surveyResponse.data) {
+            // Handle both .submission and direct data structures
+            const submission = surveyResponse.data.submission || surveyResponse.data;
+            console.log('Survey data loaded:', submission);
+            setSurveyData(submission);
+          } else {
+            console.log('No survey submission found');
           }
+        } else {
+          console.log('No assignment found for policy');
         }
       } catch (error) {
         console.error('Failed to fetch survey data:', error);
@@ -806,13 +1359,68 @@ const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose
               <p className="text-gray-500 mt-2">Loading survey details...</p>
             </div>
           ) : !surveyData ? (
-            <div className="text-center py-8 text-gray-500">
-              <Eye className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Survey details not available</p>
-              <p className="text-sm">Unable to load survey information for this policy.</p>
+            <div className="text-center py-12 text-gray-500">
+              <Eye className="w-16 h-16 mx-auto mb-4 opacity-30" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Survey Details Not Available</h3>
+              <div className="space-y-2 text-sm">
+                <p>This could happen for several reasons:</p>
+                <ul className="text-left max-w-md mx-auto space-y-1">
+                  <li>• Survey has not been completed yet</li>
+                  <li>• Policy has not been assigned to a surveyor</li>
+                  <li>• Survey data is still being processed</li>
+                </ul>
+              </div>
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg max-w-md mx-auto">
+                <p className="text-sm text-blue-800">
+                  <strong>Policy Status:</strong> <span className="capitalize">{policy.status}</span>
+                </p>
+                {policy.status === 'submitted' && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Your policy is awaiting surveyor assignment.
+                  </p>
+                )}
+                {policy.status === 'assigned' && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    A surveyor has been assigned and will contact you soon.
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Survey Summary */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600 mb-1">
+                      {surveyData.status?.toUpperCase() || 'PENDING'}
+                    </div>
+                    <div className="text-sm text-blue-800">Survey Status</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold mb-1 ${surveyData.recommendedAction === 'approve' ? 'text-green-600' :
+                      surveyData.recommendedAction === 'reject' ? 'text-red-600' :
+                        'text-yellow-600'
+                      }`}>
+                      {surveyData.recommendedAction === 'approve' && '✅ APPROVED'}
+                      {surveyData.recommendedAction === 'reject' && '❌ REJECTED'}
+                      {surveyData.recommendedAction === 'request_more_info' && '📋 INFO NEEDED'}
+                      {!surveyData.recommendedAction && '⏳ PENDING'}
+                    </div>
+                    <div className="text-sm text-gray-600">Recommendation</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-600 mb-1">
+                      {surveyData.submissionTime
+                        ? new Date(surveyData.submissionTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        : 'N/A'
+                      }
+                    </div>
+                    <div className="text-sm text-gray-600">Survey Date</div>
+                  </div>
+                </div>
+              </div>
+
               {/* Property Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -854,8 +1462,17 @@ const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose
                         {surveyData.recommendedAction === 'approve' && '✅ Approved'}
                         {surveyData.recommendedAction === 'reject' && '❌ Rejected'}
                         {surveyData.recommendedAction === 'request_more_info' && '📋 More Info Needed'}
+                        {!surveyData.recommendedAction && '⏳ Pending'}
                       </span>
                     </div>
+                    {surveyData.surveyDetails?.estimatedValue && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Estimated Value:</span>
+                        <span className="font-medium text-gray-900">
+                          ₦{surveyData.surveyDetails.estimatedValue.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -864,36 +1481,40 @@ const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Property Condition</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-gray-50 p-4 rounded-lg min-h-[80px]">
                     <p className="text-sm text-gray-700">
-                      {surveyData.surveyDetails?.propertyCondition || 'No assessment provided'}
+                      {surveyData.surveyDetails?.propertyCondition ||
+                        'No property condition assessment provided'}
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Structural Assessment</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-gray-50 p-4 rounded-lg min-h-[80px]">
                     <p className="text-sm text-gray-700">
-                      {surveyData.surveyDetails?.structuralAssessment || 'No assessment provided'}
+                      {surveyData.surveyDetails?.structuralAssessment ||
+                        'No structural assessment provided'}
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Risk Factors</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-gray-50 p-4 rounded-lg min-h-[80px]">
                     <p className="text-sm text-gray-700">
-                      {surveyData.surveyDetails?.riskFactors || 'No risk factors identified'}
+                      {surveyData.surveyDetails?.riskFactors ||
+                        'No risk factors identified'}
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Recommendations</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-gray-50 p-4 rounded-lg min-h-[80px]">
                     <p className="text-sm text-gray-700">
-                      {surveyData.surveyDetails?.recommendations || 'No recommendations provided'}
+                      {surveyData.surveyDetails?.recommendations ||
+                        'No recommendations provided'}
                     </p>
                   </div>
                 </div>
@@ -902,42 +1523,152 @@ const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose
               {/* Survey Notes */}
               <div>
                 <h4 className="font-medium text-gray-900 mb-3">Additional Survey Notes</h4>
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-gray-50 p-4 rounded-lg min-h-[80px]">
                   <p className="text-sm text-gray-700">
                     {surveyData.surveyNotes || 'No additional notes provided'}
                   </p>
                 </div>
               </div>
 
-              {/* Survey Document */}
-              {surveyData.surveyDocument && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="h-6 w-6 text-blue-600 mr-3" />
-                      <div>
-                        <h5 className="font-medium text-blue-900">Survey Report</h5>
-                        <p className="text-sm text-blue-700">Complete survey document (PDF)</p>
+              {/* Contact Log */}
+              {surveyData.contactLog && surveyData.contactLog.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Surveyor Contact History</h4>
+                  <div className="space-y-3">
+                    {surveyData.contactLog.map((contact, index) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${contact.successful
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                                }`}>
+                                {contact.successful ? '✓ Successful' : '✗ Unsuccessful'}
+                              </span>
+                              <span className="text-xs text-gray-500 capitalize">
+                                {contact.method}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 mb-1">{contact.notes}</p>
+                          </div>
+                          <div className="text-xs text-gray-500 ml-4">
+                            {new Date(contact.date).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Survey Photos */}
+              {surveyData.surveyDetails?.photos && surveyData.surveyDetails.photos.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Survey Photos</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {surveyData.surveyDetails.photos.map((photo, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={photo.url}
+                          alt={photo.description || `Survey photo ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
+                          <button
+                            onClick={() => window.open(photo.url, '_blank')}
+                            className="opacity-0 group-hover:opacity-100 bg-white text-gray-900 px-3 py-1 rounded text-sm font-medium transition-opacity"
+                          >
+                            View Full Size
+                          </button>
+                        </div>
+                        {photo.description && (
+                          <p className="text-xs text-gray-600 mt-1 truncate">{photo.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Survey Documents */}
+              {(surveyData.surveyDocument || (surveyData.documents && surveyData.documents.length > 0)) && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Survey Documents</h4>
+
+                  {/* Main Survey Document */}
+                  {surveyData.surveyDocument && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <FileText className="h-6 w-6 text-blue-600 mr-3" />
+                          <div>
+                            <h5 className="font-medium text-blue-900">Main Survey Report</h5>
+                            <p className="text-sm text-blue-700">Complete survey document</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <a
+                            href={surveyData.surveyDocument}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                          >
+                            View
+                          </a>
+                          <a
+                            href={surveyData.surveyDocument}
+                            download
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                          >
+                            Download
+                          </a>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <a
-                        href={surveyData.surveyDocument}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                      >
-                        View PDF
-                      </a>
-                      <a
-                        href={surveyData.surveyDocument}
-                        download
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                      >
-                        Download
-                      </a>
+                  )}
+
+                  {/* Additional Documents */}
+                  {surveyData.documents && surveyData.documents.length > 0 && (
+                    <div className="space-y-2">
+                      <h5 className="font-medium text-gray-800">Additional Documents</h5>
+                      {surveyData.documents.map((doc, index) => (
+                        <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <FileText className="h-5 w-5 text-gray-600 mr-2" />
+                              <div>
+                                <p className="font-medium text-gray-900 text-sm">{doc.fileName}</p>
+                                <p className="text-xs text-gray-600 capitalize">{doc.category || 'Document'}</p>
+                              </div>
+                            </div>
+                            <div className="flex space-x-2">
+                              <a
+                                href={doc.cloudinaryUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-gray-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-gray-700 transition-colors"
+                              >
+                                View
+                              </a>
+                              <a
+                                href={doc.cloudinaryUrl}
+                                download={doc.fileName}
+                                className="bg-green-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-green-700 transition-colors"
+                              >
+                                Download
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1350,7 +2081,7 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
                   >
                     {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>}
-                    {loading ? 'Updating...' : 'Update & Resubmit'}
+                    {loading ? 'Updating...' : 'Update Policy'}
                   </button>
                 </div>
               </div>
