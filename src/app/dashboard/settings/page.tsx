@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Lock, Save, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '@/services/api';
+import { extractErrorMessage } from '@/types/error.types';
 
 export default function UserSettingsPage() {
     const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
@@ -106,7 +107,7 @@ export default function UserSettingsPage() {
             }
         } catch (error) {
             console.error('❌ Password change error:', error);
-            setMessage({ type: 'error', text: getErrorMessage(error) || 'Failed to change password' });
+            setMessage({ type: 'error', text: extractErrorMessage(error) || 'Failed to change password' });
         } finally {
             setLoading(false);
         }
