@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Search, Filter, X } from "lucide-react";
 import InsuranceSidebar from "@/components/dashboard/usersComponent/InsuranceSidebar";
 import { getUserPolicyRequests } from "@/services/api";
+import { useAuth } from "@/context/useAuth";
+import { getCookie } from "@/utils/cookies";
 
 interface InsurancePolicy {
   _id: string;
@@ -29,8 +31,24 @@ const InsurancePage = () => {
     dateTo: ""
   });
 
-  // Get user name from localStorage with SSR safety
-  const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
+  // Get user from AuthContext or cookies
+  const { user } = useAuth();
+  const getUserName = () => {
+    if (user) {
+      return (user as any).fullname || (user as any).firstname || "User";
+    }
+    const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        return userData.fullname || userData.firstname || "User";
+      } catch (e) {
+        return "User";
+      }
+    }
+    return "User";
+  };
+  const userName = getUserName();
   const nameParts = userName?.split(" ") ?? [];
   const lastName = nameParts[nameParts.length - 1] || "User";
 

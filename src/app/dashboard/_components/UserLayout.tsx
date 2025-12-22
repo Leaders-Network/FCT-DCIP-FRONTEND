@@ -8,6 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { NotificationProvider } from "@/context/NotificationContext"
 import NotificationBell from "@/components/shared/NotificationBell"
 import GlobalSearch from "@/components/shared/GlobalSearch"
+import { useAuth } from "@/context/useAuth"
+import { getCookie } from "@/utils/cookies"
+import { removeAuthToken, clearAuthTokens } from "@/utils/auth"
 
 interface UserLayoutProps {
   children: React.ReactNode
@@ -41,30 +44,42 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
     }
   }, [pathname, isMobile])
 
-  // Get user name from localStorage
-  const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null
-  const displayName = userName || "User"
-  const nameParts = displayName?.split(" ") ?? []
-  const lastName = nameParts[nameParts.length - 1] || displayName
+  // Get user from AuthContext or cookies
+  const { user, logout } = useAuth();
+  const getUserName = () => {
+    if (user) {
+      return (user as any).fullname || (user as any).firstname || "User";
+    }
+    const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        return userData.fullname || userData.firstname || "User";
+      } catch (e) {
+        return "User";
+      }
+    }
+    return "User";
+  };
+  const displayName = getUserName();
+  const nameParts = displayName?.split(" ") ?? [];
+  const lastName = nameParts[nameParts.length - 1] || displayName;
 
   // Get user initials
   const initials = displayName
     .split(" ")
     .map((word) => word[0])
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen)
-  }
+    setSidebarOpen(!sidebarOpen);
+  };
 
   const onLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem("token")
-      localStorage.removeItem("fullname")
-      window.location.href = "/"
-    }
-  }
+    clearAuthTokens();
+    logout();
+  };
 
   // Navigation items for user dashboard
   const navItems = [

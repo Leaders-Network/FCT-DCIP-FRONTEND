@@ -141,7 +141,7 @@ export default function Verify() {
       });
 
       // router.push("/dashboard");
-      setTimeout(() => router.push("/dashboard"), 1200);
+      setTimeout(() => router.push("/login"), 1200);
     } catch (error) {
       console.error("Verification/Registration error:", error);
 
