@@ -8,6 +8,8 @@ import { CreatePolicyRequestData } from "@/types/api.types";
 import { PropertyType } from "@/types/survey.types";
 import PropertyDetailsModal from "@/components/dashboard/usersComponent/PropertyDetailsModal";
 import AddNewProperty from "@/components/dashboard/usersComponent/AddNewProperty";
+import { useAuth } from "@/context/useAuth";
+import { getCookie } from "@/utils/cookies";
 
 const PropertyPage = () => {
   const [properties, setProperties] = useState<PropertyType[]>([]);
@@ -31,8 +33,24 @@ const PropertyPage = () => {
     dateTo: ""
   });
 
-  // Get user name from localStorage with SSR safety
-  const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
+  // Get user from AuthContext or cookies
+  const { user } = useAuth();
+  const getUserName = () => {
+    if (user) {
+      return (user as any).fullname || (user as any).firstname || "User";
+    }
+    const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        return userData.fullname || userData.firstname || "User";
+      } catch (e) {
+        return "User";
+      }
+    }
+    return "User";
+  };
+  const userName = getUserName();
   const nameParts = userName?.split(" ") ?? [];
   const lastName = nameParts[nameParts.length - 1] || "User";
 

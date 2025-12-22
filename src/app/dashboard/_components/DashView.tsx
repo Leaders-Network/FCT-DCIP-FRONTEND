@@ -6,6 +6,9 @@ import MergedReportsSummary from "@/components/user/MergedReportsSummary";
 import NotificationTester from "@/components/shared/NotificationTester";
 import { CreatePolicyRequestData, PolicyRequest } from "@/types/api.types";
 import Image from "next/image";
+import { useAuth } from "@/context/useAuth";
+import { getCookie } from "@/utils/cookies";
+import { getAuthToken } from "@/utils/auth";
 import {
   MoreVertical,
   Download,
@@ -147,8 +150,24 @@ const Dashview = () => {
     filters.dateTo ||
     filters.sortBy !== "newest";
 
-  // Get user name from local storage
-  const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
+  // Get user from AuthContext or cookies
+  const { user } = useAuth();
+  const getUserName = () => {
+    if (user) {
+      return (user as any).fullname || (user as any).firstname || "User";
+    }
+    const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        return userData.fullname || userData.firstname || "User";
+      } catch (e) {
+        return "User";
+      }
+    }
+    return "User";
+  };
+  const userName = getUserName();
   const nameParts = userName?.split(" ") ?? [];
   const lastName = nameParts[nameParts.length - 1] || "User";
 
@@ -157,7 +176,7 @@ const Dashview = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+        const token = getAuthToken('user');
         if (!token) {
           // Not logged in, set empty state
           setStats({ active: 0, expired: 0, pending: 0, collaborators: 0, completed: 0, paymentPending: 0 });
@@ -1727,7 +1746,19 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
     },
     contactDetails: {
       fullName: policy.contactDetails?.fullName || '',
-      email: localStorage.getItem("email") || '',
+      email: (() => {
+        if (user && (user as any).email) return (user as any).email;
+        const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            return userData.email || '';
+          } catch (e) {
+            return '';
+          }
+        }
+        return '';
+      })(),
       phoneNumber: policy.contactDetails?.phoneNumber || '',
       alternatePhone: policy.contactDetails?.alternatePhone || '',
       rcNumber: policy.contactDetails?.rcNumber || ''

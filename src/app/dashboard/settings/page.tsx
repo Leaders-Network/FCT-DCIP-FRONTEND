@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Lock, Save, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '@/services/api';
 import { extractErrorMessage } from '@/types/error.types';
+import { setCookie, getCookie } from '@/utils/cookies';
+import { useAuth } from '@/context/useAuth';
 
 export default function UserSettingsPage() {
     const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
@@ -60,8 +62,19 @@ export default function UserSettingsPage() {
 
             if (response.data.success) {
                 setMessage({ type: 'success', text: 'Profile updated successfully!' });
-                // Update localStorage
-                localStorage.setItem('fullname', `${profileData.firstname} ${profileData.lastname}`);
+                // Update user cookie with new name
+                const storedUser = getCookie('user');
+                if (storedUser) {
+                    try {
+                        const userData = JSON.parse(storedUser);
+                        userData.fullname = `${profileData.firstname} ${profileData.lastname}`;
+                        userData.firstname = profileData.firstname;
+                        userData.lastname = profileData.lastname;
+                        setCookie('user', JSON.stringify(userData), { expires: 7 });
+                    } catch (e) {
+                        console.error('Failed to update user cookie:', e);
+                    }
+                }
             } else {
                 setMessage({ type: 'error', text: response.data.message || 'Failed to update profile' });
             }

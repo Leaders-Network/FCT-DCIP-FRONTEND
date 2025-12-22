@@ -159,7 +159,7 @@ export const loginUser = async (email: string, password: string) => {
 
 export const loginEmployee = async (email: string, password: string) => {
   try {
-    const response = await api.post<EmployeeLoginResponse>("/auth/loginEmployee", { email, password });
+    const response = await api.post<EmployeeLoginResponse>(`/auth/loginEmployee`, { email, password });
     return response;
   } catch (error) {
     console.error("Login API Error:", error);
