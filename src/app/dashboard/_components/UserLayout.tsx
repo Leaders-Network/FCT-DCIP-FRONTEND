@@ -68,7 +68,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
   // Get user initials
   const initials = displayName
     .split(" ")
-    .map((word) => word[0])
+    .map((word: string) => word[0])
     .join("")
     .toUpperCase();
 
