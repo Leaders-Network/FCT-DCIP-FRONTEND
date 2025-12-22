@@ -1746,19 +1746,7 @@ const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, o
     },
     contactDetails: {
       fullName: policy.contactDetails?.fullName || '',
-      email: (() => {
-        if (user && (user as any).email) return (user as any).email;
-        const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
-        if (storedUser) {
-          try {
-            const userData = JSON.parse(storedUser);
-            return userData.email || '';
-          } catch (e) {
-            return '';
-          }
-        }
-        return '';
-      })(),
+      email: policy.contactDetails?.email || '',
       phoneNumber: policy.contactDetails?.phoneNumber || '',
       alternatePhone: policy.contactDetails?.alternatePhone || '',
       rcNumber: policy.contactDetails?.rcNumber || ''
