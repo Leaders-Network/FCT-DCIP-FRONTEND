@@ -20,6 +20,9 @@ import {
   IndividualReportDownloadResponse
 } from "../types/api.types";
 
+// Import Builder Liability Policy API
+import { builderLiabilityPolicyAPI } from "./builderLiabilityPolicyApi";
+
 
 // Constants
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
@@ -257,8 +260,9 @@ export const getAvailableRoles = async () => {
   }
 };
 
-// Policy Request APIs
+// Policy Request APIs (DEPRECATED - Use Builder Liability Policy APIs instead)
 export const submitPolicyRequest = async (policyData: import("../types/api.types").CreatePolicyRequestData) => {
+  console.warn("⚠️ DEPRECATED: submitPolicyRequest is deprecated. Use builderLiabilityPolicyAPI.createPolicy instead.");
   try {
     const response = await api.post("/policy", policyData);
     return response.data;
@@ -269,6 +273,7 @@ export const submitPolicyRequest = async (policyData: import("../types/api.types
 };
 
 export const getPolicyRequests = async (status?: string, page = 1, limit = 10) => {
+  console.warn("⚠️ DEPRECATED: getPolicyRequests is deprecated. Use builderLiabilityPolicyAPI.getAllPolicies instead.");
   try {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
@@ -285,6 +290,7 @@ export const getPolicyRequests = async (status?: string, page = 1, limit = 10) =
 };
 
 export const getUserPolicyRequests = async (status?: string, page = 1, limit = 10) => {
+  console.warn("⚠️ DEPRECATED: getUserPolicyRequests is deprecated. Use builderLiabilityPolicyAPI.getUserPolicies instead.");
   try {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
@@ -1632,6 +1638,9 @@ export const userReportAPI = {
 };
 
 export default api;
+
+// Export Builder Liability Policy API
+export { builderLiabilityPolicyAPI };
 
 // Broker Admin API functions
 export const brokerAdminAPI = {

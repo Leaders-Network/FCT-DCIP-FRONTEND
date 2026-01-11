@@ -3,17 +3,34 @@
 
 import React, { useState, useEffect } from 'react';
 import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign, Search, Filter, X } from 'lucide-react';
-import { PolicyRequest, Surveyor, EnhancedSurveySubmission, Assignment } from '@/types/api.types';
-import { adminApi, reviewSubmission, deletePolicyRequest, getSubmissionByAssignment } from '@/services/api';
+import { Surveyor, EnhancedSurveySubmission, Assignment } from '@/types/api.types';
+import { BuilderLiabilityPolicy } from '@/types/builderLiabilityPolicy.types';
+import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
+import { useBuilderLiabilityPolicies } from '@/hooks/useBuilderLiabilityPolicy';
+import { adminApi, reviewSubmission, getSubmissionByAssignment } from '@/services/api';
 import { useAuth } from '@/context/useAuth';
 import { useRouter } from 'next/navigation';
 import AssignSurveyorModal from './AssignSurveyorModal';
+
+// Legacy imports for backward compatibility during transition
+import { PolicyRequest } from '@/types/api.types';
+import { deletePolicyRequest } from '@/services/api';
 
 interface PolicyManagementProps { }
 
 const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const router = useRouter();
   const { user } = useAuth();
+
+  // Use the new Builder Liability Policy hooks
+  const {
+    policies: builderLiabilityPolicies,
+    loading: blpLoading,
+    error: blpError,
+    fetchPolicies: fetchBLPolicies
+  } = useBuilderLiabilityPolicies(true); // true for admin mode
+
+  // Legacy state for backward compatibility
   const [policies, setPolicies] = useState<PolicyRequest[]>([]);
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyRequest | null>(null);
@@ -27,6 +44,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  // New state for Builder Liability Policies
+  const [selectedBLPolicy, setSelectedBLPolicy] = useState<BuilderLiabilityPolicy | null>(null);
+  const [showBLPolicyModal, setShowBLPolicyModal] = useState(false);
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,12 +92,16 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
   const fetchPoliciesAndSurveyors = async () => {
     try {
+      // Fetch both legacy policies and new Builder Liability Policies
       const [policiesResponse, surveyorsResponse] = await Promise.all([
         adminApi.getPolicies({ status: 'all', page: 1, limit: 100 }),
         adminApi.getSurveyors(),
       ]);
       setPolicies(policiesResponse.data.policyRequests);
       setSurveyors(surveyorsResponse.data);
+
+      // Also fetch Builder Liability Policies
+      fetchBLPolicies();
     } catch (error) {
       console.error('Failed to fetch policies and surveyors:', error);
     }
@@ -86,8 +111,54 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     fetchPoliciesAndSurveyors();
   }, []);
 
-  const filteredPolicies = Array.isArray(policies)
-    ? policies.filter(policy => {
+  // Combine legacy policies with Builder Liability Policies for display
+  const allPoliciesForDisplay = React.useMemo(() => {
+    // Convert Builder Liability Policies to display format
+    const blPoliciesAsDisplay = builderLiabilityPolicies.map(blp => ({
+      _id: blp._id,
+      propertyDetails: {
+        propertyType: `Builder Liability - ${blp.builder.nameOfBuilder}`,
+        address: blp.builder.address,
+        buildingValue: blp.project.totalEstimateSum,
+        plotNumber: '', // Not applicable for Builder Liability
+        cadastralZone: '',
+        district: '',
+        fullAddress: blp.builder.address,
+        yearBuilt: '',
+        squareFootage: 0,
+        constructionMaterial: ''
+      },
+      contactDetails: {
+        fullName: blp.builder.nameOfBuilder,
+        email: blp.builder.customerEmail,
+        phoneNumber: blp.builder.telNo,
+        alternatePhone: '',
+        rcNumber: blp.builder.rcNumber
+      },
+      requestDetails: {
+        coverageType: blp.project.coverTypeIdxDetails || 'Builder Liability',
+        policyDuration: '1 Year',
+        additionalCoverage: [],
+        specialRequests: blp.project.workDetails || ''
+      },
+      status: blp.status,
+      createdAt: blp.createdAt,
+      updatedAt: blp.updatedAt,
+      surveyDocument: blp.surveyDocument,
+      surveyNotes: blp.surveyNotes,
+      adminNotes: blp.adminNotes,
+      documents: blp.documents || [],
+      // Mark as Builder Liability Policy for special handling
+      isBuilderLiabilityPolicy: true,
+      originalBLPolicy: blp
+    }));
+
+    // Combine with legacy policies
+    return [...policies, ...blPoliciesAsDisplay];
+  }, [policies, builderLiabilityPolicies]);
+
+  const filteredPolicies = Array.isArray(allPoliciesForDisplay)
+    ? allPoliciesForDisplay.filter(policy => {
       // Tab filter
       const tabMatch = activeTab === 'all' ? true : policy.status === activeTab;
 
@@ -234,8 +305,17 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
   const handleDeletePolicy = async (policy: PolicyRequest) => {
     try {
-      await deletePolicyRequest(policy._id);
-      setPolicies(prev => prev.filter(p => p._id !== policy._id));
+      // Check if this is a Builder Liability Policy
+      if (policy.isBuilderLiabilityPolicy && policy.originalBLPolicy) {
+        await builderLiabilityPolicyAPI.deletePolicy(policy.originalBLPolicy._id);
+        // Refresh Builder Liability Policies
+        fetchBLPolicies();
+      } else {
+        // Handle legacy policy deletion
+        await deletePolicyRequest(policy._id);
+        setPolicies(prev => prev.filter(p => p._id !== policy._id));
+      }
+
       setShowDeleteModal(false);
       setPolicyToDelete(null);
       alert('Policy deleted successfully!');
@@ -449,7 +529,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
         <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-200">
           <span>
             Showing <span className="font-semibold text-gray-900">{filteredPolicies.length}</span> of{' '}
-            <span className="font-semibold text-gray-900">{policies.length}</span> policies
+            <span className="font-semibold text-gray-900">{allPoliciesForDisplay.length}</span> policies
           </span>
           {hasActiveFilters && (
             <span className="text-[#028835] font-medium">Filters active</span>
@@ -460,12 +540,12 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           {[
-            { key: 'all', label: 'All Policies', count: Array.isArray(policies) ? policies.length : 0 },
-            { key: 'submitted', label: 'Submitted', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'submitted').length : 0 },
-            { key: 'assigned', label: 'Assigned', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'assigned').length : 0 },
-            { key: 'surveyed', label: 'Surveyed', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'surveyed').length : 0 },
-            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'revision_required').length : 0 },
-            { key: 'rejected', label: 'Rejected', count: Array.isArray(policies) ? policies.filter(p => p?.status === 'rejected').length : 0 }
+            { key: 'all', label: 'All Policies', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.length : 0 },
+            { key: 'submitted', label: 'Submitted', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'submitted').length : 0 },
+            { key: 'assigned', label: 'Assigned', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'assigned').length : 0 },
+            { key: 'surveyed', label: 'Surveyed', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'surveyed').length : 0 },
+            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'requires_more_info').length : 0 },
+            { key: 'rejected', label: 'Rejected', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'rejected').length : 0 }
           ].map(tab => (
             <button
               key={tab.key}

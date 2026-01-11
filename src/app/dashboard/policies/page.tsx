@@ -22,44 +22,70 @@ import {
   X,
   CreditCard
 } from "lucide-react";
+import { builderLiabilityPolicyAPI } from "@/services/builderLiabilityPolicyApi";
+import { useBuilderLiabilityPolicies } from "@/hooks/useBuilderLiabilityPolicy";
+import type {
+  BuilderLiabilityPolicy,
+  BuilderLiabilityPolicyStatus,
+  BuilderLiabilityPolicyPriority
+} from "@/types/builderLiabilityPolicy.types";
+
+// Legacy import for backward compatibility during transition
 import { getUserPolicyRequests } from "@/services/api";
 
-interface PolicyRequest {
-  _id: string;
-  propertyDetails: {
-    propertyType: string;
-    address: string;
-    buildingValue: number;
-  };
-  contactDetails: {
-    fullName: string;
+// Define proper filter interface
+interface PolicyFilters {
+  propertyType: string;
+  coverageType: string;
+  dateFrom: string;
+  dateTo: string;
+  minValue: string;
+  maxValue: string;
+}
+
+// Define tab type
+type TabType = 'in-progress' | 'completed' | 'rejected';
+
+// Define dual surveyor data interface
+interface DualSurveyorData {
+  assignmentStatus: 'partially_assigned' | 'unassigned';
+  completionStatus: 0;
+  ammcSurveyorContact?: {
+    name: string;
     email: string;
-    phoneNumber: string;
+    phone: string;
   };
-  requestDetails: {
-    coverageType: string;
-    policyDuration: string;
+  niaSurveyorContact?: undefined;
+  priority: BuilderLiabilityPolicyPriority;
+  estimatedCompletion: {
+    overallDeadline: string;
   };
-  status: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export default function PoliciesPage() {
-  const [activeTab, setActiveTab] = useState<'in-progress' | 'completed' | 'rejected'>('in-progress');
+  const [activeTab, setActiveTab] = useState<TabType>('in-progress');
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
-  const [showEnhancedView, setShowEnhancedView] = useState(false);
-  const [inProgressPolicies, setInProgressPolicies] = useState<PolicyRequest[]>([]);
-  const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
-  const [rejectedPolicies, setRejectedPolicies] = useState<PolicyRequest[]>([]);
-  const [completedCount, setCompletedCount] = useState(0);
-  const [rejectedCount, setRejectedCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [showEnhancedView, setShowEnhancedView] = useState<boolean>(false);
+
+  // Use the new Builder Liability Policy hooks
+  const {
+    policies: allPolicies,
+    loading,
+    error,
+    fetchPolicies
+  } = useBuilderLiabilityPolicies(false);
+
+  // State for filtered policies
+  const [inProgressPolicies, setInProgressPolicies] = useState<BuilderLiabilityPolicy[]>([]);
+  const [completedPolicies, setCompletedPolicies] = useState<BuilderLiabilityPolicy[]>([]);
+  const [rejectedPolicies, setRejectedPolicies] = useState<BuilderLiabilityPolicy[]>([]);
+  const [completedCount, setCompletedCount] = useState<number>(0);
+  const [rejectedCount, setRejectedCount] = useState<number>(0);
 
   // Search and Filter States
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [filters, setFilters] = useState<PolicyFilters>({
     propertyType: "",
     coverageType: "",
     dateFrom: "",
@@ -69,60 +95,20 @@ export default function PoliciesPage() {
   });
 
   useEffect(() => {
-    fetchInProgressPolicies();
-    fetchCompletedPolicies();
-    fetchRejectedPolicies();
-  }, []);
+    fetchPolicies();
+  }, [fetchPolicies]);
 
-  const fetchCompletedPolicies = async () => {
-    try {
-      // Only fetch truly completed policies (payment confirmed)
-      const completedResponse = await getUserPolicyRequests("completed", 1, 100);
-      const completed = completedResponse.data.policyRequests || [];
+  // Filter policies by status when allPolicies changes
+  useEffect(() => {
+    if (allPolicies.length > 0) {
+      const inProgress = allPolicies.filter(policy =>
+        policy.status && ['draft', 'submitted', 'assigned', 'surveyed', 'approved', 'payment_pending'].includes(policy.status)
+      );
+      const completed = allPolicies.filter(policy => policy.status === 'completed');
+      const rejected = allPolicies.filter(policy => policy.status === 'rejected');
 
-      setCompletedPolicies(completed);
-      setCompletedCount(completed.length);
-    } catch (error) {
-      console.error("Failed to fetch completed policies:", error);
-    }
-  };
-
-  const fetchRejectedPolicies = async () => {
-    try {
-      console.log('🔍 Fetching rejected policies...');
-      const response = await getUserPolicyRequests("rejected", 1, 100);
-      console.log('📊 Rejected policies response:', response);
-      const rejected = response.data?.policyRequests || [];
-      console.log(`✅ Found ${rejected.length} rejected policies`);
-      setRejectedPolicies(rejected);
-      setRejectedCount(rejected.length);
-    } catch (error) {
-      console.error("❌ Failed to fetch rejected policies:", error);
-      setRejectedPolicies([]);
-      setRejectedCount(0);
-    }
-  };
-
-  const fetchInProgressPolicies = async () => {
-    try {
-      setLoading(true);
-      const [submittedResponse, assignedResponse, surveyedResponse, approvedResponse, paymentPendingResponse] = await Promise.all([
-        getUserPolicyRequests("submitted", 1, 100),
-        getUserPolicyRequests("assigned", 1, 100),
-        getUserPolicyRequests("surveyed", 1, 100),
-        getUserPolicyRequests("approved", 1, 100),
-        getUserPolicyRequests("payment_pending", 1, 100),
-      ]);
-
-      const submitted = submittedResponse.data.policyRequests || [];
-      const assigned = assignedResponse.data.policyRequests || [];
-      const surveyed = surveyedResponse.data.policyRequests || [];
-      const approved = approvedResponse.data.policyRequests || [];
-      const paymentPending = paymentPendingResponse.data.policyRequests || [];
-
-      // Sort by priority: approved (needs payment) first, then payment_pending, then others by creation date
-      const allInProgress = [...submitted, ...assigned, ...surveyed, ...approved, ...paymentPending];
-      const sortedPolicies = allInProgress.sort((a, b) => {
+      // Sort in-progress policies by priority
+      const sortedInProgress = inProgress.sort((a, b) => {
         // Prioritize approved policies (need payment action)
         if (a.status === 'approved' && b.status !== 'approved') return -1;
         if (b.status === 'approved' && a.status !== 'approved') return 1;
@@ -133,12 +119,27 @@ export default function PoliciesPage() {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
-      setInProgressPolicies(sortedPolicies);
-    } catch (error) {
-      console.error("Failed to fetch in-progress policies:", error);
-    } finally {
-      setLoading(false);
+      setInProgressPolicies(sortedInProgress);
+      setCompletedPolicies(completed);
+      setRejectedPolicies(rejected);
+      setCompletedCount(completed.length);
+      setRejectedCount(rejected.length);
     }
+  }, [allPolicies]);
+
+  const fetchCompletedPolicies = async () => {
+    // This is now handled by the useEffect above
+    fetchPolicies();
+  };
+
+  const fetchRejectedPolicies = async () => {
+    // This is now handled by the useEffect above
+    fetchPolicies();
+  };
+
+  const fetchInProgressPolicies = async () => {
+    // This is now handled by the useEffect above
+    fetchPolicies();
   };
 
   // const calculatePolicyPremium = (policy: PolicyRequest) => {
@@ -147,14 +148,14 @@ export default function PoliciesPage() {
   //   return Math.max(buildingValue * baseRate, 25000); // Minimum premium of ₦25,000
   // };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN'
     }).format(amount);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: BuilderLiabilityPolicyStatus) => {
     switch (status) {
       case 'submitted':
         return (
@@ -207,7 +208,8 @@ export default function PoliciesPage() {
     }
   };
 
-  const getMockDualSurveyorData = (policy: PolicyRequest) => {
+  // Mock dual surveyor data - updated for Builder Liability Policy
+  const getMockDualSurveyorData = (policy: BuilderLiabilityPolicy): DualSurveyorData => {
     // Mock data for demonstration - in real implementation this would come from API
     const isAssigned = policy.status === 'assigned';
 
@@ -220,32 +222,36 @@ export default function PoliciesPage() {
         phone: '+234 803 123 4567'
       } : undefined,
       niaSurveyorContact: undefined,
-      priority: 'medium',
+      priority: policy.priority || 'medium',
       estimatedCompletion: {
         overallDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       }
     };
   };
 
-  // Filter function
-  const filterPolicies = (policies: PolicyRequest[]) => {
+  // Filter function - updated for Builder Liability Policy structure
+  const filterPolicies = (policies: BuilderLiabilityPolicy[]): BuilderLiabilityPolicy[] => {
     return policies.filter(policy => {
       // Search filter
       const searchLower = searchQuery.toLowerCase();
       const searchMatch = !searchQuery ||
         policy._id?.toLowerCase().includes(searchLower) ||
-        policy.propertyDetails.address?.toLowerCase().includes(searchLower) ||
-        policy.propertyDetails.propertyType?.toLowerCase().includes(searchLower) ||
-        policy.contactDetails.fullName?.toLowerCase().includes(searchLower) ||
-        policy.requestDetails.coverageType?.toLowerCase().includes(searchLower);
+        policy.builder.address?.toLowerCase().includes(searchLower) ||
+        policy.project.workDetails?.toLowerCase().includes(searchLower) ||
+        policy.builder.nameOfBuilder?.toLowerCase().includes(searchLower) ||
+        policy.builder.customerEmail?.toLowerCase().includes(searchLower) ||
+        policy.policyNumber?.toLowerCase().includes(searchLower);
 
-      // Property Type filter
+      // Property Type filter - using project details
       const propertyTypeMatch = !filters.propertyType ||
-        policy.propertyDetails.propertyType === filters.propertyType;
+        (policy.project.categoryOfContractorId === 1 && filters.propertyType === 'Residential') ||
+        (policy.project.categoryOfContractorId === 2 && filters.propertyType === 'Commercial') ||
+        (policy.project.categoryOfContractorId === 3 && filters.propertyType === 'Industrial');
 
-      // Coverage Type filter
+      // Coverage Type filter - using project coverage type
       const coverageMatch = !filters.coverageType ||
-        policy.requestDetails.coverageType === filters.coverageType;
+        (policy.project.coverTypeIdxDetails === 'Statutory' && filters.coverageType === 'Basic') ||
+        (policy.project.coverTypeIdxDetails === 'All-Project' && filters.coverageType === 'Comprehensive');
 
       // Date range filter
       const dateFromMatch = !filters.dateFrom ||
@@ -255,16 +261,16 @@ export default function PoliciesPage() {
 
       // Value range filter
       const minValueMatch = !filters.minValue ||
-        policy.propertyDetails.buildingValue >= parseFloat(filters.minValue);
+        policy.project.totalEstimateSum >= parseFloat(filters.minValue);
       const maxValueMatch = !filters.maxValue ||
-        policy.propertyDetails.buildingValue <= parseFloat(filters.maxValue);
+        policy.project.totalEstimateSum <= parseFloat(filters.maxValue);
 
       return searchMatch && propertyTypeMatch && coverageMatch &&
         dateFromMatch && dateToMatch && minValueMatch && maxValueMatch;
     });
   };
 
-  const clearFilters = () => {
+  const clearFilters = (): void => {
     setFilters({
       propertyType: "",
       coverageType: "",
@@ -276,7 +282,7 @@ export default function PoliciesPage() {
     setSearchQuery("");
   };
 
-  const hasActiveFilters = searchQuery || Object.values(filters).some(v => v !== "");
+  const hasActiveFilters: boolean = Boolean(searchQuery) || Object.values(filters).some(v => v !== "");
 
   // Apply filters to current tab
   const filteredInProgressPolicies = filterPolicies(inProgressPolicies);
@@ -593,18 +599,18 @@ export default function PoliciesPage() {
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
                             <h3 className="text-lg font-semibold text-gray-900">
-                              {policy.propertyDetails.propertyType}
+                              Builder Liability Policy - {policy.builder.nameOfBuilder}
                             </h3>
                             {getStatusBadge(policy.status)}
                           </div>
                           <div className="space-y-1 text-sm text-gray-600">
                             <div className="flex items-center">
                               <MapPin className="w-4 h-4 mr-2" />
-                              <span>{policy.propertyDetails.address}</span>
+                              <span>{policy.builder.address}</span>
                             </div>
                             <div className="flex items-center">
                               <Building className="w-4 h-4 mr-2" />
-                              <span>₦{policy.propertyDetails.buildingValue.toLocaleString()}</span>
+                              <span>₦{policy.project.totalEstimateSum.toLocaleString()}</span>
                             </div>
                             <div className="flex items-center">
                               <Calendar className="w-4 h-4 mr-2" />
@@ -626,8 +632,9 @@ export default function PoliciesPage() {
                               onClick={(event) => {
                                 // Enhanced payment flow with better UX
                                 const confirmed = confirm(
-                                  `💳 Complete Payment for ${policy.propertyDetails.propertyType}\n\n` +
-                                  `Property Value: ₦${policy.propertyDetails.buildingValue.toLocaleString()}\n` +
+                                  `💳 Complete Payment for Builder Liability Policy\n\n` +
+                                  `Builder: ${policy.builder.nameOfBuilder}\n` +
+                                  `Project Value: ₦${policy.project.totalEstimateSum.toLocaleString()}\n` +
                                   `Click OK to proceed to payment gateway.`
                                 );
 
@@ -641,7 +648,7 @@ export default function PoliciesPage() {
                                   // Simulate payment processing
                                   setTimeout(async () => {
                                     try {
-                                      const response = await fetch(`http://localhost:5000/api/v1/admin/enforcement/webhook/test/${policy._id}?status=payment_approved`);
+                                      const response = await fetch(`http://localhost:5000/api/v1/admin/enforcement/webhook/test/${policy._id || ''}?status=payment_approved`);
                                       const data = await response.json();
 
                                       if (response.ok) {
@@ -673,7 +680,8 @@ export default function PoliciesPage() {
                             <button
                               onClick={(event) => {
                                 const retry = confirm(
-                                  `🔄 Retry Payment for ${policy.propertyDetails.propertyType}\n\n` +
+                                  `🔄 Retry Payment for Builder Liability Policy\n\n` +
+                                  `Builder: ${policy.builder.nameOfBuilder}\n` +
                                   `Your previous payment attempt was unsuccessful.\n` +
                                   `Would you like to try again?`
                                 );
@@ -688,7 +696,7 @@ export default function PoliciesPage() {
                                   // Simulate retry payment
                                   setTimeout(async () => {
                                     try {
-                                      const response = await fetch(`http://localhost:5000/api/v1/admin/enforcement/webhook/test/${policy._id}?status=payment_approved`);
+                                      const response = await fetch(`http://localhost:5000/api/v1/admin/enforcement/webhook/test/${policy._id || ''}?status=payment_approved`);
                                       const data = await response.json();
 
                                       if (response.ok) {
@@ -717,7 +725,7 @@ export default function PoliciesPage() {
                           )}
                           <button
                             onClick={() => {
-                              setSelectedPolicyId(policy._id);
+                              setSelectedPolicyId(policy._id || '');
                               setShowEnhancedView(true);
                             }}
                             className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
@@ -767,15 +775,15 @@ export default function PoliciesPage() {
                           <div className="flex items-center space-x-4">
                             {/* Survey Status */}
                             <div className="flex items-center space-x-2">
-                              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${['assigned', 'surveyed', 'approved', 'payment_pending', 'completed'].includes(policy.status) ? 'bg-green-100' : 'bg-gray-100'
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${policy.status && ['assigned', 'surveyed', 'approved', 'payment_pending', 'completed'].includes(policy.status) ? 'bg-green-100' : 'bg-gray-100'
                                 }`}>
-                                <Users className={`w-3 h-3 ${['assigned', 'surveyed', 'approved', 'payment_pending', 'completed'].includes(policy.status) ? 'text-green-600' : 'text-gray-400'
+                                <Users className={`w-3 h-3 ${policy.status && ['assigned', 'surveyed', 'approved', 'payment_pending', 'completed'].includes(policy.status) ? 'text-green-600' : 'text-gray-400'
                                   }`} />
                               </div>
                               <div>
                                 <div className="text-xs font-medium text-gray-900">Survey</div>
                                 <div className="text-xs text-gray-600">
-                                  {['assigned', 'surveyed', 'approved', 'payment_pending', 'completed'].includes(policy.status) ? 'Completed' : 'Pending'}
+                                  {policy.status && ['assigned', 'surveyed', 'approved', 'payment_pending', 'completed'].includes(policy.status) ? 'Completed' : 'Pending'}
                                 </div>
                               </div>
                             </div>
@@ -822,7 +830,7 @@ export default function PoliciesPage() {
                           </div>
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => setSelectedPolicyId(policy._id)}
+                              onClick={() => setSelectedPolicyId(policy._id || '')}
                               className="flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
                             >
                               View Details
@@ -869,7 +877,7 @@ export default function PoliciesPage() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {policy.propertyDetails.propertyType}
+                        Builder Liability Policy - {policy.builder.nameOfBuilder}
                       </h3>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         <CheckCircle className="w-3 h-3 mr-1" />
@@ -879,11 +887,11 @@ export default function PoliciesPage() {
                     <div className="space-y-1 text-sm text-gray-600">
                       <div className="flex items-center">
                         <MapPin className="w-4 h-4 mr-2" />
-                        <span>{policy.propertyDetails.address}</span>
+                        <span>{policy.builder.address}</span>
                       </div>
                       <div className="flex items-center">
                         <Building className="w-4 h-4 mr-2" />
-                        <span>₦{policy.propertyDetails.buildingValue.toLocaleString()}</span>
+                        <span>₦{policy.project.totalEstimateSum.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -893,7 +901,7 @@ export default function PoliciesPage() {
                   </div>
                   <button
                     onClick={() => {
-                      setSelectedPolicyId(policy._id);
+                      setSelectedPolicyId(policy._id || '');
                       setShowEnhancedView(true);
                     }}
                     className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
@@ -935,7 +943,7 @@ export default function PoliciesPage() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {policy.propertyDetails.propertyType}
+                        Builder Liability Policy - {policy.builder.nameOfBuilder}
                       </h3>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         <XCircle className="w-3 h-3 mr-1" />
@@ -945,11 +953,11 @@ export default function PoliciesPage() {
                     <div className="space-y-1 text-sm text-gray-600">
                       <div className="flex items-center">
                         <MapPin className="w-4 h-4 mr-2" />
-                        <span>{policy.propertyDetails.address}</span>
+                        <span>{policy.builder.address}</span>
                       </div>
                       <div className="flex items-center">
                         <Building className="w-4 h-4 mr-2" />
-                        <span>₦{policy.propertyDetails.buildingValue.toLocaleString()}</span>
+                        <span>₦{policy.project.totalEstimateSum.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -959,7 +967,7 @@ export default function PoliciesPage() {
                   </div>
                   <button
                     onClick={() => {
-                      setSelectedPolicyId(policy._id);
+                      setSelectedPolicyId(policy._id || '');
                       setShowEnhancedView(true);
                     }}
                     className="flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
