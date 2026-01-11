@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
+import { BuilderLiabilityPolicyForm } from '@/components/builderLiability/PolicyForm';
+// DEPRECATED: Legacy property insurance form - system now uses Builder Liability Policy exclusively
+// import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import ReportSection from "@/components/dashboard/ReportSection";
 import MergedReportsSummary from "@/components/user/MergedReportsSummary";
 import NotificationTester from "@/components/shared/NotificationTester";
-import { CreatePolicyRequestData, PolicyRequest } from "@/types/api.types";
+import { PolicyRequest } from "@/types/api.types";
 import Image from "next/image";
 import { useAuth } from "@/context/useAuth";
 import { getCookie } from "@/utils/cookies";
@@ -46,7 +48,7 @@ import {
 } from "@/constants/policyConstants";
 
 const Dashview = () => {
-  const [showPolicyRequest, setShowPolicyRequest] = useState(false);
+  const [showBuilderLiabilityForm, setShowBuilderLiabilityForm] = useState(false);
   const [stats, setStats] = useState({
     active: 0,
     expired: 0,
@@ -246,17 +248,6 @@ const Dashview = () => {
     fetchDashboardData();
   }, []);
 
-  const handlePolicyRequest = async (data: CreatePolicyRequestData) => {
-    try {
-      const { submitPolicyRequest } = await import("@/services/api");
-      await submitPolicyRequest(data);
-      alert("Policy request submitted successfully!");
-    } catch (error) {
-      console.error("Failed to submit policy request:", error);
-      alert("Failed to submit policy request. Please try again.");
-    }
-  };
-
   return (
     <>
       <div className="flex-1 flex flex-col overflow-hidden p-6">
@@ -432,13 +423,13 @@ const Dashview = () => {
                 {/* Quick Actions */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   <button
-                    onClick={() => setShowPolicyRequest(true)}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                    onClick={() => setShowBuilderLiabilityForm(true)}
+                    className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <div className="flex items-center justify-between">
                       <div className="text-left">
-                        <div className="text-sm font-medium opacity-90">New Request</div>
-                        <div className="text-xs opacity-75">Submit Policy</div>
+                        <div className="text-sm font-medium opacity-90">New Policy</div>
+                        <div className="text-xs opacity-75">Builder Liability</div>
                       </div>
                       <Plus className="w-6 h-6" />
                     </div>
@@ -731,12 +722,12 @@ const Dashview = () => {
                                   <>
                                     <FileText className="w-12 h-12 mb-2 text-gray-400" />
                                     <p className="font-medium">No policies yet</p>
-                                    <p className="text-sm mb-3">Start by submitting your first policy request.</p>
+                                    <p className="text-sm mb-3">Start by submitting your first Builder Liability Policy application.</p>
                                     <button
-                                      onClick={() => setShowPolicyRequest(true)}
-                                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                      onClick={() => setShowBuilderLiabilityForm(true)}
+                                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                                     >
-                                      Submit New Policy
+                                      Apply for Builder Liability Policy
                                     </button>
                                   </>
                                 )}
@@ -797,11 +788,11 @@ const Dashview = () => {
 
                       <div className="flex flex-wrap gap-3">
                         <button
-                          onClick={() => setShowPolicyRequest(true)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
+                          onClick={() => setShowBuilderLiabilityForm(true)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center"
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Start New Policy
+                          Apply for Builder Liability Policy
                         </button>
                         <button
                           onClick={() => window.open('https://niip.ng/', '_blank')}
@@ -913,14 +904,14 @@ const Dashview = () => {
               <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-2">
                 <button
-                  onClick={() => setShowPolicyRequest(true)}
-                  className="w-full flex items-center justify-between p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group"
+                  onClick={() => setShowBuilderLiabilityForm(true)}
+                  className="w-full flex items-center justify-between p-3 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors group"
                 >
                   <div className="flex items-center">
-                    <Plus className="w-4 h-4 text-blue-600 mr-3" />
-                    <span className="text-sm font-medium text-blue-900">New Policy Request</span>
+                    <Plus className="w-4 h-4 text-green-600 mr-3" />
+                    <span className="text-sm font-medium text-green-900">New Builder Liability Policy</span>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 text-green-600 group-hover:translate-x-1 transition-transform" />
                 </button>
 
                 <button
@@ -973,11 +964,30 @@ const Dashview = () => {
         </div>
       </div>
 
-      <PolicyRequestForm
-        isOpen={showPolicyRequest}
-        onClose={() => setShowPolicyRequest(false)}
-        onSubmit={handlePolicyRequest}
-      />
+      {showBuilderLiabilityForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold">Builder Liability Policy Application</h2>
+              <button
+                onClick={() => setShowBuilderLiabilityForm(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <BuilderLiabilityPolicyForm
+                onSuccess={(policyId) => {
+                  alert('Builder Liability Policy application submitted successfully!');
+                  setShowBuilderLiabilityForm(false);
+                }}
+                onCancel={() => setShowBuilderLiabilityForm(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

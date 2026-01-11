@@ -89,11 +89,6 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
       icon: <Home className="w-6 h-6" />,
     },
     {
-      name: "My Property",
-      path: "/dashboard/property",
-      icon: <FileText className="w-6 h-6" />,
-    },
-    {
       name: "Insurance",
       path: "/dashboard/insurance",
       icon: <Shield className="w-6 h-6" />,

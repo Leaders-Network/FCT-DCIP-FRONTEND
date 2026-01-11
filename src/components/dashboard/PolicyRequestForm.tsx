@@ -11,6 +11,16 @@ import {
 } from "@/constants/policyConstants";
 import { useAuth } from "@/context/useAuth";
 
+/**
+ * PolicyRequestForm - Legacy Property Insurance Application Form
+ * 
+ * This form is specifically for traditional property insurance applications.
+ * For Builder Liability Policy applications, use BuilderLiabilityPolicyForm instead.
+ * 
+ * @deprecated Consider migrating to the new Builder Liability Policy system
+ * for construction-related insurance needs.
+ */
+
 interface PropertyDetailWithContact {
   _id: string;
   address: string;
@@ -250,7 +260,9 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-4 sm:p-6 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg sm:text-xl font-bold">{property ? "Insure Property" : "Request Policy Survey"}</h2>
+          <h2 className="text-lg sm:text-xl font-bold">
+            {property ? "Insure Property" : "Property Insurance Application"}
+          </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1">
             <X size={20} className="sm:w-6 sm:h-6" />
           </button>
