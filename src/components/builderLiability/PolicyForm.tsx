@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { FCT_LOCATIONS, getDistrictsByLGA } from '@/constants/fctLocations';
 
 interface PolicyFormProps {
     onSuccess?: (policyId: string) => void;
@@ -87,6 +88,10 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     });
 
     const [activeTab, setActiveTab] = useState<string>('builder');
+
+    // Builder location fields
+    const [builderLga, setBuilderLga] = useState<string>('');
+    const [builderDistrict, setBuilderDistrict] = useState<string>('');
 
     // Project location fields (kept separate to avoid Type issues if types were reverted)
     const [projectAddress, setProjectAddress] = useState<string>('');
@@ -163,6 +168,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 customerEmail: formData.builderEmail,
                 nameOfBuilder: formData.builderName,
                 rcNumber: formData.rcNumber,
+                lga: builderLga,
+                district: builderDistrict,
                 identification: {
                     identificationTypeId: formData.identificationType,
                     identityNo: formData.identificationNumber
@@ -346,6 +353,38 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         onChange={(e) => handleInputChange('builderAddress', e.target.value)}
                                         required
                                     />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="builderLga">Builder LGA *</Label>
+                                        <Select value={builderLga} onValueChange={setBuilderLga}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select LGA" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {FCT_LOCATIONS.map((lga) => (
+                                                    <SelectItem key={lga.value} value={lga.value}>
+                                                        {lga.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="builderDistrict">Builder District *</Label>
+                                        <Select value={builderDistrict} onValueChange={setBuilderDistrict} disabled={!builderLga}>
+                                            <SelectTrigger disabled={!builderLga}>
+                                                <SelectValue placeholder={builderLga ? "Select District" : "Select LGA first"} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {builderLga && getDistrictsByLGA(builderLga).map((district) => (
+                                                    <SelectItem key={district.value} value={district.value}>
+                                                        {district.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
                             </TabsContent>
 
@@ -703,31 +742,44 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                 </div>
                                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <Label htmlFor="projectAddress">Project Address</Label>
+                                        <Label htmlFor="projectAddress">Project Address *</Label>
                                         <Textarea
                                             id="projectAddress"
                                             value={projectAddress}
                                             onChange={(e) => setProjectAddress(e.target.value)}
                                             placeholder="Full project/site address"
+                                            required
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="projectLga">Project LGA</Label>
-                                        <Input
-                                            id="projectLga"
-                                            value={projectLga}
-                                            onChange={(e) => setProjectLga(e.target.value)}
-                                            placeholder="e.g., Gwagwalada"
-                                        />
+                                        <Label htmlFor="projectLga">Project LGA *</Label>
+                                        <Select value={projectLga} onValueChange={setProjectLga}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select LGA" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {FCT_LOCATIONS.map((lga) => (
+                                                    <SelectItem key={lga.value} value={lga.value}>
+                                                        {lga.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                     <div>
-                                        <Label htmlFor="projectDistrict">Project District</Label>
-                                        <Input
-                                            id="projectDistrict"
-                                            value={projectDistrict}
-                                            onChange={(e) => setProjectDistrict(e.target.value)}
-                                            placeholder="e.g., District 1"
-                                        />
+                                        <Label htmlFor="projectDistrict">Project District *</Label>
+                                        <Select value={projectDistrict} onValueChange={setProjectDistrict} disabled={!projectLga}>
+                                            <SelectTrigger disabled={!projectLga}>
+                                                <SelectValue placeholder={projectLga ? "Select District" : "Select LGA first"} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {projectLga && getDistrictsByLGA(projectLga).map((district) => (
+                                                    <SelectItem key={district.value} value={district.value}>
+                                                        {district.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 </div>
                             </TabsContent>
