@@ -646,7 +646,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                             <button
                                 onClick={() => {
                                     // Navigate to claims or open claim modal
-                                    window.location.href = `/dashboard/policies?action=claim&policyId=${policyId}`;
+                                    window.location.href = `/dashboard/insurance?action=claim&policyId=${policyId}`;
                                 }}
                                 className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
                             >

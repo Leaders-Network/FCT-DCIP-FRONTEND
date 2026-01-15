@@ -99,7 +99,6 @@ export interface StatusHistoryEntry {
     reason?: string;
     metadata?: Record<string, unknown>;
 }
-}
 
 export interface DocumentInfo {
     fileName: string;
@@ -127,6 +126,7 @@ export type BuilderLiabilityPolicyStatus =
     | 'payment_pending'
     | 'rejected'
     | 'requires_more_info'
+    | 'revision_required'
     | 'completed'
     | 'sent_to_user';
 
@@ -396,18 +396,3 @@ export interface PolicyDashboardData {
     alerts: Alert[];
     notifications: Notification[];
 }
-
-// Export all types
-export type {
-    BuilderLiabilityPolicy,
-    BuilderLiabilityPolicyData,
-    BuilderLiabilityPolicyFormData,
-    BuilderLiabilityPolicyStatus,
-    BuilderLiabilityPolicyPriority,
-    PolicySection,
-    PolicySectionData,
-    PolicyFilters,
-    AdminPolicyFilters,
-    PolicyStatistics,
-    PolicyDashboardData
-};

@@ -1,6 +1,6 @@
 "use client"
 import AdminDashboard from "../admin/AdminDashboard"
-import SurveyorDashboard from "../surveyor/SurveyorDashboard"
+import UnifiedSurveyorDashboard from "../surveyor/UnifiedSurveyorDashboard"
 import { useAuth } from "@/context/useAuth"
 import { Employee, RoleType } from "@/types/api.types"
 
@@ -29,7 +29,7 @@ export default function MainView() {
       {role === 'Admin' || role === 'Super-admin' ? (
         <AdminDashboard />
       ) : role === 'Surveyor' ? (
-        <SurveyorDashboard />
+        <UnifiedSurveyorDashboard />
       ) : (
         <div>Welcome!</div>
       )}

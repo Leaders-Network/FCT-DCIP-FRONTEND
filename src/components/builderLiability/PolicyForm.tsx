@@ -699,6 +699,123 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         )}
                                     </div>
                                 </Card>
+
+                                <Card className="p-4">
+                                    <h3 className="text-lg font-semibold mb-4">Investigation & Disciplinary Status</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                id="underInvestigation"
+                                                checked={formData.underInvestigation}
+                                                onChange={(e) => handleInputChange('underInvestigation', e.target.checked)}
+                                            />
+                                            <Label htmlFor="underInvestigation">Currently under investigation?</Label>
+                                        </div>
+                                        {formData.underInvestigation && (
+                                            <div className="mt-4">
+                                                <Label htmlFor="investigationDetails">Investigation Details *</Label>
+                                                <Textarea
+                                                    id="investigationDetails"
+                                                    value={formData.investigationDetails}
+                                                    onChange={(e) => handleInputChange('investigationDetails', e.target.value)}
+                                                    placeholder="Provide details about the investigation"
+                                                    required={formData.underInvestigation}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+
+                                <Card className="p-4">
+                                    <h3 className="text-lg font-semibold mb-4">Disciplinary Action</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                id="disciplinaryAction"
+                                                checked={formData.disciplinaryAction}
+                                                onChange={(e) => handleInputChange('disciplinaryAction', e.target.checked)}
+                                            />
+                                            <Label htmlFor="disciplinaryAction">Subject to disciplinary action?</Label>
+                                        </div>
+                                        {formData.disciplinaryAction && (
+                                            <div className="mt-4">
+                                                <Label htmlFor="disciplinaryDetails">Disciplinary Action Details *</Label>
+                                                <Textarea
+                                                    id="disciplinaryDetails"
+                                                    value={formData.disciplinaryDetails}
+                                                    onChange={(e) => handleInputChange('disciplinaryDetails', e.target.value)}
+                                                    placeholder="Provide details about the disciplinary action"
+                                                    required={formData.disciplinaryAction}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+
+                                <Card className="p-4">
+                                    <h3 className="text-lg font-semibold mb-4">Pre-Employment Checks</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="checkbox"
+                                                id="preEmploymentCheck"
+                                                checked={formData.preEmploymentCheck}
+                                                onChange={(e) => handleInputChange('preEmploymentCheck', e.target.checked)}
+                                            />
+                                            <Label htmlFor="preEmploymentCheck">Pre-employment checks conducted?</Label>
+                                        </div>
+                                        {formData.preEmploymentCheck && (
+                                            <div className="mt-4">
+                                                <Label htmlFor="preEmploymentDetails">Pre-Employment Check Details *</Label>
+                                                <Textarea
+                                                    id="preEmploymentDetails"
+                                                    value={formData.preEmploymentDetails}
+                                                    onChange={(e) => handleInputChange('preEmploymentDetails', e.target.value)}
+                                                    placeholder="Describe the pre-employment checks conducted"
+                                                    required={formData.preEmploymentCheck}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+
+                                <Card className="p-4">
+                                    <h3 className="text-lg font-semibold mb-4">Legal Information</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <Label htmlFor="legalSuitDetails">Legal Suit Details (if any)</Label>
+                                            <Textarea
+                                                id="legalSuitDetails"
+                                                value={formData.legalSuitDetails}
+                                                onChange={(e) => handleInputChange('legalSuitDetails', e.target.value)}
+                                                placeholder="Provide details of any legal suits or claims"
+                                            />
+                                        </div>
+                                    </div>
+                                </Card>
+
+                                <Card className="p-4">
+                                    <h3 className="text-lg font-semibold mb-4">Practice Outside Nigeria</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <Label htmlFor="practiceOutsideNigeria">Do you practice outside Nigeria?</Label>
+                                            <Select
+                                                value={formData.practiceOutsideNigeria}
+                                                onValueChange={(value) => handleInputChange('practiceOutsideNigeria', value)}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Yes">Yes</SelectItem>
+                                                    <SelectItem value="No">No</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </Card>
                             </TabsContent>
 
                             <TabsContent value="project" className="space-y-4">
@@ -719,6 +836,25 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </Select>
                                     </div>
                                     <div>
+                                        <Label htmlFor="contractorCategoryId">Contractor Category *</Label>
+                                        <Select
+                                            value={formData.contractorCategoryId.toString()}
+                                            onValueChange={(value) => handleInputChange('contractorCategoryId', parseInt(value))}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="1">Category 1 - Small Scale</SelectItem>
+                                                <SelectItem value="2">Category 2 - Medium Scale</SelectItem>
+                                                <SelectItem value="3">Category 3 - Large Scale</SelectItem>
+                                                <SelectItem value="4">Category 4 - Specialized</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
                                         <Label htmlFor="totalEstimateSum">Total Estimate Sum (₦) *</Label>
                                         <Input
                                             id="totalEstimateSum"
@@ -728,6 +864,15 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             onChange={(e) => handleInputChange('totalEstimateSum', parseFloat(e.target.value) || 0)}
                                             required
                                         />
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id="extraHazardous"
+                                            checked={formData.extraHazardous}
+                                            onChange={(e) => handleInputChange('extraHazardous', e.target.checked)}
+                                        />
+                                        <Label htmlFor="extraHazardous">Extra Hazardous Work?</Label>
                                     </div>
                                 </div>
                                 <div>

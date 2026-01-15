@@ -312,7 +312,7 @@ function getQuickLinks(userType: string) {
             {
                 title: 'My Policies',
                 subtitle: 'View insurance policies',
-                url: '/dashboard/policies',
+                url: '/dashboard/insurance',
                 icon: <FileText className="h-5 w-5 text-purple-600" />
             },
             {
@@ -374,7 +374,7 @@ function getQuickNavigationResults(query: string, userType: string): SearchResul
                 title: 'My Policies',
                 subtitle: 'View your insurance policies',
                 type: 'page',
-                url: '/dashboard/policies',
+                url: '/dashboard/insurance',
                 icon: <FileText className="h-5 w-5 text-purple-600" />
             });
         }

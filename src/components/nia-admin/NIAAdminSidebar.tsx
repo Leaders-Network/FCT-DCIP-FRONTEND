@@ -52,29 +52,23 @@ const NIAAdminSidebar: React.FC<NIAAdminSidebarProps> = ({
             description: "Overview and statistics"
         },
         {
+            href: "/nia-admin/dashboard/policies",
+            label: "Policies",
+            icon: FileText,
+            description: "Builder Liability policies"
+        },
+        {
             href: "/nia-admin/surveyors",
-            label: "NIA Surveyors",
+            label: "Surveyors",
             icon: Users,
-            description: "Manage NIA surveyors"
+            description: "Manage surveyors"
         },
         {
             href: "/nia-admin/assignments",
             label: "Assignments",
             icon: ClipboardList,
-            description: "Dual-surveyor assignments"
+            description: "Automated assignments"
         },
-        // {
-        //     href: "/nia-admin/user-inquiries",
-        //     label: "User Inquiries",
-        //     icon: AlertTriangle,
-        //     description: "Handle user conflict inquiries"
-        // },
-        // {
-        //     href: "/nia-admin/processing-monitor",
-        //     label: "Processing Monitor",
-        //     icon: FileText,
-        //     description: "Monitor automatic report processing"
-        // },
         {
             href: "/nia-admin/administrators",
             label: "Administrators",

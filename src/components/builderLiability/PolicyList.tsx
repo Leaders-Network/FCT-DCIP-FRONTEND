@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import { useBuilderLiabilityPolicies } from '@/hooks/useBuilderLiabilityPolicy';
+import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
 import { BuilderLiabilityPolicy, BuilderLiabilityPolicyStatus } from '@/types/builderLiabilityPolicy.types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PolicyDetailsModal } from './PolicyDetailsModal';
 import {
     Eye,
     Search,
@@ -37,6 +39,46 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
+    const [selectedPolicy, setSelectedPolicy] = useState<BuilderLiabilityPolicy | null>(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+    const handleViewDetails = async (policy: BuilderLiabilityPolicy) => {
+        try {
+            // Fetch the complete policy data by ID to get all fields
+            const response = await builderLiabilityPolicyAPI.getPolicyById(policy._id);
+            const fullPolicy = response.data.policy;
+
+            setSelectedPolicy(fullPolicy);
+            setShowDetailsModal(true);
+            if (onPolicySelect) {
+                onPolicySelect(fullPolicy);
+            }
+        } catch (error) {
+            console.error('Failed to fetch full policy details:', error);
+            // Fallback to showing partial data if fetch fails
+            setSelectedPolicy(policy);
+            setShowDetailsModal(true);
+            if (onPolicySelect) {
+                onPolicySelect(policy);
+            }
+        }
+    };
+
+    const handleCloseModal = () => {
+        setShowDetailsModal(false);
+        setSelectedPolicy(null);
+    };
+
+    // Helper function to get the actual current status from statusHistory if available
+    const getActualStatus = (policy: BuilderLiabilityPolicy): string => {
+        // If statusHistory exists and has entries, use the most recent status
+        if (policy.statusHistory && policy.statusHistory.length > 0) {
+            const latestStatus = policy.statusHistory[policy.statusHistory.length - 1];
+            return latestStatus.status;
+        }
+        // Otherwise, use the policy status field
+        return policy.status || 'draft';
+    };
 
     // Filter policies based on search and filters
     const filteredPolicies = policies.filter(policy => {
@@ -46,7 +88,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             policy.policyNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
             policy.builder.rcNumber.toLowerCase().includes(searchQuery.toLowerCase());
 
-        const matchesStatus = statusFilter === 'all' || policy.status === statusFilter;
+        const matchesStatus = statusFilter === 'all' || getActualStatus(policy) === statusFilter;
         const matchesPriority = priorityFilter === 'all' || policy.priority === priorityFilter;
 
         return matchesSearch && matchesStatus && matchesPriority;
@@ -62,11 +104,12 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             payment_pending: { color: 'bg-orange-100 text-orange-800', icon: CreditCard, label: 'Payment Pending' },
             rejected: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Rejected' },
             requires_more_info: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
+            revision_required: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             completed: { color: 'bg-emerald-100 text-emerald-800', icon: CheckCircle, label: 'Completed' },
             sent_to_user: { color: 'bg-cyan-100 text-cyan-800', icon: CheckCircle, label: 'Sent to User' }
         };
 
-        const config = statusConfig[status] || statusConfig.draft;
+        const config = statusConfig[status] || statusConfig.submitted;
         const Icon = config.icon;
 
         return (
@@ -230,7 +273,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {getStatusBadge(policy.status)}
+                                                {getStatusBadge(getActualStatus(policy) as BuilderLiabilityPolicyStatus)}
                                                 {getPriorityBadge(policy.priority || 'medium')}
                                             </div>
                                         </div>
@@ -290,7 +333,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    onClick={() => onPolicySelect?.(policy)}
+                                                    onClick={() => handleViewDetails(policy)}
                                                 >
                                                     <Eye className="w-4 h-4 mr-2" />
                                                     View Details
@@ -304,6 +347,13 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                     ))}
                 </div>
             )}
+
+            {/* Policy Details Modal */}
+            <PolicyDetailsModal
+                policy={selectedPolicy}
+                isOpen={showDetailsModal}
+                onClose={handleCloseModal}
+            />
         </div>
     );
 };

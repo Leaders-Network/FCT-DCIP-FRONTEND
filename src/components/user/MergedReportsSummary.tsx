@@ -265,7 +265,7 @@ const MergedReportsSummary: React.FC = () => {
                         <p className="text-gray-600 mb-4">
                             Your property assessment reports will appear here once surveys are completed and processed.
                         </p>
-                        <Link href="/dashboard/policies">
+                        <Link href="/dashboard/insurance">
                             <Button>
                                 View My Policies
                             </Button>

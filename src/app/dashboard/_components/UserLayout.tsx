@@ -3,14 +3,14 @@ import { useState, useEffect } from "react"
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LogOut, Menu, User, Home, FileText, Shield, Settings, Plus, X, MessageSquare, Bell } from "lucide-react"
+import { LogOut, Menu, User, Home, Shield, Settings, X, MessageSquare, Bell } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { NotificationProvider } from "@/context/NotificationContext"
 import NotificationBell from "@/components/shared/NotificationBell"
 import GlobalSearch from "@/components/shared/GlobalSearch"
 import { useAuth } from "@/context/useAuth"
 import { getCookie } from "@/utils/cookies"
-import { removeAuthToken, clearAuthTokens } from "@/utils/auth"
+import { clearAuthTokens } from "@/utils/auth"
 
 interface UserLayoutProps {
   children: React.ReactNode
@@ -46,14 +46,15 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
 
   // Get user from AuthContext or cookies
   const { user, logout } = useAuth();
-  const getUserName = () => {
+  const getUserName = (): string => {
     if (user) {
-      return (user as any).fullname || (user as any).firstname || "User";
+      const userData = user as { fullname?: string; firstname?: string };
+      return userData.fullname || userData.firstname || "User";
     }
     const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
     if (storedUser) {
       try {
-        const userData = JSON.parse(storedUser);
+        const userData = JSON.parse(storedUser) as { fullname?: string; firstname?: string };
         return userData.fullname || userData.firstname || "User";
       } catch (e) {
         return "User";
@@ -62,8 +63,6 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
     return "User";
   };
   const displayName = getUserName();
-  const nameParts = displayName?.split(" ") ?? [];
-  const lastName = nameParts[nameParts.length - 1] || displayName;
 
   // Get user initials
   const initials = displayName
@@ -93,15 +92,15 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
       path: "/dashboard/insurance",
       icon: <Shield className="w-6 h-6" />,
     },
-    {
-      name: "My Policies",
-      path: "/dashboard/policies",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-    },
+    // {
+    //   name: "My Policies",
+    //   path: "/dashboard/insurance",
+    //   icon: (
+    //     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    //     </svg>
+    //   ),
+    // },
     {
       name: "Contacts",
       path: "/dashboard/contacts",

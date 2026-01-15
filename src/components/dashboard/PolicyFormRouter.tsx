@@ -13,6 +13,7 @@ interface PolicyFormRouterProps {
     isOpen?: boolean;
     onClose: () => void;
     onSubmitPropertyPolicy?: (data: CreatePolicyRequestData) => Promise<void>;
+    onPolicyCreated?: () => void; // New callback for when a policy is created
     property?: unknown;
     defaultPolicyType?: 'builder-liability' | 'property' | null;
 }
@@ -21,6 +22,7 @@ export const PolicyFormRouter: React.FC<PolicyFormRouterProps> = ({
     isOpen = false,
     onClose,
     onSubmitPropertyPolicy,
+    onPolicyCreated,
     property,
     defaultPolicyType = null
 }) => {
@@ -36,6 +38,13 @@ export const PolicyFormRouter: React.FC<PolicyFormRouterProps> = ({
         alert('Builder Liability Policy application submitted successfully!');
         onClose();
         setSelectedPolicyType(null);
+        // Call the callback to refresh policies if provided
+        if (onPolicyCreated) {
+            onPolicyCreated();
+        } else {
+            // Fallback to page refresh if no callback provided
+            window.location.reload();
+        }
     };
 
     const handleBuilderLiabilityCancel = () => {

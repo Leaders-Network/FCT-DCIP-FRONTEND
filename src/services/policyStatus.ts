@@ -130,7 +130,7 @@ class PolicyStatusService {
                     timestamp: yesterday.toISOString(),
                     read: false,
                     priority: 'medium',
-                    actionUrl: '/dashboard/policies'
+                    actionUrl: '/dashboard/insurance'
                 }
             ],
             estimatedTimeline: {

@@ -88,6 +88,19 @@ export interface GetAllEmployeesResponse {
   };
 }
 
+// Property Management types
+export interface Category {
+  _id: string;
+  name: string;
+}
+
+export interface AddPropertyPayload {
+  categoryId: string;
+  address: string;
+  phonenumber: string;
+  images: string[];
+}
+
 // Policy Request types
 export interface PolicyRequest {
   _id: string;
@@ -152,6 +165,15 @@ export interface PolicyRequest {
   }>;
   createdAt: string;
   updatedAt: string;
+  // Optional properties for Builder Liability Policy compatibility
+  isBuilderLiabilityPolicy?: boolean;
+  originalBLPolicy?: Partial<{
+    _id: string;
+    policyNumber: string;
+    builder: Record<string, unknown>;
+    propertyDetails: Record<string, unknown>;
+    status: string;
+  }>;
 }
 
 export interface CreatePolicyRequestData {
@@ -233,7 +255,7 @@ export interface Surveyor extends Employee {
 }
 
 export interface SurveySubmission {
-  ammcId: string;
+  policyId: string;
   surveyorId: string;
   surveyDocument: File | string | {
     name: string;
@@ -254,7 +276,7 @@ export interface ContactLogEntry {
 
 // Admin Policy Management types
 export interface PolicyAssignment {
-  ammcId: string;
+  policyId: string;
   surveyorIds: string[];
   assignedBy: string;
   deadline?: string;
@@ -263,7 +285,7 @@ export interface PolicyAssignment {
 }
 
 export interface PolicyReview {
-  ammcId: string;
+  policyId: string;
   reviewerId: string;
   decision: 'approved' | 'rejected';
   reviewNotes: string;
@@ -273,7 +295,7 @@ export interface PolicyReview {
 // Assignment Management Types
 export interface Assignment {
   _id: string;
-  ammcId: string | PolicyRequest;
+  policyId: string | PolicyRequest;
   surveyorId: string;
   assignedBy: string;
   assignedAt: string;
@@ -452,7 +474,7 @@ export interface SurveySubmissionResult {
 // Enhanced Survey Submission Interface
 export interface EnhancedSurveySubmission {
   _id: string;
-  ammcId: string;
+  policyId: string;
   surveyorId: string;
   assignmentId?: string;
   surveyDetails: SurveyDetails;

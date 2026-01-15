@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "node scripts/type-check.js",
+    "type-check:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.0",

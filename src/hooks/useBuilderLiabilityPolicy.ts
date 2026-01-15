@@ -186,6 +186,11 @@ const useBuilderLiabilityPolicies = (isAdmin = false) => {
         fetchPolicies();
     }, [fetchPolicies]);
 
+    // Fetch policies on mount
+    useEffect(() => {
+        fetchPolicies();
+    }, [fetchPolicies]);
+
     return {
         policies,
         pagination,

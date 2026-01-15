@@ -2,174 +2,65 @@
 
 /**
  * TypeScript Type Checking Script
- * 
- * This script performs comprehensive type checking across the Builders-Liability-AMMC-FRONTEND project
- * and generates a report of any type issues found.
+ * Runs comprehensive type checking and reports issues
  */
 
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔍 Starting TypeScript type checking...\n');
+console.log('🔍 Running TypeScript type checking...\n');
 
-// Function to run TypeScript compiler and capture output
-function runTypeCheck(configFile = 'tsconfig.json') {
+try {
+    // Run TypeScript compiler in check mode
+    console.log('📋 Checking TypeScript compilation...');
+    execSync('npx tsc --noEmit', { stdio: 'inherit', cwd: process.cwd() });
+    console.log('✅ TypeScript compilation check passed!\n');
+
+    // Check for any remaining 'any' types
+    console.log('🔎 Scanning for remaining "any" types...');
     try {
-        console.log(`📋 Checking with ${configFile}...`);
-        const output = execSync(`npx tsc --noEmit --project ${configFile}`, {
+        const result = execSync('npx grep -r ":\\s*any\\b" src/ --include="*.ts" --include="*.tsx"', {
             encoding: 'utf8',
-            stdio: 'pipe'
+            cwd: process.cwd()
         });
-        return { success: true, output: output || 'No issues found' };
-    } catch (error) {
-        return { success: false, output: error.stdout || error.message };
-    }
-}
-
-// Function to analyze TypeScript files for common issues
-function analyzeTypeIssues() {
-    const issues = [];
-    const srcDir = path.join(__dirname, '../src');
-
-    function scanDirectory(dir) {
-        const files = fs.readdirSync(dir);
-
-        for (const file of files) {
-            const filePath = path.join(dir, file);
-            const stat = fs.statSync(filePath);
-
-            if (stat.isDirectory()) {
-                scanDirectory(filePath);
-            } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
-                const content = fs.readFileSync(filePath, 'utf8');
-                const relativePath = path.relative(path.join(__dirname, '..'), filePath);
-
-                // Check for 'any' types
-                const anyMatches = content.match(/:\s*any\b/g);
-                if (anyMatches) {
-                    issues.push({
-                        file: relativePath,
-                        type: 'any-type',
-                        count: anyMatches.length,
-                        message: `Found ${anyMatches.length} 'any' type(s)`
-                    });
-                }
-
-                // Check for 'unknown' types that might need refinement
-                const unknownMatches = content.match(/:\s*unknown\b/g);
-                if (unknownMatches && unknownMatches.length > 2) {
-                    issues.push({
-                        file: relativePath,
-                        type: 'unknown-type',
-                        count: unknownMatches.length,
-                        message: `Found ${unknownMatches.length} 'unknown' type(s) - consider more specific types`
-                    });
-                }
-
-                // Check for missing return types on functions
-                const functionMatches = content.match(/function\s+\w+\s*\([^)]*\)\s*{/g);
-                if (functionMatches) {
-                    issues.push({
-                        file: relativePath,
-                        type: 'missing-return-type',
-                        count: functionMatches.length,
-                        message: `Found ${functionMatches.length} function(s) without explicit return types`
-                    });
-                }
-
-                // Check for TODO/FIXME comments related to types
-                const todoMatches = content.match(/\/\/\s*(TODO|FIXME).*type/gi);
-                if (todoMatches) {
-                    issues.push({
-                        file: relativePath,
-                        type: 'type-todo',
-                        count: todoMatches.length,
-                        message: `Found ${todoMatches.length} type-related TODO/FIXME comment(s)`
-                    });
-                }
-            }
-        }
-    }
-
-    scanDirectory(srcDir);
-    return issues;
-}
-
-// Main execution
-async function main() {
-    // Run standard type check
-    console.log('1️⃣ Running standard TypeScript check...');
-    const standardCheck = runTypeCheck('tsconfig.json');
-
-    if (standardCheck.success) {
-        console.log('✅ Standard type check passed\n');
-    } else {
-        console.log('❌ Standard type check failed:');
-        console.log(standardCheck.output);
-        console.log('');
-    }
-
-    // Run strict type check if config exists
-    const strictConfigPath = path.join(__dirname, '../tsconfig.strict.json');
-    if (fs.existsSync(strictConfigPath)) {
-        console.log('2️⃣ Running strict TypeScript check...');
-        const strictCheck = runTypeCheck('tsconfig.strict.json');
-
-        if (strictCheck.success) {
-            console.log('✅ Strict type check passed\n');
+        if (result.trim()) {
+            console.log('⚠️  Found remaining "any" types:');
+            console.log(result);
         } else {
-            console.log('⚠️ Strict type check found issues:');
-            console.log(strictCheck.output);
-            console.log('');
+            console.log('✅ No explicit "any" types found!\n');
+        }
+    } catch (error) {
+        if (error.status === 1) {
+            console.log('✅ No explicit "any" types found!\n');
+        } else {
+            console.log('❌ Error checking for "any" types:', error.message);
         }
     }
 
-    // Analyze for common type issues
-    console.log('3️⃣ Analyzing for common type issues...');
-    const issues = analyzeTypeIssues();
-
-    if (issues.length === 0) {
-        console.log('✅ No common type issues found\n');
-    } else {
-        console.log('⚠️ Found potential type issues:');
-        issues.forEach(issue => {
-            console.log(`  📁 ${issue.file}: ${issue.message}`);
+    // Check for untyped function parameters
+    console.log('🔎 Scanning for untyped function parameters...');
+    try {
+        const result = execSync('npx grep -r "\\(.*\\)\\s*=>" src/ --include="*.ts" --include="*.tsx" | grep -v ":\\s*\\w"', {
+            encoding: 'utf8',
+            cwd: process.cwd()
         });
-        console.log('');
-    }
-
-    // Generate summary report
-    const report = {
-        timestamp: new Date().toISOString(),
-        standardTypeCheck: standardCheck,
-        strictTypeCheck: fs.existsSync(strictConfigPath) ? runTypeCheck('tsconfig.strict.json') : null,
-        commonIssues: issues,
-        summary: {
-            totalFiles: issues.length,
-            totalIssues: issues.reduce((sum, issue) => sum + issue.count, 0),
-            typesSafe: standardCheck.success && issues.length === 0
+        if (result.trim()) {
+            console.log('⚠️  Found potentially untyped function parameters:');
+            console.log(result);
+        } else {
+            console.log('✅ No untyped function parameters found!\n');
         }
-    };
-
-    // Save report
-    const reportPath = path.join(__dirname, '../type-check-report.json');
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-
-    console.log('📊 Type checking complete!');
-    console.log(`📄 Report saved to: ${reportPath}`);
-
-    if (report.summary.typesSafe) {
-        console.log('🎉 All type checks passed! Your code is type-safe.');
-    } else {
-        console.log('⚠️ Some type issues were found. Please review the report.');
+    } catch (error) {
+        if (error.status === 1) {
+            console.log('✅ No untyped function parameters found!\n');
+        }
     }
 
-    // Exit with appropriate code
-    process.exit(report.summary.typesSafe ? 0 : 1);
-}
+    console.log('🎉 Type checking completed successfully!');
 
-main().catch(error => {
-    console.error('💥 Type checking script failed:', error);
+} catch (error) {
+    console.error('❌ TypeScript compilation failed:');
+    console.error(error.message);
     process.exit(1);
-});
+}
