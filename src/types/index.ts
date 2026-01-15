@@ -49,6 +49,8 @@ export * from './notification.types';
 export type {
     User,
     Employee,
+    Category,
+    AddPropertyPayload,
     RoleType,
     UserRoles,
     Role,

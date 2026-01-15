@@ -154,14 +154,15 @@ const Dashview = () => {
 
   // Get user from AuthContext or cookies
   const { user } = useAuth();
-  const getUserName = () => {
+  const getUserName = (): string => {
     if (user) {
-      return (user as any).fullname || (user as any).firstname || "User";
+      const userData = user as { fullname?: string; firstname?: string };
+      return userData.fullname || userData.firstname || "User";
     }
     const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
     if (storedUser) {
       try {
-        const userData = JSON.parse(storedUser);
+        const userData = JSON.parse(storedUser) as { fullname?: string; firstname?: string };
         return userData.fullname || userData.firstname || "User";
       } catch (e) {
         return "User";
@@ -170,8 +171,6 @@ const Dashview = () => {
     return "User";
   };
   const userName = getUserName();
-  const nameParts = userName?.split(" ") ?? [];
-  const lastName = nameParts[nameParts.length - 1] || "User";
 
   // Fetch dashboard data
   useEffect(() => {
@@ -253,7 +252,7 @@ const Dashview = () => {
       <div className="flex-1 flex flex-col overflow-hidden p-6">
         {/* Greeting */}
         <h1 className="text-[23px] font-extrabold pb-4">
-          Hello {lastName}
+          Hello {getUserName()}
         </h1>
 
         {/* Full-width Banner */}
@@ -294,7 +293,8 @@ const Dashview = () => {
             >
               Dashboard Overview
             </button>
-            <button
+
+            {/* <button
               onClick={() => setActiveSection('reports')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${activeSection === 'reports'
                 ? 'border-blue-500 text-blue-600'
@@ -302,7 +302,7 @@ const Dashview = () => {
                 }`}
             >
               Assessment Reports
-            </button>
+            </button> */}
           </nav>
         </div>
 
@@ -981,6 +981,8 @@ const Dashview = () => {
                 onSuccess={(policyId) => {
                   alert('Builder Liability Policy application submitted successfully!');
                   setShowBuilderLiabilityForm(false);
+                  // Trigger a page refresh to show the new policy
+                  window.location.reload();
                 }}
                 onCancel={() => setShowBuilderLiabilityForm(false)}
               />

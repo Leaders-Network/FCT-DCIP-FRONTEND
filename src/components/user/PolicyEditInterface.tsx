@@ -149,6 +149,22 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
         }
     };
 
+    // Typed event handlers
+    const handleTextInputChange = (section: keyof PolicyData, field: string) =>
+        (e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(section, field, e.target.value);
+
+    const handleTextAreaChange = (section: keyof PolicyData, field: string) =>
+        (e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange(section, field, e.target.value);
+
+    const handleSelectChange = (section: keyof PolicyData, field: string) =>
+        (e: React.ChangeEvent<HTMLSelectElement>) => handleInputChange(section, field, e.target.value);
+
+    const handleNumberInputChange = (section: keyof PolicyData, field: string) =>
+        (e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(section, field, Number(e.target.value));
+
+    const handleRcNumberChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+        handleInputChange('contactDetails', 'rcNumber', e.target.value.toUpperCase());
+
     const validateForm = (): boolean => {
         if (!policyData) return false;
 
@@ -351,7 +367,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             </label>
                                             <select
                                                 value={policyData.propertyDetails.propertyType}
-                                                onChange={(e) => handleInputChange('propertyDetails', 'propertyType', e.target.value)}
+                                                onChange={handleSelectChange('propertyDetails', 'propertyType')}
                                                 className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['propertyDetails.propertyType'] ? 'border-red-300' : 'border-gray-300'
                                                     }`}
                                             >
@@ -372,7 +388,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             <input
                                                 type="number"
                                                 value={policyData.propertyDetails.buildingValue}
-                                                onChange={(e) => handleInputChange('propertyDetails', 'buildingValue', Number(e.target.value))}
+                                                onChange={handleNumberInputChange('propertyDetails', 'buildingValue')}
                                                 className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['propertyDetails.buildingValue'] ? 'border-red-300' : 'border-gray-300'
                                                     }`}
                                             />
@@ -387,7 +403,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             </label>
                                             <textarea
                                                 value={policyData.propertyDetails.address}
-                                                onChange={(e) => handleInputChange('propertyDetails', 'address', e.target.value)}
+                                                onChange={handleTextAreaChange('propertyDetails', 'address')}
                                                 rows={3}
                                                 className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['propertyDetails.address'] ? 'border-red-300' : 'border-gray-300'
                                                     }`}
@@ -404,7 +420,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             <input
                                                 type="number"
                                                 value={policyData.propertyDetails.yearBuilt}
-                                                onChange={(e) => handleInputChange('propertyDetails', 'yearBuilt', e.target.value)}
+                                                onChange={handleTextInputChange('propertyDetails', 'yearBuilt')}
                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             />
                                         </div>
@@ -416,7 +432,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             <input
                                                 type="number"
                                                 value={policyData.propertyDetails.squareFootage}
-                                                onChange={(e) => handleInputChange('propertyDetails', 'squareFootage', Number(e.target.value))}
+                                                onChange={handleNumberInputChange('propertyDetails', 'squareFootage')}
                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             />
                                         </div>
@@ -427,7 +443,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             </label>
                                             <select
                                                 value={policyData.propertyDetails.constructionMaterial}
-                                                onChange={(e) => handleInputChange('propertyDetails', 'constructionMaterial', e.target.value)}
+                                                onChange={handleSelectChange('propertyDetails', 'constructionMaterial')}
                                                 className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['propertyDetails.constructionMaterial'] ? 'border-red-300' : 'border-gray-300'
                                                     }`}
                                             >
@@ -458,7 +474,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             <input
                                                 type="text"
                                                 value={policyData.contactDetails.fullName}
-                                                onChange={(e) => handleInputChange('contactDetails', 'fullName', e.target.value)}
+                                                onChange={handleTextInputChange('contactDetails', 'fullName')}
                                                 className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['contactDetails.fullName'] ? 'border-red-300' : 'border-gray-300'
                                                     }`}
                                             />
@@ -489,7 +505,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             <input
                                                 type="tel"
                                                 value={policyData.contactDetails.phoneNumber}
-                                                onChange={(e) => handleInputChange('contactDetails', 'phoneNumber', e.target.value)}
+                                                onChange={handleTextInputChange('contactDetails', 'phoneNumber')}
                                                 className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['contactDetails.phoneNumber'] ? 'border-red-300' : 'border-gray-300'
                                                     }`}
                                             />
@@ -505,7 +521,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             <input
                                                 type="tel"
                                                 value={policyData.contactDetails.alternatePhone}
-                                                onChange={(e) => handleInputChange('contactDetails', 'alternatePhone', e.target.value)}
+                                                onChange={handleTextInputChange('contactDetails', 'alternatePhone')}
                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             />
                                         </div>
@@ -517,7 +533,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             <input
                                                 type="text"
                                                 value={policyData.contactDetails.rcNumber}
-                                                onChange={(e) => handleInputChange('contactDetails', 'rcNumber', e.target.value.toUpperCase())}
+                                                onChange={handleRcNumberChange}
                                                 className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['contactDetails.rcNumber'] ? 'border-red-300' : 'border-gray-300'
                                                     }`}
                                                 style={{ textTransform: 'uppercase' }}
@@ -544,7 +560,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             </label>
                                             <select
                                                 value={policyData.requestDetails.coverageType}
-                                                onChange={(e) => handleInputChange('requestDetails', 'coverageType', e.target.value)}
+                                                onChange={handleSelectChange('requestDetails', 'coverageType')}
                                                 className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${validationErrors['requestDetails.coverageType'] ? 'border-red-300' : 'border-gray-300'
                                                     }`}
                                             >
@@ -566,7 +582,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
                                             </label>
                                             <textarea
                                                 value={policyData.requestDetails.specialRequests}
-                                                onChange={(e) => handleInputChange('requestDetails', 'specialRequests', e.target.value)}
+                                                onChange={handleTextAreaChange('requestDetails', 'specialRequests')}
                                                 rows={3}
                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                 placeholder="Any special requirements or additional information..."

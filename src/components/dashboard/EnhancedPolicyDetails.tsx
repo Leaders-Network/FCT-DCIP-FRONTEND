@@ -151,7 +151,7 @@ const EnhancedPolicyDetails: React.FC<EnhancedPolicyDetailsProps> = ({
                     {enhancedStatus?.currentStatus?.toLowerCase() === 'completed' && (
                         <button
                             onClick={() => {
-                                window.location.href = `/dashboard/policies?action=claim&policyId=${policyId}`;
+                                window.location.href = `/dashboard/insurance?action=claim&policyId=${policyId}`;
                             }}
                             className="flex items-center px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
                         >

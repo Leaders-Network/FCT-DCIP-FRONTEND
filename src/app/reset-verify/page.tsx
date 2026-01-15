@@ -1,7 +1,7 @@
 import ResetVerify from "@/components/ResetVerify";
 import React from "react";
 
-export default function page() {
+export default function ResetVerifyPage() {
   return (
     <>
       <ResetVerify />

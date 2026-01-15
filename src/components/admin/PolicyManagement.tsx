@@ -11,10 +11,26 @@ import { adminApi, reviewSubmission, getSubmissionByAssignment } from '@/service
 import { useAuth } from '@/context/useAuth';
 import { useRouter } from 'next/navigation';
 import AssignSurveyorModal from './AssignSurveyorModal';
+import { PolicyDetailsModal } from '@/components/builderLiability/PolicyDetailsModal';
 
 // Legacy imports for backward compatibility during transition
 import { PolicyRequest } from '@/types/api.types';
 import { deletePolicyRequest } from '@/services/api';
+
+// Union type for handling both legacy and new policy types
+type MixedPolicy = PolicyRequest;
+
+// Type guard functions
+const isBuilderLiabilityPolicy = (policy: PolicyRequest): policy is PolicyRequest & {
+  isBuilderLiabilityPolicy: true;
+  originalBLPolicy: BuilderLiabilityPolicy;
+} => {
+  return policy.isBuilderLiabilityPolicy === true;
+};
+
+const getPolicyStatus = (policy: PolicyRequest): string => {
+  return policy.status || 'unknown';
+};
 
 interface PolicyManagementProps { }
 
@@ -38,7 +54,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [selectedPolicySubmissions, setSelectedPolicySubmissions] = useState<EnhancedSurveySubmission[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'submitted' | 'assigned' | 'surveyed' | 'requires_more_info' | 'rejected'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'submitted' | 'assigned' | 'surveyed' | 'revision_required' | 'rejected'>('all');
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
@@ -92,18 +108,16 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
   const fetchPoliciesAndSurveyors = async () => {
     try {
-      // Fetch both legacy policies and new Builder Liability Policies
-      const [policiesResponse, surveyorsResponse] = await Promise.all([
-        adminApi.getPolicies({ status: 'all', page: 1, limit: 100 }),
-        adminApi.getSurveyors(),
-      ]);
-      setPolicies(policiesResponse.data.policyRequests);
+      // Fetch surveyors and Builder Liability Policies only
+      const surveyorsResponse = await adminApi.getSurveyors();
       setSurveyors(surveyorsResponse.data);
 
-      // Also fetch Builder Liability Policies
+      // Fetch Builder Liability Policies
       fetchBLPolicies();
     } catch (error) {
       console.error('Failed to fetch policies and surveyors:', error);
+      // Ensure policies is always an array even on error
+      setPolicies([]);
     }
   };
 
@@ -111,35 +125,38 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     fetchPoliciesAndSurveyors();
   }, []);
 
-  // Combine legacy policies with Builder Liability Policies for display
+  // Use only Builder Liability Policies for display
   const allPoliciesForDisplay = React.useMemo(() => {
+    const safeBuilderLiabilityPolicies = Array.isArray(builderLiabilityPolicies) ? builderLiabilityPolicies : [];
+
     // Convert Builder Liability Policies to display format
-    const blPoliciesAsDisplay = builderLiabilityPolicies.map(blp => ({
+    return safeBuilderLiabilityPolicies.map(blp => ({
       _id: blp._id,
+      userId: blp.userId || '',
       propertyDetails: {
-        propertyType: `Builder Liability - ${blp.builder.nameOfBuilder}`,
-        address: blp.builder.address,
-        buildingValue: blp.project.totalEstimateSum,
-        plotNumber: '', // Not applicable for Builder Liability
+        propertyType: `Builder Liability - ${blp.builder?.nameOfBuilder || 'Unknown'}`,
+        address: blp.builder?.address || '',
+        buildingValue: blp.project?.totalEstimateSum || 0,
+        plotNumber: '',
         cadastralZone: '',
         district: '',
-        fullAddress: blp.builder.address,
-        yearBuilt: '',
+        fullAddress: blp.builder?.address || '',
+        yearBuilt: 0,
         squareFootage: 0,
         constructionMaterial: ''
       },
       contactDetails: {
-        fullName: blp.builder.nameOfBuilder,
-        email: blp.builder.customerEmail,
-        phoneNumber: blp.builder.telNo,
+        fullName: blp.builder?.nameOfBuilder || '',
+        email: blp.builder?.customerEmail || '',
+        phoneNumber: blp.builder?.telNo || '',
         alternatePhone: '',
-        rcNumber: blp.builder.rcNumber
+        rcNumber: blp.builder?.rcNumber || ''
       },
       requestDetails: {
-        coverageType: blp.project.coverTypeIdxDetails || 'Builder Liability',
+        coverageType: blp.project?.coverTypeIdxDetails || 'Builder Liability',
         policyDuration: '1 Year',
         additionalCoverage: [],
-        specialRequests: blp.project.workDetails || ''
+        specialRequests: blp.project?.workDetails || ''
       },
       status: blp.status,
       createdAt: blp.createdAt,
@@ -148,14 +165,12 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       surveyNotes: blp.surveyNotes,
       adminNotes: blp.adminNotes,
       documents: blp.documents || [],
+      policyNumber: blp.policyNumber,
       // Mark as Builder Liability Policy for special handling
       isBuilderLiabilityPolicy: true,
       originalBLPolicy: blp
-    }));
-
-    // Combine with legacy policies
-    return [...policies, ...blPoliciesAsDisplay];
-  }, [policies, builderLiabilityPolicies]);
+    } as PolicyRequest));
+  }, [builderLiabilityPolicies]);
 
   const filteredPolicies = Array.isArray(allPoliciesForDisplay)
     ? allPoliciesForDisplay.filter(policy => {
@@ -226,7 +241,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
   const hasActiveFilters = searchQuery || Object.values(filters).some(v => v !== "");
 
-  const handleReviewSubmission = async (decision: 'approved' | 'rejected' | 'requires_more_info') => {
+  const handleReviewSubmission = async (decision: 'approved' | 'rejected' | 'revision_required') => {
     try {
       if (!selectedPolicy || selectedPolicySubmissions.length === 0) return;
 
@@ -303,10 +318,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     }
   };
 
-  const handleDeletePolicy = async (policy: PolicyRequest) => {
+  const handleDeletePolicy = async (policy: MixedPolicy) => {
     try {
-      // Check if this is a Builder Liability Policy
-      if (policy.isBuilderLiabilityPolicy && policy.originalBLPolicy) {
+      // Type guard to check if it's a Builder Liability Policy
+      if ('isBuilderLiabilityPolicy' in policy && policy.isBuilderLiabilityPolicy && policy.originalBLPolicy) {
         await builderLiabilityPolicyAPI.deletePolicy(policy.originalBLPolicy._id);
         // Refresh Builder Liability Policies
         fetchBLPolicies();
@@ -332,7 +347,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       surveyed: { color: "bg-purple-100 text-purple-800", icon: Eye, text: "Surveyed" },
       approved: { color: "bg-green-100 text-green-800", icon: CheckCircle, text: "Approved" },
       rejected: { color: "bg-red-100 text-red-800", icon: XCircle, text: "Rejected" },
-      requires_more_info: { color: "bg-orange-100 text-orange-800", icon: Clock, text: "Requires More Info" },
+      revision_required: { color: "bg-orange-100 text-orange-800", icon: Clock, text: "Requires More Info" },
       completed: { color: "bg-gray-100 text-gray-800", icon: CheckCircle, text: "Completed" },
       sent_to_user: { color: "bg-cyan-100 text-cyan-800", icon: CheckCircle, text: "Sent to User" }
     };
@@ -544,7 +559,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             { key: 'submitted', label: 'Submitted', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'submitted').length : 0 },
             { key: 'assigned', label: 'Assigned', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'assigned').length : 0 },
             { key: 'surveyed', label: 'Surveyed', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'surveyed').length : 0 },
-            { key: 'requires_more_info', label: 'Needs More Info', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'requires_more_info').length : 0 },
+            { key: 'revision_required', label: 'Needs More Info', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'revision_required').length : 0 },
             { key: 'rejected', label: 'Rejected', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'rejected').length : 0 }
           ].map(tab => (
             <button
@@ -629,7 +644,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                         <p className="text-sm text-gray-500">{policy.requestDetails.policyDuration}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4">{getStatusBadge(policy.status)}</td>
+                    <td className="px-6 py-4">{getStatusBadge(getPolicyStatus(policy))}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{new Date(policy.createdAt).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-sm font-medium">
                       <div className="relative dropdown-container">
@@ -705,7 +720,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                                   </button>
                                 </>
                               )}
-                              {['submitted', 'assigned', 'rejected'].includes(policy.status) && (
+                              {['submitted', 'assigned', 'rejected'].includes(getPolicyStatus(policy)) && (
                                 <button
                                   onClick={() => {
                                     setPolicyToDelete(policy);
@@ -807,7 +822,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                       alert('Please provide feedback in the review notes when requesting more information.');
                       return;
                     }
-                    handleReviewSubmission('requires_more_info');
+                    handleReviewSubmission('revision_required');
                   }}
                   className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
                 >
@@ -857,8 +872,25 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       )}
 
       {/* Policy Details Modal */}
-      {showDetailsModal && selectedPolicy && (
-        <PolicyDetailsModal
+      {showDetailsModal && selectedPolicy && isBuilderLiabilityPolicy(selectedPolicy) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            {/* Import and use the Builder Liability Policy Details Modal */}
+            <PolicyDetailsModal
+              policy={selectedPolicy.originalBLPolicy}
+              isOpen={true}
+              onClose={() => {
+                setShowDetailsModal(false);
+                setSelectedPolicy(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Legacy Policy Details Modal - for non-Builder Liability policies */}
+      {showDetailsModal && selectedPolicy && !isBuilderLiabilityPolicy(selectedPolicy) && (
+        <LegacyPolicyDetailsModal
           policy={selectedPolicy}
           getStatusBadge={getStatusBadge}
           onClose={() => {
@@ -871,14 +903,14 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   );
 };
 
-// Policy Details Modal Component
-interface PolicyDetailsModalProps {
-  policy: PolicyRequest;
+// Legacy Policy Details Modal Component
+interface LegacyPolicyDetailsModalProps {
+  policy: MixedPolicy;
   getStatusBadge: (status: string) => JSX.Element;
   onClose: () => void;
 }
 
-const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, getStatusBadge, onClose }) => {
+const LegacyPolicyDetailsModal: React.FC<LegacyPolicyDetailsModalProps> = ({ policy, getStatusBadge, onClose }) => {
   const [surveyData, setSurveyData] = useState<EnhancedSurveySubmission | null>(null);
   const [assignmentData, setAssignmentData] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -950,7 +982,7 @@ const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({ policy, getStat
           </div>
           <div className="flex items-center space-x-4 mt-4">
             <div className="flex items-center space-x-2">
-              {getStatusBadge(policy.status)}
+              {getStatusBadge(getPolicyStatus(policy))}
             </div>
             <div className="text-sm text-gray-600">
               <span className="font-medium">Submitted:</span> {new Date(policy.createdAt).toLocaleDateString()}

@@ -292,6 +292,19 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
         }));
     };
 
+    // Typed event handlers
+    const handleSelectChange = (field: keyof ConflictInquiry) =>
+        (e: React.ChangeEvent<HTMLSelectElement>) => handleInputChange(field, e.target.value);
+
+    const handleTextAreaChange = (field: keyof ConflictInquiry) =>
+        (e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange(field, e.target.value);
+
+    const handleTextInputChange = (field: keyof ConflictInquiry) =>
+        (e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(field, e.target.value);
+
+    const handleContactInputChange = (field: string) =>
+        (e: React.ChangeEvent<HTMLInputElement>) => handleContactChange(field, e.target.value);
+
     if (!isOpen) return null;
 
     return (
@@ -388,7 +401,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                 </label>
                                 <select
                                     value={formData.policyId}
-                                    onChange={(e) => handleInputChange('policyId', e.target.value)}
+                                    onChange={handleSelectChange('policyId')}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                     disabled={loadingPolicies}
@@ -440,7 +453,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                 </label>
                                 <select
                                     value={formData.conflictType}
-                                    onChange={(e) => handleInputChange('conflictType', e.target.value)}
+                                    onChange={handleSelectChange('conflictType')}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 >
@@ -460,7 +473,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                 </label>
                                 <textarea
                                     value={formData.description}
-                                    onChange={(e) => handleInputChange('description', e.target.value)}
+                                    onChange={handleTextAreaChange('description')}
                                     rows={5}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Please provide a detailed description of your concern, including specific issues and any supporting information..."
@@ -484,7 +497,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                                 name="urgency"
                                                 value={level.value}
                                                 checked={formData.urgency === level.value}
-                                                onChange={(e) => handleInputChange('urgency', e.target.value)}
+                                                onChange={handleTextInputChange('urgency')}
                                                 className="mr-3"
                                             />
                                             <span className={`text-sm ${level.color}`}>
@@ -507,7 +520,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                         <input
                                             type="text"
                                             value={formData.userContact.name}
-                                            onChange={(e) => handleContactChange('name', e.target.value)}
+                                            onChange={handleContactInputChange('name')}
                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         />
@@ -520,7 +533,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                         <input
                                             type="email"
                                             value={formData.userContact.email}
-                                            onChange={(e) => handleContactChange('email', e.target.value)}
+                                            onChange={handleContactInputChange('email')}
                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         />
@@ -533,7 +546,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                         <input
                                             type="tel"
                                             value={formData.userContact.phone}
-                                            onChange={(e) => handleContactChange('phone', e.target.value)}
+                                            onChange={handleContactInputChange('phone')}
                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             placeholder="Optional"
                                         />
@@ -545,7 +558,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                         </label>
                                         <select
                                             value={formData.contactPreference}
-                                            onChange={(e) => handleInputChange('contactPreference', e.target.value)}
+                                            onChange={handleSelectChange('contactPreference')}
                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                         >
                                             <option value="email">Email Only</option>

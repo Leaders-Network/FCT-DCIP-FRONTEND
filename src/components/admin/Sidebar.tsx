@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  Home, Users, FileText, Settings, Building, ClipboardList, Shield,
+  Home, Users, FileText, Settings, ClipboardList, Shield,
   AlertTriangle, UserCheck, X, LucideIcon
 } from "lucide-react";
 import { IoMdLogOut } from "react-icons/io";
@@ -98,9 +98,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
       {/* NAV */}
       <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <NavItem collapsed={collapsed} href="/admin/dashboard" icon={Home} label="Dashboard" onClick={isMobile ? onClose : undefined} />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/property" icon={Building} label="Property" onClick={isMobile ? onClose : undefined} />
+        {/* <NavItem collapsed={collapsed} href="/admin/dashboard/property" icon={Building} label="Property" onClick={isMobile ? onClose : undefined} /> */}
         <NavItem collapsed={collapsed} href="/admin/dashboard/policies" icon={FileText} label="Policies" onClick={isMobile ? onClose : undefined} />
-        <NavItem collapsed={collapsed} href="/admin/dashboard/dual-assignments" icon={UserCheck} label="Assignments" onClick={isMobile ? onClose : undefined} />
+        <NavItem collapsed={collapsed} href="/admin/dashboard/assignments" icon={UserCheck} label="Assignments" onClick={isMobile ? onClose : undefined} />
         <NavItem collapsed={collapsed} href="/admin/dashboard/enforcement" icon={Shield} label="Enforcement" onClick={isMobile ? onClose : undefined} />
         <NavItem collapsed={collapsed} href="/admin/dashboard/surveyors" icon={Users} label="Surveyors" onClick={isMobile ? onClose : undefined} />
         <NavItem collapsed={collapsed} href="/admin/dashboard/administrators" icon={ClipboardList} label="Administrators" onClick={isMobile ? onClose : undefined} />

@@ -2,10 +2,23 @@
 import React, { useState } from 'react';
 import { CreditCard, CheckCircle, XCircle, Clock } from 'lucide-react';
 
+interface TestResult {
+    success: boolean;
+    data?: {
+        policyId: string;
+        oldStatus: string;
+        newStatus: string;
+        paymentStatus: string;
+        transactionId: string;
+    };
+    error?: string;
+    status: 'payment_approved' | 'payment_rejected';
+}
+
 export default function TestPaymentPage() {
     const [policyId, setPolicyId] = useState('');
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<TestResult | null>(null);
 
     const testPaymentWebhook = async (status: 'payment_approved' | 'payment_rejected') => {
         if (!policyId.trim()) {
@@ -98,8 +111,8 @@ export default function TestPaymentPage() {
                         {/* Results */}
                         {result && (
                             <div className={`p-4 rounded-lg border ${result.success
-                                    ? 'bg-green-50 border-green-200'
-                                    : 'bg-red-50 border-red-200'
+                                ? 'bg-green-50 border-green-200'
+                                : 'bg-red-50 border-red-200'
                                 }`}>
                                 <div className="flex items-center mb-3">
                                     {result.success ? (

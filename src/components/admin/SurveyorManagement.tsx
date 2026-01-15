@@ -67,6 +67,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     specializations: [] as string[],
     licenseNumber: "",
     address: "",
+    state: "",
+    city: "",
+    lga: "",
+    district: "",
     emergencyContact: "",
     notes: "",
     role: "Surveyor",
@@ -87,9 +91,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         const { adminApi, getPolicyRequests } = await import("@/services/api");
 
         // Fetch surveyors
-        const surveyorResponse = await adminApi.getSurveyors({
-          organization: "AMMC"
-        });
+        const surveyorResponse = await adminApi.getSurveyors({});
 
         if (surveyorResponse?.success && surveyorResponse?.data) {
           setSurveyors(surveyorResponse.data);
@@ -128,7 +130,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         const filters = {
           status: statusFilter !== "all" ? statusFilter : undefined,
           specialization: specializationFilter !== "all" ? specializationFilter : undefined,
-          organization: "AMMC",
           search: searchTerm || undefined
         };
 
@@ -257,7 +258,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       const filters = {
         status: statusFilter !== "all" ? statusFilter : undefined,
         specialization: specializationFilter !== "all" ? specializationFilter : undefined,
-        organization: "AMMC",
         search: searchTerm || undefined
       };
 
@@ -291,6 +291,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         specializations: [],
         licenseNumber: "",
         address: "",
+        state: "",
+        city: "",
+        lga: "",
+        district: "",
         emergencyContact: "",
         notes: "",
         role: "Surveyor",
@@ -345,6 +349,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       specializations: surveyor.profile?.specialization || surveyor.specializations || [],
       licenseNumber: surveyor.licenseNumber || "",
       address: surveyor.profile?.location?.state || surveyor.address || "",
+      state: surveyor.profile?.location?.state || "",
+      city: surveyor.profile?.location?.city || "",
+      lga: surveyor.profile?.location?.lga || "",
+      district: surveyor.profile?.location?.district || "",
       emergencyContact: surveyor.emergencyContact || "",
       notes: surveyor.notes || "",
       role: surveyor.role || "Surveyor",
@@ -380,15 +388,15 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">AMMC Surveyor Management</h2>
-          <p className="text-gray-600">Comprehensive management of AMMC surveyor profiles, qualifications, and assignments</p>
+          <h2 className="text-2xl font-bold text-gray-900">Surveyor Management</h2>
+          <p className="text-gray-600">Comprehensive management of surveyor profiles, qualifications, and LGA-based assignments</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
           className="bg-[#028835] text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add AMMC Surveyor
+          Add Surveyor
         </button>
       </div>
 
@@ -399,7 +407,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search AMMC surveyors..."
+              placeholder="Search surveyors..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2"
@@ -592,10 +600,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold">
-                    {showCreateModal ? "Add New AMMC Surveyor" : "Edit AMMC Surveyor"}
+                    {showCreateModal ? "Add New Surveyor" : "Edit Surveyor"}
                   </h2>
                   <p className="text-green-100 mt-1">
-                    {showCreateModal ? 'Register a new AMMC surveyor' : 'Update surveyor information'}
+                    {showCreateModal ? 'Register a new surveyor with LGA assignment' : 'Update surveyor information'}
                   </p>
                 </div>
                 <button
@@ -689,6 +697,41 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                       placeholder="Enter full address"
                       required
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        LGA (Local Government Area) *
+                      </label>
+                      <select
+                        value={formData.lga}
+                        onChange={(e) => setFormData({ ...formData, lga: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        required
+                      >
+                        <option value="">Select LGA</option>
+                        <option value="amac">Abuja Municipal Area Council (AMAC)</option>
+                        <option value="bwari">Bwari Area Council</option>
+                        <option value="gwagwalada">Gwagwalada Area Council</option>
+                        <option value="kuje">Kuje Area Council</option>
+                        <option value="abaji">Abaji Area Council</option>
+                        <option value="kwali">Kwali Area Council</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        District
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.district}
+                        onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter district within LGA"
+                      />
+                    </div>
                   </div>
                 </div>
 
