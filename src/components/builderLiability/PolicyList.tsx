@@ -41,6 +41,48 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
     const [selectedPolicy, setSelectedPolicy] = useState<BuilderLiabilityPolicy | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+
+    const handleProceedToPayment = async (policy: BuilderLiabilityPolicy) => {
+        try {
+            setProcessingPayment(policy._id);
+
+            // Make request to NIIP payment gateway
+            const response = await fetch('http://uat.niip.ng/api/payment/initiate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    policyNumber: policy.policyNumber,
+                    policyId: policy._id,
+                    amount: policy.project.totalEstimateSum,
+                    builderName: policy.builder.nameOfBuilder,
+                    builderEmail: policy.builder.customerEmail,
+                    builderPhone: policy.builder.telNo,
+                    rcNumber: policy.builder.rcNumber
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to initiate payment');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.transactionId) {
+                // Redirect to payment page or open payment modal
+                window.location.href = `http://uat.niip.ng/payment/${data.transactionId}`;
+            } else {
+                throw new Error(data.message || 'Payment initiation failed');
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            alert('Failed to initiate payment. Please try again or contact support.');
+        } finally {
+            setProcessingPayment(null);
+        }
+    };
 
     const handleViewDetails = async (policy: BuilderLiabilityPolicy) => {
         try {
@@ -324,11 +366,31 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {policy.status === 'approved' && (
-                                                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                                {/* Show payment button only if survey is completed and approved */}
+                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'approve' && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-green-600 hover:bg-green-700"
+                                                        onClick={() => handleProceedToPayment(policy)}
+                                                        disabled={processingPayment === policy._id}
+                                                    >
                                                         <CreditCard className="w-4 h-4 mr-2" />
-                                                        Complete Payment
+                                                        {processingPayment === policy._id ? 'Processing...' : 'Proceed to Payment'}
                                                     </Button>
+                                                )}
+                                                {/* Show rejection message if rejected */}
+                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'reject' && (
+                                                    <Badge className="bg-red-100 text-red-800">
+                                                        <XCircle className="w-3 h-3 mr-1" />
+                                                        Policy Rejected
+                                                    </Badge>
+                                                )}
+                                                {/* Show info needed message */}
+                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'request_more_info' && (
+                                                    <Badge className="bg-amber-100 text-amber-800">
+                                                        <AlertCircle className="w-3 h-3 mr-1" />
+                                                        More Info Required
+                                                    </Badge>
                                                 )}
                                                 <Button
                                                     size="sm"
