@@ -164,6 +164,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         // Convert form data to API format
         const policyData = {
+            status: 'submitted', // Set status to submitted for auto-assignment
             builder: {
                 customerEmail: formData.builderEmail,
                 nameOfBuilder: formData.builderName,
