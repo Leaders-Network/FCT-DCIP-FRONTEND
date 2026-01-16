@@ -47,38 +47,34 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         try {
             setProcessingPayment(policy._id);
 
-            // Make request to NIIP payment gateway
-            const response = await fetch('http://uat.niip.ng/api/payment/initiate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    policyNumber: policy.policyNumber,
-                    policyId: policy._id,
-                    amount: policy.project.totalEstimateSum,
-                    builderName: policy.builder.nameOfBuilder,
-                    builderEmail: policy.builder.customerEmail,
-                    builderPhone: policy.builder.telNo,
-                    rcNumber: policy.builder.rcNumber
-                })
-            });
+            console.log('💳 Initiating payment through backend...');
 
-            if (!response.ok) {
-                throw new Error('Failed to initiate payment');
-            }
+            // Make request to backend payment endpoint (which will proxy to NIIP)
+            const api = (await import('@/services/api')).default;
+            const response = await api.post(`/payment/initiate/${policy._id}`);
 
-            const data = await response.json();
+            const data = response.data;
+            console.log('Payment Response:', data);
 
-            if (data.success && data.transactionId) {
-                // Redirect to payment page or open payment modal
-                window.location.href = `http://uat.niip.ng/payment/${data.transactionId}`;
+            if (data.success && data.data) {
+                const paymentData = data.data;
+
+                alert(`✅ Payment Initiated Successfully!\n\nInvoice Number: ${paymentData.invoiceNumber}\nTransaction Reference: ${paymentData.transactionReference}\nAmount: ₦${paymentData.amount}\nInsurance Company: ${paymentData.companyName}\n\nYou will be redirected to complete the payment.`);
+
+                // Redirect to NIIP payment page if encrypted reference is provided
+                if (paymentData.encryptTransRef) {
+                    window.location.href = `http://uat.niip.ng/payment/${paymentData.encryptTransRef}`;
+                } else {
+                    // Refresh the page to show updated payment status
+                    window.location.reload();
+                }
             } else {
                 throw new Error(data.message || 'Payment initiation failed');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Payment error:', error);
-            alert('Failed to initiate payment. Please try again or contact support.');
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to initiate payment';
+            alert(`❌ Payment Error\n\n${errorMessage}\n\nPlease try again or contact support.`);
         } finally {
             setProcessingPayment(null);
         }
