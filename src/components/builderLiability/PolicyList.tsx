@@ -41,6 +41,44 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
     const [selectedPolicy, setSelectedPolicy] = useState<BuilderLiabilityPolicy | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+
+    const handleProceedToPayment = async (policy: BuilderLiabilityPolicy) => {
+        try {
+            setProcessingPayment(policy._id);
+
+            console.log('💳 Initiating payment through backend...');
+
+            // Make request to backend payment endpoint (which will proxy to NIIP)
+            const api = (await import('@/services/api')).default;
+            const response = await api.post(`/payment/initiate/${policy._id}`);
+
+            const data = response.data;
+            console.log('Payment Response:', data);
+
+            if (data.success && data.data) {
+                const paymentData = data.data;
+
+                alert(`✅ Payment Initiated Successfully!\n\nInvoice Number: ${paymentData.invoiceNumber}\nTransaction Reference: ${paymentData.transactionReference}\nAmount: ₦${paymentData.amount}\nInsurance Company: ${paymentData.companyName}\n\nYou will be redirected to complete the payment.`);
+
+                // Redirect to NIIP payment page if encrypted reference is provided
+                if (paymentData.encryptTransRef) {
+                    window.location.href = `http://uat.niip.ng/payment/${paymentData.encryptTransRef}`;
+                } else {
+                    // Refresh the page to show updated payment status
+                    window.location.reload();
+                }
+            } else {
+                throw new Error(data.message || 'Payment initiation failed');
+            }
+        } catch (error: any) {
+            console.error('Payment error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to initiate payment';
+            alert(`❌ Payment Error\n\n${errorMessage}\n\nPlease try again or contact support.`);
+        } finally {
+            setProcessingPayment(null);
+        }
+    };
 
     const handleViewDetails = async (policy: BuilderLiabilityPolicy) => {
         try {
@@ -324,11 +362,31 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {policy.status === 'approved' && (
-                                                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                                {/* Show payment button only if survey is completed and approved */}
+                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'approve' && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-green-600 hover:bg-green-700"
+                                                        onClick={() => handleProceedToPayment(policy)}
+                                                        disabled={processingPayment === policy._id}
+                                                    >
                                                         <CreditCard className="w-4 h-4 mr-2" />
-                                                        Complete Payment
+                                                        {processingPayment === policy._id ? 'Processing...' : 'Proceed to Payment'}
                                                     </Button>
+                                                )}
+                                                {/* Show rejection message if rejected */}
+                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'reject' && (
+                                                    <Badge className="bg-red-100 text-red-800">
+                                                        <XCircle className="w-3 h-3 mr-1" />
+                                                        Policy Rejected
+                                                    </Badge>
+                                                )}
+                                                {/* Show info needed message */}
+                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'request_more_info' && (
+                                                    <Badge className="bg-amber-100 text-amber-800">
+                                                        <AlertCircle className="w-3 h-3 mr-1" />
+                                                        More Info Required
+                                                    </Badge>
                                                 )}
                                                 <Button
                                                     size="sm"
