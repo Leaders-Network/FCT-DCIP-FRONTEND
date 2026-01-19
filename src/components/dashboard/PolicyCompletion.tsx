@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical, Shield, Eye, AlertTriangle } from "lucide-react";
 import { PolicyRequest, UserReport } from "@/types/api.types";
-import { getUserPolicyRequests, deletePolicyRequest, userReportAPI } from "@/services/api";
+import { builderLiabilityPolicyAPI, userReportAPI } from "@/services/api";
 import MergedReportDetailsModal from "@/components/user/MergedReportDetailsModal";
 
 interface PolicyCompletionProps { }
@@ -43,17 +43,17 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       try {
         // Fetch both old completed policies and new merged reports
         const [approvedResponse, surveyedResponse, rejectedResponse, completedResponse, reportsResponse] = await Promise.all([
-          getUserPolicyRequests("approved", 1, 100),
-          getUserPolicyRequests("surveyed", 1, 100),
-          getUserPolicyRequests("rejected", 1, 100),
-          getUserPolicyRequests("completed", 1, 100),
+          builderLiabilityPolicyAPI.getUserPolicies({ status: "approved", page: 1, limit: 100 }),
+          builderLiabilityPolicyAPI.getUserPolicies({ status: "surveyed", page: 1, limit: 100 }),
+          builderLiabilityPolicyAPI.getUserPolicies({ status: "rejected", page: 1, limit: 100 }),
+          builderLiabilityPolicyAPI.getUserPolicies({ status: "completed", page: 1, limit: 100 }),
           userReportAPI.getUserReports(1, 100)
         ]);
 
-        const approved = approvedResponse.data.policyRequests || [];
-        const surveyed = surveyedResponse.data.policyRequests || [];
-        const rejected = rejectedResponse.data.policyRequests || [];
-        const completed = completedResponse.data.policyRequests || [];
+        const approved = approvedResponse.data.policies || [];
+        const surveyed = surveyedResponse.data.policies || [];
+        const rejected = rejectedResponse.data.policies || [];
+        const completed = completedResponse.data.policies || [];
 
         // Separate completed and rejected policies
         setCompletedPolicies([...approved, ...surveyed, ...completed]);
@@ -79,7 +79,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
   const handleDeletePolicy = async (policy: PolicyRequest) => {
     try {
-      await deletePolicyRequest(policy._id);
+      await builderLiabilityPolicyAPI.deletePolicy(policy._id);
       setCompletedPolicies(prev => prev.filter(p => p._id !== policy._id));
       setRejectedPolicies(prev => prev.filter(p => p._id !== policy._id));
       setShowDeleteModal(false);

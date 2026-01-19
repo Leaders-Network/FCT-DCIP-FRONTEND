@@ -129,8 +129,8 @@ const PropertyPage = () => {
   const handlePolicyRequest = async (data: CreatePolicyRequestData) => {
     try {
       console.log("Submitting policy request with data:", data);
-      const { submitPolicyRequest } = await import("@/services/api");
-      await submitPolicyRequest(data);
+      const { builderLiabilityPolicyAPI } = await import("@/services/api");
+      await builderLiabilityPolicyAPI.createPolicy(data);
       alert("Policy request submitted successfully!");
       setShowPolicyRequest(false);
     } catch (error) {
