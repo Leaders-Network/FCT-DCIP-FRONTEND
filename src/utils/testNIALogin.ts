@@ -50,5 +50,5 @@ export const testNIAAdminLogin = async () => {
 
 // Test function that can be called from browser console
 if (typeof window !== 'undefined') {
-    (window as any).testNIALogin = testNIAAdminLogin;
+    (window as unknown as Window & { testNIALogin: typeof testNIAAdminLogin }).testNIALogin = testNIAAdminLogin;
 }

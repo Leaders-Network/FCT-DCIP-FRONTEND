@@ -4,10 +4,10 @@ import { Assignment, PolicyRequest, ContactLogEntry } from '@/types/api.types';
 import { SurveySubmissionData } from '@/types/component.types';
 
 interface SurveySubmissionModalProps {
-    policy: PolicyRequest;
+    policy: any; // Accept any policy type for now
     assignment: Assignment;
     isOpen: boolean;
-    onSubmit: (submission: SurveySubmissionData) => Promise<void>;
+    onSubmit: (submission: FormData) => Promise<void>;
     onClose: () => void;
 }
 
@@ -39,9 +39,23 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const submissionData = new FormData();
+
+        // Append non-file data. Note that complex objects are stringified.
+        submissionData.append('surveyNotes', formData.surveyNotes);
+        submissionData.append('recommendedAction', formData.recommendedAction);
+        submissionData.append('contactLog', JSON.stringify(formData.contactLog));
+        submissionData.append('surveyDetails', JSON.stringify(formData.surveyDetails));
+
+        // Append files
+        uploadedFiles.forEach(file => {
+            submissionData.append('documents', file);
+        });
+
+
         try {
             setLoading(true);
-            await onSubmit(formData);
+            await onSubmit(submissionData);
         } catch (error) {
             console.error('Error submitting survey:', error);
             alert('Failed to submit survey. Please try again.');
@@ -75,8 +89,13 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                         <div>
                             <h2 className="text-xl font-bold">Submit Survey Report</h2>
                             <p className="text-green-100 mt-1">
-                                {policy.propertyDetails.propertyType} - {policy.propertyDetails.address}
+                                {policy?.project?.projectType || policy?.propertyDetails?.propertyType || 'Construction Project'} - {policy?.project?.address || policy?.propertyDetails?.address || 'Address not available'}
                             </p>
+                            {policy?.policyNumber && (
+                                <p className="text-green-100 text-sm mt-1">
+                                    Policy #{policy.policyNumber}
+                                </p>
+                            )}
                         </div>
                         <button
                             onClick={onClose}

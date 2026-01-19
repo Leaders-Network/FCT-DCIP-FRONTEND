@@ -200,14 +200,14 @@ export default function GenerateReportsPage() {
                             <div className="mt-4">
                                 <h5 className="font-medium mb-2">Created Reports:</h5>
                                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                                    {result.data.reports.slice(0, 10).map((report: { _id: string; policyId: string; status: string; createdAt: string }, index: number) => (
+                                    {result.data.reports.slice(0, 10).map((report: { _id: string; policyId: string; status: string; createdAt: string; propertyDetails?: { address?: string } }, index: number) => (
                                         <div key={index} className="flex items-center justify-between p-2 border rounded">
                                             <div>
                                                 <div className="font-medium text-sm">
                                                     Policy: {report.policyId.substring(0, 8)}...
                                                 </div>
                                                 <div className="text-xs text-gray-600">
-                                                    {(report as any).propertyAddress || 'No address'}
+                                                    {report.propertyDetails?.address || 'No address'}
                                                 </div>
                                             </div>
                                             <Badge className="bg-green-100 text-green-800">

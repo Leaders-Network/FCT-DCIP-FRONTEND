@@ -3,9 +3,19 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, FileText, Upload, Settings, LogOut } from "lucide-react";
+import { Home, FileText, Upload, Settings, LogOut, X } from "lucide-react";
 
-const SurveyorSidebar = () => {
+interface SurveyorSidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  isMobile?: boolean;
+}
+
+const SurveyorSidebar: React.FC<SurveyorSidebarProps> = ({
+  isOpen = true,
+  onClose,
+  isMobile = false
+}) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -13,6 +23,8 @@ const SurveyorSidebar = () => {
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
+
+  const showExpanded = isMobile || !isCollapsed;
 
   const handleLogout = () => {
     localStorage.removeItem("surveyorToken");
@@ -32,46 +44,58 @@ const SurveyorSidebar = () => {
 
   return (
     <aside
-      className={`bg-white shadow-md transition-all duration-300 flex flex-col  ${isCollapsed ? "w-16" : "w-64"
-        }`}
+      className={`bg-white shadow-md transition-all duration-300 flex flex-col fixed md:relative z-30 h-full border-r border-gray-200
+        ${isMobile
+          ? (isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64")
+          : (isCollapsed ? "w-16" : "w-64")
+        }
+        md:translate-x-0`}
     >
-      <div className="p-4 flex justify-between items-center relative">
-        {!isCollapsed ? (
+      <div className="p-4 flex justify-between items-center relative border-b border-gray-200">
+        {showExpanded ? (
           <Image
             src="/logoblack.svg"
-            alt="FCT-DCIP Logo"
+            alt="Builders-Liability-AMMC Logo"
             className="cursor-pointer"
             width={120}
             height={40}
-            onClick={toggleSidebar}
+            onClick={() => !isMobile && toggleSidebar()}
           />
         ) : (
           <button
             onClick={toggleSidebar}
-            className="p-1 text-2xl rounded-full hover:bg-gray-100"
+            className="p-1 text-2xl rounded-full hover:bg-gray-100 mx-auto"
           >
             ☰
           </button>
         )}
+        {isMobile && (
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
-      <nav className="mt-8 flex flex-col flex-grow">
+      <nav className="mt-4 flex flex-col flex-grow px-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center px-4 py-3 transition-colors ${pathname === item.href
+              className={`flex items-center px-4 py-3 rounded-lg transition-colors mb-1 ${pathname === item.href
                 ? "bg-[#028835] text-white"
                 : "text-gray-700 hover:bg-gray-100"
-                } ${isCollapsed ? "justify-center" : ""}`}
+                } ${!showExpanded ? "justify-center" : ""}`}
             >
               <Icon
-                className={`w-5 h-5 ${isCollapsed ? "" : "mr-3"
+                className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"
                   } ${pathname === item.href ? "text-white" : "text-gray-500"}`}
               />
-              {!isCollapsed && <span>{item.label}</span>}
+              {showExpanded && <span>{item.label}</span>}
             </Link>
           );
         })}
@@ -80,10 +104,10 @@ const SurveyorSidebar = () => {
 
         <button
           onClick={handleLogout}
-          className="flex items-center px-4 py-3 mb-4 text-gray-700 hover:bg-gray-100 transition-colors"
+          className={`flex items-center px-4 py-3 mb-4 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${!showExpanded ? "justify-center" : ""}`}
         >
-          <LogOut className={`w-5 h-5 ${isCollapsed ? "" : "mr-3"}`} />
-          {!isCollapsed && <span>Logout</span>}
+          <LogOut className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"}`} />
+          {showExpanded && <span>Logout</span>}
         </button>
       </nav>
     </aside>

@@ -35,5 +35,5 @@ export const testUserConflictInquiriesAPI = async () => {
 
 // Test function that can be called from browser console
 if (typeof window !== 'undefined') {
-    (window as any).testAPI = testUserConflictInquiriesAPI;
+    (window as unknown as Window & { testAPI: typeof testUserConflictInquiriesAPI }).testAPI = testUserConflictInquiriesAPI;
 }

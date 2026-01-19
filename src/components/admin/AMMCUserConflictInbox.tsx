@@ -35,16 +35,17 @@ interface ConflictInquiry {
   contactPreference: 'email' | 'phone' | 'both';
   userContact: {
     email: string;
+    name?: string;
     phone: string;
     preferredTime: string;
   };
-  userId: {
+  userId?: {
     _id: string;
     fullName: string;
     email: string;
     phoneNumber: string;
-  };
-  policyId: {
+  } | null;
+  policyId?: {
     _id: string;
     propertyDetails: {
       address: string;
@@ -57,7 +58,7 @@ interface ConflictInquiry {
       phoneNumber: string;
     };
     status: string;
-  };
+  } | null;
   assignedAdminId?: {
     _id: string;
     firstname: string;
@@ -108,7 +109,7 @@ const AMMCUserConflictInbox: React.FC = () => {
     status: 'all',
     urgency: 'all',
     conflictType: 'all',
-    organization: 'AMMC'
+    organization: 'all' // Changed from 'AMMC' to 'all' to show all inquiries by default
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -128,49 +129,47 @@ const AMMCUserConflictInbox: React.FC = () => {
 
   useEffect(() => {
     fetchInquiries();
-  }, [filters, currentPage, searchTerm]);
+  }, [filters, currentPage]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (currentPage === 1) {
+        fetchInquiries();
+      } else {
+        setCurrentPage(1); // Reset to page 1 when searching
+      }
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
 
   const fetchInquiries = async () => {
     try {
-      console.log('Fetching inquiries...');
       setLoading(true);
-      const queryParams = new URLSearchParams({
+
+      const { adminApi } = await import('@/services/api');
+
+      const data = await adminApi.getUserConflictInquiries({
         ...filters,
-        page: currentPage.toString(),
-        limit: '10'
+        page: currentPage,
+        limit: 10,
+        search: searchTerm || undefined
       });
 
-      if (searchTerm) {
-        queryParams.append('search', searchTerm);
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user-conflict-inquiries/admin?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'apikey': process.env.NEXT_PUBLIC_API_KEY || '',
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('API Response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API Response data:', data);
-        setInquiries(data.data?.inquiries || []);
+      if (data.success) {
+        const inquiriesData = data.data?.inquiries || [];
+        setInquiries(inquiriesData);
         setStats(data.data?.stats || { open: 0, in_progress: 0, resolved: 0, closed: 0 });
         setTotalPages(data.data?.pagination?.pages || 1);
       } else {
-        const errorText = await response.text();
-        console.error('API Error:', response.status, errorText);
-        // Set empty state on error
+        console.error('Failed to fetch inquiries:', data.message);
         setInquiries([]);
         setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
         setTotalPages(1);
       }
-    } catch (error) {
-      console.error('Network Error fetching inquiries:', error);
-      // Set empty state on error
+    } catch (error: unknown) {
+      console.error('Error fetching inquiries:', error);
       setInquiries([]);
       setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
       setTotalPages(1);
@@ -181,17 +180,10 @@ const AMMCUserConflictInbox: React.FC = () => {
 
   const handleAssignToSelf = async (inquiryId: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user-conflict-inquiries/admin/${inquiryId}/assign`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'apikey': process.env.NEXT_PUBLIC_API_KEY || ''
-        },
-        body: JSON.stringify({ organization: 'AMMC' })
-      });
+      const { adminApi } = await import('@/services/api');
+      const data = await adminApi.assignConflictInquiry(inquiryId, 'AMMC');
 
-      if (response.ok) {
+      if (data.success) {
         fetchInquiries();
         if (selectedInquiry?._id === inquiryId) {
           const updatedInquiry = inquiries.find(i => i._id === inquiryId);
@@ -202,6 +194,7 @@ const AMMCUserConflictInbox: React.FC = () => {
       }
     } catch (error) {
       console.error('Error assigning inquiry:', error);
+      alert('Failed to assign inquiry. Please try again.');
     }
   };
 
@@ -209,34 +202,22 @@ const AMMCUserConflictInbox: React.FC = () => {
     if (!selectedInquiry || !responseForm.response.trim()) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user-conflict-inquiries/admin/${selectedInquiry._id}/respond`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'apikey': process.env.NEXT_PUBLIC_API_KEY || ''
-        },
-        body: JSON.stringify({
-          response: responseForm.response,
-          method: responseForm.method
-        })
-      });
+      const { adminApi } = await import('@/services/api');
 
-      if (response.ok) {
+      const data = await adminApi.respondToConflictInquiry(
+        selectedInquiry._id,
+        responseForm.response,
+        responseForm.method || 'email'
+      );
+
+      if (data.success) {
         // Add internal note if provided
         if (responseForm.internalNote && responseForm.internalNote.trim()) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user-conflict-inquiries/admin/${selectedInquiry._id}/add-note`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'apikey': process.env.NEXT_PUBLIC_API_KEY || ''
-            },
-            body: JSON.stringify({
-              note: responseForm.internalNote,
-              noteType: 'follow_up'
-            })
-          });
+          await adminApi.addConflictInquiryNote(
+            selectedInquiry._id,
+            responseForm.internalNote,
+            'follow_up'
+          );
         }
 
         setShowResponseModal(false);
@@ -251,9 +232,11 @@ const AMMCUserConflictInbox: React.FC = () => {
           followUpDate: ''
         });
         fetchInquiries();
+        alert('Response sent successfully!');
       }
     } catch (error) {
       console.error('Error sending response:', error);
+      alert('Failed to send response. Please try again.');
     }
   };
 
@@ -309,6 +292,7 @@ const AMMCUserConflictInbox: React.FC = () => {
               All user inquiries or conflicts raised will be managed on this page.
             </p>
           </div>
+
         </div>
       </div>
 
@@ -535,10 +519,10 @@ const AMMCUserConflictInbox: React.FC = () => {
                         </div>
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">
-                            {inquiry.userId.fullName}
+                            {inquiry.userId?.fullName || inquiry.userContact?.name || 'Unknown User'}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {inquiry.userId.email}
+                            {inquiry.userId?.email || inquiry.userContact?.email || 'No email'}
                           </p>
                         </div>
                       </div>
@@ -762,11 +746,11 @@ const InquiryDetailsModal: React.FC<{
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Name</label>
-                    <p className="text-sm text-gray-900">{inquiry.userId.fullName}</p>
+                    <p className="text-sm text-gray-900">{inquiry.userId?.fullName || inquiry.userContact?.name || 'Unknown User'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Email</label>
-                    <p className="text-sm text-gray-900">{inquiry.userId.email}</p>
+                    <p className="text-sm text-gray-900">{inquiry.userId?.email || inquiry.userContact?.email || 'No email'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Phone</label>
@@ -971,8 +955,8 @@ const ResponseModal: React.FC<{
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="text-sm font-medium text-blue-900 mb-2">User Contact Information</h4>
               <div className="space-y-1 text-sm text-blue-800">
-                <p><strong>Name:</strong> {inquiry.userId.fullName}</p>
-                <p><strong>Email:</strong> {inquiry.userId.email}</p>
+                <p><strong>Name:</strong> {inquiry.userId?.fullName || inquiry.userContact?.name || 'Unknown User'}</p>
+                <p><strong>Email:</strong> {inquiry.userId?.email || inquiry.userContact?.email || 'No email'}</p>
                 {inquiry.userContact.phone && (
                   <p><strong>Phone:</strong> {inquiry.userContact.phone}</p>
                 )}

@@ -17,8 +17,14 @@ import {
   ReportSummaryResponse,
   ReportDetailsResponse,
   DownloadReportResponse,
-  IndividualReportDownloadResponse
-} from "../types/api.types";
+  IndividualReportDownloadResponse,
+  Category,
+  AddPropertyPayload
+} from "@/types/api.types";
+import { ApiError } from "@/utils/errorHandling";
+
+// Import Builder Liability Policy API
+import { builderLiabilityPolicyAPI } from "./builderLiabilityPolicyApi";
 
 
 // Constants
@@ -133,37 +139,24 @@ api.interceptors.response.use(
   }
 );
 
-// Property Types
-export interface Category {
-  _id: string;
-  name: string;
-}
-
-export interface AddPropertyPayload {
-  categoryId: string;
-  address: string;
-  phonenumber: string;
-  images: string[];
-}
-
 // Authentication APIs
 export const loginUser = async (email: string, password: string) => {
   try {
     const response = await api.post<UserLoginResponse>("/auth/login", { email, password });
     return response;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("User Login API Error:", error);
-    throw error;
+    throw error as ApiError;
   }
 };
 
 export const loginEmployee = async (email: string, password: string) => {
   try {
-    const response = await api.post<EmployeeLoginResponse>("/auth/loginEmployee", { email, password });
+    const response = await api.post<EmployeeLoginResponse>(`/auth/loginEmployee`, { email, password });
     return response;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Login API Error:", error);
-    throw error;
+    throw error as ApiError;
   }
 };
 
@@ -194,7 +187,20 @@ export const addProperty = async (
   }
 };
 
-// Password Reset APIs
+// Unified Password Reset APIs
+export const sendResetPasswordOTP = (email: string) =>
+  api.post("/reset-password/send-otp", { email });
+
+export const verifyResetPasswordOTP = (email: string, otp: string) =>
+  api.post("/reset-password/verify-otp", { email, otp });
+
+export const resetPasswordWithToken = (email: string, resetToken: string, newPassword: string, confirmPassword: string) =>
+  api.post("/reset-password/reset", { email, resetToken, newPassword, confirmPassword });
+
+export const resendResetPasswordOTP = (email: string) =>
+  api.post("/reset-password/resend-otp", { email });
+
+// Legacy Password Reset APIs (deprecated - use unified APIs above)
 export const initiatePasswordReset = (email: string) =>
   api.post("/auth/reset-password-otp", { email });
 
@@ -244,8 +250,9 @@ export const getAvailableRoles = async () => {
   }
 };
 
-// Policy Request APIs
+// Policy Request APIs (DEPRECATED - Use Builder Liability Policy APIs instead)
 export const submitPolicyRequest = async (policyData: import("../types/api.types").CreatePolicyRequestData) => {
+  console.warn("⚠️ DEPRECATED: submitPolicyRequest is deprecated. Use builderLiabilityPolicyAPI.createPolicy instead.");
   try {
     const response = await api.post("/policy", policyData);
     return response.data;
@@ -256,6 +263,7 @@ export const submitPolicyRequest = async (policyData: import("../types/api.types
 };
 
 export const getPolicyRequests = async (status?: string, page = 1, limit = 10) => {
+  console.warn("⚠️ DEPRECATED: getPolicyRequests is deprecated. Use builderLiabilityPolicyAPI.getAllPolicies instead.");
   try {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
@@ -272,6 +280,7 @@ export const getPolicyRequests = async (status?: string, page = 1, limit = 10) =
 };
 
 export const getUserPolicyRequests = async (status?: string, page = 1, limit = 10) => {
+  console.warn("⚠️ DEPRECATED: getUserPolicyRequests is deprecated. Use builderLiabilityPolicyAPI.getUserPolicies instead.");
   try {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
@@ -578,7 +587,7 @@ export const getAdminAssignments = async (filters?: {
   status?: string;
   priority?: string;
   surveyorId?: string;
-  ammcId?: string;
+  policyId?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -847,7 +856,7 @@ export const getSubmissionByAssignment = async (assignmentId: string) => {
 // File Upload APIs
 export const uploadSurveyDocument = async (file: File, data: {
   assignmentId?: string;
-  ammcId?: string;
+  policyId?: string;
   category?: string;
   description?: string;
   documentType?: string;
@@ -874,7 +883,7 @@ export const uploadSurveyDocument = async (file: File, data: {
 
 export const uploadMultipleSurveyDocuments = async (files: File[], data: {
   assignmentId?: string;
-  ammcId?: string;
+  policyId?: string;
   category?: string;
   description?: string;
   documentType?: string;
@@ -902,7 +911,7 @@ export const uploadMultipleSurveyDocuments = async (files: File[], data: {
 
 export const getSurveyDocuments = async (filters: {
   assignmentId?: string;
-  ammcId?: string;
+  policyId?: string;
   category?: string;
   documentType?: string;
 }) => {
@@ -921,11 +930,11 @@ export const getSurveyDocuments = async (filters: {
   }
 };
 
-export const deleteSurveyDocument = async (documentId: string, assignmentId?: string, ammcId?: string) => {
+export const deleteSurveyDocument = async (documentId: string, assignmentId?: string, policyId?: string) => {
   try {
     const endpoint = assignmentId
       ? `/survey-documents/assignment/${assignmentId}/document/${documentId}`
-      : `/survey-documents/policy/${ammcId}/document/${documentId}`;
+      : `/survey-documents/policy/${policyId}/document/${documentId}`;
 
     const response = await api.delete(endpoint);
     return response.data;
@@ -966,9 +975,10 @@ export const deleteProperty = async (propertyId: string) => {
   }
 };
 
-export const updatePolicyRequest = async (ammcId: string, policyData: Partial<PolicyRequest>) => {
+export const updatePolicyRequest = async (policyId: string, policyData: Partial<PolicyRequest>) => {
+  console.warn("⚠️ DEPRECATED: updatePolicyRequest is deprecated. Use builderLiabilityPolicyAPI.updatePolicy instead.");
   try {
-    const response = await api.patch(`/policy/${ammcId}`, policyData);
+    const response = await api.patch(`/policy/${policyId}`, policyData);
     return response.data;
   } catch (error) {
     console.error("Failed to update policy request:", error);
@@ -976,19 +986,20 @@ export const updatePolicyRequest = async (ammcId: string, policyData: Partial<Po
   }
 };
 
-export const getUserAssignmentByAmmcId = async (ammcId: string) => {
+export const getUserAssignmentByPolicyId = async (policyId: string) => {
   try {
-    const response = await api.get(`/admin/assignment/policy/${ammcId}`);
+    const response = await api.get(`/admin/assignment/policy/${policyId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to get assignment by AMMC ID:", error);
+    console.error("Failed to get assignment by Policy ID:", error);
     throw error;
   }
 };
 
-export const deletePolicyRequest = async (ammcId: string) => {
+export const deletePolicyRequest = async (policyId: string) => {
+  console.warn("⚠️ DEPRECATED: deletePolicyRequest is deprecated. Use builderLiabilityPolicyAPI.deletePolicy instead.");
   try {
-    const response = await api.delete(`/policy/${ammcId}`);
+    const response = await api.delete(`/policy/${policyId}`);
     return response.data;
   } catch (error) {
     console.error("Failed to delete policy request:", error);
@@ -1057,23 +1068,23 @@ export const adminApi = {
     return response.data;
   },
 
-  getPolicyById: async (ammcId: string) => {
-    const response = await api.get(`/admin/policy/${ammcId}`);
+  getPolicyById: async (policyId: string) => {
+    const response = await api.get(`/admin/policy/${policyId}`);
     return response.data;
   },
 
-  assignSurveyor: async (ammcId: string, assignment: { surveyorIds: string[] }) => {
-    const response = await api.post(`/policy/${ammcId}/assign`, assignment);
+  assignSurveyor: async (policyId: string, assignment: { surveyorIds: string[] }) => {
+    const response = await api.post(`/policy/${policyId}/assign`, assignment);
     return response.data;
   },
 
-  reviewPolicySubmission: async (ammcId: string, decision: 'approved' | 'rejected', notes: string) => {
-    const response = await api.post(`/policy/${ammcId}/review`, { decision, notes });
+  reviewPolicySubmission: async (policyId: string, decision: 'approved' | 'rejected', notes: string) => {
+    const response = await api.post(`/policy/${policyId}/review`, { decision, notes });
     return response.data;
   },
 
-  sendPolicyToUser: async (ammcId: string) => {
-    const response = await api.post(`/admin/policy/${ammcId}/send-to-user`);
+  sendPolicyToUser: async (policyId: string) => {
+    const response = await api.post(`/admin/policy/${policyId}/send-to-user`);
     return response.data;
   },
 
@@ -1106,6 +1117,11 @@ export const adminApi = {
 
   deleteAdministrator: async (adminId: string) => {
     const response = await api.delete(`/admin/administrators/${adminId}`);
+    return response.data;
+  },
+
+  updateAdministrator: async (adminId: string, adminData: Partial<EmployeeRegistrationData>) => {
+    const response = await api.patch(`/admin/administrators/${adminId}`, adminData);
     return response.data;
   },
 
@@ -1194,15 +1210,15 @@ export const adminApi = {
     return response.data;
   },
 
-  getAssignmentByAmmcId: async (ammcId: string) => {
-    const response = await api.get(`/admin/assignment/policy/${ammcId}`);
+  getAssignmentByPolicyId: async (policyId: string) => {
+    const response = await api.get(`/admin/assignment/policy/${policyId}`);
     return response.data;
   },
 
   getSurveySubmissions: async (filters?: {
     status?: string;
     surveyorId?: string;
-    ammcId?: string;
+    policyId?: string;
     page?: number;
     limit?: number;
   }) => {
@@ -1245,6 +1261,59 @@ export const adminApi = {
         // Let browser set Content-Type for FormData
       },
     });
+    return response.data;
+  },
+
+  // User Conflict Inquiries
+  getUserConflictInquiries: async (filters?: {
+    status?: string;
+    urgency?: string;
+    conflictType?: string;
+    organization?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== 'all') {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const endpoint = `/user-conflict-inquiries/admin${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  getUserConflictInquiryById: async (inquiryId: string) => {
+    const response = await api.get(`/user-conflict-inquiries/admin/${inquiryId}`);
+    return response.data;
+  },
+
+  assignConflictInquiry: async (inquiryId: string, organization: string = 'AMMC') => {
+    const response = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/assign`, { organization });
+    return response.data;
+  },
+
+  respondToConflictInquiry: async (inquiryId: string, response: string, method: string = 'email') => {
+    const res = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/respond`, { response, method });
+    return res.data;
+  },
+
+  addConflictInquiryNote: async (inquiryId: string, note: string, noteType: string = 'general') => {
+    const response = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/add-note`, { note, noteType });
+    return response.data;
+  },
+
+  escalateConflictInquiry: async (inquiryId: string, escalatedTo: string, reason: string) => {
+    const response = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/escalate`, { escalatedTo, reason });
+    return response.data;
+  },
+
+  closeConflictInquiry: async (inquiryId: string, closureReason?: string) => {
+    const response = await api.put(`/user-conflict-inquiries/admin/${inquiryId}/close`, { closureReason });
     return response.data;
   },
 
@@ -1561,6 +1630,9 @@ export const userReportAPI = {
 };
 
 export default api;
+
+// Export Builder Liability Policy API
+export { builderLiabilityPolicyAPI };
 
 // Broker Admin API functions
 export const brokerAdminAPI = {

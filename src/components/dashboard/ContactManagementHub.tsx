@@ -4,15 +4,13 @@ import {
     Users,
     Shield,
     MessageCircle,
-    Phone,
-    Mail,
     AlertTriangle,
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
 import SurveyorContactsDisplay from './SurveyorContactsDisplay';
 import AdminContactDisplay from './AdminContactDisplay';
-import ConflictRaiseInterface from './ConflictRaiseInterface';
+import ConflictRaiseInterface, { ConflictInquirySubmitData } from '@/components/user/ConflictRaiseInterface';
 
 import { SurveyorContactInfo, AdminContactInfo, ConflictInquiryData } from '@/types/api.types';
 
@@ -66,17 +64,23 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
         }));
     };
 
-    const handleConflictSubmit = (conflictData: ConflictInquiryData) => {
+    const handleConflictSubmit = (conflictData: ConflictInquirySubmitData) => {
         if (onConflictSubmit) {
-            onConflictSubmit(conflictData);
+            // Convert ConflictInquirySubmitData to ConflictInquiryData
+            const inquiryData: ConflictInquiryData = {
+                policyId: conflictData.policyId,
+                mergedReportId: conflictData.mergedReportId,
+                conflictType: conflictData.conflictType,
+                description: conflictData.description,
+                priority: conflictData.priority,
+                contactPreference: conflictData.contactPreference,
+                additionalInfo: conflictData.additionalInfo
+            };
+            onConflictSubmit(inquiryData);
         } else {
             console.log('Conflict submitted:', conflictData);
         }
         setShowConflictModal(false);
-    };
-
-    const getSectionIcon = (section: 'surveyors' | 'admins') => {
-        return section === 'surveyors' ? Users : Shield;
     };
 
     const getSectionTitle = (section: 'surveyors' | 'admins') => {
@@ -170,8 +174,28 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                     {expandedSections.surveyors && (
                         <div className="p-6 border-t border-gray-200">
                             <SurveyorContactsDisplay
-                                ammcSurveyor={ammcSurveyor as any}
-                                niaSurveyor={niaSurveyor as any}
+                                ammcSurveyor={ammcSurveyor ? {
+                                    name: ammcSurveyor.name,
+                                    email: ammcSurveyor.email,
+                                    phone: ammcSurveyor.phone || '',
+                                    organization: ammcSurveyor.organization || 'AMMC',
+                                    licenseNumber: ammcSurveyor.licenseNumber,
+                                    specialization: ammcSurveyor.specialization,
+                                    experience: ammcSurveyor.experience,
+                                    rating: ammcSurveyor.rating,
+                                    lastActive: ammcSurveyor.lastActive
+                                } : undefined}
+                                niaSurveyor={niaSurveyor ? {
+                                    name: niaSurveyor.name,
+                                    email: niaSurveyor.email,
+                                    phone: niaSurveyor.phone || '',
+                                    organization: niaSurveyor.organization || 'NIA',
+                                    licenseNumber: niaSurveyor.licenseNumber,
+                                    specialization: niaSurveyor.specialization,
+                                    experience: niaSurveyor.experience,
+                                    rating: niaSurveyor.rating,
+                                    lastActive: niaSurveyor.lastActive
+                                } : undefined}
                                 assignmentStatus={assignmentStatus}
                                 showContactActions={showContactActions}
                             />

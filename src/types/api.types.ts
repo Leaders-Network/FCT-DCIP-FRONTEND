@@ -88,6 +88,19 @@ export interface GetAllEmployeesResponse {
   };
 }
 
+// Property Management types
+export interface Category {
+  _id: string;
+  name: string;
+}
+
+export interface AddPropertyPayload {
+  categoryId: string;
+  address: string;
+  phonenumber: string;
+  images: string[];
+}
+
 // Policy Request types
 export interface PolicyRequest {
   _id: string;
@@ -108,7 +121,11 @@ export interface PolicyRequest {
     };
   };
   propertyDetails: {
-    address: string;
+    plotNumber: string;
+    cadastralZone: string;
+    district: string;
+    fullAddress: string;
+    address?: string; // Legacy field for backward compatibility
     propertyType: string;
     buildingValue: number;
     yearBuilt: number;
@@ -148,12 +165,25 @@ export interface PolicyRequest {
   }>;
   createdAt: string;
   updatedAt: string;
+  // Optional properties for Builder Liability Policy compatibility
+  isBuilderLiabilityPolicy?: boolean;
+  originalBLPolicy?: Partial<{
+    _id: string;
+    policyNumber: string;
+    builder: Record<string, unknown>;
+    propertyDetails: Record<string, unknown>;
+    status: string;
+  }>;
 }
 
 export interface CreatePolicyRequestData {
   propertyId?: string;
   propertyDetails: {
-    address: string;
+    plotNumber: string;
+    cadastralZone: string;
+    district: string;
+    fullAddress: string;
+    address?: string; // Legacy field for backward compatibility
     propertyType: string;
     buildingValue: number;
     yearBuilt: number;
@@ -225,7 +255,7 @@ export interface Surveyor extends Employee {
 }
 
 export interface SurveySubmission {
-  ammcId: string;
+  policyId: string;
   surveyorId: string;
   surveyDocument: File | string | {
     name: string;
@@ -246,7 +276,7 @@ export interface ContactLogEntry {
 
 // Admin Policy Management types
 export interface PolicyAssignment {
-  ammcId: string;
+  policyId: string;
   surveyorIds: string[];
   assignedBy: string;
   deadline?: string;
@@ -255,7 +285,7 @@ export interface PolicyAssignment {
 }
 
 export interface PolicyReview {
-  ammcId: string;
+  policyId: string;
   reviewerId: string;
   decision: 'approved' | 'rejected';
   reviewNotes: string;
@@ -265,7 +295,7 @@ export interface PolicyReview {
 // Assignment Management Types
 export interface Assignment {
   _id: string;
-  ammcId: string | PolicyRequest;
+  policyId: string | PolicyRequest;
   surveyorId: string;
   assignedBy: string;
   assignedAt: string;
@@ -444,7 +474,7 @@ export interface SurveySubmissionResult {
 // Enhanced Survey Submission Interface
 export interface EnhancedSurveySubmission {
   _id: string;
-  ammcId: string;
+  policyId: string;
   surveyorId: string;
   assignmentId?: string;
   surveyDetails: SurveyDetails;
@@ -470,8 +500,12 @@ export interface DualAssignment {
   policyId: {
     _id: string;
     propertyDetails: {
+      plotNumber?: string;
+      cadastralZone?: string;
+      district?: string;
+      fullAddress?: string;
       propertyType: string;
-      address: string;
+      address?: string; // Legacy field
       buildingValue: number;
     };
     contactDetails: {
@@ -495,7 +529,11 @@ export interface DualAssignment {
   };
   partnerSurveyorInfo?: SurveyorContact;
   policyDetails?: {
-    address: string;
+    plotNumber?: string;
+    cadastralZone?: string;
+    district?: string;
+    fullAddress?: string;
+    address?: string; // Legacy field
     propertyType?: string;
     buildingValue?: number;
   };
@@ -967,8 +1005,12 @@ export interface DualAssignmentData {
   policyId: string | {
     _id: string;
     propertyDetails: {
+      plotNumber?: string;
+      cadastralZone?: string;
+      district?: string;
+      fullAddress?: string;
       propertyType: string;
-      address: string;
+      address?: string; // Legacy field
       buildingValue: number;
       yearBuilt?: string;
       squareFootage?: number;
@@ -1175,16 +1217,16 @@ export interface BrokerStatusUpdateResponse {
 }
 
 export type UserReportsResponse = ApiSuccessResponse<{
-    reports: UserReport[];
-    pagination: PaginationData;
+  reports: UserReport[];
+  pagination: PaginationData;
 }> | ApiErrorResponse;
 
 export type ReportSummaryResponse = ApiSuccessResponse<{
-    totalReports: number;
-    releasedReports: number;
-    pendingReports: number;
-    withheldReports: number;
-    completedReports: number;
+  totalReports: number;
+  releasedReports: number;
+  pendingReports: number;
+  withheldReports: number;
+  completedReports: number;
 }> | ApiErrorResponse;
 
 export type ReportDetailsResponse = ApiSuccessResponse<ReportDetails> | ApiErrorResponse;
@@ -1192,28 +1234,28 @@ export type ReportDetailsResponse = ApiSuccessResponse<ReportDetails> | ApiError
 export type ReportStatusResponse = ApiSuccessResponse<ReportStatus> | ApiErrorResponse;
 
 export type DownloadReportResponse = ApiSuccessResponse<{
-    reportId: string;
-    downloadCount: number;
-    propertyDetails: ReportDetails['propertyDetails'];
-    finalRecommendation: RecommendationAction;
-    paymentEnabled: boolean;
-    conflictDetected: boolean;
-    reportSections: ReportDetails['reportSections'];
-    mergingMetadata: MergingMetadata;
-    releasedAt: string;
+  reportId: string;
+  downloadCount: number;
+  propertyDetails: ReportDetails['propertyDetails'];
+  finalRecommendation: RecommendationAction;
+  paymentEnabled: boolean;
+  conflictDetected: boolean;
+  reportSections: ReportDetails['reportSections'];
+  mergingMetadata: MergingMetadata;
+  releasedAt: string;
 }> | ApiErrorResponse;
 
 export interface SurveyData {
-    propertyCondition?: string;
-    structuralAssessment?: string;
-    riskFactors?: string;
-    recommendations?: string;
-    estimatedValue?: number;
-    photos?: Array<{
-        url: string;
-        description: string;
-        timestamp: string;
-    }>;
+  propertyCondition?: string;
+  structuralAssessment?: string;
+  riskFactors?: string;
+  recommendations?: string;
+  estimatedValue?: number;
+  photos?: Array<{
+    url: string;
+    description: string;
+    timestamp: string;
+  }>;
 }
 
 export interface IndividualReportDownloadResponse {

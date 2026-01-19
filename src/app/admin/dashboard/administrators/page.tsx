@@ -22,9 +22,30 @@ import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
+interface Administrator {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phonenumber: string;
+  employeeRole?: {
+    _id: string;
+    role: string;
+  };
+  employeeStatus?: {
+    _id: string;
+    status: string;
+  };
+  deleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export default function AdministratorsPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
-  const [administrators, setAdministrators] = useState<any[]>([])
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedAdmin, setSelectedAdmin] = useState<Administrator | null>(null)
+  const [administrators, setAdministrators] = useState<Administrator[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -114,6 +135,52 @@ export default function AdministratorsPage() {
     }
   }
 
+  const handleEditAdministrator = (admin: Administrator) => {
+    setSelectedAdmin(admin)
+    setFormData({
+      firstname: admin.firstname,
+      lastname: admin.lastname,
+      email: admin.email,
+      phonenumber: admin.phonenumber,
+      role: admin.employeeRole?.role || "",
+      status: admin.employeeStatus?.status || "Active",
+      roleId: admin.employeeRole?._id || "",
+      statusId: admin.employeeStatus?._id || "active"
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateAdministrator = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedAdmin) return
+
+    setLoading(true)
+    try {
+      const updateData = {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        phonenumber: formData.phonenumber,
+        roleId: formData.roleId || formData.role,
+        statusId: formData.statusId || (formData.status === "Active" ? "active" : "inactive")
+      }
+
+      await adminApi.updateAdministrator(selectedAdmin._id, updateData)
+      setShowEditModal(false)
+      setSelectedAdmin(null)
+
+      // Refresh administrators list
+      const response = await adminApi.getAdministrators()
+      if (response?.success && response?.data) {
+        setAdministrators(response.data)
+      }
+    } catch (error) {
+      console.error("Failed to update administrator:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleToggleStatus = async (adminId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
     try {
@@ -195,7 +262,7 @@ export default function AdministratorsPage() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{`${admin.firstname} ${admin.lastname}`}</div>
-                        <div className="text-sm text-gray-500">{admin.employeeRole.role}</div>
+                        <div className="text-sm text-gray-500">{admin.employeeRole?.role || 'N/A'}</div>
                       </div>
                     </div>
                   </TableCell>
@@ -203,11 +270,11 @@ export default function AdministratorsPage() {
                   <TableCell>{admin.phonenumber}</TableCell>
                   <TableCell>
                     <Switch
-                      checked={admin.employeeStatus.status === 'Active'}
-                      onCheckedChange={() => handleToggleStatus(admin._id, admin.employeeStatus.status)}
+                      checked={admin.employeeStatus?.status === 'Active'}
+                      onCheckedChange={() => handleToggleStatus(admin._id, admin.employeeStatus?.status || 'Inactive')}
                     />
                   </TableCell>
-                  <TableCell>{new Date(admin.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -217,8 +284,9 @@ export default function AdministratorsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditAdministrator(admin)}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -383,6 +451,150 @@ export default function AdministratorsPage() {
                     <>
                       <UserPlus className="w-4 h-4" />
                       <span>Create Administrator</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Admin Modal */}
+      {showEditModal && selectedAdmin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-blue-600 text-white p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">Edit Administrator</h2>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setSelectedAdmin(null)
+                  }}
+                  className="text-blue-100 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdateAdministrator} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="firstname"
+                    value={formData.firstname}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="lastname"
+                    value={formData.lastname}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  name="phonenumber"
+                  value={formData.phonenumber}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role *
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Select a role</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Super Admin">Super Admin</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status *
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setSelectedAdmin(null)
+                  }}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="w-4 h-4" />
+                      <span>Update Administrator</span>
                     </>
                   )}
                 </button>

@@ -10,60 +10,33 @@ interface AssignmentDetailProps {
   assignmentId: string;
 }
 
-interface PolicyPropertyDetails {
-  propertyType: string;
-  address: string;
-  buildingValue: number;
-  yearBuilt: number;
-  squareFootage: number;
-  constructionMaterial: string;
+// Use BuilderLiabilityPolicy directly from types
+interface BuilderLiabilityPolicy {
+  _id: string;
+  policyNumber: string;
+  builder: {
+    nameOfBuilder: string;
+    customerEmail: string;
+    address: string;
+    telNo?: string;
+  };
+  project: {
+    lga: string;
+    district?: string;
+    address: string;
+    projectType?: string;
+    projectValue?: number;
+  };
+  status: string;
+  createdAt: string;
+  payment?: {
+    status: string;
+    amount: number;
+  };
 }
 
-interface PolicyContactDetails {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  alternatePhone?: string;
-  rcNumber: string;
-}
-
-interface PolicyRequestDetails {
-  coverageType: string;
-  policyDuration: string;
-  additionalCoverage?: string[];
-  specialRequests?: string;
-}
-
-interface PolicyDetails extends Omit<import('@/types/api.types').PolicyRequest, 'propertyDetails' | 'contactDetails' | 'requestDetails'> {
-  propertyDetails: PolicyPropertyDetails;
-  contactDetails: PolicyContactDetails;
-  requestDetails: PolicyRequestDetails;
-}
-
-interface OtherSurveyorInfo {
-  name?: string;
-  fullName?: string;
-  phone?: string;
-  phonenumber?: string;
-  email?: string;
-  licenseNumber?: string;
-  organization?: 'AMMC' | 'NIA';
-}
-
-interface DualAssignmentInfo {
-  completionStatus: 0 | 50 | 100;
-  assignmentStatus: 'unassigned' | 'partially_assigned' | 'fully_assigned';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  otherSurveyor?: OtherSurveyorInfo;
-}
-
-// Helper type: DualAssignmentInfo | DualAssignment union,
-// but we need a common base that allows otherSurveyor for render time access
-type DualAssignmentLike = DualAssignmentInfo | (DualAssignment & { otherSurveyor?: OtherSurveyorInfo });
-
-interface EnhancedAssignment extends Omit<Assignment, 'ammcId' | 'dualAssignmentInfo'> {
-  ammcId: PolicyDetails | string;
-  dualAssignmentInfo?: DualAssignmentLike;
+interface EnhancedAssignment extends Omit<Assignment, 'policyId'> {
+  policyId: BuilderLiabilityPolicy | string;
 }
 
 const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => {
@@ -82,9 +55,14 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         const response = await getSurveyorAssignmentById(assignmentId);
         if (response.success) {
           setAssignment(response.data);
-          console.log('Assignment data:', response.data);
+          console.log('=== Assignment Data Loaded ===');
+          console.log('Full response:', response.data);
+          console.log('Policy ID type:', typeof response.data.policyId);
+          console.log('Policy ID value:', response.data.policyId);
+          console.log('Is policyId an object?', typeof response.data.policyId === 'object');
+          console.log('==============================');
         } else {
-          // Handle error
+          console.error('Failed to load assignment:', response);
         }
       } catch (error) {
         // Handle error
@@ -95,25 +73,22 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     fetchAssignment();
   }, [assignmentId]);
 
-  const handleSurveySubmission = async (submission: SurveySubmissionData) => {
+  const handleSurveySubmission = async (submission: FormData) => {
     try {
+      if (!assignment) {
+        throw new Error("No assignment selected for submission.");
+      }
+
       const { submitSurvey } = await import("@/services/api");
 
-      const formData = new FormData();
-      formData.append('ammcId', typeof assignment!.ammcId === 'object' ? (assignment!.ammcId as PolicyDetails)._id : assignment!.ammcId);
-      formData.append('assignmentId', assignmentId || '');
-      formData.append('surveyNotes', submission.surveyNotes);
-      formData.append('recommendedAction', submission.recommendedAction);
-      formData.append('contactLog', JSON.stringify(submission.contactLog));
-      formData.append('surveyDetails', JSON.stringify(submission.surveyDetails));
-      if (submission.expenses) {
-        formData.append('expenses', JSON.stringify(submission.expenses));
-      }
-      if (submission.surveyDocument) {
-        formData.append('surveyDocument', submission.surveyDocument);
-      }
+      const policyId = typeof assignment.policyId === 'object' ? (assignment.policyId as BuilderLiabilityPolicy)._id : assignment.policyId;
 
-      const result = await submitSurvey(formData);
+      submission.append('policyId', policyId);
+      submission.append('assignmentId', assignmentId || '');
+
+      // The 'submission' FormData object now also includes the files from the modal
+
+      const result = await submitSurvey(submission);
 
       // Store submission result for confirmation display
       setSubmissionResult(result.data);
@@ -139,13 +114,13 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
   };
 
   const handleContactUser = (method: 'phone' | 'email') => {
-    if (!assignment || typeof assignment.ammcId === 'string') return;
+    if (!assignment || typeof assignment.policyId === 'string') return;
 
-    const policy = assignment.ammcId as PolicyDetails;
+    const policy = assignment.policyId as BuilderLiabilityPolicy;
     if (method === 'phone') {
-      window.open(`tel:${policy.contactDetails.phoneNumber}`);
+      window.open(`tel:${policy.builder.telNo || ''}`);
     } else if (method === 'email') {
-      window.open(`mailto:${policy.contactDetails.email}`);
+      window.open(`mailto:${policy.builder.customerEmail || ''}`);
     }
   };
 
@@ -189,12 +164,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">AMMC Survey Assignment Details</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Builder Liability Survey Assignment</h1>
                 <p className="text-gray-600 mt-1">
-                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.propertyType || 'AMMC Property Survey'}
+                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.projectType || 'Builder Liability Policy Survey'}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Assignment ID: {assignment._id}
+                  Policy #{typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.policyNumber || 'N/A'} • Assignment ID: {assignment._id}
                 </p>
               </div>
             </div>
@@ -229,7 +204,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
               {assignment.status === 'assigned' && (
                 <button
-                  onClick={() => setShowSurveyForm(true)}
+                  onClick={() => {
+                    console.log('Start Survey button clicked - Header');
+                    console.log('Assignment:', assignment);
+                    console.log('Policy ID:', assignment.policyId);
+                    setShowSurveyForm(true);
+                  }}
                   className="bg-[#028835] text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] font-medium"
                 >
                   Start Survey
@@ -256,24 +236,33 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.propertyType || 'Property'}
+                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.projectType || 'Construction Project'}
                 </h3>
                 <p className="text-gray-600 mt-1 flex items-start">
                   <MapPin className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
-                  {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.address || assignment.location?.address || 'Address not available'}
+                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.address || assignment.location?.address || 'Address not available'}
                 </p>
                 <div className="flex items-center text-sm text-gray-500 mt-2">
                   <Calendar className="h-4 w-4 mr-1" />
-                  Policy Request: {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.createdAt
-                    ? new Date((assignment.ammcId as PolicyDetails).createdAt).toLocaleDateString()
+                  Policy Created: {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.createdAt
+                    ? new Date((assignment.policyId as BuilderLiabilityPolicy).createdAt).toLocaleDateString()
                     : 'N/A'}
                 </div>
+                {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.lga && (
+                  <div className="flex items-center text-sm text-gray-500 mt-1">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    LGA: {(assignment.policyId as BuilderLiabilityPolicy).project.lga}
+                    {(assignment.policyId as BuilderLiabilityPolicy).project.district &&
+                      ` • District: ${(assignment.policyId as BuilderLiabilityPolicy).project.district}`
+                    }
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-gray-900">
-                  ₦{typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
+                  ₦{typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.projectValue?.toLocaleString() || 'N/A'}
                 </div>
-                <div className="text-sm text-gray-500">Property Value</div>
+                <div className="text-sm text-gray-500">Project Value</div>
               </div>
             </div>
           </div>
@@ -281,26 +270,28 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           {/* Property Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Construction Details</h4>
+              <h4 className="text-sm font-medium text-gray-500 mb-3">Project Details</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Material:</span>
+                  <span className="text-gray-600">Project Type:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.constructionMaterial || 'N/A'}
+                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.projectType || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Year Built:</span>
+                  <span className="text-gray-600">LGA:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.yearBuilt || 'N/A'}
+                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.lga || 'N/A'}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Square Footage:</span>
-                  <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.squareFootage?.toLocaleString() || 'N/A'} sq ft
-                  </span>
-                </div>
+                {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.district && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">District:</span>
+                    <span className="font-medium text-gray-900">
+                      {(assignment.policyId as BuilderLiabilityPolicy).project.district}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -364,207 +355,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         </div>
       </div>
 
-      {/* Dual Assignment Information */}
-      {assignment.dualAssignmentInfo && (
-        <div className="bg-indigo-50 rounded-lg border border-indigo-200 shadow-sm">
-          <div className="px-6 py-4 border-b border-indigo-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-indigo-900 flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                Dual Surveyor Assignment
-              </h2>
-              <div className="flex items-center space-x-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.dualAssignmentInfo.completionStatus === 100 ? 'bg-green-100 text-green-800' :
-                  assignment.dualAssignmentInfo.completionStatus === 50 ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                  {assignment.dualAssignmentInfo.completionStatus}% Complete
-                </span>
-                <button
-                  onClick={async () => {
-                    try {
-                      const { getSurveyorAssignmentById } = await import("@/services/api");
-                      const response = await getSurveyorAssignmentById(assignmentId);
-                      if (response.success) {
-                        setAssignment(response.data);
-                      }
-                    } catch (error) {
-                      console.error("Failed to refresh:", error);
-                    }
-                  }}
-                  className="p-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded"
-                  title="Refresh progress"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="p-6">
-            <div className="mb-4 p-4 bg-white rounded-lg border border-indigo-100">
-              <h3 className="text-sm font-medium text-indigo-900 mb-2">Assignment Overview</h3>
-              <p className="text-sm text-indigo-700 mb-4">
-                This property requires dual surveyor assessment from both AMMC and NIA organizations.
-                Coordinate with your partner surveyor to ensure comprehensive coverage.
-              </p>
-
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="flex justify-between text-sm text-indigo-700 mb-2">
-                  <span className="font-medium">Overall Progress</span>
-                  <span className="font-semibold">{assignment.dualAssignmentInfo.completionStatus}% Complete</span>
-                </div>
-                <div className="w-full bg-indigo-200 rounded-full h-3">
-                  <div
-                    className={`h-3 rounded-full transition-all duration-500 ${assignment.dualAssignmentInfo.completionStatus === 100
-                      ? 'bg-green-500'
-                      : assignment.dualAssignmentInfo.completionStatus === 50
-                        ? 'bg-yellow-500'
-                        : 'bg-indigo-400'
-                      }`}
-                    style={{ width: `${assignment.dualAssignmentInfo.completionStatus}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs text-indigo-600 mt-1">
-                  <span>0%</span>
-                  <span>50% (One Report)</span>
-                  <span>100% (Both Reports)</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-indigo-600 font-medium">Status:</span>
-                  <p className="text-indigo-800">{assignment.dualAssignmentInfo.assignmentStatus.replace('_', ' ').toUpperCase()}</p>
-                </div>
-                <div>
-                  <span className="text-indigo-600 font-medium">Priority:</span>
-                  <p className="text-indigo-800">{assignment.dualAssignmentInfo.priority.toUpperCase()}</p>
-                </div>
-                <div>
-                  <span className="text-indigo-600 font-medium">Completion:</span>
-                  <p className="text-indigo-800">
-                    {assignment.dualAssignmentInfo.completionStatus === 100
-                      ? 'Both reports submitted'
-                      : assignment.dualAssignmentInfo.completionStatus === 50
-                        ? 'One report submitted'
-                        : 'No reports submitted'
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {assignment.dualAssignmentInfo && 'otherSurveyor' in assignment.dualAssignmentInfo && (
-              <div className="bg-white rounded-lg border border-indigo-100 p-4">
-                <h3 className="text-sm font-medium text-indigo-900 mb-3">
-                  Partner Surveyor ({(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.organization || 'Unknown'})
-                </h3>
-
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <User className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.name ||
-                            (assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.fullName ||
-                            'Name not available'}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.organization || 'Unknown'} Surveyor
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <Phone className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-gray-900">
-                          {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.phone ||
-                            (assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.phonenumber ||
-                            'Phone not available'}
-                        </p>
-                        <p className="text-xs text-gray-500">Primary Contact</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <Mail className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-gray-900">
-                          {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.email || 'Email not available'}
-                        </p>
-                        <p className="text-xs text-gray-500">Email Address</p>
-                      </div>
-                    </div>
-
-                    {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor?.licenseNumber && (
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 text-indigo-500 mr-3 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm text-gray-900">
-                            {(assignment.dualAssignmentInfo as DualAssignmentInfo).otherSurveyor!.licenseNumber}
-                          </p>
-                          <p className="text-xs text-gray-500">License Number</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact Actions</h4>
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          const phone = (assignment.dualAssignmentInfo as DualAssignmentInfo)?.otherSurveyor?.phone ||
-                            (assignment.dualAssignmentInfo as DualAssignmentInfo)?.otherSurveyor?.phonenumber;
-                          if (phone) {
-                            window.open(`tel:${phone}`);
-                          } else {
-                            alert('Phone number not available');
-                          }
-                        }}
-                        className="w-full inline-flex items-center justify-center px-3 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        <Phone className="h-4 w-4 mr-2" />
-                        Call Partner
-                      </button>
-                      <button
-                        onClick={() => {
-                          const email = (assignment.dualAssignmentInfo as DualAssignmentInfo)?.otherSurveyor?.email;
-                          if (email) {
-                            window.open(`mailto:${email}`);
-                          } else {
-                            alert('Email address not available');
-                          }
-                        }}
-                        className="w-full inline-flex items-center justify-center px-3 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        <Mail className="h-4 w-4 mr-2" />
-                        Email Partner
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Coordination Guidelines */}
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-amber-900 mb-2">Coordination Guidelines</h3>
-              <ul className="text-sm text-amber-800 space-y-1">
-                <li>• Contact your partner surveyor before site visit to coordinate timing</li>
-                <li>• Share findings and observations to ensure comprehensive assessment</li>
-                <li>• Both surveyors must submit reports for complete evaluation</li>
-                <li>• Reports will be automatically merged once both are submitted</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Contact Information */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -574,41 +364,53 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Property Builder/Contractor Details */}
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Property Builder/Contractor</h4>
+              <h4 className="text-sm font-medium text-gray-500 mb-3">Builder Information</h4>
               <div className="space-y-3">
                 <div className="flex items-center">
                   <User className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                   <div>
                     <p className="text-base font-medium text-gray-900">
-                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.contactDetails?.fullName || 'N/A'}
+                      {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.builder?.nameOfBuilder || 'N/A'}
                     </p>
-                    <p className="text-sm text-gray-500">Property Builder/Contractor</p>
+                    <p className="text-sm text-gray-500">Builder Name</p>
                   </div>
                 </div>
 
-                <div className="flex items-center">
-                  <Phone className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-base text-gray-900">
-                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.contactDetails?.phoneNumber || 'N/A'}
-                    </p>
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.contactDetails?.alternatePhone && (
-                      <p className="text-sm text-gray-600">
-                        Alt: {(assignment.ammcId as PolicyDetails).contactDetails.alternatePhone}
+                {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.builder?.telNo && (
+                  <div className="flex items-center">
+                    <Phone className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-base text-gray-900">
+                        {(assignment.policyId as BuilderLiabilityPolicy).builder.telNo}
                       </p>
-                    )}
+                      <p className="text-sm text-gray-500">Phone Number</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="flex items-center">
-                  <Mail className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="text-base text-gray-900">
-                      {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.contactDetails?.email || 'N/A'}
-                    </p>
-                    <p className="text-sm text-gray-500">Primary Email</p>
+                {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.builder?.customerEmail && (
+                  <div className="flex items-center">
+                    <Mail className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                    <div>
+                      <p className="text-base text-gray-900">
+                        {(assignment.policyId as BuilderLiabilityPolicy).builder.customerEmail}
+                      </p>
+                      <p className="text-sm text-gray-500">Email Address</p>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.builder?.address && (
+                  <div className="flex items-start">
+                    <MapPin className="h-5 w-5 text-gray-400 mr-3 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-base text-gray-900">
+                        {(assignment.policyId as BuilderLiabilityPolicy).builder.address}
+                      </p>
+                      <p className="text-sm text-gray-500">Builder Address</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -671,27 +473,32 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         </div>
       </div>
 
-      {/* Coverage Requirements & Policy Details */}
+      {/* Policy Details */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Policy & Coverage Requirements</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Policy Details</h2>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Coverage Details</h4>
+              <h4 className="text-sm font-medium text-gray-500 mb-3">Policy Information</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Coverage Type:</span>
+                  <span className="text-gray-600">Policy Number:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.coverageType || 'N/A'}
+                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.policyNumber || 'N/A'}
                   </span>
                 </div>
-                {/* Policy Duration removed - always 1 year */}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Property Value:</span>
+                  <span className="text-gray-600">Policy Type:</span>
                   <span className="font-medium text-gray-900">
-                    ₦{typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.propertyDetails?.buildingValue?.toLocaleString() || 'N/A'}
+                    Builder Liability Insurance
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-medium text-gray-900">
+                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.status || 'N/A'}
                   </span>
                 </div>
               </div>
@@ -700,41 +507,14 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div>
               <h4 className="text-sm font-medium text-gray-500 mb-3">Survey Focus Areas</h4>
               <div className="space-y-1 text-sm text-gray-600">
-                <p>• Structural integrity assessment</p>
-                <p>• Fire safety compliance</p>
-                <p>• Security measures evaluation</p>
-                <p>• Environmental risk factors</p>
-                <p>• Building code compliance</p>
+                <p>• Construction quality assessment</p>
+                <p>• Structural integrity verification</p>
+                <p>• Safety compliance check</p>
+                <p>• Risk factors identification</p>
+                <p>• Builder liability evaluation</p>
               </div>
             </div>
           </div>
-
-          {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.additionalCoverage && (assignment.ammcId as PolicyDetails).requestDetails.additionalCoverage!.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-500 mb-2">Additional Coverage Requested</h4>
-              <div className="flex flex-wrap gap-2">
-                {(assignment.ammcId as PolicyDetails).requestDetails.additionalCoverage!.map((coverage: string, index: number) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
-                  >
-                    {coverage}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {typeof assignment.ammcId === 'object' && (assignment.ammcId as PolicyDetails)?.requestDetails?.specialRequests && (
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-500 mb-2">Special Requests from Client</h4>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-sm text-amber-800">
-                  {(assignment.ammcId as PolicyDetails).requestDetails.specialRequests}
-                </p>
-              </div>
-            </div>
-          )}
 
           {assignment.specialRequirements && assignment.specialRequirements.length > 0 && (
             <div>
@@ -744,7 +524,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                   {assignment.specialRequirements.map((req, index) => (
                     <li key={index} className="flex items-start">
                       <span className="mr-2">•</span>
-                      <span>{req}</span>
+                      <span>{req.replace(/_/g, ' ')}</span>
                     </li>
                   ))}
                 </ul>
@@ -760,32 +540,32 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           <div className="p-6">
             <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
               <FileText className="h-5 w-5 mr-2" />
-              AMMC Survey Guidelines
+              Builder Liability Survey Guidelines
             </h2>
             <div className="space-y-3 text-sm text-blue-800">
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Conduct thorough inspection of property structure and surroundings</span>
+                <span>Conduct thorough inspection of construction site and completed structures</span>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Document existing damages, hazards, or risk factors with photos</span>
+                <span>Document construction quality, materials used, and workmanship</span>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Verify property details match the information provided</span>
+                <span>Verify project details match the policy information provided</span>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Assess compliance with local building codes and safety standards</span>
+                <span>Assess compliance with building codes and safety standards</span>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Interview property builder/contractor about construction history</span>
+                <span>Interview builder about construction methods and timeline</span>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Provide detailed recommendations based on findings</span>
+                <span>Provide detailed risk assessment and recommendations</span>
               </div>
             </div>
           </div>
@@ -800,27 +580,27 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="space-y-3 text-sm text-green-800">
               <div className="flex items-start">
                 <Camera className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Exterior photos (all sides, roof, foundation)</span>
+                <span>Construction site photos (all angles, progress stages)</span>
               </div>
               <div className="flex items-start">
                 <Camera className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Interior photos (main rooms, electrical, plumbing)</span>
+                <span>Materials and workmanship documentation</span>
               </div>
               <div className="flex items-start">
                 <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Detailed survey report with findings</span>
+                <span>Detailed survey report with construction assessment</span>
               </div>
               <div className="flex items-start">
                 <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Risk assessment and recommendations</span>
+                <span>Builder liability risk assessment</span>
               </div>
               <div className="flex items-start">
                 <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Contact log with property builder/contractor</span>
+                <span>Contact log with builder</span>
               </div>
               <div className="flex items-start">
                 <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Compliance verification checklist</span>
+                <span>Safety and compliance verification</span>
               </div>
             </div>
           </div>
@@ -848,32 +628,43 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium flex items-center justify-center"
               >
                 <Phone className="h-5 w-5 mr-2" />
-                Contact Builder/Contractor
+                Contact Builder
               </button>
             </div>
             <p className="text-sm text-gray-500 mt-3 text-center">
-              Make sure to contact the property builder/contractor before visiting the site
+              Make sure to contact the builder before visiting the construction site
             </p>
           </div>
         </div>
       )}
 
       {/* Survey Submission Modal */}
-      {assignment && typeof assignment.ammcId === 'object' && (
-        <SurveySubmissionModal
-          policy={assignment.ammcId as PolicyDetails}
-          assignment={assignment as Assignment}
-          isOpen={showSurveyForm}
-          onSubmit={handleSurveySubmission}
-          onClose={() => setShowSurveyForm(false)}
-        />
-      )}
+      {(() => {
+        console.log('Modal render check:', {
+          hasAssignment: !!assignment,
+          policyIdType: typeof assignment?.policyId,
+          policyId: assignment?.policyId,
+          showSurveyForm
+        });
+        return assignment && typeof assignment.policyId === 'object' && (
+          <SurveySubmissionModal
+            policy={assignment.policyId as any}
+            assignment={assignment as Assignment}
+            isOpen={showSurveyForm}
+            onSubmit={handleSurveySubmission}
+            onClose={() => {
+              console.log('Closing survey form');
+              setShowSurveyForm(false);
+            }}
+          />
+        );
+      })()}
 
       {/* Submission Confirmation Modal */}
-      {submissionResult && showConfirmation && assignment && typeof assignment.ammcId === 'object' && (
+      {submissionResult && showConfirmation && assignment && typeof assignment.policyId === 'object' && (
         <SurveySubmissionConfirmation
           submissionResult={submissionResult}
-          policy={assignment.ammcId as PolicyDetails}
+          policy={assignment.policyId as any}
           onClose={() => {
             setShowConfirmation(false);
             setSubmissionResult(null);

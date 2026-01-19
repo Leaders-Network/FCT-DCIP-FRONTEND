@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Bell, Search, User, Settings, LogOut, Building2, RefreshCw } from "lucide-react";
+import { Bell, Search, User, Settings, LogOut, Building2, RefreshCw, Menu } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,7 +9,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const BrokerHeader = () => {
+interface BrokerHeaderProps {
+    onMenuClick?: () => void;
+}
+
+const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
     const [adminInfo, setAdminInfo] = useState<{
         fullname: string;
         email: string;
@@ -47,41 +51,49 @@ const BrokerHeader = () => {
         .toUpperCase();
 
     return (
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <header className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">
             <div className="flex items-center justify-between">
-                {/* Left side - Organization info */}
-                <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-3">
-                        <div className="bg-blue-100 p-2 rounded-lg">
-                            <Building2 className="h-5 w-5 text-blue-600" />
+                {/* Left side - Menu button and Organization info */}
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                    {/* Mobile menu button */}
+                    <button
+                        onClick={onMenuClick}
+                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 md:hidden"
+                    >
+                        <Menu className="h-5 w-5" />
+                    </button>
+
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                        <div className="bg-blue-100 p-1.5 sm:p-2 rounded-lg">
+                            <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                         </div>
-                        <div>
-                            <h1 className="text-lg font-semibold text-gray-900">Broker Admin Portal</h1>
+                        <div className="hidden sm:block">
+                            <h1 className="text-base sm:text-lg font-semibold text-gray-900">Broker Admin Portal</h1>
                             <p className="text-xs text-gray-500">Faith Broker Firm</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Right side - Search, notifications, and user menu */}
-                <div className="flex items-center space-x-4">
-                    {/* Search */}
-                    <form onSubmit={handleSearch} className="relative hidden md:block">
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                    {/* Search - hidden on mobile */}
+                    <form onSubmit={handleSearch} className="relative hidden lg:block">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Search className="h-4 w-4 text-gray-400" />
                         </div>
                         <input
                             type="text"
-                            placeholder="Search assignments, surveyors..."
+                            placeholder="Search..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                            className="block w-48 xl:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         />
                     </form>
 
-                    {/* Refresh Button */}
+                    {/* Refresh Button - hidden on small screens */}
                     <button
                         onClick={() => window.location.reload()}
-                        className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-colors hidden sm:block"
                         title="Refresh Dashboard"
                     >
                         <RefreshCw className="h-5 w-5" />
@@ -98,9 +110,9 @@ const BrokerHeader = () => {
                     </button>
 
                     {/* User Menu */}
-                    <div className="flex items-center space-x-3">
-                        <div className="hidden md:block text-right">
-                            <p className="text-sm font-medium text-gray-900">John Doe</p>
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                        <div className="hidden lg:block text-right">
+                            <p className="text-sm font-medium text-gray-900 truncate max-w-[100px]">John Doe</p>
                             <p className="text-xs text-gray-500">Administrator</p>
                         </div>
 

@@ -14,10 +14,21 @@ import {
     UserCheck,
     AlertTriangle,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    X
 } from "lucide-react";
 
-const NIAAdminSidebar = () => {
+interface NIAAdminSidebarProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+    isMobile?: boolean;
+}
+
+const NIAAdminSidebar: React.FC<NIAAdminSidebarProps> = ({
+    isOpen = true,
+    onClose,
+    isMobile = false
+}) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
@@ -41,28 +52,22 @@ const NIAAdminSidebar = () => {
             description: "Overview and statistics"
         },
         {
+            href: "/nia-admin/dashboard/policies",
+            label: "Policies",
+            icon: FileText,
+            description: "Builder Liability policies"
+        },
+        {
             href: "/nia-admin/surveyors",
-            label: "NIA Surveyors",
+            label: "Surveyors",
             icon: Users,
-            description: "Manage NIA surveyors"
+            description: "Manage surveyors"
         },
         {
             href: "/nia-admin/assignments",
             label: "Assignments",
             icon: ClipboardList,
-            description: "Dual-surveyor assignments"
-        },
-        {
-            href: "/nia-admin/user-inquiries",
-            label: "User Inquiries",
-            icon: AlertTriangle,
-            description: "Handle user conflict inquiries"
-        },
-        {
-            href: "/nia-admin/processing-monitor",
-            label: "Processing Monitor",
-            icon: FileText,
-            description: "Monitor automatic report processing"
+            description: "Automated assignments"
         },
         {
             href: "/nia-admin/administrators",
@@ -78,15 +83,22 @@ const NIAAdminSidebar = () => {
         },
     ];
 
+    // Determine if sidebar should show content expanded
+    const showExpanded = isMobile || !isCollapsed;
+
     return (
         <aside
-            className={`bg-white shadow-lg transition-all duration-300 flex flex-col border-r border-gray-200 ${isCollapsed ? "w-16" : "w-64"
-                }`}
+            className={`bg-white shadow-lg transition-all duration-300 flex flex-col border-r border-gray-200 fixed md:relative z-30 h-full
+                ${isMobile
+                    ? (isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64")
+                    : (isCollapsed ? "w-16" : "w-64")
+                }
+                md:translate-x-0`}
         >
             {/* Header */}
             <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                    {!isCollapsed ? (
+                    {showExpanded ? (
                         <div className="flex items-center space-x-3">
                             <div className="bg-blue-600 p-2 rounded-lg">
                                 <Building2 className="h-6 w-6 text-white" />
@@ -102,21 +114,30 @@ const NIAAdminSidebar = () => {
                         </div>
                     )}
 
-                    <button
-                        onClick={toggleSidebar}
-                        className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                        {isCollapsed ? (
-                            <ChevronRight className="h-4 w-4 text-gray-500" />
-                        ) : (
-                            <ChevronLeft className="h-4 w-4 text-gray-500" />
-                        )}
-                    </button>
+                    {isMobile ? (
+                        <button
+                            onClick={onClose}
+                            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                        >
+                            <X className="h-5 w-5 text-gray-500" />
+                        </button>
+                    ) : (
+                        <button
+                            onClick={toggleSidebar}
+                            className="p-1 rounded-full hover:bg-gray-100 transition-colors hidden md:block"
+                        >
+                            {isCollapsed ? (
+                                <ChevronRight className="h-4 w-4 text-gray-500" />
+                            ) : (
+                                <ChevronLeft className="h-4 w-4 text-gray-500" />
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
 
             {/* Organization Badge */}
-            {!isCollapsed && (
+            {showExpanded && (
                 <div className="px-4 py-2 bg-blue-50 border-b border-gray-200">
                     <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -141,14 +162,14 @@ const NIAAdminSidebar = () => {
                                 className={`flex items-center px-3 py-2 rounded-lg transition-colors group ${isActive
                                     ? "bg-blue-100 text-blue-700 border border-blue-200"
                                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                    } ${isCollapsed ? "justify-center" : ""}`}
-                                title={isCollapsed ? item.label : ""}
+                                    } ${!showExpanded ? "justify-center" : ""}`}
+                                title={!showExpanded ? item.label : ""}
                             >
                                 <Icon
-                                    className={`w-5 h-5 ${isCollapsed ? "" : "mr-3"} ${isActive ? "text-blue-600" : "text-gray-500 group-hover:text-gray-700"
+                                    className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"} ${isActive ? "text-blue-600" : "text-gray-500 group-hover:text-gray-700"
                                         }`}
                                 />
-                                {!isCollapsed && (
+                                {showExpanded && (
                                     <div className="flex-1">
                                         <div className="font-medium">{item.label}</div>
                                         <div className="text-xs text-gray-500 group-hover:text-gray-600">
@@ -164,7 +185,7 @@ const NIAAdminSidebar = () => {
 
             {/* User Info & Logout */}
             <div className="border-t border-gray-200 p-4">
-                {!isCollapsed && (
+                {showExpanded && (
                     <div className="mb-3">
                         <div className="flex items-center space-x-3">
                             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -175,7 +196,7 @@ const NIAAdminSidebar = () => {
                                     NIA Administrator
                                 </p>
                                 <p className="text-xs text-gray-500 truncate">
-                                    {JSON.parse(localStorage.getItem('niaAdminInfo') || '{}').email || 'admin@nia.org'}
+                                    {typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('niaAdminInfo') || '{}').email || 'admin@nia.org' : 'admin@nia.org'}
                                 </p>
                             </div>
                         </div>
@@ -184,12 +205,12 @@ const NIAAdminSidebar = () => {
 
                 <button
                     onClick={handleLogout}
-                    className={`flex items-center w-full px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${isCollapsed ? "justify-center" : ""
+                    className={`flex items-center w-full px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${!showExpanded ? "justify-center" : ""
                         }`}
-                    title={isCollapsed ? "Logout" : ""}
+                    title={!showExpanded ? "Logout" : ""}
                 >
-                    <LogOut className={`w-5 h-5 ${isCollapsed ? "" : "mr-3"}`} />
-                    {!isCollapsed && <span>Logout</span>}
+                    <LogOut className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"}`} />
+                    {showExpanded && <span>Logout</span>}
                 </button>
             </div>
         </aside>

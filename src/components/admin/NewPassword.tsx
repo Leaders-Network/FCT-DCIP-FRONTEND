@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import Input from '../Input';
 import Button from '../Button';
 import { useRouter } from 'next/navigation';
-import { verifyOTPAndResetPassword } from '@/services/api';
+import { resetPasswordWithToken } from '@/services/api';
 
 const NewPassword = () => {
   const [newpassword, setNewPassword] = useState("");
@@ -19,13 +19,18 @@ const NewPassword = () => {
       return;
     }
 
+    if (newpassword.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     const email = localStorage.getItem("resetEmail");
-    const otp = localStorage.getItem("enteredOTP");
+    const resetToken = localStorage.getItem("resetToken");
 
-    if (!email || !otp) {
+    if (!email || !resetToken) {
       setError(
         "Missing reset information. Please try again from the beginning."
       );
@@ -34,12 +39,28 @@ const NewPassword = () => {
     }
 
     try {
-      await verifyOTPAndResetPassword(email, otp, newpassword);
+      const response = await resetPasswordWithToken(email, resetToken, newpassword, confirmPassword);
+      console.log("✅ Password reset successful:", response.data);
+
+      // Clean up localStorage
       localStorage.removeItem("resetEmail");
       localStorage.removeItem("enteredOTP");
-      router.push("/admin/registration-success");
-    } catch (err) {
-      setError("Failed to reset password. Please try again.");
+      localStorage.removeItem("resetToken");
+
+      // Determine the correct route based on current path
+      const currentPath = window.location.pathname;
+      let successRoute = '/admin/registration-success';
+      if (currentPath.includes('/nia-admin')) {
+        successRoute = '/nia-admin/registration-success';
+      } else if (currentPath.includes('/surveyor')) {
+        successRoute = '/surveyor/registration-success';
+      }
+      router.push(successRoute);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error
+        ? err.message
+        : (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to reset password. Please try again.";
+      setError(errorMessage);
       console.log(err, "err");
     } finally {
       setLoading(false);
@@ -74,7 +95,7 @@ const NewPassword = () => {
           />
         </div>
         <div className="flex items-center justify-between mb-6">
-          <Button title="Submit" onClick={() => {}} isDisabled={loading} />
+          <Button title="Submit" onClick={() => { }} isDisabled={loading} />
         </div>
       </form>
     </div>

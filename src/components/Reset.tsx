@@ -35,14 +35,14 @@ export default function Reset() {
     const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
     try {
-      // Step 1: Request OTP for password reset
-            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+      // Step 1: Request OTP for password reset (using new unified endpoint)
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
       const response = await fetch(
-        `${apiBaseUrl}/auth/send-reset-password-otp`,
+        `${apiBaseUrl}/reset-password/send-otp`,
         {
           method: "POST",
           headers: {
-            apiKey: ApiKey,
+            apikey: ApiKey, // Note: lowercase 'apikey'
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email }),
@@ -53,11 +53,14 @@ export default function Reset() {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      // Store email and token for the reset process
+      console.log('✅ OTP sent successfully:', data);
+
+      // Store email for the reset process
       localStorage.setItem("resetEmail", email);
-      localStorage.setItem("resetToken", data.token);
+      localStorage.setItem("userType", data.userType);
+
       // Redirect to reset verification page
       router.push("/reset-verify");
     } catch (error) {
@@ -178,17 +181,17 @@ function ResetPasswordTitle() {
   );
 }
 
-function ResetPasswordForm({ 
-  email, 
-  setEmail, 
-  error, 
-  isLoading, 
-  handleSubmit 
-}: { 
-  email: string; 
-  setEmail: (email: string) => void; 
-  error: string | null; 
-  isLoading: boolean; 
+function ResetPasswordForm({
+  email,
+  setEmail,
+  error,
+  isLoading,
+  handleSubmit
+}: {
+  email: string;
+  setEmail: (email: string) => void;
+  error: string | null;
+  isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
 }) {
   return (
@@ -215,9 +218,8 @@ function ResetPasswordForm({
       <button
         type="submit"
         disabled={isLoading}
-        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${
-          isLoading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
       >
         {isLoading ? "Sending..." : "Send code"}
         {!isLoading && (

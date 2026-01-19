@@ -225,7 +225,7 @@ export const ROUTES = {
     },
     USER: {
         DASHBOARD: '/dashboard',
-        POLICIES: '/dashboard/policies',
+        POLICIES: '/dashboard/insurance',
         REPORTS: '/dashboard/reports',
         CONTACTS: '/dashboard/contacts',
         PROFILE: '/dashboard/profile'

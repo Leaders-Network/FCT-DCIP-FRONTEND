@@ -35,7 +35,7 @@ const Sidebar = () => {
         {!isCollapsed ? (
           <Image
             src="/logoblack.svg"
-            alt="FCT-DCIP Logo"
+            alt="Builders-Liability-AMMC Logo"
             className="bg-black-500"
             width={isCollapsed ? 150 : 300}
             height={isCollapsed ? 150 : 300}

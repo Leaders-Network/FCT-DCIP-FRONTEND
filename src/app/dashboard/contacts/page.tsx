@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import ContactManagementHub from '@/components/dashboard/ContactManagementHub';
 import { ContactData, SurveyorContactInfo, ConflictInquiryData } from '@/types/api.types';
+import { getAuthToken } from '@/utils/auth';
 
 const ContactsPage: React.FC = () => {
     const [contactData, setContactData] = useState<ContactData>({
@@ -22,7 +23,7 @@ const ContactsPage: React.FC = () => {
                 setLoading(true);
 
                 // Get user's latest policy to determine contact information
-                const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+                const token = getAuthToken('user');
                 if (!token) {
                     setLoading(false);
                     return;
@@ -265,8 +266,6 @@ const ContactsPage: React.FC = () => {
                     assignmentStatus={contactData.assignmentStatus}
                     ammcAdmin={contactData.ammcAdmin}
                     niaAdmin={contactData.niaAdmin}
-                    policyId={contactData.policyId || undefined}
-                    mergedReportId={contactData.mergedReportId || undefined}
                     hasConflicts={contactData.hasConflicts}
                     showContactActions={true}
                     defaultExpandedSection="both"

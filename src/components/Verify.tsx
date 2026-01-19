@@ -11,25 +11,25 @@ import { toast } from "sonner";
 export default function Verify() {
 
   const [currentImage, setCurrentImage] = useState(0)
-       const backgroundImages = [
-        "/bg-construct-2.webp",
-        "/bg-hero-1.jpg",
-        "/bg-hero-4.jpg",
-        "/bg-hero-5.jpg",
-        "/bg-hero-6.jpg",
-        "/bg-hero-7.jpg",
-        "/bg-hero-8.jpg",
-        "/bg-hero-9.jpg",
-        "/bg-hero-11.jpg",
-    ]
-    
-    useEffect(() => {
-      const interval = setInterval(()=> {
-        setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
-      },5000); 
-      return () => clearInterval(interval);
-    }, [backgroundImages.length]);
-  
+  const backgroundImages = [
+    "/bg-construct-2.webp",
+    "/bg-hero-1.jpg",
+    "/bg-hero-4.jpg",
+    "/bg-hero-5.jpg",
+    "/bg-hero-6.jpg",
+    "/bg-hero-7.jpg",
+    "/bg-hero-8.jpg",
+    "/bg-hero-9.jpg",
+    "/bg-hero-11.jpg",
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [backgroundImages.length]);
+
 
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export default function Verify() {
 
       // toast.loading("Verifying OTP...");
       // Verify OTP
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://fct-dcip-backend.vercel.app/api/v1";
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
       const verifyResponse = await fetch(
         `${apiBaseUrl}/auth/verify-otp`,
         {
@@ -94,7 +94,7 @@ export default function Verify() {
         throw new Error(errorData.message || `HTTP error! status: ${verifyResponse.status}`);
       }
 
-       toast.dismiss(); // remove the loading toast
+      toast.dismiss(); // remove the loading toast
       toast.success("✅ OTP Verified Successfully!", {
         description: "Completing your registration...",
       });
@@ -141,14 +141,14 @@ export default function Verify() {
       });
 
       // router.push("/dashboard");
-      setTimeout(() => router.push("/dashboard"), 1200);
+      setTimeout(() => router.push("/login"), 1200);
     } catch (error) {
       console.error("Verification/Registration error:", error);
 
-      const message =  error instanceof Error
-          ? error.message
-          : "An unexpected error occurred. Please try again.";
-          setError(message);
+      const message = error instanceof Error
+        ? error.message
+        : "An unexpected error occurred. Please try again.";
+      setError(message);
       toast.error("Verification failed", { description: message });
     } finally {
       setIsLoading(false);
@@ -172,34 +172,33 @@ export default function Verify() {
         </main>
       </div>
       <div className="hidden md:block md:w-1/3 relative overflow-hidden">
-              {backgroundImages.map((src, index) => (
-                <Image
-                  key={index}
-                  src={src}
-                  alt={`Background ${index + 1}`}
-                  fill
-                  priority={index === 0}
-                  className={`object-cover transition-opacity duration-[2000ms] ${
-                    index === currentImage ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-              ))}
-              
-              {/* Dark Overlay */}
-              <div className="absolute inset-0 bg-black/60"></div>
-      
-              {/* Text Overlay */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 md:px-10 text-white">
-                <div className="max-w-md">
-                  <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">
-                    OTP Verification
-                  </h2>
-                  <p className="text-[3rem] md:text-[1.5rem] leading-relaxed fade-in-text mt-2">
-                    Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
-                  </p>
-                </div>
-              </div>
-            </div>
+        {backgroundImages.map((src, index) => (
+          <Image
+            key={index}
+            src={src}
+            alt={`Background ${index + 1}`}
+            fill
+            priority={index === 0}
+            className={`object-cover transition-opacity duration-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"
+              }`}
+          />
+        ))}
+
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/60"></div>
+
+        {/* Text Overlay */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 md:px-10 text-white">
+          <div className="max-w-md">
+            <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">
+              OTP Verification
+            </h2>
+            <p className="text-[3rem] md:text-[1.5rem] leading-relaxed fade-in-text mt-2">
+              Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -303,7 +302,7 @@ function VerifyForm({
           type="text"
           id="otp"
           value={otp}
-          onChange={(e) => setOtp(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtp(e.target.value)}
           placeholder=" "
           maxLength={5}
           className="peer w-full h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -316,9 +315,9 @@ function VerifyForm({
         </label>
       </div>
 
-      {error && <p 
+      {error && <p
         className="text-red-500 text-xs md:text-sm mt-1 transition-all duration-300 ease-in-out animate-fadeIn">
-          {error}</p>}
+        {error}</p>}
 
       <button
         type="submit"

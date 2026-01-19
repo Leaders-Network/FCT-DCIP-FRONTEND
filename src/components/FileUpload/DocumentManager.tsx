@@ -11,6 +11,8 @@ interface DocumentManagerProps {
   className?: string;
   title?: string;
   showCategories?: boolean;
+  assignmentId?: string;
+  ammcId?: string;
 }
 
 interface DocumentCategory {
@@ -94,7 +96,9 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
   initialDocuments = [],
   className = '',
   title = 'Document Manager',
-  showCategories = true
+  showCategories = true,
+  assignmentId,
+  ammcId
 }) => {
   const [documents, setDocuments] = useState<DocumentFile[]>(initialDocuments);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>(documentCategories[0]);
@@ -243,6 +247,8 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
                 maxSize={selectedCategory.maxSize}
                 isRequired={selectedCategory.isRequired}
                 description={`Upload ${selectedCategory.name.toLowerCase()}`}
+                assignmentId={assignmentId}
+                ammcId={ammcId}
                 onFilesUploaded={(files) => handleFilesUploaded(selectedCategory.id, files)}
                 onError={(error) => handleUploadError(selectedCategory.id, error)}
               />
@@ -254,6 +260,8 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
         <FileUploadZone
           category="general"
           documentType="other"
+          assignmentId={assignmentId}
+          ammcId={ammcId}
           onFilesUploaded={(files) => handleFilesUploaded('general', files)}
           onError={(error) => handleUploadError('general', error)}
         />

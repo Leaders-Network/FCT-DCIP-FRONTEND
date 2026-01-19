@@ -1,8 +1,8 @@
-# FCT-DCIP Frontend
+# Builders-Liability-AMMC Frontend
 
 ## 📋 Overview
 
-The FCT-DCIP (Federal Capital Territory - Distress and Compulsory Insurance Policy) Frontend is a modern Next.js application that provides a comprehensive interface for managing insurance policy requests, dual surveyor assignments, and administrative operations for AMMC and NIA organizations.
+The Builders-Liability-AMMC (Federal Capital Territory - Distress and Compulsory Insurance Policy) Frontend is a modern Next.js application that provides a comprehensive interface for managing insurance policy requests, dual surveyor assignments, and administrative operations for AMMC and NIA organizations.
 
 ## 🏗️ Architecture
 
@@ -28,7 +28,7 @@ The FCT-DCIP (Federal Capital Territory - Distress and Compulsory Insurance Poli
 ## 📁 Project Structure
 
 ```
-FCT-DCIP-FRONTEND/
+Builders-Liability-AMMC-FRONTEND/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
 │   │   ├── dashboard/         # User dashboard
@@ -73,7 +73,7 @@ FCT-DCIP-FRONTEND/
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd FCT-DCIP-FRONTEND
+cd Builders-Liability-AMMC-FRONTEND
 ```
 
 2. **Install dependencies**
@@ -366,7 +366,7 @@ xl: 1280px
 
 Use the backend token generation script to create test accounts:
 ```bash
-cd FCT-DCIP-BACKEND
+cd Builders-Liability-AMMC-BACKEND
 npm run generate-tokens
 ```
 

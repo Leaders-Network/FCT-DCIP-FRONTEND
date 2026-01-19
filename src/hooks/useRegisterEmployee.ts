@@ -21,7 +21,13 @@ interface RegisterEmployeeState {
   availableRoles: Role[];
 }
 
-export const useRegisterEmployee = () => {
+interface UseRegisterEmployeeReturn extends RegisterEmployeeState {
+  userRole: string;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
+}
+
+export const useRegisterEmployee = (): UseRegisterEmployeeReturn => {
   const router = useRouter();
   const [state, setState] = useState<RegisterEmployeeState>({
     formData: {
@@ -38,7 +44,7 @@ export const useRegisterEmployee = () => {
   });
 
   const [userRole, setUserRole] = useState<string>("");
-  
+
   // Get current user role from context or localStorage
   useEffect(() => {
     const currentUserRole = localStorage.getItem("userRole"); // or from your auth context
@@ -53,11 +59,11 @@ export const useRegisterEmployee = () => {
       case ROLE_IDS.SUPER_ADMIN:
         return roles; // Show all roles
       case ROLE_IDS.ADMIN:
-        return roles.filter(role => 
+        return roles.filter(role =>
           role._id === ROLE_IDS.ADMIN || role._id === ROLE_IDS.STAFF
         );
       case ROLE_IDS.STAFF:
-        return roles.filter(role => 
+        return roles.filter(role =>
           role._id === ROLE_IDS.STAFF
         );
       default:

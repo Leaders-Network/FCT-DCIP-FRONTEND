@@ -1,7 +1,7 @@
 import Verify from "@/components/Verify";
 import React from "react";
 
-export default function page() {
+export default function VerifyPage() {
   return (
     <>
       <Verify />

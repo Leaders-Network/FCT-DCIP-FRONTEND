@@ -10,30 +10,30 @@ import Link from "next/link";
 
 const faqItems = [
   {
-    question: "What is FCT-DCIP?",
+    question: "What is Builders-Liability-AMMC?",
     answer:
-      "FCT-DCIP stands for Federal Capital Territory Development Control Insurance Program. It is a comprehensive insurance solution for property builders and contractors in Abuja.",
+      "Builders-Liability-AMMC stands for Federal Capital Territory Development Control Insurance Program. It is a comprehensive insurance solution for property builders and contractors in Abuja.",
   },
   {
-    question: "What are the benefits of the FCT-DCIP?",
+    question: "What are the benefits of the Builders-Liability-AMMC?",
     answer:
-      "The FCT-DCIP provides protection against property damage, liability coverage, and ensures compliance with local regulations.",
+      "The Builders-Liability-AMMC provides protection against property damage, liability coverage, and ensures compliance with local regulations.",
   },
   {
-    question: "Who are the stakeholders in the FCT-DCIP?",
+    question: "Who are the stakeholders in the Builders-Liability-AMMC?",
     answer:
       "Stakeholders include property builders/contractors, developers, insurance providers, and the FCT Development Control Department.",
   },
   {
-    question: "What is the advantage of the FCT-DCIP?",
+    question: "What is the advantage of the Builders-Liability-AMMC?",
     answer:
-      "The FCT-DCIP offers tailored insurance solutions, streamlined processes, and enhanced protection for property investments in Abuja.",
+      "The Builders-Liability-AMMC offers tailored insurance solutions, streamlined processes, and enhanced protection for property investments in Abuja.",
   },
 ];
 
 const FAQ = () => {
   return (
-    <section className="py-16 bg-[#004C3F]">
+    <section className="py-16 bg-green-800">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row">
           <div data-aos="zoom-in" data-aos-anchor-placement="top-center" className="w-full items-center justify-center md:pr-8">
@@ -53,10 +53,10 @@ const FAQ = () => {
               <Accordion type="single" collapsible className="space-y-4">
                 {faqItems.map((item, index) => (
                   <AccordionItem key={index} value={`item-${index}`} className="border rounded-lg">
-                    <AccordionTrigger className="px-4 py-2 text-[#004C3F] hover:text-[#004C3F] hover:no-underline">
+                    <AccordionTrigger className="px-4 py-2 text-[#004C3F] text-[1.03rem] hover:text-[#004C3F] hover:no-underline">
                       {item.question}
                     </AccordionTrigger>
-                    <AccordionContent className="px-4 py-2 text-gray-600">
+                    <AccordionContent className="px-4 py-2 text-gray-600 text-[1rem]">
                       {item.answer}
                     </AccordionContent>
                   </AccordionItem>

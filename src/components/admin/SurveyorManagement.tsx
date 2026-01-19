@@ -39,6 +39,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [specializationFilter, setSpecializationFilter] = useState<string>("all");
@@ -66,6 +67,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     specializations: [] as string[],
     licenseNumber: "",
     address: "",
+    state: "",
+    city: "",
+    lga: "",
+    district: "",
     emergencyContact: "",
     notes: "",
     role: "Surveyor",
@@ -78,66 +83,87 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     availability: "available" as "available" | "busy" | "unavailable"
   });
 
+  // Initial load
   useEffect(() => {
-    fetchSurveyors();
-    fetchAssignments();
+    const fetchInitialData = async () => {
+      setLoading(true);
+      try {
+        const { adminApi, getPolicyRequests } = await import("@/services/api");
+
+        // Fetch surveyors
+        const surveyorResponse = await adminApi.getSurveyors({});
+
+        if (surveyorResponse?.success && surveyorResponse?.data) {
+          setSurveyors(surveyorResponse.data);
+        }
+
+        // Fetch assignments
+        const assignmentResponse = await getPolicyRequests('all', 1, 100);
+        if (assignmentResponse?.data && Array.isArray(assignmentResponse.data)) {
+          const assignmentData = assignmentResponse.data?.map((policy: PolicyRequest) => ({
+            _id: policy._id,
+            surveyorId: policy.assignedSurveyors?.[0] || null,
+            ammcId: policy._id,
+            status: policy.status,
+            createdAt: policy.createdAt,
+            updatedAt: policy.updatedAt
+          })) || [];
+          setAssignments(assignmentData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
   }, []);
 
-  const fetchSurveyors = async () => {
-    setLoading(true);
-    try {
-      const { adminApi } = await import("@/services/api");
+  // Fetch on filter/search changes
+  useEffect(() => {
+    const fetchSurveyors = async () => {
+      setFetching(true);
+      try {
+        const { adminApi } = await import("@/services/api");
 
-      // Fetch AMMC surveyors from the API
-      const response = await adminApi.getSurveyors({
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        specialization: specializationFilter !== "all" ? specializationFilter : undefined,
-        organization: "AMMC", // Filter for AMMC surveyors only
-        search: searchTerm || undefined
-      });
+        const filters = {
+          status: statusFilter !== "all" ? statusFilter : undefined,
+          specialization: specializationFilter !== "all" ? specializationFilter : undefined,
+          search: searchTerm || undefined
+        };
 
-      console.log("Surveyor API response:", response);
+        console.log("Fetching surveyors with filters:", filters);
 
-      if (response?.success && response?.data) {
-        setSurveyors(response.data);
-      } else {
+        const response = await adminApi.getSurveyors(filters);
+
+        console.log("Surveyor API response:", response);
+        console.log("Surveyors count:", response?.data?.length || 0);
+
+        if (response?.success && response?.data) {
+          setSurveyors(response.data);
+        } else {
+          console.warn("No surveyors data in response");
+          setSurveyors([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch surveyors:", error);
         setSurveyors([]);
+      } finally {
+        setFetching(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch surveyors:", error);
-      setSurveyors([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const fetchAssignments = async () => {
-    try {
-      const { getPolicyRequests } = await import("@/services/api");
+    // Skip initial render (handled by initial load effect)
+    if (loading) return;
 
-      // Fetch all policy requests with assignments
-      const response = await getPolicyRequests('all', 1, 100);
+    // Debounce search
+    const debounceTimer = setTimeout(() => {
+      fetchSurveyors();
+    }, searchTerm ? 500 : 0);
 
-      if (response?.data && Array.isArray(response.data)) {
-        // Transform policy requests to assignment format if needed
-        const assignmentData = response.data?.map((policy: PolicyRequest) => ({
-          _id: policy._id,
-          surveyorId: policy.assignedSurveyors?.[0] || null,
-          ammcId: policy._id,
-          status: policy.status,
-          createdAt: policy.createdAt,
-          updatedAt: policy.updatedAt
-        })) || [];
-
-        setAssignments(assignmentData);
-      } else {
-        setAssignments([]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch assignments:', error);
-      setAssignments([]);
-    }
-  };
+    return () => clearTimeout(debounceTimer);
+  }, [statusFilter, specializationFilter, searchTerm, loading]);
 
   const fetchSurveyorAnalytics = async (surveyor: Surveyor) => {
     setSelectedSurveyor(surveyor);
@@ -204,25 +230,8 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }
   };
 
-  const filteredSurveyors = (surveyors || []).filter(surveyor => {
-    const matchesSearch =
-      (surveyor?.firstname || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-      (surveyor?.lastname || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-      (surveyor?.email || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-      (surveyor?.licenseNumber || '').toLowerCase().includes((searchTerm || '').toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" ||
-      (surveyor?.employeeStatus?.status || '').toLowerCase() === (statusFilter || '').toLowerCase();
-
-    const matchesSpecialization =
-      specializationFilter === "all" ||
-      (surveyor?.specializations || []).some(spec =>
-        (spec || '').toLowerCase().includes((specializationFilter || '').toLowerCase())
-      );
-
-    return matchesSearch && matchesStatus && matchesSpecialization;
-  });
+  // Backend now handles all filtering, so we just use the surveyors directly
+  const filteredSurveyors = surveyors || [];
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -241,6 +250,32 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     ).length;
   };
 
+  const refetchSurveyors = async () => {
+    setFetching(true);
+    try {
+      const { adminApi } = await import("@/services/api");
+
+      const filters = {
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        specialization: specializationFilter !== "all" ? specializationFilter : undefined,
+        search: searchTerm || undefined
+      };
+
+      const response = await adminApi.getSurveyors(filters);
+
+      if (response?.success && response?.data) {
+        setSurveyors(response.data);
+      } else {
+        setSurveyors([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch surveyors:", error);
+      setSurveyors([]);
+    } finally {
+      setFetching(false);
+    }
+  };
+
   const handleCreateSurveyor = async () => {
     try {
       await onCreateSurveyor({
@@ -256,6 +291,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         specializations: [],
         licenseNumber: "",
         address: "",
+        state: "",
+        city: "",
+        lga: "",
+        district: "",
         emergencyContact: "",
         notes: "",
         role: "Surveyor",
@@ -267,7 +306,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         qualifications: [],
         availability: "available"
       });
-      fetchSurveyors();
+      refetchSurveyors();
     } catch (error) {
       console.error('Failed to create surveyor:', error);
     }
@@ -281,7 +320,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         status: formData.status as "active" | "inactive" | "suspended"
       });
       setShowEditModal(false);
-      fetchSurveyors();
+      refetchSurveyors();
     } catch (error) {
       console.error('Failed to update surveyor:', error);
     }
@@ -291,7 +330,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     if (window.confirm('Are you sure you want to delete this surveyor?')) {
       try {
         await onDeleteSurveyor(surveyorId);
-        fetchSurveyors();
+        refetchSurveyors();
       } catch (error) {
         console.error('Failed to delete surveyor:', error);
       }
@@ -310,6 +349,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       specializations: surveyor.profile?.specialization || surveyor.specializations || [],
       licenseNumber: surveyor.licenseNumber || "",
       address: surveyor.profile?.location?.state || surveyor.address || "",
+      state: surveyor.profile?.location?.state || "",
+      city: surveyor.profile?.location?.city || "",
+      lga: surveyor.profile?.location?.lga || "",
+      district: surveyor.profile?.location?.district || "",
       emergencyContact: surveyor.emergencyContact || "",
       notes: surveyor.notes || "",
       role: surveyor.role || "Surveyor",
@@ -345,15 +388,15 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">AMMC Surveyor Management</h2>
-          <p className="text-gray-600">Comprehensive management of AMMC surveyor profiles, qualifications, and assignments</p>
+          <h2 className="text-2xl font-bold text-gray-900">Surveyor Management</h2>
+          <p className="text-gray-600">Comprehensive management of surveyor profiles, qualifications, and LGA-based assignments</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
           className="bg-[#028835] text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add AMMC Surveyor
+          Add Surveyor
         </button>
       </div>
 
@@ -364,7 +407,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search AMMC surveyors..."
+              placeholder="Search surveyors..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2"
@@ -407,8 +450,15 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         </div>
       </div>
 
+
       {/* Surveyors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {fetching && (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <span className="ml-3 text-gray-600">Loading surveyors...</span>
+        </div>
+      )}
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${fetching ? 'opacity-50 pointer-events-none' : ''}`}>
         {filteredSurveyors.map((surveyor) => (
           <div key={surveyor._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6">
@@ -423,9 +473,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <button className="text-gray-400 hover:text-gray-600">
                     <MoreVertical className="h-4 w-4" />
                   </button>
-                  {typeof surveyor.userId === "object" && (surveyor.userId as any)?.phonenumber
-                    ? (surveyor.userId as any).phonenumber
-                    : surveyor.phonenumber || 'N/A'}
+                  {surveyor.userId?.phonenumber ?? surveyor.phonenumber ?? 'N/A'}
                 </div>
               </div>
 
@@ -552,10 +600,10 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold">
-                    {showCreateModal ? "Add New AMMC Surveyor" : "Edit AMMC Surveyor"}
+                    {showCreateModal ? "Add New Surveyor" : "Edit Surveyor"}
                   </h2>
                   <p className="text-green-100 mt-1">
-                    {showCreateModal ? 'Register a new AMMC surveyor' : 'Update surveyor information'}
+                    {showCreateModal ? 'Register a new surveyor with LGA assignment' : 'Update surveyor information'}
                   </p>
                 </div>
                 <button
@@ -649,6 +697,41 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                       placeholder="Enter full address"
                       required
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        LGA (Local Government Area) *
+                      </label>
+                      <select
+                        value={formData.lga}
+                        onChange={(e) => setFormData({ ...formData, lga: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        required
+                      >
+                        <option value="">Select LGA</option>
+                        <option value="amac">Abuja Municipal Area Council (AMAC)</option>
+                        <option value="bwari">Bwari Area Council</option>
+                        <option value="gwagwalada">Gwagwalada Area Council</option>
+                        <option value="kuje">Kuje Area Council</option>
+                        <option value="abaji">Abaji Area Council</option>
+                        <option value="kwali">Kwali Area Council</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        District
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.district}
+                        onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter district within LGA"
+                      />
+                    </div>
                   </div>
                 </div>
 

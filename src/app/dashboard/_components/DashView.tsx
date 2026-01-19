@@ -1,11 +1,46 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
+import { BuilderLiabilityPolicyForm } from '@/components/builderLiability/PolicyForm';
+import { BuilderLiabilityPolicyList } from '@/components/builderLiability/PolicyList';
+// DEPRECATED: Legacy property insurance form - system now uses Builder Liability Policy exclusively
+// import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import ReportSection from "@/components/dashboard/ReportSection";
-import MergedReportsSummary from "@/components/user/MergedReportsSummary";
-import { CreatePolicyRequestData, PolicyRequest } from "@/types/api.types";
+// REMOVED: MergedReportsSummary - not applicable for Builder Liability policies
+import NotificationTester from "@/components/shared/NotificationTester";
+import { PolicyRequest } from "@/types/api.types";
 import Image from "next/image";
-import { MoreVertical, Download, CreditCard, Eye, FileText } from "lucide-react";
+import { useAuth } from "@/context/useAuth";
+import { getCookie } from "@/utils/cookies";
+import { getAuthToken } from "@/utils/auth";
+import {
+  MoreVertical,
+  Download,
+  CreditCard,
+  Eye,
+  FileText,
+  Search,
+  Filter,
+  Plus,
+  Bell,
+  User,
+  Settings,
+  HelpCircle,
+  ChevronDown,
+  Calendar,
+  MapPin,
+  Building,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  X,
+  RefreshCw,
+  ArrowRight,
+  Shield,
+  Home,
+  BarChart3,
+  Users
+} from "lucide-react";
 import {
   PROPERTY_TYPES,
   CONSTRUCTION_MATERIALS,
@@ -14,74 +49,182 @@ import {
 } from "@/constants/policyConstants";
 
 const Dashview = () => {
-  const [showPolicyRequest, setShowPolicyRequest] = useState(false);
+  const [showBuilderLiabilityForm, setShowBuilderLiabilityForm] = useState(false);
   const [stats, setStats] = useState({
     active: 0,
     expired: 0,
     pending: 0,
-    collaborators: 0
+    collaborators: 0,
+    completed: 0,
+    paymentPending: 0
   });
-  const [recentInsurances, setRecentInsurances] = useState<any[]>([]);
-  const [surveyedPolicies, setSurveyedPolicies] = useState<any[]>([]);
-  const [allPolicies, setAllPolicies] = useState<any[]>([]);
+  const [recentInsurances, setRecentInsurances] = useState<PolicyRequest[]>([]);
+  const [surveyedPolicies, setSurveyedPolicies] = useState<PolicyRequest[]>([]);
+  const [allPolicies, setAllPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<'overview' | 'reports'>('overview');
 
-  // Get user name from local storage
-  const userName = typeof window !== 'undefined' ? localStorage.getItem("fullname") : null;
-  const nameParts = userName?.split(" ") ?? [];
-  const lastName = nameParts[nameParts.length - 1] || "User";
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: "all",
+    propertyType: "",
+    dateFrom: "",
+    dateTo: "",
+    sortBy: "newest"
+  });
+  const [filteredPolicies, setFilteredPolicies] = useState<PolicyRequest[]>([]);
+
+  // Apply search and filters to policies
+  useEffect(() => {
+    let filtered = [...allPolicies];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(policy =>
+        policy._id?.toLowerCase().includes(query) ||
+        policy.propertyDetails?.address?.toLowerCase().includes(query) ||
+        policy.propertyDetails?.propertyType?.toLowerCase().includes(query) ||
+        policy.contactDetails?.fullName?.toLowerCase().includes(query) ||
+        policy.requestDetails?.coverageType?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (filters.status !== "all") {
+      filtered = filtered.filter(policy => policy.status === filters.status);
+    }
+
+    // Apply property type filter
+    if (filters.propertyType) {
+      filtered = filtered.filter(policy => policy.propertyDetails?.propertyType === filters.propertyType);
+    }
+
+    // Apply date range filters
+    if (filters.dateFrom) {
+      filtered = filtered.filter(policy =>
+        new Date(policy.createdAt) >= new Date(filters.dateFrom)
+      );
+    }
+    if (filters.dateTo) {
+      filtered = filtered.filter(policy =>
+        new Date(policy.createdAt) <= new Date(filters.dateTo)
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (filters.sortBy) {
+        case "newest":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "oldest":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "value-high":
+          return (b.propertyDetails?.buildingValue || 0) - (a.propertyDetails?.buildingValue || 0);
+        case "value-low":
+          return (a.propertyDetails?.buildingValue || 0) - (b.propertyDetails?.buildingValue || 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredPolicies(filtered);
+  }, [allPolicies, searchQuery, filters]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilters({
+      status: "all",
+      propertyType: "",
+      dateFrom: "",
+      dateTo: "",
+      sortBy: "newest"
+    });
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery ||
+    filters.status !== "all" ||
+    filters.propertyType ||
+    filters.dateFrom ||
+    filters.dateTo ||
+    filters.sortBy !== "newest";
+
+  // Get user from AuthContext or cookies
+  const { user } = useAuth();
+  const getUserName = (): string => {
+    if (user) {
+      const userData = user as { fullname?: string; firstname?: string };
+      return userData.fullname || userData.firstname || "User";
+    }
+    const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser) as { fullname?: string; firstname?: string };
+        return userData.fullname || userData.firstname || "User";
+      } catch (e) {
+        return "User";
+      }
+    }
+    return "User";
+  };
+  const userName = getUserName();
 
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+        const token = getAuthToken('user');
         if (!token) {
           // Not logged in, set empty state
-          setStats({ active: 0, expired: 0, pending: 0, collaborators: 0 });
+          setStats({ active: 0, expired: 0, pending: 0, collaborators: 0, completed: 0, paymentPending: 0 });
           setRecentInsurances([]);
           setSurveyedPolicies([]);
           setLoading(false);
           return;
         }
 
-        const { getUserPolicyRequests } = await import("@/services/api");
+        const { builderLiabilityPolicyAPI } = await import("@/services/builderLiabilityPolicyApi");
 
-        // Fetch all policy requests to calculate stats
-        const [allPolicies, approvedPolicies, rejectedPolicies, pendingPolicies, surveyedPolicies] = await Promise.all([
-          getUserPolicyRequests('all', 1, 100),
-          getUserPolicyRequests('approved', 1, 100),
-          getUserPolicyRequests('rejected', 1, 100),
-          getUserPolicyRequests('submitted', 1, 100),
-          getUserPolicyRequests('surveyed', 1, 100)
-        ]);
+        // Fetch Builder Liability policies
+        const response = await builderLiabilityPolicyAPI.getUserPolicies({
+          page: 1,
+          limit: 100
+        });
 
-        // Calculate collaborators from all policies
-        const allPolicyData = allPolicies?.data?.policyRequests || [];
-        const assignedPolicies = allPolicyData.filter((p: PolicyRequest) => p.status === 'assigned' || p.status === 'surveyed');
-        const collaborators = assignedPolicies.length; // Simple count of policies with surveyors
+        const allPolicyData = response.data.policies || [];
+
+        // Calculate stats from policies
+        const completedPolicies = allPolicyData.filter((p: any) => p.status === 'completed');
+        const rejectedPolicies = allPolicyData.filter((p: any) => p.status === 'rejected' || (p.status === 'completed' && p.surveyorRecommendation === 'reject'));
+        const pendingPolicies = allPolicyData.filter((p: any) => p.status === 'submitted');
+        const assignedPolicies = allPolicyData.filter((p: any) => p.status === 'assigned');
+        const approvedPolicies = completedPolicies.filter((p: any) => p.surveyorRecommendation === 'approve');
+        const paymentPendingPolicies = allPolicyData.filter((p: any) => p.status === 'payment_pending');
 
         // Update stats
         setStats({
-          active: approvedPolicies?.data?.policyRequests?.length || 0,
-          expired: rejectedPolicies?.data?.policyRequests?.length || 0,
-          pending: pendingPolicies?.data?.policyRequests?.length || 0,
-          collaborators: collaborators
+          active: approvedPolicies.length,
+          expired: rejectedPolicies.length,
+          pending: pendingPolicies.length,
+          collaborators: assignedPolicies.length,
+          completed: completedPolicies.length,
+          paymentPending: paymentPendingPolicies.length
         });
 
         // Set recent insurances (first 5 items from all policies)
-        setRecentInsurances(allPolicies?.data?.policyRequests?.slice(0, 5) || []);
+        setRecentInsurances(allPolicyData.slice(0, 5) || []);
 
-        // Store all policies for report section
+        // Store all policies for report section and filtering
         setAllPolicies(allPolicyData);
+        setFilteredPolicies(allPolicyData);
 
-        // Combine surveyed and approved policies for the "Surveyed Policies" table
-        const surveyedData = surveyedPolicies?.data?.policyRequests || [];
-        const approvedData = approvedPolicies?.data?.policyRequests || [];
-        const combinedSurveyedPolicies = [...surveyedData, ...approvedData];
-        setSurveyedPolicies(combinedSurveyedPolicies);
+        // Set surveyed/completed policies for the table
+        setSurveyedPolicies(completedPolicies);
 
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -90,7 +233,9 @@ const Dashview = () => {
           active: 0,
           expired: 0,
           pending: 0,
-          collaborators: 0
+          collaborators: 0,
+          completed: 0,
+          paymentPending: 0
         });
       } finally {
         setLoading(false);
@@ -100,23 +245,12 @@ const Dashview = () => {
     fetchDashboardData();
   }, []);
 
-  const handlePolicyRequest = async (data: CreatePolicyRequestData) => {
-    try {
-      const { submitPolicyRequest } = await import("@/services/api");
-      await submitPolicyRequest(data);
-      alert("Policy request submitted successfully!");
-    } catch (error) {
-      console.error("Failed to submit policy request:", error);
-      alert("Failed to submit policy request. Please try again.");
-    }
-  };
-
   return (
     <>
       <div className="flex-1 flex flex-col overflow-hidden p-6">
         {/* Greeting */}
         <h1 className="text-[23px] font-extrabold pb-4">
-          Hello {lastName}
+          Hello {getUserName()}
         </h1>
 
         {/* Full-width Banner */}
@@ -157,7 +291,8 @@ const Dashview = () => {
             >
               Dashboard Overview
             </button>
-            <button
+
+            {/* <button
               onClick={() => setActiveSection('reports')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${activeSection === 'reports'
                 ? 'border-blue-500 text-blue-600'
@@ -165,7 +300,7 @@ const Dashview = () => {
                 }`}
             >
               Assessment Reports
-            </button>
+            </button> */}
           </nav>
         </div>
 
@@ -175,6 +310,9 @@ const Dashview = () => {
           <main className="flex-1 pb-8 overflow-y-auto">
             {activeSection === 'overview' && (
               <>
+                {/* Notification Tester - Temporary for debugging */}
+                {/* <NotificationTester /> */}
+
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   {[
@@ -280,91 +418,288 @@ const Dashview = () => {
                   ))}
                 </div>
 
-                {/* Merged Reports Summary */}
-                <MergedReportsSummary />
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <button
+                    onClick={() => setShowBuilderLiabilityForm(true)}
+                    className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <div className="text-sm font-medium opacity-90">New Policy</div>
+                        <div className="text-xs opacity-75">Builder Liability</div>
+                      </div>
+                      <Plus className="w-6 h-6" />
+                    </div>
+                  </button>
 
-                {/* Surveyed Policies Table */}
-                <div className="w-full bg-white rounded-xl p-4 overflow-x-auto mt-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold">Surveyed Policies</h3>
+                  <button
+                    onClick={() => setActiveSection('reports')}
+                    className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <div className="text-sm font-medium opacity-90">View Reports</div>
+                        <div className="text-xs opacity-75">Assessment Details</div>
+                      </div>
+                      <BarChart3 className="w-6 h-6" />
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => window.open('https://niip.ng/', '_blank')}
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <div className="text-sm font-medium opacity-90">Insurance Portal</div>
+                        <div className="text-xs opacity-75">NIIP Website</div>
+                      </div>
+                      <Shield className="w-6 h-6" />
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const helpSection = document.getElementById('help-section');
+                      if (helpSection) {
+                        helpSection.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-left">
+                        <div className="text-sm font-medium opacity-90">Need Help?</div>
+                        <div className="text-xs opacity-75">Support Guide</div>
+                      </div>
+                      <HelpCircle className="w-6 h-6" />
+                    </div>
+                  </button>
+                </div>
+
+                {/* Search and Filter Bar */}
+                <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-200">
+                  <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                    {/* Search Input */}
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search policies by ID, address, property type..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filter Toggle Button */}
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className={`flex items-center px-4 py-2.5 border rounded-lg transition-all ${showFilters || hasActiveFilters
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        }`}
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filters
+                      {hasActiveFilters && !showFilters && (
+                        <span className="ml-2 bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                          !
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Clear Filters Button */}
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearFilters}
+                        className="flex items-center px-4 py-2.5 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-all"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Clear
+                      </button>
+                    )}
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[720px]">
-                      <thead>
-                        <tr className="text-left border-b">
-                          <th className="pb-2 font-bold">Name</th>
-                          <th className="pb-2 font-bold">Survey Date</th>
-                          <th className="pb-2 font-bold">AMMC Policy ID</th>
-                          <th className="pb-2 font-bold">Status</th>
-                          <th className="pb-2 font-bold">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {loading ? (
-                          // Loading state
-                          Array.from({ length: 3 }).map((_, index) => (
-                            <tr key={index} className="border-b animate-pulse">
-                              <td className="py-4">
-                                <div className="h-4 bg-gray-200 rounded w-32"></div>
-                              </td>
-                              <td className="py-4">
-                                <div className="h-4 bg-gray-200 rounded w-24"></div>
-                              </td>
-                              <td className="py-4">
-                                <div className="h-4 bg-gray-200 rounded w-20"></div>
-                              </td>
-                              <td className="py-4">
-                                <div className="h-6 bg-gray-200 rounded w-16"></div>
-                              </td>
-                              <td className="py-4">
-                                <div className="w-32 h-8 bg-gray-200 rounded"></div>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (surveyedPolicies || []).length > 0 ? (
-                          (surveyedPolicies || []).map((item, index) => (
-                            <tr key={item._id || index} className="border-b">
-                              <td className="py-4 text-[#1e1e1e] text-[17px] font-medium">
-                                {item.requestDetails?.coverageType || "Insurance Policy"}
-                              </td>
-                              <td className="py-4 text-[#2a2828] text-base font-medium">
-                                {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: '2-digit'
-                                }) : "N/A"}
-                              </td>
-                              <td className="py-4 text-[#2a2828] text-base font-medium">
-                                {item._id?.substring(0, 7).toUpperCase() || "N/A"}
-                              </td>
-                              <td className="py-4">
-                                <span
-                                  className={`px-2.5 py-1.5 rounded-md text-white text-[15px] font-medium capitalize bg-blue-500`}
-                                >
-                                  {item.status || "Unknown"}
-                                </span>
-                              </td>
-                              <td className="py-4">
-                                <PolicyActionsDropdown policy={item} />
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          // Empty state
-                          <tr className="border-b">
-                            <td colSpan={5} className="py-8 text-center text-gray-500">
-                              <div className="flex flex-col items-center">
-                                <svg className="w-12 h-12 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <p className="font-medium">No surveyed policies</p>
-                                <p className="text-sm">Your surveyed policies will appear here.</p>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+
+                  {/* Advanced Filters Panel */}
+                  {showFilters && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                      {/* Status Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select
+                          value={filters.status}
+                          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="all">All Statuses</option>
+                          <option value="submitted">Submitted</option>
+                          <option value="assigned">Assigned</option>
+                          <option value="surveyed">Surveyed</option>
+                          <option value="approved">Approved</option>
+                          <option value="payment_pending">Payment Pending</option>
+                          <option value="completed">Completed</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                      </div>
+
+                      {/* Property Type Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                        <select
+                          value={filters.propertyType}
+                          onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="">All Types</option>
+                          <option value="Residential">Residential</option>
+                          <option value="Commercial">Commercial</option>
+                          <option value="Industrial">Industrial</option>
+                        </select>
+                      </div>
+
+                      {/* Sort By Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                        <select
+                          value={filters.sortBy}
+                          onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="newest">Newest First</option>
+                          <option value="oldest">Oldest First</option>
+                          <option value="value-high">Highest Value</option>
+                          <option value="value-low">Lowest Value</option>
+                        </select>
+                      </div>
+
+                      {/* Date From Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                        <input
+                          type="date"
+                          value={filters.dateFrom}
+                          onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      {/* Date To Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                        <input
+                          type="date"
+                          value={filters.dateTo}
+                          onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Results Count */}
+                  <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t border-gray-200 mt-3">
+                    <span>
+                      Showing <span className="font-semibold text-gray-900">{filteredPolicies.length}</span> of{' '}
+                      <span className="font-semibold text-gray-900">{allPolicies.length}</span> policies
+                    </span>
+                    {hasActiveFilters && (
+                      <span className="text-blue-600 font-medium">Filters active</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Removed MergedReportsSummary - not applicable for Builder Liability policies */}
+
+                {/* Builder Liability Policies List */}
+                <div className="mt-6">
+                  <BuilderLiabilityPolicyList isAdmin={false} />
+                </div>
+
+                {/* Help Section */}
+                <div id="help-section" className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mt-6 border border-blue-200">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <HelpCircle className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Need Help Getting Started?</h3>
+                      <p className="text-gray-700 mb-4">
+                        Welcome to your insurance dashboard! Here's how to navigate your policy journey:
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="bg-white p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">1</div>
+                            <h4 className="font-medium text-gray-900">Submit Policy Request</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">Click "New Request" to submit your property details for insurance coverage.</p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">2</div>
+                            <h4 className="font-medium text-gray-900">Survey & Assessment</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">Our surveyors will assess your property and provide recommendations.</p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">3</div>
+                            <h4 className="font-medium text-gray-900">Complete Payment</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">Once approved, complete your premium payment to activate your policy.</p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-center mb-2">
+                            <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">4</div>
+                            <h4 className="font-medium text-gray-900">Policy Active</h4>
+                          </div>
+                          <p className="text-sm text-gray-600">Download your certificate and access the insurance portal for ongoing support.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={() => setShowBuilderLiabilityForm(true)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Apply for Builder Liability Policy
+                        </button>
+                        <button
+                          onClick={() => window.open('https://niip.ng/', '_blank')}
+                          className="bg-white text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium flex items-center"
+                        >
+                          <Shield className="w-4 h-4 mr-2" />
+                          Visit NIIP Portal
+                        </button>
+                        <button
+                          onClick={() => {
+                            const email = 'support@ammc.gov.ng';
+                            const subject = 'Insurance Dashboard Support Request';
+                            const body = 'Hello, I need assistance with my insurance dashboard. Please help me with:';
+                            window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                          }}
+                          className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center"
+                        >
+                          <Bell className="w-4 h-4 mr-2" />
+                          Contact Support
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
@@ -377,948 +712,170 @@ const Dashview = () => {
 
           {/* Right Sidebar */}
           <aside className="w-[300px] space-y-6 p-4 hidden lg:block">
-            {/* Collaboration */}
-            <div className="bg-white rounded-xl p-4">
-              <div className="flex border-b pb-2 justify-between items-center mb-4">
-                <h3 className="text-[19px] font-bold">Collaboration</h3>
-                <button className="text-[#2b172b] text-base hover:text-[#028835]">
-                  View All
-                </button>
+            {/* Quick Stats */}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Quick Overview</h3>
+                <TrendingUp className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="space-y-4">
-                {recentInsurances.slice(0, 2).map((policy, index) => (
-                  <div key={policy._id || index} className="flex items-center">
-                    <div className="w-8 h-8 rounded-full mr-2 bg-gray-100 flex items-center justify-center">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 29 29"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M14.5 2C7.59625 2 2 7.59625 2 14.5C2 21.4037 7.59625 27 14.5 27C21.4037 27 27 21.4037 27 14.5C27 7.59625 21.4037 2 14.5 2Z"
-                          stroke="#827E7E"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M4.83789 22.4327C4.83789 22.4327 7.62414 18.8752 14.4991 18.8752C21.3741 18.8752 24.1616 22.4327 24.1616 22.4327M14.4991 14.5002C15.4937 14.5002 16.4475 14.1051 17.1508 13.4018C17.8541 12.6986 18.2491 11.7447 18.2491 10.7502C18.2491 9.75562 17.8541 8.80179 17.1508 8.09853C16.4475 7.39527 15.4937 7.00018 14.4991 7.00018C13.5046 7.00018 12.5508 7.39527 11.8475 8.09853C11.1442 8.80179 10.7491 9.75562 10.7491 10.7502C10.7491 11.7447 11.1442 12.6986 11.8475 13.4018C12.5508 14.1051 13.5046 14.5002 14.4991 14.5002Z"
-                          stroke="#827E7E"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 text-blue-600 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">In Progress</span>
+                  </div>
+                  <span className="text-lg font-bold text-blue-600">{stats.pending + stats.active}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">Completed</span>
+                  </div>
+                  <span className="text-lg font-bold text-green-600">{stats.completed}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg">
+                  <div className="flex items-center">
+                    <CreditCard className="w-4 h-4 text-orange-600 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">Payment Due</span>
+                  </div>
+                  <span className="text-lg font-bold text-orange-600">{stats.paymentPending}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+                <Users className="w-5 h-5 text-gray-600" />
+              </div>
+              <div className="space-y-3">
+                {recentInsurances.slice(0, 3).map((policy, index) => (
+                  <div key={policy._id || index} className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Home className="w-4 h-4 text-blue-600" />
                     </div>
-                    <div>
-                      <div className="text-[15px] font-bold">
-                        {policy.contactDetails?.fullName || 'Policy Holder'}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {policy.propertyDetails?.propertyType || 'Property'}
                       </div>
-                      <div className="text-[13px] text-gray-500">
-                        {policy.contactDetails?.email || 'No email'}
+                      <div className="text-xs text-gray-500 truncate">
+                        {policy.propertyDetails?.address || 'No address'}
                       </div>
+                      <div className="text-xs text-gray-400">
+                        {new Date(policy.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${policy.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      policy.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                        policy.status === 'surveyed' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                      }`}>
+                      {policy.status}
                     </div>
                   </div>
                 ))}
                 {recentInsurances.length === 0 && (
                   <div className="text-center py-4 text-gray-500">
-                    <p className="text-sm">No collaborations yet</p>
+                    <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No recent activity</p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Notifications */}
-            <div className="bg-white rounded-xl p-4 h-full flex flex-col">
-              <div className="flex border-b pb-2 justify-between items-center mb-4">
-                <h3 className="text-lg font-bold">Notifications</h3>
-                <a href="#" className="text-[#2b172b] text-base">
-                  View All
-                </a>
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setShowBuilderLiabilityForm(true)}
+                  className="w-full flex items-center justify-between p-3 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <Plus className="w-4 h-4 text-green-600 mr-3" />
+                    <span className="text-sm font-medium text-green-900">New Builder Liability Policy</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-green-600 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={() => setActiveSection('reports')}
+                  className="w-full flex items-center justify-between p-3 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <BarChart3 className="w-4 h-4 text-green-600 mr-3" />
+                    <span className="text-sm font-medium text-green-900">View Reports</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-green-600 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={() => window.open('https://niip.ng/', '_blank')}
+                  className="w-full flex items-center justify-between p-3 text-left bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <Shield className="w-4 h-4 text-purple-600 mr-3" />
+                    <span className="text-sm font-medium text-purple-900">Insurance Portal</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-purple-600 group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
-              <div className="space-y-4 flex-grow overflow-y-auto">
-                <div className="border-b-2 border-dashed pb-2">
-                  <div className="text-[17px] font-bold">
-                    Insurance Renewal
-                  </div>
-                  <div className="text-xs">
-                    A building with the ID: A012D30 just made a payment on
-                    23rd of sept 2024.
-                  </div>
-                </div>
-                <div className="border-b-2 border-dashed pb-2">
-                  <div className="text-[17px] font-bold">
-                    Expired Insurance
-                  </div>
-                  <div className="text-xs">
-                    A building with the ID: A015D30 just expired 27th of sept
-                    2024
-                  </div>
-                </div>
+            </div>
+
+            {/* Support */}
+            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center mb-3">
+                <HelpCircle className="w-5 h-5 text-orange-600 mr-2" />
+                <h3 className="text-lg font-bold text-orange-900">Need Help?</h3>
               </div>
+              <p className="text-sm text-orange-800 mb-3">
+                Our support team is here to help you with your insurance needs.
+              </p>
+              <button
+                onClick={() => {
+                  const email = 'support@ammc.gov.ng';
+                  const subject = 'Insurance Dashboard Support Request';
+                  const body = 'Hello, I need assistance with my insurance dashboard. Please help me with:';
+                  window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                }}
+                className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium flex items-center justify-center"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Contact Support
+              </button>
             </div>
           </aside>
         </div>
       </div>
 
-      <PolicyRequestForm
-        isOpen={showPolicyRequest}
-        onClose={() => setShowPolicyRequest(false)}
-        onSubmit={handlePolicyRequest}
-      />
-    </>
-  );
-};
-
-// Policy Actions Dropdown Component
-interface PolicyActionsDropdownProps {
-  policy: PolicyRequest;
-}
-
-const PolicyActionsDropdown: React.FC<PolicyActionsDropdownProps> = ({ policy }) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [showSurveyModal, setShowSurveyModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
-  const [loadingSurveyData, setLoadingSurveyData] = useState(false);
-
-  // Fetch survey data when dropdown opens
-  useEffect(() => {
-    if (showDropdown && !surveyData && !loadingSurveyData) {
-      fetchSurveyData();
-    }
-  }, [showDropdown]);
-
-  const fetchSurveyData = async () => {
-    setLoadingSurveyData(true);
-    try {
-      console.log('Fetching survey data for policy:', policy._id);
-      console.log('Policy status:', policy.status);
-
-      const { getUserAssignmentByAmmcId } = await import('@/services/api');
-      const assignmentResponse = await getUserAssignmentByAmmcId(policy._id);
-      console.log('Assignment response:', assignmentResponse);
-
-      if (assignmentResponse.success && assignmentResponse.data) {
-        const assignment = assignmentResponse.data;
-        console.log('Assignment data:', assignment);
-
-        const { getSubmissionByAssignment } = await import('@/services/api');
-        const surveyResponse = await getSubmissionByAssignment(assignment._id);
-        console.log('Survey response:', surveyResponse);
-
-        if (surveyResponse.success && surveyResponse.data.submission) {
-          console.log('Survey data loaded:', surveyResponse.data.submission);
-          setSurveyData(surveyResponse.data.submission);
-        } else {
-          console.log('No survey submission found');
-        }
-      } else {
-        console.log('No assignment found for policy');
-      }
-    } catch (error) {
-      console.error('Failed to fetch survey data:', error);
-    } finally {
-      setLoadingSurveyData(false);
-    }
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (showDropdown && !target.closest('.dropdown-container')) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showDropdown]);
-
-  const handleInsuranceClick = () => {
-    console.log('Insurance click - Policy status:', policy.status);
-    console.log('Insurance click - Survey data:', surveyData);
-    console.log('Insurance click - Recommended action:', surveyData?.recommendedAction);
-
-    // If policy is already approved (admin approved), allow insurance regardless of survey recommendation
-    if (policy.status === 'approved') {
-      window.open('https://askniid.org/verifypolicy.aspx', '_blank');
-      return;
-    }
-
-    // For surveyed policies, check the surveyor's recommendation
-    if (surveyData?.recommendedAction === 'reject') {
-      alert('❌ Insurance Disabled\n\nThis policy request has been rejected by the surveyor. Please review the survey report for details on why the policy was rejected.');
-      return;
-    }
-
-    if (surveyData?.recommendedAction === 'request_more_info') {
-      alert('⚠️ Insurance Disabled\n\nThe surveyor has requested additional information for this policy. Please edit and resubmit your policy request with the required information before proceeding to insurance.');
-      return;
-    }
-
-    // If we have survey data and surveyor approved, allow insurance
-    if (surveyData?.recommendedAction === 'approve') {
-      window.open('https://niip.ng/', '_blank');
-      return;
-    }
-
-    // Fallback: If no survey data but policy is surveyed, assume it's approved
-    if (policy.status === 'surveyed' && !surveyData) {
-      console.log('No survey data found, but policy is surveyed - allowing insurance');
-      window.open('https://niip.ng/', '_blank');
-      return;
-    }
-
-    // Default case
-    alert('⚠️ Insurance Not Available\n\nInsurance is not available for this policy at this time. Please check the policy status.');
-  };
-
-  return (
-    <div className="relative dropdown-container">
-      <button
-        onClick={() => setShowDropdown(!showDropdown)}
-        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-      >
-        <MoreVertical className="h-4 w-4" />
-      </button>
-
-      {showDropdown && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border">
-          <div className="py-1">
-            {/* Always show survey details */}
-            <button
-              onClick={() => {
-                setShowSurveyModal(true);
-                setShowDropdown(false);
-              }}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-            >
-              <Eye className="mr-3 h-4 w-4" />
-              View Survey Details
-            </button>
-
-            {/* Always show survey document download if available */}
-            {policy.surveyDocument && (
-              <a
-                href={typeof policy.surveyDocument === 'string' ? policy.surveyDocument : policy.surveyDocument.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setShowDropdown(false)}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+      {showBuilderLiabilityForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold">Builder Liability Policy Application</h2>
+              <button
+                onClick={() => setShowBuilderLiabilityForm(false)}
+                className="text-gray-500 hover:text-gray-700"
               >
-                <Download className="mr-3 h-4 w-4" />
-                Download Survey Report
-              </a>
-            )}
-
-            {/* Conditional actions based on surveyor recommendation */}
-            {loadingSurveyData ? (
-              <div className="flex items-center px-4 py-2 text-sm text-gray-500">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-3"></div>
-                Loading...
-              </div>
-            ) : (
-              <>
-                {/* Insurance button - conditional based on recommendation */}
-                <button
-                  onClick={() => {
-                    handleInsuranceClick();
-                    setShowDropdown(false);
-                  }}
-                  className={`flex items-center px-4 py-2 text-sm w-full text-left ${
-                    // Enable if: approved by admin, approved by surveyor, or surveyed without explicit rejection
-                    (policy.status === 'approved' ||
-                      surveyData?.recommendedAction === 'approve' ||
-                      (policy.status === 'surveyed' && !surveyData) ||
-                      (policy.status === 'surveyed' && loadingSurveyData))
-                      ? 'text-gray-700 hover:bg-gray-100'
-                      : 'text-gray-400 cursor-not-allowed'
-                    }`}
-                  disabled={
-                    // Disable only if: explicitly rejected or explicitly requesting more info
-                    surveyData?.recommendedAction === 'reject' ||
-                    surveyData?.recommendedAction === 'request_more_info'
-                  }
-                >
-                  <CreditCard className="mr-3 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span>Proceed to Insure</span>
-                    {policy.status === 'approved' && (
-                      <span className="text-xs text-green-500">Policy Approved</span>
-                    )}
-                    {surveyData?.recommendedAction === 'approve' && policy.status !== 'approved' && (
-                      <span className="text-xs text-blue-500">Survey Approved</span>
-                    )}
-                    {policy.status === 'surveyed' && !surveyData && !loadingSurveyData && (
-                      <span className="text-xs text-green-500">Survey Completed</span>
-                    )}
-                    {loadingSurveyData && (
-                      <span className="text-xs text-gray-500">Loading...</span>
-                    )}
-                    {surveyData?.recommendedAction === 'reject' && (
-                      <span className="text-xs text-red-500">Policy Rejected</span>
-                    )}
-                    {surveyData?.recommendedAction === 'request_more_info' && (
-                      <span className="text-xs text-orange-500">More Info Required</span>
-                    )}
-                  </div>
-                </button>
-
-                {/* Edit Policy - only show if more info is requested */}
-                {surveyData?.recommendedAction === 'request_more_info' && (
-                  <button
-                    onClick={() => {
-                      setShowEditModal(true);
-                      setShowDropdown(false);
-                    }}
-                    className="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 w-full text-left"
-                  >
-                    <svg className="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    <div className="flex flex-col">
-                      <span>Edit Policy Request</span>
-                      <span className="text-xs text-gray-500">Update & Resubmit</span>
-                    </div>
-                  </button>
-                )}
-
-                {/* Certificate download - for approved or surveyed policies */}
-                {(surveyData?.recommendedAction === 'approve' ||
-                  policy.status === 'approved' ||
-                  (policy.status === 'surveyed' && surveyData?.recommendedAction !== 'reject' && surveyData?.recommendedAction !== 'request_more_info')) && (
-                    <button
-                      onClick={() => {
-                        // Handle policy certificate download
-                        setShowDropdown(false);
-                      }}
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                    >
-                      <FileText className="mr-3 h-4 w-4" />
-                      Download Certificate
-                    </button>
-                  )}
-              </>
-            )}
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <BuilderLiabilityPolicyForm
+                onSuccess={(policyId) => {
+                  alert('Builder Liability Policy application submitted successfully!');
+                  setShowBuilderLiabilityForm(false);
+                  // Trigger a page refresh to show the new policy
+                  window.location.reload();
+                }}
+                onCancel={() => setShowBuilderLiabilityForm(false)}
+              />
+            </div>
           </div>
         </div>
       )}
-
-      {/* Survey Details Modal */}
-      {showSurveyModal && (
-        <SurveyDetailsModal
-          policy={policy}
-          onClose={() => setShowSurveyModal(false)}
-        />
-      )}
-
-      {/* Edit Policy Modal */}
-      {showEditModal && (
-        <EditPolicyModal
-          policy={policy}
-          surveyData={surveyData}
-          onClose={() => setShowEditModal(false)}
-          onUpdate={() => {
-            setShowEditModal(false);
-            // Refresh the page or update the policy list
-            window.location.reload();
-          }}
-        />
-      )}
-    </div>
-  );
-};
-
-// Survey Details Modal Component
-interface SurveyDetailsModalProps {
-  policy: PolicyRequest;
-  onClose: () => void;
-}
-
-const SurveyDetailsModal: React.FC<SurveyDetailsModalProps> = ({ policy, onClose }) => {
-  const [surveyData, setSurveyData] = useState<import('@/types/survey.types').SurveyDataType | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSurveyData = async () => {
-      try {
-        // Get assignment for this policy
-        const { getUserAssignmentByAmmcId } = await import('@/services/api');
-        const assignmentResponse = await getUserAssignmentByAmmcId(policy._id);
-
-        if (assignmentResponse.success && assignmentResponse.data) {
-          const assignment = assignmentResponse.data;
-
-          // Get survey submission
-          const { getSubmissionByAssignment } = await import('@/services/api');
-          const surveyResponse = await getSubmissionByAssignment(assignment._id);
-          if (surveyResponse.success && surveyResponse.data.submission) {
-            setSurveyData(surveyResponse.data.submission);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch survey data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSurveyData();
-  }, [policy._id]);
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        {/* Modal Header */}
-        <div className="p-6 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">Survey Details</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Policy #{policy._id?.substring(0, 8).toUpperCase()} • {policy.propertyDetails?.propertyType}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <span className="sr-only">Close</span>
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Modal Content */}
-        <div className="p-6 bg-white overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-500 mt-2">Loading survey details...</p>
-            </div>
-          ) : !surveyData ? (
-            <div className="text-center py-8 text-gray-500">
-              <Eye className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Survey details not available</p>
-              <p className="text-sm">Unable to load survey information for this policy.</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Property Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Property Details</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Type:</span>
-                      <span className="font-medium text-gray-900">{policy.propertyDetails?.propertyType}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Value:</span>
-                      <span className="font-medium text-gray-900">₦{policy.propertyDetails?.buildingValue?.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Address:</span>
-                      <span className="font-medium text-gray-900 text-right">{policy.propertyDetails?.address}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Survey Results</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <span className={`font-medium px-2 py-1 rounded text-xs ${policy.status === 'surveyed' ? 'bg-blue-100 text-blue-800' :
-                        policy.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                        {policy.status?.toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Recommendation:</span>
-                      <span className={`font-medium px-2 py-1 rounded text-xs ${surveyData.recommendedAction === 'approve' ? 'bg-green-100 text-green-800' :
-                        surveyData.recommendedAction === 'reject' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                        {surveyData.recommendedAction === 'approve' && '✅ Approved'}
-                        {surveyData.recommendedAction === 'reject' && '❌ Rejected'}
-                        {surveyData.recommendedAction === 'request_more_info' && '📋 More Info Needed'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Survey Assessment */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Property Condition</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      {surveyData.surveyDetails?.propertyCondition || 'No assessment provided'}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Structural Assessment</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      {surveyData.surveyDetails?.structuralAssessment || 'No assessment provided'}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Risk Factors</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      {surveyData.surveyDetails?.riskFactors || 'No risk factors identified'}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Recommendations</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      {surveyData.surveyDetails?.recommendations || 'No recommendations provided'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Survey Notes */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">Additional Survey Notes</h4>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-700">
-                    {surveyData.surveyNotes || 'No additional notes provided'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Survey Document */}
-              {surveyData.surveyDocument && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="h-6 w-6 text-blue-600 mr-3" />
-                      <div>
-                        <h5 className="font-medium text-blue-900">Survey Report</h5>
-                        <p className="text-sm text-blue-700">Complete survey document (PDF)</p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <a
-                        href={surveyData.surveyDocument}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                      >
-                        View PDF
-                      </a>
-                      <a
-                        href={surveyData.surveyDocument}
-                        download
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                      >
-                        Download
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Edit Policy Modal Component
-interface EditPolicyModalProps {
-  policy: PolicyRequest;
-  surveyData: SurveyData | null;
-  onClose: () => void;
-  onUpdate: () => void;
-}
-
-interface SurveyData {
-  surveyDetails?: {
-    propertyCondition?: string;
-    structuralAssessment?: string;
-    riskFactors?: string;
-    recommendations?: string;
-    estimatedValue?: number;
-  };
-  surveyNotes?: string;
-  recommendedAction?: string;
-}
-
-const EditPolicyModal: React.FC<EditPolicyModalProps> = ({ policy, surveyData, onClose, onUpdate }) => {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    propertyDetails: {
-      propertyType: policy.propertyDetails?.propertyType || '',
-      address: policy.propertyDetails?.address || '',
-      buildingValue: policy.propertyDetails?.buildingValue || 0,
-      yearBuilt: policy.propertyDetails?.yearBuilt || '',
-      squareFootage: policy.propertyDetails?.squareFootage || 0,
-      constructionMaterial: policy.propertyDetails?.constructionMaterial || ''
-    },
-    contactDetails: {
-      fullName: policy.contactDetails?.fullName || '',
-      email: localStorage.getItem("email") || '',
-      phoneNumber: policy.contactDetails?.phoneNumber || '',
-      alternatePhone: policy.contactDetails?.alternatePhone || '',
-      rcNumber: policy.contactDetails?.rcNumber || ''
-    },
-    requestDetails: {
-      coverageType: policy.requestDetails?.coverageType || '',
-      policyDuration: policy.requestDetails?.policyDuration || '',
-      additionalCoverage: policy.requestDetails?.additionalCoverage || [],
-      specialRequests: policy.requestDetails?.specialRequests || ''
-    }
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const api = await import('@/services/api');
-      // Ensure yearBuilt is a number
-      const submitData = {
-        ...formData,
-        propertyDetails: {
-          ...formData.propertyDetails,
-          yearBuilt: typeof formData.propertyDetails.yearBuilt === 'string'
-            ? parseInt(formData.propertyDetails.yearBuilt, 10)
-            : formData.propertyDetails.yearBuilt
-        }
-      };
-      await api.updatePolicyRequest(policy._id, submitData);
-      alert('Policy request updated successfully! It will be reassigned for survey.');
-      onUpdate();
-    } catch (error) {
-      console.error('Failed to update policy:', error);
-      alert('Failed to update policy request. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInputChange = (section: string, field: string, value: string | number | string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section as keyof typeof prev],
-        [field]: value
-      }
-    }));
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        {/* Modal Header */}
-        <div className="p-6 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">Edit Policy Request</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Update your policy information based on surveyor feedback
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <span className="sr-only">Close</span>
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Surveyor Feedback */}
-          {surveyData && (
-            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <h4 className="font-medium text-orange-900 mb-2">Surveyor Feedback</h4>
-              <p className="text-sm text-orange-800 mb-2">
-                <strong>Recommendation:</strong> {surveyData.recommendedAction === 'request_more_info' ? 'Additional Information Required' : surveyData.recommendedAction}
-              </p>
-              {surveyData.surveyNotes && (
-                <p className="text-sm text-orange-800">
-                  <strong>Notes:</strong> {surveyData.surveyNotes}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Modal Content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-            <div className="p-6 bg-white overflow-y-auto flex-1">
-              <div className="space-y-6">
-                {/* Property Details */}
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Property Details</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                      <select
-                        value={formData.propertyDetails.propertyType}
-                        onChange={(e) => handleInputChange('propertyDetails', 'propertyType', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      >
-                        <option value="">Select property type</option>
-                        {PROPERTY_TYPES.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Building Value (₦)</label>
-                      <input
-                        type="number"
-                        value={formData.propertyDetails.buildingValue}
-                        onChange={(e) => handleInputChange('propertyDetails', 'buildingValue', Number(e.target.value))}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Property Address</label>
-                      <textarea
-                        value={formData.propertyDetails.address}
-                        onChange={(e) => handleInputChange('propertyDetails', 'address', e.target.value)}
-                        rows={3}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Year Built</label>
-                      <input
-                        type="number"
-                        value={formData.propertyDetails.yearBuilt}
-                        onChange={(e) => handleInputChange('propertyDetails', 'yearBuilt', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Square Footage</label>
-                      <input
-                        type="number"
-                        value={formData.propertyDetails.squareFootage}
-                        onChange={(e) => handleInputChange('propertyDetails', 'squareFootage', Number(e.target.value))}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Construction Material</label>
-                      <select
-                        value={formData.propertyDetails.constructionMaterial}
-                        onChange={(e) => handleInputChange('propertyDetails', 'constructionMaterial', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      >
-                        <option value="">Select material</option>
-                        {CONSTRUCTION_MATERIALS.map((material) => (
-                          <option key={material} value={material}>
-                            {material}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Contact Details */}
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Contact Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Name of Builder/Contractor</label>
-                      <input
-                        type="text"
-                        value={formData.contactDetails.fullName}
-                        onChange={(e) => handleInputChange('contactDetails', 'fullName', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                        <span className="text-xs text-green-600 ml-2">(Auto-filled from your account)</span>
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.contactDetails.email}
-                        readOnly
-                        disabled
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 cursor-not-allowed"
-                        required
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        This email is automatically filled from your account and cannot be changed.
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                      <input
-                        type="tel"
-                        value={formData.contactDetails.phoneNumber}
-                        onChange={(e) => handleInputChange('contactDetails', 'phoneNumber', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Phone</label>
-                      <input
-                        type="tel"
-                        value={formData.contactDetails.alternatePhone}
-                        onChange={(e) => handleInputChange('contactDetails', 'alternatePhone', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">RC Number *</label>
-                      <input
-                        type="text"
-                        value={formData.contactDetails.rcNumber}
-                        onChange={(e) => handleInputChange('contactDetails', 'rcNumber', e.target.value.toUpperCase())}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        style={{ textTransform: 'uppercase' }}
-                        placeholder="RC123456"
-                        required
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Enter your company's Registration Certificate number
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Coverage Details */}
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Coverage Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
-                      <select
-                        value={formData.requestDetails.coverageType}
-                        onChange={(e) => handleInputChange('requestDetails', 'coverageType', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      >
-                        <option value="">Select coverage type</option>
-                        {COVERAGE_TYPES.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Policy Duration</label>
-                      <select
-                        value={formData.requestDetails.policyDuration}
-                        onChange={(e) => handleInputChange('requestDetails', 'policyDuration', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      >
-                        <option value="">Select duration</option>
-                        {POLICY_DURATIONS.map((duration) => (
-                          <option key={duration} value={duration}>
-                            {duration}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Special Requests</label>
-                      <textarea
-                        value={formData.requestDetails.specialRequests}
-                        onChange={(e) => handleInputChange('requestDetails', 'specialRequests', e.target.value)}
-                        rows={3}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Any special requirements or additional information..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer - Now inside form */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600">
-                  Your updated policy will be reassigned for a new survey.
-                </p>
-                <div className="flex space-x-3">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-                  >
-                    {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>}
-                    {loading ? 'Updating...' : 'Update & Resubmit'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
 
