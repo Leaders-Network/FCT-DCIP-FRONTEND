@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { BuilderLiabilityPolicyForm } from '@/components/builderLiability/PolicyForm';
 import { BuilderLiabilityPolicyList } from '@/components/builderLiability/PolicyList';
-// DEPRECATED: Legacy property insurance form - system now uses Builder Liability Policy exclusively
+// DEPRECATED: Legacy property builder liability form - system now uses Builder Liability Policy exclusively
 // import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import ReportSection from "@/components/dashboard/ReportSection";
 // REMOVED: MergedReportsSummary - not applicable for Builder Liability policies
@@ -216,7 +216,7 @@ const Dashview = () => {
           paymentPending: paymentPendingPolicies.length
         });
 
-        // Set recent insurances (first 5 items from all policies)
+        // Set recent builder liabilities (first 5 items from all policies)
         setRecentInsurances(allPolicyData.slice(0, 5) || []);
 
         // Store all policies for report section and filtering
@@ -268,7 +268,7 @@ const Dashview = () => {
           </div>
           <div className="absolute inset-0 flex flex-col justify-center p-4">
             <div className="text-white text-sm sm:text-base md:text-lg lg:text-[17px] font-bold mb-2">
-              Life is unpredictable, but your home insurance doesn&apos;t
+              Life is unpredictable, but your home&apos;s builder liability doesn&apos;t
               have to be.
             </div>
             <div className="text-white text-xs sm:text-sm md:text-base lg:text-[13px] font-semibold">
@@ -634,7 +634,7 @@ const Dashview = () => {
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">Need Help Getting Started?</h3>
                       <p className="text-gray-700 mb-4">
-                        Welcome to your insurance dashboard! Here's how to navigate your policy journey:
+                        Welcome to your builder liability dashboard! Here's how to navigate your policy journey:
                       </p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -643,7 +643,7 @@ const Dashview = () => {
                             <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">1</div>
                             <h4 className="font-medium text-gray-900">Submit Policy Request</h4>
                           </div>
-                          <p className="text-sm text-gray-600">Click "New Request" to submit your property details for insurance coverage.</p>
+                          <p className="text-sm text-gray-600">Click "New Request" to submit your property details for builder liability coverage.</p>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-blue-200">
@@ -667,7 +667,7 @@ const Dashview = () => {
                             <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">4</div>
                             <h4 className="font-medium text-gray-900">Policy Active</h4>
                           </div>
-                          <p className="text-sm text-gray-600">Download your certificate and access the insurance portal for ongoing support.</p>
+                          <p className="text-sm text-gray-600">Download your certificate and access the builder liability portal for ongoing support.</p>
                         </div>
                       </div>
 
@@ -690,7 +690,7 @@ const Dashview = () => {
                           onClick={() => {
                             const email = 'support@ammc.gov.ng';
                             const subject = 'Insurance Dashboard Support Request';
-                            const body = 'Hello, I need assistance with my insurance dashboard. Please help me with:';
+                            const body = 'Hello, I need assistance with my builder liability dashboard. Please help me with:';
                             window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                           }}
                           className="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center"
@@ -830,13 +830,13 @@ const Dashview = () => {
                 <h3 className="text-lg font-bold text-orange-900">Need Help?</h3>
               </div>
               <p className="text-sm text-orange-800 mb-3">
-                Our support team is here to help you with your insurance needs.
+                Our support team is here to help you with your builder liability needs.
               </p>
               <button
                 onClick={() => {
                   const email = 'support@ammc.gov.ng';
                   const subject = 'Insurance Dashboard Support Request';
-                  const body = 'Hello, I need assistance with my insurance dashboard. Please help me with:';
+                  const body = 'Hello, I need assistance with my builder liability dashboard. Please help me with:';
                   window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 }}
                 className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium flex items-center justify-center"
