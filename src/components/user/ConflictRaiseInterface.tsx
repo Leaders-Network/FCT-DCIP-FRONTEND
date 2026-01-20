@@ -137,19 +137,19 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
     const fetchUserPolicies = async () => {
         try {
             setLoadingPolicies(true);
-            const { getUserPolicyRequests } = await import('@/services/api');
+            const { builderLiabilityPolicyAPI } = await import('@/services/api');
 
             // Fetch completed, approved, and surveyed policies
             const [completedRes, approvedRes, surveyedRes] = await Promise.all([
-                getUserPolicyRequests('completed', 1, 100).catch(() => ({ data: { policyRequests: [] } })),
-                getUserPolicyRequests('approved', 1, 100).catch(() => ({ data: { policyRequests: [] } })),
-                getUserPolicyRequests('surveyed', 1, 100).catch(() => ({ data: { policyRequests: [] } }))
+                builderLiabilityPolicyAPI.getUserPolicies({ status: 'completed', page: 1, limit: 100 }).catch(() => ({ data: { policies: [] } })),
+                builderLiabilityPolicyAPI.getUserPolicies({ status: 'approved', page: 1, limit: 100 }).catch(() => ({ data: { policies: [] } })),
+                builderLiabilityPolicyAPI.getUserPolicies({ status: 'surveyed', page: 1, limit: 100 }).catch(() => ({ data: { policies: [] } }))
             ]);
 
             const allPolicies = [
-                ...(completedRes?.data?.policyRequests || []),
-                ...(approvedRes?.data?.policyRequests || []),
-                ...(surveyedRes?.data?.policyRequests || [])
+                ...(completedRes?.data?.policies || []),
+                ...(approvedRes?.data?.policies || []),
+                ...(surveyedRes?.data?.policies || [])
             ];
 
             // Remove duplicates by _id
