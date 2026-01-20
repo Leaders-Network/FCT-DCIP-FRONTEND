@@ -88,7 +88,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     const fetchInitialData = async () => {
       setLoading(true);
       try {
-        const { adminApi, getPolicyRequests } = await import("@/services/api");
+        const { adminApi, builderLiabilityPolicyAPI } = await import("@/services/api");
 
         // Fetch surveyors
         const surveyorResponse = await adminApi.getSurveyors({});
@@ -98,7 +98,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         }
 
         // Fetch assignments
-        const assignmentResponse = await getPolicyRequests('all', 1, 100);
+        const assignmentResponse = await builderLiabilityPolicyAPI.getAllPolicies({ status: 'all', page: 1, limit: 100 });
         if (assignmentResponse?.data && Array.isArray(assignmentResponse.data)) {
           const assignmentData = assignmentResponse.data?.map((policy: PolicyRequest) => ({
             _id: policy._id,

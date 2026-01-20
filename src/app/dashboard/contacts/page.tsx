@@ -29,11 +29,11 @@ const ContactsPage: React.FC = () => {
                     return;
                 }
 
-                const { getUserPolicyRequests } = await import("@/services/api");
-                const policiesResponse = await getUserPolicyRequests('all', 1, 1);
+                const { builderLiabilityPolicyAPI } = await import("@/services/api");
+                const policiesResponse = await builderLiabilityPolicyAPI.getUserPolicies({ status: 'all', page: 1, limit: 1 });
 
-                if (policiesResponse?.data?.policyRequests?.length > 0) {
-                    const latestPolicy = policiesResponse.data.policyRequests[0];
+                if (policiesResponse?.data?.policies?.length > 0) {
+                    const latestPolicy = policiesResponse.data.policies[0];
 
                     // Try to get assignment information for the latest policy
                     try {

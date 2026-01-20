@@ -296,8 +296,8 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     if (!confirmed) return;
 
     try {
-      const { updatePolicyRequest } = await import('@/services/api');
-      await updatePolicyRequest(policy._id, {
+      const { builderLiabilityPolicyAPI } = await import('@/services/api');
+      await builderLiabilityPolicyAPI.updatePolicy(policy._id, {
         status: 'completed',
         adminNotes: `Payment confirmed on ${new Date().toLocaleDateString()}`
       });

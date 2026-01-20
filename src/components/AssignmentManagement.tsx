@@ -82,7 +82,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     try {
       const response = await adminApi.getPolicies({ status: 'assigned', page: 1, limit: 100 });
       if (response?.data) {
-        setAssignedPolicies(response.data.policyRequests);
+        setAssignedPolicies(response.data.policies);
       } else {
         setAssignedPolicies([]);
       }
@@ -116,7 +116,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({
     try {
       const response = await adminApi.getPolicies({ status: 'submitted', page: 1, limit: 100 });
       if (response?.data) {
-        setPolicies(response.data.policyRequests);
+        setPolicies(response.data.policies);
       } else {
         setPolicies([]);
       }
