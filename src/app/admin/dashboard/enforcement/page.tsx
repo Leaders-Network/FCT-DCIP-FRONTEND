@@ -65,19 +65,19 @@ const EnforcementPage = () => {
   const fetchPolicies = async () => {
     try {
       setLoading(true);
-      const { getUserPolicyRequests } = await import("@/services/api");
+      const { builderLiabilityPolicyAPI } = await import("@/services/api");
 
       const [approvedResponse, paymentPendingResponse, completedResponse, rejectedResponse] = await Promise.all([
-        getUserPolicyRequests("approved", 1, 100),
-        getUserPolicyRequests("payment_pending", 1, 100),
-        getUserPolicyRequests("completed", 1, 100),
-        getUserPolicyRequests("rejected", 1, 100),
+        builderLiabilityPolicyAPI.getUserPolicies({ status: "approved", page: 1, limit: 100 }),
+        builderLiabilityPolicyAPI.getUserPolicies({ status: "payment_pending", page: 1, limit: 100 }),
+        builderLiabilityPolicyAPI.getUserPolicies({ status: "completed", page: 1, limit: 100 }),
+        builderLiabilityPolicyAPI.getUserPolicies({ status: "rejected", page: 1, limit: 100 }),
       ]);
 
-      const approved = approvedResponse.data?.policyRequests || [];
-      const paymentPending = paymentPendingResponse.data?.policyRequests || [];
-      const completed = completedResponse.data?.policyRequests || [];
-      const rejected = rejectedResponse.data?.policyRequests || [];
+      const approved = approvedResponse.data?.policies || [];
+      const paymentPending = paymentPendingResponse.data?.policies || [];
+      const completed = completedResponse.data?.policies || [];
+      const rejected = rejectedResponse.data?.policies || [];
 
       setPolicies([...approved, ...paymentPending, ...completed, ...rejected]);
     } catch (error) {
