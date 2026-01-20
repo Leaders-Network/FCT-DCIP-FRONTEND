@@ -63,7 +63,7 @@ export function Login() {
               Welcome Back!
             </h2>
             <p className="text-sm md:text-[1.1rem] leading-relaxed fade-in-text mt-2">
-              We’re glad to have you again, log in to continue protecting what matters most.
+              We're glad to have you again, log in to continue protecting what matters most.
             </p>
           </div>
         </div>
@@ -162,7 +162,6 @@ function LoginForm() {
     try {
       loginSchema.parse({ email, password });
       setErrors({});
-      toast.success("Validation successful! ✅");
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -269,15 +268,18 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
     }
 
     setIsLoading(true);
+    toast.loading("Signing in...", { id: 'login-toast' });
 
     try {
       // First, try to log in as a regular user
       await login(email, password, 'user');
+      toast.success("Login successful! 🎉", { id: 'login-toast' });
       // If successful, navigation happens in AuthProvider
     } catch (userError) {
       try {
         // If user login fails, try to log in as an employee
         await login(email, password, 'employee');
+        toast.success("Login successful! 🎉", { id: 'login-toast' });
         // If successful, navigation happens in AuthProvider
       } catch (employeeError) {
         console.error("Login error:", employeeError);
@@ -285,6 +287,7 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
 
         setError(message);
         toast.error(message, {
+          id: 'login-toast',
           description: "Please check your credentials and try again.",
           duration: 3000,
         });
