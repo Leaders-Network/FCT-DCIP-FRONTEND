@@ -24,8 +24,11 @@ interface BuilderLiabilityPolicy {
     lga: string;
     district?: string;
     address: string;
-    projectType?: string;
-    projectValue?: number;
+    coverTypeIdxDetails?: string; // This is the project type
+    totalEstimateSum?: number;    // This is the project value
+    categoryOfContractorId?: number;
+    extraHazardous?: boolean;
+    workDetails?: string;
   };
   status: string;
   createdAt: string;
@@ -166,7 +169,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Builder Liability Survey Assignment</h1>
                 <p className="text-gray-600 mt-1">
-                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.projectType || 'Builder Liability Policy Survey'}
+                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.coverTypeIdxDetails || 'Builder Liability Policy Survey'}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Policy #{typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.policyNumber || 'N/A'} • Assignment ID: {assignment._id}
@@ -236,7 +239,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.projectType || 'Construction Project'}
+                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.coverTypeIdxDetails || 'Construction Project'}
                 </h3>
                 <p className="text-gray-600 mt-1 flex items-start">
                   <MapPin className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
@@ -260,7 +263,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-gray-900">
-                  ₦{typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.projectValue?.toLocaleString() || 'N/A'}
+                  ₦{typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.totalEstimateSum?.toLocaleString() || 'N/A'}
                 </div>
                 <div className="text-sm text-gray-500">Project Value</div>
               </div>
@@ -275,7 +278,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Project Type:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.projectType || 'N/A'}
+                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.coverTypeIdxDetails || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
