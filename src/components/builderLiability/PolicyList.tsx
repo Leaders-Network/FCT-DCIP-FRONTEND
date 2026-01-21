@@ -336,7 +336,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                 <MapPin className="w-4 h-4 text-gray-400" />
                                                 <div>
                                                     <p className="text-gray-600">Location</p>
-                                                    <p className="font-medium truncate">{policy.builder.address}</p>
+                                                    <p className="font-medium truncate text-wrap">{policy.builder.address}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
