@@ -5,9 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Building, Home, ArrowLeft } from 'lucide-react';
 import { BuilderLiabilityPolicyForm } from '@/components/builderLiability/PolicyForm';
-// DEPRECATED: Legacy property insurance form - keeping for backward compatibility only
-// import PolicyRequestForm from '@/components/dashboard/PolicyRequestForm';
 import { CreatePolicyRequestData } from '@/types/api.types';
+import { Toaster, toast } from "sonner";
 
 interface PolicyFormRouterProps {
     isOpen?: boolean;
@@ -35,7 +34,7 @@ export const PolicyFormRouter: React.FC<PolicyFormRouterProps> = ({
     };
 
     const handleBuilderLiabilitySuccess = (policyId: string) => {
-        alert('Builder Liability Policy application submitted successfully!');
+        toast.success('Builder Liability Policy application submitted successfully!');
         onClose();
         setSelectedPolicyType(null);
         // Call the callback to refresh policies if provided
@@ -52,6 +51,7 @@ export const PolicyFormRouter: React.FC<PolicyFormRouterProps> = ({
     };
 
     // Always show Builder Liability Policy form - no more property insurance option
+    <Toaster richColors position="top-right" />
     if (selectedPolicyType === 'builder-liability' || defaultPolicyType === 'builder-liability') {
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
