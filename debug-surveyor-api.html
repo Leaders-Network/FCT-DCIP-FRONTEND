@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Surveyor API</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Debug Surveyor API</h1>
+    <div id="output"></div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:5000/api/v1";
+        const API_KEY = "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+
+        // Create axios instance
+        const api = axios.create({
+            baseURL: API_BASE_URL,
+            headers: {
+                "Content-Type": "application/json",
+                "apikey": API_KEY,
+            },
+        });
+
+        async function testSurveyorLogin() {
+            try {
+                console.log('Testing surveyor login...');
+                
+                // Test login with a known surveyor
+                const loginResponse = await api.post('/auth/loginEmployee', {
+                    email: 'queinippezopau-8330@yopmail.com',
+                    password: '696f7ed78822b80620c13983' // ObjectId as password
+                });
+
+                console.log('Login response:', loginResponse.data);
+
+                if (loginResponse.data.success && loginResponse.data.token) {
+                    const token = loginResponse.data.token;
+                    console.log('Login successful, token:', token.substring(0, 50) + '...');
+
+                    // Set authorization header
+                    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+                    // Test assignments endpoint
+                    console.log('Testing assignments endpoint...');
+                    const assignmentsResponse = await api.get('/surveyor/assignments?status=all&page=1&limit=10');
+                    
+                    console.log('Assignments response:', assignmentsResponse.data);
+                    
+                    document.getElementById('output').innerHTML = `
+                        <h2>Login Success!</h2>
+                        <p>Token: ${token.substring(0, 50)}...</p>
+                        <h3>Assignments Response:</h3>
+                        <pre>${JSON.stringify(assignmentsResponse.data, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('output').innerHTML = `
+                        <h2>Login Failed</h2>
+                        <pre>${JSON.stringify(loginResponse.data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('output').innerHTML = `
+                    <h2>Error</h2>
+                    <p>Status: ${error.response?.status}</p>
+                    <p>Message: ${error.message}</p>
+                    <pre>${JSON.stringify(error.response?.data, null, 2)}</pre>
+                `;
+            }
+        }
+
+        // Run test when page loads
+        testSurveyorLogin();
+    </script>
+</body>
+</html>

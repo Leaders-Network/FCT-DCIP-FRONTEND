@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import type { Policy, FormErrors, ClaimRequest } from '@/types/claims';
+import api from '@/services/api';
 
 interface ClaimSubmissionFormProps {
     userId: string;
@@ -34,16 +35,11 @@ const ClaimSubmissionForm: React.FC<ClaimSubmissionFormProps> = ({
         setErrors(prev => ({ ...prev, policyNumber: undefined }));
 
         try {
-            const response = await fetch(
-                `/api/v1/policy/validate/${encodeURIComponent(policyNum)}?userId=${userId}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                }
+            const response = await api.get(
+                `/builder-liability-policy/validate/${encodeURIComponent(policyNum)}?userId=${userId}`
             );
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success && data.policy) {
                 setPolicyDetails(data.policy);
@@ -150,15 +146,13 @@ const ClaimSubmissionForm: React.FC<ClaimSubmissionFormProps> = ({
                 formData.append('documents', file);
             });
 
-            const response = await fetch('/api/v1/claims/submit', {
-                method: 'POST',
+            const response = await api.post('/claims/submit', formData, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: formData
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 setSuccessMessage(`Claim submitted successfully! Reference: ${data.referenceNumber}`);

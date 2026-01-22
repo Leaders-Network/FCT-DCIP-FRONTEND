@@ -380,18 +380,38 @@ export const getSurveyorDualAssignments = async (filters?: {
   }
 };
 
-export const getSurveyorAssignments = async (status?: string, page = 1, limit = 10) => {
+export const getSurveyorAssignments = async (filters?: {
+  status?: string;
+  priority?: string;
+  page?: number;
+  limit?: number;
+}) => {
   try {
+    console.log('🔍 getSurveyorAssignments called with filters:', filters);
+
     const params = new URLSearchParams();
-    if (status && status !== 'all') params.append('status', status);
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    if (filters) {
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters.priority && filters.priority !== 'all') params.append('priority', filters.priority);
+      params.append('page', (filters.page || 1).toString());
+      params.append('limit', (filters.limit || 10).toString());
+    } else {
+      params.append('page', '1');
+      params.append('limit', '10');
+    }
 
     const url = `/surveyor/assignments?${params.toString()}`;
+    console.log('📡 Making API request to:', url);
+    console.log('🔑 Current path for token detection:', window.location.pathname);
+
     const response = await api.get(url);
+    console.log('✅ API response received:', response.data);
+
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyor assignments", error);
+    console.error("❌ Failed to fetch surveyor assignments", error);
+    console.error("Error response:", error.response?.data);
+    console.error("Error status:", error.response?.status);
     throw error;
   }
 };
