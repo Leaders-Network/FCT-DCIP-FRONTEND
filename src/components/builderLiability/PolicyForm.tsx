@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle, Plus, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FCT_LOCATIONS, getDistrictsByLGA } from '@/constants/fctLocations';
+import { toast } from "sonner";
 
 interface PolicyFormProps {
     onSuccess?: (policyId: string) => void;
@@ -157,8 +158,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         // Client-side validation: if insurance is checked, ensure details provided
         if (formData.hasInsurance && !formData.insuranceDetails) {
-            // Show a client-side validation message (could be improved to use UI alert)
-            alert('Insurance details are required when insurance is available');
+            toast.error('Insurance details are required when insurance is available');
             return;
         }
 
@@ -424,7 +424,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             type="number"
                                             min="0"
                                             value={formData.permanentStaffCount}
-                                            onChange={(e) => handleInputChange('permanentStaffCount', parseInt(e.target.value) || 0)}
+                                            onChange={(e) => handleInputChange('permanentStaffCount', parseInt(e.target.value) || "")}
                                             required
                                         />
                                     </div>
@@ -435,7 +435,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             type="number"
                                             min="0"
                                             value={formData.numberOfFloors}
-                                            onChange={(e) => handleInputChange('numberOfFloors', parseInt(e.target.value) || 0)}
+                                            onChange={(e) => handleInputChange('numberOfFloors', parseInt(e.target.value) || "")}
                                             required
                                         />
                                     </div>
@@ -859,10 +859,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         <Label htmlFor="totalEstimateSum">Total Estimate Sum (₦) *</Label>
                                         <Input
                                             id="totalEstimateSum"
-                                            type="number"
                                             min="0"
                                             value={formData.totalEstimateSum}
-                                            onChange={(e) => handleInputChange('totalEstimateSum', parseFloat(e.target.value) || 0)}
+                                            onChange={(e) => handleInputChange('totalEstimateSum', parseFloat(e.target.value) || "")}
                                             required
                                         />
                                     </div>
