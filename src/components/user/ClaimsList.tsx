@@ -220,9 +220,15 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
             {/* Claims Grid */}
             <div className="grid grid-cols-1 gap-6">
                 {claims.map((claim) => {
-                    const statusConfig = getStatusConfig(claim.status as any);
+                    // Use brokerStatus for claim status, fallback to status if not available
+                    const claimStatus = claim.brokerStatus || claim.status || 'pending';
+                    const statusConfig = getStatusConfig(claimStatus as any);
                     const StatusIcon = statusConfig.icon;
-                    const lastUpdate = null; // Status history not included in list view
+
+                    // Get the latest update from broker status history
+                    const lastUpdate = claim.brokerStatusHistory && claim.brokerStatusHistory.length > 0
+                        ? claim.brokerStatusHistory[claim.brokerStatusHistory.length - 1]
+                        : null;
 
                     return (
                         <div
@@ -314,7 +320,7 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                                 {/* Actions */}
                                 <div className="flex items-center justify-between">
                                     <p className="text-xs text-gray-500">
-                                        Last updated: {formatDate(claim.submissionDate)}
+                                        Last updated: {lastUpdate ? formatDate(lastUpdate.changedAt) : formatDate(claim.submissionDate)}
                                     </p>
                                     <button
                                         onClick={() => handleViewDetails(claim)}
