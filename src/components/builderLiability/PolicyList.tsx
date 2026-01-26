@@ -24,7 +24,7 @@ import {
     AlertCircle,
     CreditCard
 } from 'lucide-react';
-import { toast } form "sonner"
+import { toast } from "sonner"
 
 interface PolicyListProps {
     isAdmin?: boolean;
