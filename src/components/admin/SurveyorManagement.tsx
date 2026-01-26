@@ -76,7 +76,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     role: "Surveyor",
     status: "active" as "active" | "inactive" | "suspended",
     rating: 0,
-    experience: 0,
+    experience: "",
     maxAssignments: 5,
     dateOfBirth: "",
     qualifications: [] as string[],
@@ -300,7 +300,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         role: "Surveyor",
         status: "active",
         rating: 0,
-        experience: 0,
+        experience: "",
         maxAssignments: 5,
         dateOfBirth: "",
         qualifications: [],
@@ -358,7 +358,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       role: surveyor.role || "Surveyor",
       status: surveyor.status || "active",
       rating: surveyor.rating || 0,
-      experience: surveyor.experience || 0,
+      experience: surveyor.experience || "",
       maxAssignments: surveyor.maxAssignments || 5,
       dateOfBirth: surveyor.dateOfBirth || "",
       qualifications: surveyor.qualifications || [],
@@ -491,7 +491,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   License: {surveyor?.licenseNumber || 'N/A'}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-semibold">Experience:</span> {surveyor?.experience || 0} years
+                  <span className="font-semibold">Experience:</span> {surveyor?.experience} years
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <span className="font-semibold">Max Assignments:</span> {surveyor?.maxAssignments || 5}
@@ -1033,7 +1033,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <h4 className="font-medium text-gray-900 mb-2">Professional Information</h4>
                   <div className="space-y-2 text-sm">
                     <p><span className="text-gray-600">License:</span> {selectedSurveyor?.licenseNumber || 'N/A'}</p>
-                    <p><span className="text-gray-600">Experience:</span> {selectedSurveyor?.experience || 0} years</p>
+                    <p><span className="text-gray-600">Experience:</span> {selectedSurveyor?.experience || ""} years</p>
                     <p><span className="text-gray-600">Max Assignments:</span> {selectedSurveyor?.maxAssignments || 5}</p>
                     <p><span className="text-gray-600">Availability:</span>
                       <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${selectedSurveyor?.availability === 'available' ? 'bg-green-100 text-green-800' :
