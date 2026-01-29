@@ -133,21 +133,22 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           search: searchTerm || undefined
         };
 
-        console.log("Fetching surveyors with filters:", filters);
+        console.log("🔍 Fetching surveyors with filters:", filters);
 
         const response = await adminApi.getSurveyors(filters);
 
-        console.log("Surveyor API response:", response);
-        console.log("Surveyors count:", response?.data?.length || 0);
+        console.log("📊 Surveyor API response:", response);
+        console.log("👥 Surveyors count:", response?.data?.length || 0);
 
         if (response?.success && response?.data) {
+          console.log("✅ Setting surveyors data:", response.data);
           setSurveyors(response.data);
         } else {
-          console.warn("No surveyors data in response");
+          console.warn("⚠️ No surveyors data in response");
           setSurveyors([]);
         }
       } catch (error) {
-        console.error("Failed to fetch surveyors:", error);
+        console.error("❌ Failed to fetch surveyors:", error);
         setSurveyors([]);
       } finally {
         setFetching(false);
@@ -230,8 +231,92 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }
   };
 
-  // Backend now handles all filtering, so we just use the surveyors directly
-  const filteredSurveyors = surveyors || [];
+  // Get unique specializations from surveyors for dynamic filter options
+  const availableSpecializations = React.useMemo(() => {
+    const specs = new Set<string>();
+    surveyors.forEach(surveyor => {
+      const specializations = surveyor.specializations || surveyor.profile?.specialization || [];
+      if (Array.isArray(specializations)) {
+        specializations.forEach(spec => {
+          if (spec && typeof spec === 'string') {
+            specs.add(spec.toLowerCase());
+          }
+        });
+      }
+    });
+    return Array.from(specs).sort();
+  }, [surveyors]);
+
+  // Get unique statuses from surveyors for dynamic filter options
+  const availableStatuses = React.useMemo(() => {
+    const statuses = new Set<string>();
+    surveyors.forEach(surveyor => {
+      const status = surveyor.status || surveyor.employeeStatus?.status || '';
+      if (status) {
+        statuses.add(status.toLowerCase());
+      }
+    });
+    return Array.from(statuses).sort();
+  }, [surveyors]);
+  const filteredSurveyors = React.useMemo(() => {
+    let filtered = surveyors || [];
+
+    console.log("🔄 Client-side filtering - Initial count:", filtered.length);
+    console.log("🔄 Filters applied:", { searchTerm, statusFilter, specializationFilter });
+
+    // Apply search filter if backend didn't handle it properly
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(surveyor => {
+        const firstName = (surveyor.userId?.firstname || surveyor.firstname || '').toLowerCase();
+        const lastName = (surveyor.userId?.lastname || surveyor.lastname || '').toLowerCase();
+        const email = (surveyor.userId?.email || surveyor.email || '').toLowerCase();
+        const phone = (surveyor.userId?.phonenumber || surveyor.phonenumber || '').toLowerCase();
+        const license = (surveyor.licenseNumber || '').toLowerCase();
+
+        return firstName.includes(searchLower) ||
+          lastName.includes(searchLower) ||
+          email.includes(searchLower) ||
+          phone.includes(searchLower) ||
+          license.includes(searchLower);
+      });
+    }
+
+    // Apply status filter if backend didn't handle it properly
+    if (statusFilter && statusFilter !== "all") {
+      filtered = filtered.filter(surveyor => {
+        const surveyorStatus = (surveyor.status || surveyor.employeeStatus?.status || '').toLowerCase();
+        const filterStatus = statusFilter.toLowerCase();
+
+        // Handle different status formats
+        if (filterStatus === 'active') {
+          return surveyorStatus === 'active' || surveyorStatus === 'available';
+        } else if (filterStatus === 'inactive') {
+          return surveyorStatus === 'inactive' || surveyorStatus === 'unavailable';
+        } else if (filterStatus === 'on leave') {
+          return surveyorStatus === 'on leave' || surveyorStatus === 'busy';
+        }
+
+        return surveyorStatus === filterStatus;
+      });
+    }
+
+    // Apply specialization filter if backend didn't handle it properly
+    if (specializationFilter && specializationFilter !== "all") {
+      filtered = filtered.filter(surveyor => {
+        const specializations = surveyor.specializations || surveyor.profile?.specialization || [];
+        if (Array.isArray(specializations)) {
+          return specializations.some(spec =>
+            spec.toLowerCase().includes(specializationFilter.toLowerCase())
+          );
+        }
+        return false;
+      });
+    }
+
+    console.log("✅ Client-side filtering - Final count:", filtered.length);
+    return filtered;
+  }, [surveyors, searchTerm, statusFilter, specializationFilter]);
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -407,34 +492,57 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search surveyors..."
+              placeholder="Search by name, email, phone, or license..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2"
+              className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={fetching}
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
+            className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={fetching}
           >
             <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="on leave">On Leave</option>
-            <option value="inactive">Inactive</option>
+            {availableStatuses.map(status => (
+              <option key={status} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </option>
+            ))}
+            {/* Fallback options if no dynamic statuses found */}
+            {availableStatuses.length === 0 && (
+              <>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </>
+            )}
           </select>
 
           <select
             value={specializationFilter}
             onChange={(e) => setSpecializationFilter(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
+            className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={fetching}
           >
             <option value="all">All Specializations</option>
-            <option value="residential">Residential</option>
-            <option value="commercial">Commercial</option>
-            <option value="industrial">Industrial</option>
-            <option value="agricultural">Agricultural</option>
+            {availableSpecializations.map(spec => (
+              <option key={spec} value={spec}>
+                {spec.charAt(0).toUpperCase() + spec.slice(1)}
+              </option>
+            ))}
+            {/* Fallback options if no dynamic specializations found */}
+            {availableSpecializations.length === 0 && (
+              <>
+                <option value="residential">Residential</option>
+                <option value="commercial">Commercial</option>
+                <option value="industrial">Industrial</option>
+                <option value="agricultural">Agricultural</option>
+              </>
+            )}
           </select>
 
           <button
@@ -443,10 +551,19 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               setStatusFilter("all");
               setSpecializationFilter("all");
             }}
-            className="border border-gray-300 rounded-md px-3 py-2 hover:bg-gray-50"
+            className="border border-gray-300 rounded-md px-3 py-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={fetching}
           >
             Clear Filters
           </button>
+        </div>
+
+        {/* Results counter */}
+        <div className="mt-3 text-sm text-gray-600">
+          Showing {filteredSurveyors.length} of {surveyors.length} surveyors
+          {(searchTerm || statusFilter !== 'all' || specializationFilter !== 'all') && (
+            <span className="text-blue-600 ml-2">• Filters applied</span>
+          )}
         </div>
       </div>
 
@@ -458,6 +575,31 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           <span className="ml-3 text-gray-600">Loading surveyors...</span>
         </div>
       )}
+
+      {!fetching && filteredSurveyors.length === 0 && (
+        <div className="text-center py-12">
+          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No surveyors found</h3>
+          <p className="text-gray-600 mb-4">
+            {searchTerm || statusFilter !== 'all' || specializationFilter !== 'all'
+              ? 'Try adjusting your search criteria or filters'
+              : 'No surveyors have been added yet'}
+          </p>
+          {(searchTerm || statusFilter !== 'all' || specializationFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("all");
+                setSpecializationFilter("all");
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
+
       <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${fetching ? 'opacity-50 pointer-events-none' : ''}`}>
         {filteredSurveyors.map((surveyor) => (
           <div key={surveyor._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
