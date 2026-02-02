@@ -102,7 +102,11 @@ const AutomatedAssignmentsPage = () => {
         params.search = filters.search;
       }
 
+      console.log('Fetching assignments with params:', params);
+
       const response = await adminApi.getAssignments(params);
+
+      console.log('Assignments API response:', response);
 
       if (response.success) {
         setAssignments(response.data.assignments || []);
@@ -127,6 +131,7 @@ const AutomatedAssignmentsPage = () => {
           overdueCount: response.data.statistics?.overdueAssignments || 0
         });
       } else {
+        console.error('API returned error:', response.message);
         throw new Error(response.message || 'Failed to load assignments');
       }
     } catch (error) {
