@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, X, Clock, TrendingUp, FileText, Home, Shield, Users, MapPin, Calendar } from 'lucide-react';
+import { Search, X, Clock, TrendingUp, FileText, Home, Shield, Users, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
+import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
+import { adminApi } from '@/services/api';
 
 interface SearchResult {
     id: string;
@@ -18,6 +20,160 @@ interface SearchResult {
 interface GlobalSearchProps {
     userType: 'user' | 'admin' | 'surveyor' | 'nia-admin' | 'broker-admin';
     className?: string;
+}
+
+// API search function
+async function searchAPI(searchQuery: string, userType: string): Promise<SearchResult[]> {
+    const results: SearchResult[] = [];
+    const lowerQuery = searchQuery.toLowerCase();
+
+    try {
+        if (userType === 'admin' || userType === 'nia-admin') {
+            // Search Builder Liability Policies
+            try {
+                const policiesResponse = await builderLiabilityPolicyAPI.searchPolicies(searchQuery, 5);
+                if (policiesResponse.success && policiesResponse.data.policies) {
+                    policiesResponse.data.policies.forEach(policy => {
+                        results.push({
+                            id: `policy-${policy._id}`,
+                            title: `Policy: ${policy.builder?.nameOfBuilder || 'Unknown Builder'}`,
+                            subtitle: `Status: ${policy.status} | RC: ${policy.builder?.rcNumber || 'N/A'}`,
+                            type: 'policy',
+                            url: userType === 'admin' ? `/admin/dashboard/policies/${policy._id}` : `/nia-admin/dashboard/policies/${policy._id}`,
+                            icon: <FileText className="h-5 w-5 text-purple-600" />,
+                            metadata: {
+                                'Policy Number': policy.policyNumber || 'N/A',
+                                'Project Value': `₦${policy.project?.totalEstimateSum?.toLocaleString() || '0'}`
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error searching policies:', error);
+            }
+
+            // Search Surveyors
+            try {
+                const surveyorsResponse = await adminApi.getSurveyors();
+                if (surveyorsResponse.success && surveyorsResponse.data) {
+                    const filteredSurveyors = surveyorsResponse.data.filter((surveyor: any) => {
+                        const fullName = `${surveyor.firstname || ''} ${surveyor.lastname || ''}`.toLowerCase();
+                        const email = (surveyor.email || '').toLowerCase();
+                        const phone = (surveyor.phonenumber || '').toLowerCase();
+                        return fullName.includes(lowerQuery) ||
+                            email.includes(lowerQuery) ||
+                            phone.includes(lowerQuery);
+                    }).slice(0, 3);
+
+                    filteredSurveyors.forEach((surveyor: any) => {
+                        results.push({
+                            id: `surveyor-${surveyor._id}`,
+                            title: `${surveyor.firstname || ''} ${surveyor.lastname || ''}`.trim(),
+                            subtitle: `Surveyor | ${surveyor.email || 'No email'}`,
+                            type: 'surveyor',
+                            url: userType === 'admin' ? `/admin/dashboard/surveyors/${surveyor._id}` : `/nia-admin/surveyors/${surveyor._id}`,
+                            icon: <Users className="h-5 w-5 text-blue-600" />,
+                            metadata: {
+                                'Phone': surveyor.phonenumber || 'N/A',
+                                'Status': surveyor.status || 'Unknown'
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error searching surveyors:', error);
+            }
+
+            // Search Assignments
+            try {
+                const assignmentsResponse = await adminApi.getAssignments({ search: searchQuery, limit: 3 });
+                if (assignmentsResponse.success && assignmentsResponse.data) {
+                    assignmentsResponse.data.forEach((assignment: any) => {
+                        const policyInfo = assignment.policyId;
+                        const surveyorInfo = assignment.surveyorId;
+                        results.push({
+                            id: `assignment-${assignment._id}`,
+                            title: `Assignment: ${policyInfo?.builder?.nameOfBuilder || 'Unknown Builder'}`,
+                            subtitle: `Surveyor: ${surveyorInfo?.firstname || ''} ${surveyorInfo?.lastname || ''} | Status: ${assignment.status}`,
+                            type: 'assignment',
+                            url: userType === 'admin' ? `/admin/dashboard/assignments/${assignment._id}` : `/nia-admin/assignments/${assignment._id}`,
+                            icon: <Calendar className="h-5 w-5 text-green-600" />,
+                            metadata: {
+                                'Priority': assignment.priority || 'Medium',
+                                'Deadline': assignment.deadline ? new Date(assignment.deadline).toLocaleDateString() : 'N/A'
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error searching assignments:', error);
+            }
+
+            // Search Administrators (if applicable)
+            if (lowerQuery.includes('admin') || lowerQuery.includes('staff') || lowerQuery.includes('employee')) {
+                try {
+                    const employeesResponse = await adminApi.getAllEmployees();
+                    if (employeesResponse.success && employeesResponse.allStaff?.sanitizedEmployees) {
+                        const filteredEmployees = employeesResponse.allStaff.sanitizedEmployees.filter((employee: any) => {
+                            const fullName = `${employee.firstname || ''} ${employee.lastname || ''}`.toLowerCase();
+                            const email = (employee.email || '').toLowerCase();
+                            const role = (employee.employeeRole?.role || '').toLowerCase();
+                            return fullName.includes(lowerQuery) ||
+                                email.includes(lowerQuery) ||
+                                role.includes(lowerQuery);
+                        }).slice(0, 3);
+
+                        filteredEmployees.forEach((employee: any) => {
+                            results.push({
+                                id: `employee-${employee._id}`,
+                                title: `${employee.firstname || ''} ${employee.lastname || ''}`.trim(),
+                                subtitle: `${employee.employeeRole?.role || 'Staff'} | ${employee.email || 'No email'}`,
+                                type: 'user',
+                                url: userType === 'admin' ? `/admin/dashboard/administrators/${employee._id}` : `/nia-admin/administrators/${employee._id}`,
+                                icon: <Users className="h-5 w-5 text-indigo-600" />,
+                                metadata: {
+                                    'Phone': employee.phonenumber || 'N/A',
+                                    'Status': employee.employeeStatus?.status || 'Unknown'
+                                }
+                            });
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error searching administrators:', error);
+                }
+            }
+        }
+
+        // For user searches, we could add user-specific searches here
+        if (userType === 'user') {
+            // Search user's own policies
+            try {
+                const userPoliciesResponse = await builderLiabilityPolicyAPI.searchPolicies(searchQuery, 3);
+                if (userPoliciesResponse.success && userPoliciesResponse.data.policies) {
+                    userPoliciesResponse.data.policies.forEach(policy => {
+                        results.push({
+                            id: `user-policy-${policy._id}`,
+                            title: `My Policy: ${policy.builder?.nameOfBuilder || 'Builder Liability'}`,
+                            subtitle: `Status: ${policy.status} | ${policy.project?.coverTypeIdxDetails || 'Builder Liability'}`,
+                            type: 'policy',
+                            url: `/dashboard/insurance/${policy._id}`,
+                            icon: <Shield className="h-5 w-5 text-green-600" />,
+                            metadata: {
+                                'Policy Number': policy.policyNumber || 'N/A',
+                                'Project Value': `₦${policy.project?.totalEstimateSum?.toLocaleString() || '0'}`
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error searching user policies:', error);
+            }
+        }
+    } catch (error) {
+        console.error('Search API error:', error);
+    }
+
+    return results;
 }
 
 const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' }) => {
@@ -101,12 +257,20 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
             // Get quick navigation results
             const quickResults = getQuickNavigationResults(searchQuery, userType);
 
-            // TODO: Add API calls to search actual data
-            // const apiResults = await searchAPI(searchQuery, userType);
+            // Add API calls to search actual data
+            const apiResults = await searchAPI(searchQuery, userType);
 
-            setResults(quickResults);
+            // Combine quick navigation and API results
+            const combinedResults = [...quickResults, ...apiResults];
+
+            // Limit total results to prevent overwhelming the UI
+            const limitedResults = combinedResults.slice(0, 10);
+            setResults(limitedResults);
         } catch (error) {
             console.error('Search error:', error);
+            // Fallback to just quick results if API fails
+            const quickResults = getQuickNavigationResults(searchQuery, userType);
+            setResults(quickResults);
         } finally {
             setLoading(false);
         }
@@ -161,7 +325,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => setIsOpen(true)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Search... (⌘K)"
+                    placeholder={
+                        userType === 'admin' || userType === 'nia-admin'
+                            ? "Search policies, surveyors, assignments... (⌘K)"
+                            : "Search... (⌘K)"
+                    }
                     className="pl-9 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {query && (
@@ -238,32 +406,37 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                     {query && !loading && results.length > 0 && (
                         <div className="p-2">
                             <p className="text-xs text-gray-500 px-3 py-2">
-                                Found {results.length} result{results.length !== 1 ? 's' : ''}
+                                Found {results.length} result{results.length !== 1 ? 's' : ''} for "{query}"
+                                {results.length === 10 && <span className="text-blue-600"> (showing first 10)</span>}
                             </p>
                             {results.map((result, index) => (
                                 <button
                                     key={result.id}
                                     onClick={() => handleSelect(result)}
-                                    className={`w-full flex items-start px-3 py-2 rounded-md text-left transition-colors ${index === selectedIndex ? 'bg-blue-50' : 'hover:bg-gray-50'
+                                    className={`w-full flex items-start px-3 py-3 rounded-md text-left transition-colors ${index === selectedIndex ? 'bg-blue-50 border-l-2 border-blue-500' : 'hover:bg-gray-50'
                                         }`}
                                 >
                                     <div className="flex-shrink-0 mt-0.5">{result.icon}</div>
                                     <div className="ml-3 flex-1 min-w-0">
                                         <p className="text-sm font-medium text-gray-900 truncate">{result.title}</p>
                                         {result.subtitle && (
-                                            <p className="text-xs text-gray-500 truncate">{result.subtitle}</p>
+                                            <p className="text-xs text-gray-500 truncate mt-0.5">{result.subtitle}</p>
                                         )}
                                         {result.metadata && (
-                                            <div className="flex flex-wrap gap-2 mt-1">
+                                            <div className="flex flex-wrap gap-3 mt-1">
                                                 {Object.entries(result.metadata).map(([key, value]) => (
                                                     <span key={key} className="text-xs text-gray-400">
-                                                        {key}: {value}
+                                                        <span className="font-medium">{key}:</span> {value}
                                                     </span>
                                                 ))}
                                             </div>
                                         )}
                                     </div>
-                                    <span className="ml-2 text-xs text-gray-400 capitalize">{result.type}</span>
+                                    <div className="ml-2 flex flex-col items-end">
+                                        <span className="text-xs text-gray-400 capitalize bg-gray-100 px-2 py-0.5 rounded-full">
+                                            {result.type}
+                                        </span>
+                                    </div>
                                 </button>
                             ))}
                         </div>
@@ -273,8 +446,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                     {query && !loading && results.length === 0 && (
                         <div className="p-8 text-center text-gray-500">
                             <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                            <p className="text-sm font-medium">No results found</p>
-                            <p className="text-xs mt-1">Try searching for something else</p>
+                            <p className="text-sm font-medium">No results found for "{query}"</p>
+                            <p className="text-xs mt-1">
+                                {userType === 'admin' || userType === 'nia-admin'
+                                    ? 'Try searching for policy numbers, builder names, surveyor names, or email addresses'
+                                    : 'Try searching for your policies or insurance options'
+                                }
+                            </p>
                         </div>
                     )}
 
@@ -303,18 +481,6 @@ function getQuickLinks(userType: string) {
     if (userType === 'user') {
         return [
             ...commonLinks,
-            {
-                title: 'My Properties',
-                subtitle: 'View and manage properties',
-                url: '/dashboard/property',
-                icon: <MapPin className="h-5 w-5 text-green-600" />
-            },
-            {
-                title: 'My Policies',
-                subtitle: 'View insurance policies',
-                url: '/dashboard/insurance',
-                icon: <FileText className="h-5 w-5 text-purple-600" />
-            },
             {
                 title: 'Insurance Options',
                 subtitle: 'Browse insurance types',
@@ -358,26 +524,6 @@ function getQuickNavigationResults(query: string, userType: string): SearchResul
 
     // User-specific searches
     if (userType === 'user') {
-        if ('property'.includes(lowerQuery) || 'properties'.includes(lowerQuery)) {
-            results.push({
-                id: 'nav-property',
-                title: 'My Properties',
-                subtitle: 'View and manage your properties',
-                type: 'page',
-                url: '/dashboard/property',
-                icon: <MapPin className="h-5 w-5 text-green-600" />
-            });
-        }
-        if ('policy'.includes(lowerQuery) || 'policies'.includes(lowerQuery)) {
-            results.push({
-                id: 'nav-policies',
-                title: 'My Policies',
-                subtitle: 'View your insurance policies',
-                type: 'page',
-                url: '/dashboard/insurance',
-                icon: <FileText className="h-5 w-5 text-purple-600" />
-            });
-        }
         if ('insurance'.includes(lowerQuery)) {
             results.push({
                 id: 'nav-insurance',
