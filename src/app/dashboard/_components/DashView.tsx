@@ -48,6 +48,7 @@ import {
   COVERAGE_TYPES,
   POLICY_DURATIONS
 } from "@/constants/policyConstants";
+import AOS from 'aos';
 
 const Dashview = () => {
   const [showBuilderLiabilityForm, setShowBuilderLiabilityForm] = useState(false);
@@ -76,6 +77,10 @@ const Dashview = () => {
     sortBy: "newest"
   });
   const [filteredPolicies, setFilteredPolicies] = useState<PolicyRequest[]>([]);
+
+  useEffect(() => {
+    AOS.refresh();
+  }, [loading, activeSection]);
 
   // Apply search and filters to policies
   useEffect(() => {
@@ -257,7 +262,7 @@ const Dashview = () => {
         {/* Full-width Banner */}
         <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] lg:h-[160px] relative mb-6">
           <div className="w-full h-full absolute">
-            <div className="w-full h-full absolute opacity-20 bg-white rounded-xl border border-black" />
+            <div data-aos="fade-up" className="w-full h-full absolute opacity-20 bg-white rounded-xl border border-black" />
             <Image
               className="w-full h-full absolute rounded-xl object-cover"
               src="/abuja-bg.png"
@@ -308,7 +313,7 @@ const Dashview = () => {
         {/* Main Content and Right Sidebar */}
         <div className="flex-1 flex overflow-hidden">
           {/* Main Content */}
-          <main className="flex-1 pb-8 overflow-y-auto">
+          <main className="flex-1 pb-8">
             {activeSection === 'overview' && (
               <>
                 {/* Notification Tester - Temporary for debugging */}

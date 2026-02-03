@@ -82,6 +82,7 @@ useEffect(() => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
+
               <Link href="/signup">
                 <button
                   className="w-full sm:w-auto bg-green-600 text-white px-8 py-3 font-semibold rounded-lg shadow-lg hover:bg-green-700 hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -89,7 +90,7 @@ useEffect(() => {
                   Register Now<span className="ml-2">→</span>
                 </button>
               </Link>
-              
+
               <Link href="/login">
                 <button
                   className="w-full sm:w-auto bg-white text-green-600 px-8 font-semibold py-3 rounded-lg shadow-lg hover:bg-gray-50 hover:shadow-xl transition-all duration-300 hover:scale-105"
