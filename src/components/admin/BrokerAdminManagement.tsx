@@ -18,6 +18,8 @@ import {
     AlertCircle
 } from "lucide-react";
 import { BrokerAdmin } from "@/types/api.types";
+import { toast } from "sonner";
+import Swal from "sweetalert2"
 
 // Extended BrokerAdmin interface for management UI with populated userId
 interface BrokerAdminWithUser extends Omit<BrokerAdmin, 'userId'> {
@@ -161,7 +163,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
             const response = await adminApi.post<{ success: boolean; data: BrokerAdmin }>('/broker-admin/management', formData);
 
             if (response && 'success' in response && response.success) {
-                alert('Broker admin created successfully!');
+                toast.success('Broker admin created successfully!');
                 setShowCreateModal(false);
                 resetForm();
                 fetchBrokerAdmins();
@@ -170,7 +172,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         } catch (error) {
             console.error("Failed to create broker admin:", error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to create broker admin';
-            alert(errorMessage);
+            toast.error(errorMessage);
         }
     };
 
@@ -190,7 +192,7 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
             const data = (response as unknown as { data?: { success?: boolean } }).data;
 
             if (data?.success) {
-                alert('Broker admin updated successfully!');
+                toast.success('Broker admin updated successfully!');
                 setShowEditModal(false);
                 setSelectedBrokerAdmin(null);
                 resetForm();
@@ -199,33 +201,49 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         } catch (error) {
             console.error("Failed to update broker admin:", error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to update broker admin';
-            alert(errorMessage);
+            toast.error(errorMessage);
         }
     };
+
 
     const handleDeleteBrokerAdmin = async (id: string) => {
-        if (!confirm('Are you sure you want to deactivate this broker admin?')) {
-            return;
+    const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "This broker admin will be deactivated!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, deactivate",
+        cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const { adminApi } = await import("@/services/api");
+
+        const response = await adminApi.delete<{ success: boolean }>(
+        `/broker-admin/management/${id}`
+        );
+
+        const data = (response as unknown as { data?: { success?: boolean } }).data;
+
+        if (data?.success) {
+        toast.success("Broker admin deactivated successfully!");
+        fetchBrokerAdmins();
+        fetchStats();
         }
-
-        try {
-            const { adminApi } = await import("@/services/api");
-
-            const response = await adminApi.delete<{ success: boolean }>(`/broker-admin/management/${id}`);
-
-            const data = (response as unknown as { data?: { success?: boolean } }).data;
-
-            if (data?.success) {
-                alert('Broker admin deactivated successfully!');
-                fetchBrokerAdmins();
-                fetchStats();
-            }
-        } catch (error) {
-            console.error("Failed to delete broker admin:", error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to deactivate broker admin';
-            alert(errorMessage);
-        }
+    } catch (error) {
+        console.error("Failed to delete broker admin:", error);
+        const errorMessage =
+        error instanceof Error
+            ? error.message
+            : "Failed to deactivate broker admin";
+        toast.error(errorMessage);
+    }
     };
+
 
     const openEditModal = (brokerAdmin: BrokerAdminWithUser) => {
         setSelectedBrokerAdmin(brokerAdmin);

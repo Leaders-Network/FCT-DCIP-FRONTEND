@@ -25,26 +25,27 @@ const AdminLogin: React.FC = () => {
 
     try {
       await login(email, password, 'employee');
-      toast.success("Login successful! 🎉", { id: 'admin-login-toast' });
+
+      toast.success("Login successful! 🎉", 
+      { id: 'admin-login-toast' 
+      });
+      setIsLoading(false);
       // Navigation happens in AuthProvider, no need to call router.push here
     } catch (error) {
-      setIsLoading(false);
-      if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data.message || "Invalid credentials";
-        setError(errorMessage);
-        toast.error(`Login failed: ${errorMessage}`, { 
-          id: 'admin-login-toast',
-          description: "Please check your credentials and try again.",
-          duration: 3000,
-        });
-      } else {
-        setError("Login failed. Please check your credentials.");
-        toast.error("Login failed. Please try again.", { 
-          id: 'admin-login-toast',
-          description: "Please check your credentials and try again.",
-          duration: 3000,
-        });
-      }
+    setIsLoading(false);
+
+    let errorMessage = "Login failed. Please try again.";
+
+    if (axios.isAxiosError(error) && error.response) {
+      errorMessage =
+        error.response.data.message || "Invalid credentials";
+    } 
+      setError(errorMessage);
+      toast.error(`Login failed: ${errorMessage}`, { 
+        id: 'admin-login-toast',
+        description: "Please check your credentials and try again.",
+        duration: 3000,
+      });
     }
   };
 

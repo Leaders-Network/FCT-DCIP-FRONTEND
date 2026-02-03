@@ -7,6 +7,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
+import ChatWidget from "./ChatWidget";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -259,44 +260,59 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+      const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
 
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-    toast.loading("Signing in...", { id: 'login-toast' });
-
-    try {
-      // First, try to log in as a regular user
-      await login(email, password, 'user');
-      toast.success("Login successful! 🎉", { id: 'login-toast' });
-      // If successful, navigation happens in AuthProvider
-    } catch (userError) {
-      try {
-        // If user login fails, try to log in as an employee
-        await login(email, password, 'employee');
-        toast.success("Login successful! 🎉", { id: 'login-toast' });
-        // If successful, navigation happens in AuthProvider
-      } catch (employeeError) {
-        console.error("Login error:", employeeError);
-        const message = employeeError instanceof Error ? employeeError.message : "Invalid email or password. Please try again.";
-
-        setError(message);
-        toast.error(message, {
-          id: 'login-toast',
-          description: "Please check your credentials and try again.",
-          duration: 3000,
-        });
-        setIsLoading(false); // Only set loading to false on error
-        return; // Prevent further execution
+      if (!validateForm()) {
+        return;
       }
-    }
-    // Don't set isLoading to false here - let the navigation happen
-  };
+
+      setIsLoading(true);
+      toast.loading("Signing in...", { id: "login-toast" });
+
+      try {
+        // Try user login first
+        await login(email, password, "user");
+
+        // ✅ CLEAR ERROR ON SUCCESS
+        setError(null);
+
+        toast.success("Login successful! 🎉", { id: "login-toast" });
+        setIsLoading(false);
+        return;
+      } catch (userError) {
+        try {
+          // Try employee login if user login fails
+          await login(email, password, "employee");
+
+          // ✅ CLEAR ERROR ON SUCCESS
+          setError(null);
+
+          toast.success("Login successful! 🎉", { id: "login-toast" });
+          setIsLoading(false);
+          return;
+        } catch (employeeError) {
+          console.error("Login error:", employeeError);
+
+          const message =
+            employeeError instanceof Error
+              ? employeeError.message
+              : "Invalid email or password. Please try again.";
+
+          setError(message);
+
+          toast.error(message, {
+            id: "login-toast",
+            description: "Please check your credentials and try again.",
+            duration: 3000,
+          });
+
+          setIsLoading(false);
+        }
+      }
+    };
+
 
   return (
     <>
@@ -338,6 +354,7 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
           </>
         )}
       </button>
+      <ChatWidget />
     </>
   );
 }

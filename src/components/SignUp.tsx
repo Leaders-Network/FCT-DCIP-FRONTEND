@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import ChatWidget from "./ChatWidget";
 
 const signUpSchema = z.object({
   fullName: z.string().min(1, "Full Name is required"),
@@ -419,6 +420,7 @@ function SignUpButton({
           <MoveRight color="#000000" size={20} />
         </span>
       </button>
+      <ChatWidget />
     </>
   );
 }

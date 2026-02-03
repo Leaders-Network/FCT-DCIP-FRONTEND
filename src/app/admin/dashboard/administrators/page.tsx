@@ -21,6 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { toast } from "sonner"
 
 interface Administrator {
   _id: string;
@@ -220,7 +221,7 @@ export default function AdministratorsPage() {
         // Note: The current delete endpoint deletes the current user, not by ID
         // We may need to create a new admin endpoint for deleting users by ID
         console.warn('User deletion by admin not yet implemented - requires new backend endpoint')
-        alert('User deletion by admin is not yet implemented. Please contact the user to delete their own account.')
+        toast.warning('User deletion by admin is not yet implemented. Please contact the user to delete their own account.')
         return
       }
     } catch (error) {
@@ -282,7 +283,7 @@ export default function AdministratorsPage() {
       } else if (formData.userType === 'user') {
         // For users, we don't have an update endpoint yet
         console.warn('User update by admin not yet implemented - requires new backend endpoint')
-        alert('User editing by admin is not yet implemented.')
+        toast.warning('User editing by admin is not yet implemented.')
         return
       }
 
@@ -310,7 +311,7 @@ export default function AdministratorsPage() {
       } else if (activeTab === 'users') {
         // For users, we don't have a status toggle endpoint yet
         console.warn('User status toggle not yet implemented - requires new backend endpoint')
-        alert('User status management is not yet implemented.')
+        toast.warning('User status management is not yet implemented.')
         return
       }
     } catch (error) {

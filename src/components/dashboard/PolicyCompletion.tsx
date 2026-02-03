@@ -4,6 +4,7 @@ import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, 
 import { PolicyRequest, UserReport } from "@/types/api.types";
 import { builderLiabilityPolicyAPI, userReportAPI } from "@/services/api";
 import MergedReportDetailsModal from "@/components/user/MergedReportDetailsModal";
+import { toast } from "sonner";
 
 interface PolicyCompletionProps { }
 
@@ -84,10 +85,10 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       setRejectedPolicies(prev => prev.filter(p => p._id !== policy._id));
       setShowDeleteModal(false);
       setPolicyToDelete(null);
-      alert('Policy deleted successfully!');
+      toast.success('Policy deleted successfully!');
     } catch (error) {
       console.error('Delete policy error:', error);
-      alert('Failed to delete policy');
+      toast.error('Failed to delete policy');
     }
   };
 
@@ -109,7 +110,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
 
   const handleSubmitClaim = async () => {
     if (!selectedPolicyForClaim || !claimReason.trim()) {
-      alert('Please provide a reason for the claim request');
+      toast.error('Please provide a reason for the claim request');
       return;
     }
 
@@ -119,7 +120,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       // Find the report to get property and contact details
       const report = mergedReports.find(r => r.policyId === selectedPolicyForClaim);
       if (!report) {
-        alert('Report not found');
+        toast.error('Report not found');
         return;
       }
 
@@ -151,18 +152,18 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       });
 
       if (response.data?.success) {
-        alert('Claim request submitted successfully! The broker admin will review your claim.');
+        toast.success('Claim request submitted successfully! The broker admin will review your claim.');
         setShowClaimModal(false);
         setSelectedPolicyForClaim(null);
         setClaimReason('');
       } else {
-        alert(response.data?.message || 'Failed to submit claim request');
+        toast.error(response.data?.message || 'Failed to submit claim request');
       }
     } catch (error: unknown) {
       console.error('Claim submission error:', error);
       const err = error as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage = err.response?.data?.message || err.message || 'Failed to submit claim request';
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setClaimSubmitting(false);
     }
