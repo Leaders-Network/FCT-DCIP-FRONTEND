@@ -96,7 +96,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           token,
           name: employee.firstname,
         });
-        router.push("/admin/dashboard");
+
+        // Determine redirect based on employee role
+        const role = employee.employeeRole.role;
+        
+        if (role === 'Super-admin') {
+          // Redirect super-admin to a dashboard selector page
+          router.push("/admin/dashboard-selector");
+        } else if (role === 'Admin') {
+          router.push("/admin/dashboard");
+        } else if (role === 'Staff') {
+          router.push("/admin/dashboard");
+        } else if (role === 'Surveyor') {
+          router.push("/surveyor/dashboard");
+        } else {
+          // Fallback to admin dashboard
+          router.push("/admin/dashboard");
+        }
       } else {
         const response = await loginUser(email, password);
         const { token, user } = response.data;

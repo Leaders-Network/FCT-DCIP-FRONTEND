@@ -1399,6 +1399,41 @@ export const adminApi = {
     return response.data;
   },
 
+  // Generic HTTP methods for adminApi
+  get: async <T = unknown>(endpoint: string, config?: { params?: Record<string, unknown> }) => {
+    const queryParams = new URLSearchParams();
+    if (config?.params) {
+      Object.entries(config.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const url = `${endpoint}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(url);
+    return response.data as T;
+  },
+
+  post: async <T = unknown>(endpoint: string, data?: unknown) => {
+    const response = await api.post(endpoint, data);
+    return response.data as T;
+  },
+
+  patch: async <T = unknown>(endpoint: string, data?: unknown) => {
+    const response = await api.patch(endpoint, data);
+    return response.data as T;
+  },
+
+  put: async <T = unknown>(endpoint: string, data?: unknown) => {
+    const response = await api.put(endpoint, data);
+    return response.data as T;
+  },
+
+  delete: async <T = unknown>(endpoint: string) => {
+    const response = await api.delete(endpoint);
+    return response.data as T;
+  }
+
 };
 
 export const withErrorHandling = <T extends (...args: unknown[]) => Promise<unknown>>(
