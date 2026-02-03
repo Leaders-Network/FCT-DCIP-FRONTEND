@@ -120,17 +120,24 @@ export default function AdministratorsPage() {
       if (formData.userType === 'administrator') {
         await adminApi.createAdministrator(submitData);
       } else if (formData.userType === 'employee') {
-        await adminApi.post('/admin/employees', submitData);
+        // Employees are always Surveyors
+        const surveyorPayload = {
+          firstname: formData.firstname,
+          lastname: formData.lastname,
+          email: formData.email,
+          phonenumber: formData.phonenumber,
+        };
+        await adminApi.createSurveyor(surveyorPayload);
       } else if (formData.userType === 'user') {
-        // For users, we need to use the register endpoint with additional fields
+        // Platform users are simple users
         const userSubmitData = {
           fullname: `${formData.firstname} ${formData.lastname}`.trim(),
           email: formData.email,
           phonenumber: formData.phonenumber,
-          password: 'TempPassword123!', // Temporary password - user should reset
+          password: 'TempPassword123!',
           confirmPassword: 'TempPassword123!'
         };
-        await adminApi.post('/auth/register', userSubmitData);
+        await adminApi.registerUser(userSubmitData);
       }
 
       setShowAdminSidebar(false);
@@ -639,35 +646,29 @@ export default function AdministratorsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Role *
                 </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                  required
-                >
-                  <option value="">Select a role</option>
-                  {formData.userType === 'administrator' && (
-                    <>
-                      <option value="Admin">Admin</option>
-                      <option value="Super Admin">Super Admin</option>
-                    </>
-                  )}
-                  {formData.userType === 'employee' && (
-                    <>
-                      <option value="Surveyor">Surveyor</option>
-                      <option value="Manager">Manager</option>
-                      <option value="Clerk">Clerk</option>
-                      <option value="Analyst">Analyst</option>
-                    </>
-                  )}
-                  {formData.userType === 'user' && (
-                    <>
-                      <option value="Standard User">Standard User</option>
-                      <option value="Premium User">Premium User</option>
-                    </>
-                  )}
-                </select>
+                {/* Show role select only for administrators and employees (employees are only Surveyors) */}
+                {(formData.userType === 'administrator' || formData.userType === 'employee') && (
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                    required
+                  >
+                    <option value="">Select a role</option>
+                    {formData.userType === 'administrator' && (
+                      <>
+                        <option value="Admin">Admin</option>
+                        <option value="Super Admin">Super Admin</option>
+                      </>
+                    )}
+                    {formData.userType === 'employee' && (
+                      <>
+                        <option value="Surveyor">Surveyor</option>
+                      </>
+                    )}
+                  </select>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
