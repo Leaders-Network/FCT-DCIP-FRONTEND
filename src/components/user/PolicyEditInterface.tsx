@@ -14,6 +14,7 @@ import {
     Building,
     Shield
 } from 'lucide-react';
+import { toast } from "sonner";
 import {
     PROPERTY_TYPES,
     CONSTRUCTION_MATERIALS,
@@ -237,7 +238,7 @@ const PolicyEditInterface: React.FC<PolicyEditInterfaceProps> = ({
             onClose();
 
             // Show success message
-            alert('Policy updated successfully! It will be reassigned for a new survey.');
+            toast.success('Policy updated successfully! It will be reassigned for a new survey.');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update policy');
         } finally {

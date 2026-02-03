@@ -5,6 +5,7 @@ import { userReportAPI } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import {
     FileText,
     CheckCircle,
@@ -74,7 +75,7 @@ const MergedReportsSummary: React.FC = () => {
 
         } catch (error) {
             console.error('Error fetching report data:', error);
-            alert('Failed to load report summary');
+            toast.error('Failed to load report summary');
         } finally {
             setLoading(false);
         }

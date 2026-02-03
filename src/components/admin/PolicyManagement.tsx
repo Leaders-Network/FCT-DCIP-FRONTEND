@@ -12,6 +12,8 @@ import { useAuth } from '@/context/useAuth';
 import { useRouter } from 'next/navigation';
 import AssignSurveyorModal from './AssignSurveyorModal';
 import { PolicyDetailsModal } from '@/components/builderLiability/PolicyDetailsModal';
+import { toast } from "sonner";
+import Swal from "sweetalert2"
 
 // Legacy imports for backward compatibility during transition
 import { PolicyRequest } from '@/types/api.types';
@@ -301,16 +303,16 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       const actionText = decision === 'approved' ? 'approved' :
         decision === 'rejected' ? 'rejected' :
           'marked as requiring more information';
-      alert(`Submission ${actionText} successfully!`);
+      toast.success(`Submission ${actionText} successfully!`);
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      alert(`Failed to review submission: ${err.message}`);
+      toast.error(`Failed to review submission: ${err.message}`);
     }
   };
 
   const handleSendToUser = async (policyId: string) => {
     if (!policyId) {
-      alert('Invalid policy ID');
+      toast.error('Invalid policy ID');
       return;
     }
 
@@ -323,46 +325,63 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
             : p
         )
       );
-      alert('Policy sent to user successfully!');
+      toast.success('Policy sent to user successfully!');
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      alert(`Failed to send policy: ${err.message}`);
+      toast.error(`Failed to send policy: ${err.message}`);
     }
   };
 
-  const handleConfirmPayment = async (policy: MixedPolicy) => {
-    const policyRequest = toPolicyRequest(policy);
-    const confirmed = window.confirm(
-      `Confirm payment received for policy:\n\n` +
-      `Property: ${policyRequest.propertyDetails.propertyType}\n` +
-      `Owner: ${policyRequest.contactDetails.fullName}\n` +
-      `Value: â‚¦${policyRequest.propertyDetails.buildingValue.toLocaleString()}\n\n` +
-      `This will mark the policy as COMPLETED and finalize the workflow.`
-    );
+    const handleConfirmPayment = async (policy: MixedPolicy) => {
+      const policyRequest = toPolicyRequest(policy);
 
-    if (!confirmed) return;
-
-    try {
-      const { builderLiabilityPolicyAPI } = await import('@/services/api');
-      await builderLiabilityPolicyAPI.updatePolicy(policy._id, {
-        status: 'completed'
+      const result = await Swal.fire({
+        title: "Confirm Payment?",
+        html: `
+          <div style="text-align:left; font-size:14px;">
+            <p><strong>Property:</strong> ${policyRequest.propertyDetails.propertyType}</p>
+            <p><strong>Owner:</strong> ${policyRequest.contactDetails.fullName}</p>
+            <p><strong>Value:</strong> ₦${policyRequest.propertyDetails.buildingValue.toLocaleString()}</p>
+            <hr />
+            <p style="color:#b91c1c; font-weight:600;">
+              This will mark the policy as <b>COMPLETED</b> and finalize the workflow.
+            </p>
+          </div>
+        `,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, confirm payment",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#16a34a",
+        cancelButtonColor: "#6b7280",
+        reverseButtons: true,
       });
 
-      setPolicies(prev =>
-        prev.map(p =>
-          p._id === policy._id
-            ? { ...p, status: 'completed' as PolicyRequest['status'] }
-            : p
-        )
-      );
+      if (!result.isConfirmed) return;
 
-      alert('Payment confirmed! Policy marked as completed.');
-    } catch (error) {
-      console.error('Failed to confirm payment:', error);
-      const err = error instanceof Error ? error : new Error('Unknown error');
-      alert(`Failed to confirm payment: ${err.message}`);
-    }
-  };
+      try {
+        const { builderLiabilityPolicyAPI } = await import("@/services/api");
+
+        await builderLiabilityPolicyAPI.updatePolicy(policy._id, {
+          status: "completed",
+        });
+
+        setPolicies(prev =>
+          prev.map(p =>
+            p._id === policy._id
+              ? { ...p, status: "completed" as PolicyRequest["status"] }
+              : p
+          )
+        );
+
+        toast.success("Payment confirmed! Policy marked as completed.");
+      } catch (error) {
+        console.error("Failed to confirm payment:", error);
+        const err = error instanceof Error ? error : new Error("Unknown error");
+        toast.error(`Failed to confirm payment: ${err.message}`);
+      }
+    };
+
 
   const handleDeletePolicy = async (policy: MixedPolicy) => {
     try {
@@ -379,10 +398,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
       setShowDeleteModal(false);
       setPolicyToDelete(null);
-      alert('Policy deleted successfully!');
+      toast.success('Policy deleted successfully!');
     } catch (error) {
       console.error('Delete policy error:', error);
-      alert('Failed to delete policy');
+      toast.error('Failed to delete policy');
     }
   };
 

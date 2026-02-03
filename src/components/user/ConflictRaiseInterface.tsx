@@ -13,6 +13,7 @@ import {
     Clock
 } from 'lucide-react';
 import { getCookie } from '@/utils/cookies';
+import { toast } from "sonner";
 
 interface ConflictRaiseInterfaceProps {
     policyId?: string;
@@ -269,7 +270,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                 errorMessage = axiosError.message;
             }
 
-            alert(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setSubmitting(false);
         }

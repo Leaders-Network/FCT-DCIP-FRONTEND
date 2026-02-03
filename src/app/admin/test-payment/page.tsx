@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { CreditCard, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { toast } from "sonner";
 
 interface TestResult {
     success: boolean;
@@ -22,7 +23,7 @@ export default function TestPaymentPage() {
 
     const testPaymentWebhook = async (status: 'payment_approved' | 'payment_rejected') => {
         if (!policyId.trim()) {
-            alert('Please enter a Policy ID');
+            toast.error('Please enter a Policy ID');
             return;
         }
 

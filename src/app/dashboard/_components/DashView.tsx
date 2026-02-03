@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useAuth } from "@/context/useAuth";
 import { getCookie } from "@/utils/cookies";
 import { getAuthToken } from "@/utils/auth";
+import { toast } from "sonner";
 import {
   MoreVertical,
   Download,
@@ -721,17 +722,23 @@ const Dashview = () => {
                 ×
               </button>
             </div>
-            <div className="p-6">
-              <BuilderLiabilityPolicyForm
-                onSuccess={(policyId) => {
-                  alert('Builder Liability Policy application submitted successfully!');
-                  setShowBuilderLiabilityForm(false);
-                  // Trigger a page refresh to show the new policy
-                  window.location.reload();
-                }}
-                onCancel={() => setShowBuilderLiabilityForm(false)}
-              />
-            </div>
+      <div className="p-6">
+        <BuilderLiabilityPolicyForm
+          onSuccess={(policyId) => {
+            toast.success(
+              "Builder Liability Policy application submitted successfully!"
+            );
+
+            setShowBuilderLiabilityForm(false);
+
+            setTimeout(() => {
+              window.location.reload();
+            }, 3000); // 2 seconds (adjust if needed)
+          }}
+          onCancel={() => setShowBuilderLiabilityForm(false)}
+        />
+      </div>
+
           </div>
         </div>
       )}

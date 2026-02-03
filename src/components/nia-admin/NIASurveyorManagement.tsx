@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, User, Award } from 'lucide-react';
 import { NIASurveyor, NIASurveyorManagementProps } from '@/types/api.types';
+import { toast } from "sonner";
 
 const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
     surveyor,
@@ -82,7 +83,7 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
             await onSave(formData as NIASurveyor);
         } catch (error) {
             console.error('Error saving surveyor:', error);
-            alert('Failed to save surveyor. Please try again.');
+            toast.error('Failed to save surveyor. Please try again.');
         } finally {
             setLoading(false);
         }

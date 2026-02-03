@@ -19,6 +19,7 @@ import {
     Send,
     RefreshCw
 } from 'lucide-react';
+import { toast } from "sonner";
 
 interface SurveyorInfo {
     _id: string;
@@ -152,7 +153,7 @@ const DualAssignmentCoordination: React.FC<DualAssignmentCoordinationProps> = ({
             }
         } catch (err) {
             console.error('Failed to send message:', err);
-            alert('Failed to send message. Please try again.');
+            toast.error('Failed to send message. Please try again.');
         } finally {
             setSendingMessage(false);
         }

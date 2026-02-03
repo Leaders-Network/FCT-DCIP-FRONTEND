@@ -5,11 +5,16 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { IoMdLogOut } from "react-icons/io";
 import { useAuth } from "@/context/useAuth";
+import { clearAuthTokens } from "@/utils/auth"
+import Swal from "sweetalert2";
+import { useRouter } from 'next/navigation';
+
 
 const Sidebar = () => {
   const { logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -23,6 +28,28 @@ const Sidebar = () => {
     { href: "/admin/dashboard/members", label: "Members", icon: "/dashboard/people.png" },
     { href: "/admin/dashboard/settings", label: "Settings", icon: "/dashboard/setting.png" },
   ];
+
+      // Handle logout
+    const onLogout = async () => {
+      const result = await Swal.fire({
+        title: 'Logout?',
+        text: 'Are you sure you want to logout?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, logout',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        background: isDarkMode ? '#111827' : '#ffffff',
+        color: isDarkMode ? '#ffffff' : '#111827',
+    });
+  
+    if (result.isConfirmed) {
+      clearAuthTokens();
+      router.push('/login');
+    }
+  };
+  const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   return (
     <aside
@@ -75,7 +102,7 @@ const Sidebar = () => {
         ))}
         <div className="flex-grow"></div>
         <button
-          onClick={logout}
+          onClick={onLogout}
           className="flex items-center px-4 py-2 mb-4 text-gray-700 hover:bg-gray-100"
         >
           <IoMdLogOut className="h-6 w-6 mr-2"/>

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Inbox,
   Search,
-  Filter,
   AlertTriangle,
   Clock,
   User,
@@ -24,6 +23,7 @@ import {
   Users,
   Activity
 } from 'lucide-react';
+import { toast } from "sonner";
 
 interface ConflictInquiry {
   _id: string;
@@ -194,7 +194,7 @@ const AMMCUserConflictInbox: React.FC = () => {
       }
     } catch (error) {
       console.error('Error assigning inquiry:', error);
-      alert('Failed to assign inquiry. Please try again.');
+      toast.error('Failed to assign inquiry. Please try again.');
     }
   };
 
@@ -232,11 +232,11 @@ const AMMCUserConflictInbox: React.FC = () => {
           followUpDate: ''
         });
         fetchInquiries();
-        alert('Response sent successfully!');
+        toast.success('Response sent successfully!');
       }
     } catch (error) {
       console.error('Error sending response:', error);
-      alert('Failed to send response. Please try again.');
+      toast.error('Failed to send response. Please try again.');
     }
   };
 

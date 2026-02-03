@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from "sonner";
 import {
     Zap,
     FileText,
@@ -33,13 +34,13 @@ export default function GenerateReportsPage() {
             const data = await response.json();
             if (data.success) {
                 setResult(data);
-                alert(`Success! Created ${data.data.created} merged reports for users to see.`);
+                toast.success(`Success! Created ${data.data.created} merged reports for users to see.`);
             } else {
-                alert(`Failed: ${data.message || 'Unknown error'}`);
+                toast.error(`Failed: ${data.message || 'Unknown error'}`);
             }
         } catch (error) {
             console.error('Error generating reports:', error);
-            alert('Failed to generate reports');
+            toast.error('Failed to generate reports');
         } finally {
             setLoading(false);
         }
@@ -62,7 +63,7 @@ export default function GenerateReportsPage() {
             }
         } catch (error) {
             console.error('Error checking status:', error);
-            alert('Failed to check status');
+            toast.error('Failed to check status');
         }
     };
 
