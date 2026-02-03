@@ -173,45 +173,64 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     try {
       const { adminApi } = await import("@/services/api");
 
-      // Fetch comprehensive analytics for the surveyor
-      const surveyorAssignments = assignments.filter(a => a.surveyorId === surveyor._id);
-      const completedAssignments = surveyorAssignments.filter(a => a.status === 'completed');
-      const inProgressAssignments = surveyorAssignments.filter(a => a.status === 'in_progress' || a.status === 'assigned');
-      const rejectedAssignments = surveyorAssignments.filter(a => a.status === 'rejected');
+      // Try to fetch authoritative performance metrics from backend
+      const resp = await adminApi.getSurveyorPerformance(surveyor._id);
 
-      // Calculate performance metrics
-      const totalSurveys = surveyorAssignments.length;
-      const completedSurveys = completedAssignments.length;
-      const currentAssignments = inProgressAssignments.length;
-      const successRate = totalSurveys > 0 ? ((completedSurveys / totalSurveys) * 100).toFixed(1) : '0';
+      // Backend may return metrics under different shapes; normalize safely
+      const backendMetrics = resp?.data || resp?.performance || resp || null;
 
-      // Calculate average completion time (mock data for now)
-      const avgCompletionTime = completedSurveys > 0 ? Math.floor(Math.random() * 7) + 1 : 0;
+      if (backendMetrics) {
+        const performance = {
+          totalSurveys: (backendMetrics.totalSurveys ?? backendMetrics.total_surveys ?? backendMetrics.total) || assignments.filter(a => a.surveyorId === surveyor._id).length,
+          completedSurveys: (backendMetrics.completedSurveys ?? backendMetrics.completed_surveys ?? backendMetrics.completed) || assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'completed').length,
+          currentAssignments: (backendMetrics.currentAssignments ?? backendMetrics.current_assignments ?? backendMetrics.current) || getCurrentAssignments(surveyor._id),
+          rejectedSurveys: (backendMetrics.rejectedSurveys ?? backendMetrics.rejected_surveys ?? backendMetrics.rejected) || assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'rejected').length,
+          successRate: backendMetrics.successRate ?? backendMetrics.success_rate ?? parseFloat((backendMetrics.success || 0).toString()) ?? 0,
+          avgCompletionTime: (backendMetrics.avgCompletionTime ?? backendMetrics.avg_completion_time ?? backendMetrics.avg) || 0,
+          recentActivity: (backendMetrics.recentActivity ?? backendMetrics.recent_activity ?? backendMetrics.recent) || 0,
+          rating: backendMetrics.rating ?? surveyor?.rating ?? 0,
+          joinDate: backendMetrics.joinDate ?? backendMetrics.join_date ?? (surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A'),
+          lastActive: backendMetrics.lastActive ?? backendMetrics.last_active ?? 'N/A'
+        };
 
-      // Recent activity (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentAssignments = surveyorAssignments.filter(a =>
-        new Date(a.createdAt) >= thirtyDaysAgo
-      ).length;
+        setPerformanceData(performance);
+        setShowDetailsModal(true);
+      } else {
+        // If backend doesn't provide metrics, fall back to client-side computation
+        const surveyorAssignments = assignments.filter(a => a.surveyorId === surveyor._id);
+        const completedAssignments = surveyorAssignments.filter(a => a.status === 'completed');
+        const inProgressAssignments = surveyorAssignments.filter(a => a.status === 'in_progress' || a.status === 'assigned');
+        const rejectedAssignments = surveyorAssignments.filter(a => a.status === 'rejected');
 
-      const performance = {
-        totalSurveys,
-        completedSurveys,
-        currentAssignments,
-        rejectedSurveys: rejectedAssignments.length,
-        successRate: parseFloat(successRate),
-        avgCompletionTime,
-        recentActivity: recentAssignments,
-        rating: surveyor?.rating || 0,
-        joinDate: surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A',
-        lastActive: completedAssignments.length > 0
-          ? new Date(Math.max(...completedAssignments.map(a => new Date(a.updatedAt).getTime()))).toLocaleDateString()
-          : 'N/A'
-      };
+        const totalSurveys = surveyorAssignments.length;
+        const completedSurveys = completedAssignments.length;
+        const currentAssignments = inProgressAssignments.length;
+        const successRate = totalSurveys > 0 ? ((completedSurveys / totalSurveys) * 100).toFixed(1) : '0';
 
-      setPerformanceData(performance);
-      setShowDetailsModal(true);
+        const avgCompletionTime = completedSurveys > 0 ? Math.floor(Math.random() * 7) + 1 : 0;
+
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentAssignments = surveyorAssignments.filter(a => new Date(a.createdAt) >= thirtyDaysAgo).length;
+
+        const performance = {
+          totalSurveys,
+          completedSurveys,
+          currentAssignments,
+          rejectedSurveys: rejectedAssignments.length,
+          successRate: parseFloat(successRate),
+          avgCompletionTime,
+          recentActivity: recentAssignments,
+          rating: surveyor?.rating || 0,
+          joinDate: surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A',
+          lastActive: completedAssignments.length > 0
+            ? new Date(Math.max(...completedAssignments.map(a => new Date(a.updatedAt).getTime()))).toLocaleDateString()
+            : 'N/A'
+        };
+
+        setPerformanceData(performance);
+        setShowDetailsModal(true);
+      }
     } catch (error) {
       console.error('Failed to fetch surveyor analytics:', error);
       // Fallback to basic metrics
@@ -334,6 +353,24 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         assignment?.surveyorId === surveyorId &&
         assignment?.status === "in_progress"
     ).length;
+  };
+
+  const getFullAddress = (surveyor: Surveyor | null) => {
+    if (!surveyor) return 'N/A';
+    // Prefer structured profile location when available
+    const profileLoc = surveyor.profile?.location;
+    const parts: string[] = [];
+    if (surveyor.address) parts.push(surveyor.address);
+    if (profileLoc?.district) parts.push(profileLoc.district);
+    if (profileLoc?.lga) parts.push(profileLoc.lga);
+    if (profileLoc?.city) parts.push(profileLoc.city);
+    if (profileLoc?.state) parts.push(profileLoc.state);
+
+    if (parts.length > 0) return parts.join(', ');
+
+    // Fallback to individual fields
+    const fallbackParts = [surveyor.district, surveyor.lga, surveyor.city, surveyor.state].filter(Boolean) as string[];
+    return fallbackParts.length ? fallbackParts.join(', ') : 'N/A';
   };
 
   const refetchSurveyors = async () => {
@@ -1196,7 +1233,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                     <p><span className="text-gray-600">Email:</span> {selectedSurveyor.userId?.email || 'N/A'}</p>
                     <p><span className="text-gray-600">Phone:</span> {selectedSurveyor.userId?.phonenumber || 'N/A'}</p>
                     <p><span className="text-gray-600">Emergency Contact:</span> {selectedSurveyor?.emergencyContact || 'N/A'}</p>
-                    <p><span className="text-gray-600">Address:</span> {selectedSurveyor?.address || 'N/A'}</p>
+                    <p><span className="text-gray-600">Address:</span> {getFullAddress(selectedSurveyor)}</p>
                   </div>
                 </div>
                 <div>
