@@ -1135,6 +1135,12 @@ export const adminApi = {
     return response.data;
   },
 
+  // Create a generic employee (non-surveyor) via admin endpoint
+  createEmployee: async (employeeData: EmployeeRegistrationData) => {
+    const response = await api.post('/admin/employees', employeeData);
+    return response.data;
+  },
+
   deleteAdministrator: async (adminId: string) => {
     const response = await api.delete(`/admin/administrators/${adminId}`);
     return response.data;
@@ -1166,6 +1172,12 @@ export const adminApi = {
 
   createSurveyor: async (surveyorData: Partial<Surveyor>) => {
     const response = await api.post('/admin/surveyor', surveyorData);
+    return response.data;
+  },
+
+  // Register a platform user (admin-initiated)
+  registerUser: async (userData: { fullname: string; email: string; phonenumber?: string; password: string; confirmPassword: string }) => {
+    const response = await api.post('/auth/register', userData);
     return response.data;
   },
 
