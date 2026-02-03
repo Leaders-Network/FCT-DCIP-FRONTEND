@@ -1,6 +1,5 @@
 /**
  * Authentication utility functions
- * Uses secure cookies for token storage instead of localStorage
  */
 
 import { getCookie, setCookie, deleteCookie, hasCookie } from './cookies';
