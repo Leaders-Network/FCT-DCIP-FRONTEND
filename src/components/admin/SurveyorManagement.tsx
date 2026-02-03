@@ -13,6 +13,7 @@ import {
   Edit
 } from "lucide-react";
 import { Surveyor as BaseSurveyor, Assignment, PolicyRequest } from "@/types/api.types";
+import Swal from "sweetalert2"
 
 type UserIdType = {
   firstname?: string;
@@ -448,16 +449,43 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }
   };
 
-  const handleDeleteSurveyor = async (surveyorId: string) => {
-    if (window.confirm('Are you sure you want to delete this surveyor?')) {
-      try {
-        await onDeleteSurveyor(surveyorId);
-        refetchSurveyors();
-      } catch (error) {
-        console.error('Failed to delete surveyor:', error);
+
+    const handleDeleteSurveyor = async (surveyorId: string) => {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel',
+      });
+
+      if (result.isConfirmed) {
+        try {
+          await onDeleteSurveyor(surveyorId);
+          refetchSurveyors();
+
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Surveyor has been deleted successfully.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } catch (error) {
+          console.error('Failed to delete surveyor:', error);
+
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to delete surveyor. Please try again.',
+            icon: 'error',
+          });
+        }
       }
-    }
-  };
+    };
+
 
   const openEditModal = (surveyor: Surveyor) => {
     setSelectedSurveyor(surveyor);

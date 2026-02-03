@@ -11,6 +11,9 @@ import GlobalSearch from "@/components/shared/GlobalSearch"
 import { useAuth } from "@/context/useAuth"
 import { getCookie } from "@/utils/cookies"
 import { clearAuthTokens } from "@/utils/auth"
+import Swal from "sweetalert2";
+import { useRouter } from 'next/navigation';
+
 
 interface UserLayoutProps {
   children: React.ReactNode
@@ -20,6 +23,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
+  const router = useRouter();
 
   // Handle responsive sidebar
   useEffect(() => {
@@ -75,10 +79,27 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const onLogout = () => {
+    // Handle logout
+  const onLogout = async () => {
+    const result = await Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      background: isDarkMode ? '#111827' : '#ffffff',
+      color: isDarkMode ? '#ffffff' : '#111827',
+  });
+
+  if (result.isConfirmed) {
     clearAuthTokens();
-    logout();
-  };
+    router.push('/login');
+  }
+};
+  const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   // Navigation items for user dashboard
   const navItems = [

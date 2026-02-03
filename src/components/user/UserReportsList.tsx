@@ -15,6 +15,7 @@ import {
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { UserReport, UserReportsResponse } from '@/types/api.types';
+import { toast } from "sonner";
 
 interface UserReportsListProps {
     refreshTrigger?: number;
@@ -282,15 +283,15 @@ const UserReportsList: React.FC<UserReportsListProps> = ({ refreshTrigger }) => 
                                                     if (response.success) {
                                                         // For now, just show success message
                                                         // In future, this would trigger actual PDF download
-                                                        alert('Report download initiated successfully!');
+                                                        toast.success('Report download initiated successfully!');
                                                         // Refresh the reports list to update download count
                                                         fetchReports();
                                                     } else {
-                                                        alert('Failed to download report: ' + response.message);
+                                                        toast.error('Failed to download report: ' + response.message);
                                                     }
                                                 } catch (error) {
                                                     console.error('Download failed:', error);
-                                                    alert('Failed to download report. Please try again.');
+                                                    toast.error('Failed to download report. Please try again.');
                                                 }
                                             }}
                                             className="inline-flex items-center space-x-1 text-sm text-green-600 hover:text-green-800"

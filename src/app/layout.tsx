@@ -4,7 +4,6 @@ import { AuthProvider } from "@/context/AuthProvider";
 
 //always run npm run lint to heck errors before deployment 
 import CookieConsent from "@/components/CookieConsent"
-import ChatWidget from "@/components/ChatWidget"
 import { Toaster} from "sonner"
 
 
@@ -53,7 +52,6 @@ export default function RootLayout({
       <body>
         <AuthProvider>{children}</AuthProvider>
         <CookieConsent />
-        <ChatWidget />
         <Toaster
           richColors
           position="top-right"

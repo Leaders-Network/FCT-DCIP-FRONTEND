@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import { IoMdLogOut } from "react-icons/io";
 import { useAuth } from "@/context/useAuth";
+import { clearAuthTokens } from "@/utils/auth"
+import Swal from "sweetalert2";
+import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
   isOpen?: boolean;     // mobile only
@@ -48,7 +51,29 @@ const NavItem = ({
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const { logout } = useAuth();
+  const router = useRouter();
+
+    // Handle logout
+  const onLogout = async () => {
+    const result = await Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      background: isDarkMode ? '#111827' : '#ffffff',
+      color: isDarkMode ? '#ffffff' : '#111827',
+  });
+
+  if (result.isConfirmed) {
+    clearAuthTokens();
+    router.push('/admin/login');
+  }
+};
+  const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   const sidebarWidth = isMobile
     ? "w-64"
@@ -112,7 +137,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
       {/* LOGOUT */}
       <div className="p-4">
         <button
-          onClick={logout}
+          onClick={onLogout}
           className="flex items-center px-4 py-3 text-sm font-medium rounded-lg w-full
           text-gray-600 hover:bg-gray-100 hover:text-gray-900"
         >

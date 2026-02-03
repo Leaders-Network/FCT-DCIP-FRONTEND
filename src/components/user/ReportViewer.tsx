@@ -13,6 +13,7 @@ import {
     User,
     Building
 } from 'lucide-react';
+import { toast } from "sonner";
 
 interface ReportPhoto {
     url: string;
@@ -234,14 +235,14 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
 
-                alert('Merged report downloaded successfully. Open the HTML file and print to PDF from your browser.');
+                toast.success('Merged report downloaded successfully. Open the HTML file and print to PDF from your browser.');
             } else {
                 throw new Error(response.message || 'Failed to download report');
             }
 
         } catch (err) {
             console.error('Download failed:', err);
-            alert('Download failed. Please try again.');
+            toast.error('Download failed. Please try again.');
         } finally {
             setDownloading(false);
         }
@@ -432,7 +433,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                         document.body.appendChild(link);
                                                         link.click();
                                                         document.body.removeChild(link);
-                                                        alert('AMMC report opened in new tab.');
+                                                        toast.success('AMMC report opened in new tab.');
                                                     } else if (response.data.documents && response.data.documents.length > 0) {
                                                         // Download the first available document
                                                         const doc = response.data.documents[0];
@@ -445,16 +446,16 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                         document.body.appendChild(link);
                                                         link.click();
                                                         document.body.removeChild(link);
-                                                        alert('AMMC report opened in new tab.');
+                                                        toast.success('AMMC report downloaded successfully.');
                                                     } else {
-                                                        alert('No AMMC report document available for download');
+                                                        toast.error('No AMMC report document available for download');
                                                     }
                                                 } else {
-                                                    alert('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
+                                                    toast.error('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
                                                 }
                                             } catch (error) {
                                                 console.error('Error downloading AMMC report:', error);
-                                                alert('Failed to download AMMC report');
+                                                toast.error('Failed to download AMMC report');
                                             }
                                         }
                                     }}
@@ -598,7 +599,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                         document.body.appendChild(link);
                                                         link.click();
                                                         document.body.removeChild(link);
-                                                        alert('NIA report opened in new tab.');
+                                                        toast.success('NIA report downloaded successfully.');
                                                     } else if (response.data.documents && response.data.documents.length > 0) {
                                                         // Download the first available document
                                                         const doc = response.data.documents[0];
@@ -611,16 +612,16 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                         document.body.appendChild(link);
                                                         link.click();
                                                         document.body.removeChild(link);
-                                                        alert('NIA report opened in new tab.');
+                                                        toast.success('NIA report downloaded successfully.');
                                                     } else {
-                                                        alert('No NIA report document available for download');
+                                                        toast.error('No NIA report document available for download');
                                                     }
                                                 } else {
-                                                    alert('Failed to download NIA report: ' + (response.message || 'Unknown error'));
+                                                    toast.error('Failed to download NIA report: ' + (response.message || 'Unknown error'));
                                                 }
                                             } catch (error) {
                                                 console.error('Error downloading NIA report:', error);
-                                                alert('Failed to download NIA report');
+                                                toast.error('Failed to download NIA report');
                                             }
                                         }
                                     }}

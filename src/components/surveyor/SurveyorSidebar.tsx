@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, FileText, Upload, Settings, LogOut, X } from "lucide-react";
+import { clearAuthTokens } from "@/utils/auth"
+import Swal from "sweetalert2";
 
 interface SurveyorSidebarProps {
   isOpen?: boolean;
@@ -18,7 +20,7 @@ const SurveyorSidebar: React.FC<SurveyorSidebarProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
+   const router = useRouter();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -26,14 +28,33 @@ const SurveyorSidebar: React.FC<SurveyorSidebarProps> = ({
 
   const showExpanded = isMobile || !isCollapsed;
 
-  const handleLogout = () => {
+
+      // Handle logout
+    const handleLogout = async () => {
+      const result = await Swal.fire({
+        title: 'Logout?',
+        text: 'Are you sure you want to logout?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, logout',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        background: isDarkMode ? '#111827' : '#ffffff',
+        color: isDarkMode ? '#ffffff' : '#111827',
+    });
+  
+    if (result.isConfirmed) {
+    clearAuthTokens();
     localStorage.removeItem("surveyorToken");
     localStorage.removeItem("surveyorName");
     localStorage.removeItem("surveyorRole");
     localStorage.removeItem("surveyorOrganization");
     localStorage.removeItem("surveyorInfo");
-    router.push("/surveyor");
+    router.push('/surveyor');
+    }
   };
+    const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   const menuItems = [
     { href: "/surveyor/dashboard", label: "Dashboard", icon: Home },

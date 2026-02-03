@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import ContactManagementHub from '@/components/dashboard/ContactManagementHub';
 import { ContactData, SurveyorContactInfo, ConflictInquiryData } from '@/types/api.types';
 import { getAuthToken } from '@/utils/auth';
+import { toast } from "sonner";
 
 const ContactsPage: React.FC = () => {
     const [contactData, setContactData] = useState<ContactData>({
@@ -239,10 +240,10 @@ const ContactsPage: React.FC = () => {
             //     ...conflictData
             // });
 
-            alert('Conflict inquiry submitted successfully! You will receive a response within 24-48 hours.');
+            toast.success('Conflict inquiry submitted successfully! You will receive a response within 24-48 hours.');
         } catch (error) {
             console.error('Failed to submit conflict inquiry:', error);
-            alert('Failed to submit conflict inquiry. Please try again or contact administrators directly.');
+            toast.error('Failed to submit conflict inquiry. Please try again or contact administrators directly.');
         }
     };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import ChatWidget from "@/components/ChatWidget";
 import ContactForm from "@/components/ContactForm";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
@@ -37,6 +38,7 @@ export default function Home() {
       <FAQ />
       <ContactForm />
       <Footer/>
+      <ChatWidget />
     </div>
   );
 }
