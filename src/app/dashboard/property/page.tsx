@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const PropertyPage = () => {
   const router = useRouter();
@@ -71,7 +72,7 @@ const handlePropertyAdded = () => {
 const handleDeleteProperty = async (property: PropertyType) => {
   // Safety check: Only allow deletion of unverified properties
   if (property.status !== "Unverified") {
-    alert('Only unverified properties can be deleted.');
+    toast.error('Only unverified properties can be deleted.');
     setShowDeleteModal(false);
     setPropertyToDelete(null);
     return;
@@ -82,10 +83,10 @@ const handleDeleteProperty = async (property: PropertyType) => {
     setProperties(prev => prev.filter(p => p._id !== property._id));
     setShowDeleteModal(false);
     setPropertyToDelete(null);
-    alert('Unverified property deleted successfully!');
+    toast.success('Unverified property deleted successfully!');
   } catch (error) {
     console.error('Delete property error:', error);
-    alert('Failed to delete property. Please try again.');
+    toast.error('Failed to delete property. Please try again.');
   }
 };
 
@@ -104,11 +105,11 @@ const handlePolicyRequest = async (data: CreatePolicyRequestData) => {
     console.log("Submitting policy request with data:", data);
     const { builderLiabilityPolicyAPI } = await import("@/services/api");
     await builderLiabilityPolicyAPI.createPolicy(data);
-    alert("Policy request submitted successfully!");
+    toast.success("Policy request submitted successfully!");
     setShowPolicyRequest(false);
   } catch (error) {
     console.error("Failed to submit policy request:", error);
-    alert("Failed to submit policy request. Please try again.");
+    toast.error("Failed to submit policy request. Please try again.");
   }
 };
 

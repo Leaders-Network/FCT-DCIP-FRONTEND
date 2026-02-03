@@ -102,7 +102,7 @@ const UnifiedSurveyorDashboard = () => {
     const fetchSurveyorData = async () => {
         setLoading(true);
         setError(null);
-
+        
         try {
             // Fetch surveyor's assignments using surveyor-specific endpoint
             const assignmentsResponse = await getSurveyorAssignments('all', 1, 100);

@@ -14,94 +14,106 @@ const SurveyorLogin = () => {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
+
+  try {
+    const { loginEmployee } = await import("@/services/api");
+    const { setAuthToken, clearAuthTokens } = await import("@/utils/auth");
+    const { setCookie, getCookie } = await import("@/utils/cookies");
+
+    // Clear all existing tokens first
+    clearAuthTokens();
+
+    const response = await loginEmployee(email, password);
+
+    if (!response.data?.token || !response.data?.employee) {
+      toast.error("Invalid response from server. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const { token, employee } = response.data;
+
+    // ❌ Block non-surveyors
+    if (employee.employeeRole.role !== "Surveyor") {
+      setError("Access denied. This portal is for surveyors only.");
+      toast.error("Access denied. This portal is for surveyors only.");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ CLEAR ERROR ON SUCCESS
     setError("");
 
-    try {
-      const { loginEmployee } = await import("@/services/api");
-      const { setAuthToken, clearAuthTokens } = await import("@/utils/auth");
-      const { setCookie } = await import("@/utils/cookies");
+    // Store token
+    setAuthToken(token, "surveyor");
 
-      // Clear all existing tokens first to avoid conflicts
-      console.log('🧹 Clearing all existing tokens...');
-      clearAuthTokens();
+    const storedToken = getCookie("surveyorToken");
+    console.log("Token stored:", storedToken ? "Yes" : "No");
 
-      const response = await loginEmployee(email, password);
+    const fullName = `${employee.firstname} ${employee.lastname}`;
 
-      if (response.data?.token && response.data?.employee) {
-        const { token, employee } = response.data;
+    const organization: string =
+      (response.data.organization as string) ||
+      ("organization" in employee ? (employee.organization as string) : "AMMC");
 
-        if (employee.employeeRole.role !== "Surveyor") {
-          toast.error("Access denied. This portal is for surveyors only.");
-          return;
-        }
+    const surveyorInfo = {
+      id: employee._id,
+      name: fullName,
+      email: employee.email,
+      role: employee.employeeRole.role,
+      organization: organization,
+      surveyorInfo: response.data.surveyorInfo,
+    };
 
-        // Store token in cookies using the auth utility
-        console.log('🔐 Storing surveyor token in cookies...');
-        setAuthToken(token, 'surveyor');
+    setCookie("surveyorInfo", JSON.stringify(surveyorInfo), {
+      expires: 7,
+      path: "/",
+      secure: window.location.protocol === "https:",
+      sameSite: "lax",
+    });
 
-        // Verify token was stored
-        const { getCookie } = await import("@/utils/cookies");
-        const storedToken = getCookie('surveyorToken');
-        console.log('✅ Token stored successfully:', storedToken ? 'Yes' : 'No');
-        console.log('📝 Token preview:', storedToken ? storedToken.substring(0, 20) + '...' : 'N/A');
+    setCookie("surveyorOrganization", organization, {
+      expires: 7,
+      path: "/",
+      secure: window.location.protocol === "https:",
+      sameSite: "lax",
+    });
 
-        // Store surveyor information in cookies
-        const fullName = `${employee.firstname} ${employee.lastname}`;
-        const surveyorInfo = {
-          id: employee._id,
-          name: fullName,
-          email: employee.email,
-          role: employee.employeeRole.role,
-          organization: response.data.organization || (employee && 'organization' in employee ? (employee as { organization?: 'AMMC' | 'NIA' }).organization : undefined) || 'AMMC',
-          surveyorInfo: response.data.surveyorInfo
-        };
+    toast.success(`Welcome back, ${fullName}!`);
 
-        setCookie('surveyorInfo', JSON.stringify(surveyorInfo), {
-          expires: 7,
-          path: '/',
-          secure: window.location.protocol === 'https:',
-          sameSite: 'lax'
-        });
+    // Small delay to ensure cookies persist
+    await new Promise((res) => setTimeout(res, 150));
 
-        setCookie('surveyorOrganization', surveyorInfo.organization, {
-          expires: 7,
-          path: '/',
-          secure: window.location.protocol === 'https:',
-          sameSite: 'lax'
-        });
+    router.push("/surveyor/dashboard");
+    return; // ⛔ Stop execution
+  } catch (error: unknown) {
+    console.error("Login failed:", error);
 
-        console.log('👤 Surveyor info stored:', surveyorInfo);
-        toast.success(`Welcome back, ${fullName}!`);
+    const err = error as {
+      response?: { status?: number; data?: { message?: string } };
+    };
 
-        // Small delay to ensure cookies are set before navigation
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        router.push("/surveyor/dashboard");
-      } else {
-        toast.error("Invalid response from server. Please try again.");
-      }
-    } catch (error: unknown) {
-      console.error("Login failed:", error);
-
-      // Handle different error types
-      const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
-      if (err.response?.status === 401) {
-        setError("Invalid email or password.");
-      } else if (err.response?.status === 403) {
-        setError("Account access denied. Please contact administrator.");
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        toast.error("Login failed. Please check your connection and try again.");
-      }
-    } finally {
-      setLoading(false);
+    if (err.response?.status === 401) {
+      setError("Invalid email or password.");
+    } else if (err.response?.status === 403) {
+      setError("Account access denied. Please contact administrator.");
+    } else if (err.response?.data?.message) {
+      setError(err.response.data.message);
+    } else {
+      toast.error("Login failed. Please check your connection and try again.");
     }
-  };
 
+    setLoading(false);
+  }
+};
+
+
+
+  
   return (
     <div className="h-screen w-full grid md:grid-cols-2 overflow-hidden">
       {/* Left Image Section */}

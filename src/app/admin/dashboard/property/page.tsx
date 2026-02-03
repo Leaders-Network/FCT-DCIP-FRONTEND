@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { getAdminProperties } from "@/services/api";
+import { toast } from "sonner";
 
 interface AdminProperty {
   _id: string;
@@ -131,11 +132,11 @@ export default function PropertiesPage() {
         setPropertyToDelete(null);
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete property');
+        toast.error(errorData.message || 'Failed to delete property');
       }
     } catch (error) {
       console.error('Delete property error:', error);
-      alert('Failed to delete property');
+      toast.error('Failed to delete property');
     }
   };
 
@@ -161,7 +162,7 @@ export default function PropertiesPage() {
       setSelectedProperties([]);
     } catch (error) {
       console.error('Bulk delete error:', error);
-      alert('Failed to delete selected properties');
+      toast.error('Failed to delete selected properties');
     }
   };
 

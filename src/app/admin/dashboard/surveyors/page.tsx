@@ -3,6 +3,7 @@ import React from "react";
 import SurveyorManagement from "@/components/admin/SurveyorManagement";
 import { Surveyor } from "@/types/api.types";
 import { adminApi } from "@/services/api";
+import { toast } from "sonner";
 
 const SurveyorsPage = () => {
   const handleCreateSurveyor = async (surveyorData: Partial<Surveyor>) => {
@@ -10,10 +11,10 @@ const SurveyorsPage = () => {
       // Create surveyor without organization field (single surveyor system)
       const result = await adminApi.createSurveyor(surveyorData);
       console.log('Surveyor created:', result);
-      alert('Surveyor created successfully!');
+      toast.success('Surveyor created successfully!');
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      alert(`Failed to create surveyor: ${err.message}`);
+      toast.error(`Failed to create surveyor: ${err.message}`);
     }
   };
 
@@ -21,10 +22,10 @@ const SurveyorsPage = () => {
     try {
       const result = await adminApi.updateSurveyor(id, surveyorData);
       console.log('Surveyor updated:', result);
-      alert('Surveyor updated successfully!');
+      toast.success('Surveyor updated successfully!');
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      alert(`Failed to update surveyor: ${err.message}`);
+      toast.error(`Failed to update surveyor: ${err.message}`);
     }
   };
 
@@ -32,10 +33,10 @@ const SurveyorsPage = () => {
     try {
       await adminApi.deleteSurveyor(id);
       console.log('Surveyor deleted successfully');
-      alert('Surveyor deleted successfully!');
+      toast.success('Surveyor deleted successfully!');
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      alert(`Failed to delete surveyor: ${err.message}`);
+      toast.error(`Failed to delete surveyor: ${err.message}`);
     }
   };
 

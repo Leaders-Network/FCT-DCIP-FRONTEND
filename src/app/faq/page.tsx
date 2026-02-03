@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
+import ChatWidget from "@/components/ChatWidget";
 
 const faqs = [
   // === Existing Builders-Liability-AMMC-focused FAQs ===
@@ -180,6 +181,7 @@ const FAQPage = () => {
       </section>
 
       <Footer />
+      <ChatWidget />
     </div>
   );
 };

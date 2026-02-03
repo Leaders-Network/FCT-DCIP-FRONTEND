@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from "sonner";
 import {
     Play,
     TestTube,
@@ -55,7 +56,7 @@ export default function TestMergedReportsPage() {
 
             if (data.success) {
                 setTestResults(data);
-                alert(data.message);
+                toast.success(data.message);
 
                 // Refresh merged reports list
                 if (testType !== 'cleanup') {
@@ -69,7 +70,7 @@ export default function TestMergedReportsPage() {
 
         } catch (error) {
             console.error('Test error:', error);
-            alert(error instanceof Error ? error.message : 'Test failed');
+            toast.error(error instanceof Error ? error.message : 'Test failed');
         } finally {
             setLoading(false);
         }
@@ -113,7 +114,7 @@ export default function TestMergedReportsPage() {
             const data = await response.json();
 
             if (data.success) {
-                alert('Merge triggered successfully');
+                toast.success(`Merge triggered successfully for policy ${policyId}`);
                 await fetchMergedReports();
             } else {
                 throw new Error(data.message || 'Merge trigger failed');
@@ -121,7 +122,7 @@ export default function TestMergedReportsPage() {
 
         } catch (error) {
             console.error('Merge trigger error:', error);
-            alert(error instanceof Error ? error.message : 'Merge trigger failed');
+            toast.error(error instanceof Error ? error.message : 'Merge trigger failed');
         } finally {
             setLoading(false);
         }
