@@ -71,7 +71,9 @@ export default function Verify() {
 
     try {
 
-      // toast.loading("Verifying OTP...");
+      // Show loading toast for OTP verification
+      toast.loading("Verifying OTP...", { id: "verify-otp" });
+      
       // Verify OTP
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
       const verifyResponse = await fetch(
@@ -94,10 +96,17 @@ export default function Verify() {
         throw new Error(errorData.message || `HTTP error! status: ${verifyResponse.status}`);
       }
 
-      toast.dismiss(); // remove the loading toast
+      // Dismiss OTP verification loading toast
+      toast.dismiss("verify-otp");
+      
+      // Show success for OTP verification
       toast.success("✅ OTP Verified Successfully!", {
-        description: "Completing your registration...",
+        description: "Now completing your registration...",
+        duration: 2000,
       });
+
+      // Show loading toast for registration
+      toast.loading("Completing your registration...", { id: "register" });
 
       // Complete registration
       const registerResponse = await fetch(
@@ -125,6 +134,7 @@ export default function Verify() {
 
       const result = await registerResponse.json();
       console.log("Registration result:", result);
+      
       // Store auth data in localStorage
       localStorage.setItem("token", result.token);
       localStorage.setItem("fullname", result.user.fullname);
@@ -133,6 +143,9 @@ export default function Verify() {
       // Clear signup data
       localStorage.removeItem("pendingUser");
       localStorage.removeItem("pendingEmail");
+
+      // Dismiss registration loading toast
+      toast.dismiss("register");
 
       // 🎉 Success message before redirect
       toast.success("Welcome aboard 🎉", {
@@ -144,6 +157,10 @@ export default function Verify() {
       setTimeout(() => router.push("/login"), 1200);
     } catch (error) {
       console.error("Verification/Registration error:", error);
+
+      // Dismiss any loading toasts
+      toast.dismiss("verify-otp");
+      toast.dismiss("register");
 
       const message = error instanceof Error
         ? error.message
@@ -194,7 +211,7 @@ export default function Verify() {
               OTP Verification
             </h2>
             <p className="text-[3rem] md:text-[1.5rem] leading-relaxed fade-in-text mt-2">
-              Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
+              Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
             </p>
           </div>
         </div>

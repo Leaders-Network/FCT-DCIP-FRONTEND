@@ -3,6 +3,7 @@ import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Image from "next/image";
+import ChatWidget from "@/components/ChatWidget";
 
 const AboutPage = () => {
   return (
@@ -169,6 +170,7 @@ const AboutPage = () => {
 
 
       <Footer />
+      <ChatWidget />
     </div>
   );
 };

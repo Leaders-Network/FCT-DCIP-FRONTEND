@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from "sonner";
 import {
     Play,
     RefreshCw,
@@ -37,7 +38,7 @@ export default function DebugMergedReportsPage() {
             }
         } catch (error) {
             console.error('Error fetching status:', error);
-            alert('Failed to fetch status');
+            toast.error('Failed to fetch status');
         } finally {
             setLoading(false);
         }
@@ -60,7 +61,7 @@ export default function DebugMergedReportsPage() {
             }
         } catch (error) {
             console.error('Error fetching missing reports:', error);
-            alert('Failed to fetch missing reports');
+            toast.error('Failed to fetch missing reports');
         }
     };
 
@@ -79,16 +80,16 @@ export default function DebugMergedReportsPage() {
 
             const data = await response.json();
             if (data.success) {
-                alert(`Success! ${data.message}`);
+                toast.success(`Success! ${data.message}`);
                 // Refresh data
                 await fetchStatus();
                 await fetchMissingReports();
             } else {
-                alert(`Failed: ${data.message}`);
+                toast.error(`Failed: ${data.message}`);
             }
         } catch (error) {
             console.error('Error triggering merge:', error);
-            alert('Failed to trigger merge');
+            toast.error('Failed to trigger merge');
         } finally {
             setLoading(false);
         }
@@ -108,14 +109,14 @@ export default function DebugMergedReportsPage() {
 
             const data = await response.json();
             if (data.success) {
-                alert(`Merge triggered successfully for policy ${policyId}`);
+                toast.success(`Merge triggered successfully for policy ${policyId}`);
                 await fetchMissingReports();
             } else {
-                alert(`Failed to trigger merge: ${data.message}`);
+                toast.error(`Failed to trigger merge: ${data.message}`);
             }
         } catch (error) {
             console.error('Error triggering single merge:', error);
-            alert('Failed to trigger merge');
+            toast.error('Failed to trigger merge');
         }
     };
 

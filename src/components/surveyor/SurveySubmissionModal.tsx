@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Upload, Save, FileText, Camera, Phone, Mail, MessageSquare } from 'lucide-react';
 import { Assignment, PolicyRequest, ContactLogEntry } from '@/types/api.types';
 import { SurveySubmissionData } from '@/types/component.types';
+import { toast } from "sonner";
 
 interface SurveySubmissionModalProps {
     policy: any; // Accept any policy type for now
@@ -58,7 +59,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
             await onSubmit(submissionData);
         } catch (error) {
             console.error('Error submitting survey:', error);
-            alert('Failed to submit survey. Please try again.');
+            toast.error('Failed to submit survey. Please try again.');
         } finally {
             setLoading(false);
         }

@@ -19,21 +19,34 @@ import type { BrokerPolicyRequest, BrokerClaimStatusHistory } from '@/types/api.
 // Use the proper type from api.types.ts
 type Claim = BrokerPolicyRequest;
 
-export const ClaimsList: React.FC = () => {
+interface ClaimsListProps {
+    refreshTrigger?: number;
+}
+
+export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
     const [claims, setClaims] = useState<Claim[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
+    const [claimDetails, setClaimDetails] = useState<any>(null);
+    const [loadingDetails, setLoadingDetails] = useState(false);
 
     useEffect(() => {
         fetchClaims();
 
-        // Set up polling for real-time updates (every 5 seconds)
-        const interval = setInterval(fetchClaims, 5000);
+        // Set up polling for real-time updates (every 30 seconds)
+        const interval = setInterval(fetchClaims, 30000);
 
         return () => clearInterval(interval);
     }, []);
+
+    // Handle external refresh trigger
+    useEffect(() => {
+        if (refreshTrigger && refreshTrigger > 0) {
+            fetchClaims();
+        }
+    }, [refreshTrigger]);
 
     const fetchClaims = async () => {
         try {
@@ -41,13 +54,12 @@ export const ClaimsList: React.FC = () => {
 
             const response = await api.get<{
                 success: boolean;
-                data?: {
-                    policyRequests?: Claim[];
-                };
-            }>('/policy-requests/user');
+                count?: number;
+                claims?: Claim[];
+            }>('/claims/user');
 
             if (response.data.success) {
-                setClaims(response.data.data?.policyRequests || []);
+                setClaims(response.data.claims || []);
             }
         } catch (err) {
             console.error('Failed to fetch claims:', err);
@@ -61,6 +73,33 @@ export const ClaimsList: React.FC = () => {
     const handleRefresh = async () => {
         setRefreshing(true);
         await fetchClaims();
+    };
+
+    const handleViewDetails = async (claim: Claim) => {
+        setSelectedClaim(claim);
+        setLoadingDetails(true);
+
+        try {
+            // Try to fetch detailed claim information
+            const response = await api.get(`/claims/${claim._id}`);
+            if (response.data.success) {
+                setClaimDetails(response.data.claim);
+            } else {
+                // If detailed endpoint doesn't work, use the claim from list
+                setClaimDetails(claim);
+            }
+        } catch (error) {
+            console.error('Failed to fetch claim details:', error);
+            // Fallback to using the claim from list
+            setClaimDetails(claim);
+        } finally {
+            setLoadingDetails(false);
+        }
+    };
+
+    const closeModal = () => {
+        setSelectedClaim(null);
+        setClaimDetails(null);
     };
 
     const getStatusConfig = (status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'completed') => {
@@ -181,8 +220,12 @@ export const ClaimsList: React.FC = () => {
             {/* Claims Grid */}
             <div className="grid grid-cols-1 gap-6">
                 {claims.map((claim) => {
-                    const statusConfig = getStatusConfig(claim.brokerStatus);
+                    // Use brokerStatus for claim status, fallback to status if not available
+                    const claimStatus = claim.brokerStatus || claim.status || 'pending';
+                    const statusConfig = getStatusConfig(claimStatus as any);
                     const StatusIcon = statusConfig.icon;
+
+                    // Get the latest update from broker status history
                     const lastUpdate = claim.brokerStatusHistory && claim.brokerStatusHistory.length > 0
                         ? claim.brokerStatusHistory[claim.brokerStatusHistory.length - 1]
                         : null;
@@ -218,10 +261,10 @@ export const ClaimsList: React.FC = () => {
                                         <div>
                                             <p className="text-xs text-gray-500 mb-1">Property</p>
                                             <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                                                {claim.propertyDetails.address}
+                                                {claim.address || 'N/A'}
                                             </p>
                                             <p className="text-xs text-gray-600">
-                                                {claim.propertyDetails.propertyType}
+                                                {claim.coverageType || 'N/A'}
                                             </p>
                                         </div>
                                     </div>
@@ -232,7 +275,7 @@ export const ClaimsList: React.FC = () => {
                                         <div>
                                             <p className="text-xs text-gray-500 mb-1">Building Value</p>
                                             <p className="text-sm font-semibold text-gray-900">
-                                                {formatCurrency(claim.propertyDetails.buildingValue)}
+                                                {claim.buildingValue ? formatCurrency(claim.buildingValue) : 'N/A'}
                                             </p>
                                         </div>
                                     </div>
@@ -243,7 +286,7 @@ export const ClaimsList: React.FC = () => {
                                         <div>
                                             <p className="text-xs text-gray-500 mb-1">Submitted</p>
                                             <p className="text-sm font-medium text-gray-900">
-                                                {new Date(claim.createdAt).toLocaleDateString('en-US', {
+                                                {new Date(claim.submissionDate).toLocaleDateString('en-US', {
                                                     month: 'short',
                                                     day: 'numeric',
                                                     year: 'numeric'
@@ -277,10 +320,10 @@ export const ClaimsList: React.FC = () => {
                                 {/* Actions */}
                                 <div className="flex items-center justify-between">
                                     <p className="text-xs text-gray-500">
-                                        Last updated: {formatDate(claim.updatedAt)}
+                                        Last updated: {lastUpdate ? formatDate(lastUpdate.changedAt) : formatDate(claim.submissionDate)}
                                     </p>
                                     <button
-                                        onClick={() => setSelectedClaim(claim)}
+                                        onClick={() => handleViewDetails(claim)}
                                         className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
                                     >
                                         <Eye className="w-4 h-4 mr-2" />
@@ -310,8 +353,142 @@ export const ClaimsList: React.FC = () => {
                                 </button>
                             </div>
 
-                            {/* Status History */}
-                            {selectedClaim.brokerStatusHistory && selectedClaim.brokerStatusHistory.length > 0 && (
+                            {/* Claim Information */}
+                            {loadingDetails ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    <span className="ml-2 text-gray-600">Loading details...</span>
+                                </div>
+                            ) : claimDetails ? (
+                                <div className="space-y-6">
+                                    {/* Basic Information */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Policy Number</label>
+                                            <p className="text-sm text-gray-900">{claimDetails.policyNumber}</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusConfig(claimDetails.brokerStatus || claimDetails.status).bg} ${getStatusConfig(claimDetails.brokerStatus || claimDetails.status).text}`}>
+                                                {getStatusConfig(claimDetails.brokerStatus || claimDetails.status).label}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Submission Date</label>
+                                            <p className="text-sm text-gray-900">{formatDate(claimDetails.submissionDate)}</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
+                                            <p className="text-sm text-gray-900">{claimDetails.coverageType}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Claim Reason */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Claim Reason</label>
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <p className="text-sm text-gray-900 whitespace-pre-wrap">{claimDetails.claimReason}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Property Details */}
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Property Information</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                                <p className="text-sm text-gray-900">{claimDetails.propertyDetails?.address || claimDetails.address || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Building Value</label>
+                                                <p className="text-sm text-gray-900">{claimDetails.propertyDetails?.buildingValue ? formatCurrency(claimDetails.propertyDetails.buildingValue) : 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contact Details */}
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Contact Information</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                                <p className="text-sm text-gray-900">{claimDetails.contactDetails?.name || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                                <p className="text-sm text-gray-900">{claimDetails.contactDetails?.email || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                                <p className="text-sm text-gray-900">{claimDetails.contactDetails?.phone || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Documents */}
+                                    {claimDetails.documents && claimDetails.documents.length > 0 && (
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-gray-900 mb-3">Supporting Documents</h4>
+                                            <div className="space-y-2">
+                                                {claimDetails.documents.map((doc: any, index: number) => (
+                                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                        <div className="flex items-center gap-3">
+                                                            <FileText className="w-5 h-5 text-gray-600" />
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-900">{doc.fileName}</p>
+                                                                <p className="text-xs text-gray-600">{doc.fileType} • {(doc.fileSize / 1024 / 1024).toFixed(2)} MB</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Status History */}
+                                    {claimDetails.brokerStatusHistory && claimDetails.brokerStatusHistory.length > 0 && (
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-gray-900 mb-3">Status History</h4>
+                                            <div className="space-y-3">
+                                                {claimDetails.brokerStatusHistory.map((history: any, index: number) => {
+                                                    const config = getStatusConfig(history.status);
+                                                    const HistoryIcon = config.icon;
+                                                    return (
+                                                        <div key={index} className={`p-4 rounded-lg border ${config.bg} ${config.border}`}>
+                                                            <div className="flex items-start gap-3">
+                                                                <HistoryIcon className={`w-5 h-5 ${config.text} flex-shrink-0 mt-0.5`} />
+                                                                <div className="flex-1">
+                                                                    <div className="flex items-center justify-between mb-1">
+                                                                        <span className={`font-semibold ${config.text}`}>
+                                                                            {config.label}
+                                                                        </span>
+                                                                        <span className="text-xs text-gray-600">
+                                                                            {formatDate(history.timestamp || history.changedAt)}
+                                                                        </span>
+                                                                    </div>
+                                                                    {history.notes && (
+                                                                        <p className="text-sm text-gray-700">
+                                                                            {history.notes}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                    <p className="text-gray-600">Unable to load claim details</p>
+                                </div>
+                            )}
+
+                            {/* Status History - Not available in list view */}
+                            {false && selectedClaim.brokerStatusHistory && selectedClaim.brokerStatusHistory.length > 0 && (
                                 <div className="mb-6">
                                     <h4 className="text-sm font-semibold text-gray-900 mb-3">Status History</h4>
                                     <div className="space-y-3">

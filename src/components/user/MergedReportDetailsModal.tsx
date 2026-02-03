@@ -18,6 +18,7 @@ import {
   RecommendationAction
 } from '@/types/api.types';
 import { normalizeError, getErrorMessage } from '@/utils/errorHandling';
+import { toast } from "sonner"
 
 interface MergedReportDetailsModalProps {
   reportId: string;
@@ -291,21 +292,21 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        alert('Merged report downloaded successfully. Open the HTML file and print to PDF from your browser.');
+        toast.success('Merged report downloaded successfully. Open the HTML file and print to PDF from your browser.');
         fetchReportDetails();
       } else {
-        alert('Failed to download merged report');
+        toast.error('Failed to download merged report');
       }
     } catch (error) {
       console.error('Error downloading merged report:', error);
-      alert('Failed to download merged report');
+      toast.error('Failed to download merged report');
     }
   };
 
   const handleDownloadAMMC = async () => {
     try {
       if (!reportDetails?.individualReports?.ammcReportId) {
-        alert('AMMC report not available');
+        toast.error('AMMC report not available');
         return;
       }
       const response = await userReportAPI.downloadAMMCReport(reportDetails.individualReports.ammcReportId);
@@ -323,7 +324,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          alert('AMMC report opened in new tab. If download didn\'t start, please check your browser\'s download settings.');
+          toast.success('AMMC report opened in new tab. If download didn\'t start, please check your browser\'s download settings.');
         } else if (response.data.documents && response.data.documents.length > 0) {
           // Download the first available document
           const doc = response.data.documents[0];
@@ -336,23 +337,23 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          alert('AMMC report opened in new tab.');
+          toast.success('AMMC report opened in new tab.');
         } else {
-          alert('No AMMC report document available for download');
+          toast.error('No AMMC report document available for download');
         }
       } else {
-        alert('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
+        toast.error('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error downloading AMMC report:', error);
-      alert('Failed to download AMMC report');
+      toast.error('Failed to download AMMC report');
     }
   };
 
   const handleDownloadNIA = async () => {
     try {
       if (!reportDetails?.individualReports?.niaReportId) {
-        alert('NIA report not available');
+        toast.error('NIA report not available');
         return;
       }
       const response = await userReportAPI.downloadNIAReport(reportDetails.individualReports.niaReportId);
@@ -370,7 +371,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          alert('NIA report opened in new tab. If download didn\'t start, please check your browser\'s download settings.');
+          toast.success('NIA report opened in new tab. If download didn\'t start, please check your browser\'s download settings.');
         } else if (response.data.documents && response.data.documents.length > 0) {
           // Download the first available document
           const doc = response.data.documents[0];
@@ -383,16 +384,16 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          alert('NIA report opened in new tab.');
+          toast.success('NIA report opened in new tab.');
         } else {
-          alert('No NIA report document available for download');
+          toast.error('No NIA report document available for download');
         }
       } else {
-        alert('Failed to download NIA report: ' + (response.message || 'Unknown error'));
+        toast.error('Failed to download NIA report: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error downloading NIA report:', error);
-      alert('Failed to download NIA report');
+      toast.error('Failed to download NIA report');
     }
   };
 

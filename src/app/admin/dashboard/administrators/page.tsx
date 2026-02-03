@@ -21,6 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { toast } from "sonner"
 
 interface Administrator {
   _id: string;
@@ -41,15 +42,50 @@ interface Administrator {
   updatedAt?: string;
 }
 
+interface User {
+  _id: string;
+  fullname: string;
+  email: string;
+  phonenumber: string;
+  role?: string;
+  isEmailVerified?: boolean;
+  deleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface Employee {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phonenumber: string;
+  employeeRole?: {
+    _id: string;
+    role: string;
+  };
+  employeeStatus?: {
+    _id: string;
+    status: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+type UserManagementItem = Administrator | User | Employee;
+
 export default function AdministratorsPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedAdmin, setSelectedAdmin] = useState<Administrator | null>(null)
+  const [selectedAdmin, setSelectedAdmin] = useState<UserManagementItem | null>(null)
   const [administrators, setAdministrators] = useState<Administrator[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [activeTab, setActiveTab] = useState<'administrators' | 'employees' | 'users'>('administrators')
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -58,7 +94,8 @@ export default function AdministratorsPage() {
     role: "",
     status: "Active",
     roleId: "",
-    statusId: "active"
+    statusId: "active",
+    userType: "administrator" // New field to track what type of user we're creating
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -81,7 +118,29 @@ export default function AdministratorsPage() {
         statusId: formData.statusId || (formData.status === "Active" ? "active" : "inactive")
       };
 
-      await adminApi.createAdministrator(submitData);
+      if (formData.userType === 'administrator') {
+        await adminApi.createAdministrator(submitData);
+      } else if (formData.userType === 'employee') {
+        // Employees are always Surveyors
+        const surveyorPayload = {
+          firstname: formData.firstname,
+          lastname: formData.lastname,
+          email: formData.email,
+          phonenumber: formData.phonenumber,
+        };
+        await adminApi.createSurveyor(surveyorPayload);
+      } else if (formData.userType === 'user') {
+        // Platform users are simple users
+        const userSubmitData = {
+          fullname: `${formData.firstname} ${formData.lastname}`.trim(),
+          email: formData.email,
+          phonenumber: formData.phonenumber,
+          password: 'TempPassword123!',
+          confirmPassword: 'TempPassword123!'
+        };
+        await adminApi.registerUser(userSubmitData);
+      }
+
       setShowAdminSidebar(false);
       // Reset form
       setFormData({
@@ -92,60 +151,119 @@ export default function AdministratorsPage() {
         role: "",
         status: "Active",
         roleId: "",
-        statusId: "active"
+        statusId: "active",
+        userType: "administrator"
       });
-      // Refresh administrators list
-      const response = await adminApi.getAdministrators()
-      if (response?.success && response?.data) {
-        setAdministrators(response.data)
-      }
+      // Refresh data
+      await fetchAllData();
     } catch (error) {
-      console.error("Failed to create administrator:", error);
+      console.error("Failed to create user:", error);
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    const fetchAdministrators = async () => {
+  const fetchAllData = async () => {
+    try {
+      setLoading(true)
+
+      // Fetch administrators
+      const adminResponse = await adminApi.getAdministrators()
+      if (adminResponse?.success && adminResponse?.data) {
+        setAdministrators(adminResponse.data)
+      } else {
+        setAdministrators([])
+      }
+
+      // Fetch employees
       try {
-        setLoading(true)
-        const response = await adminApi.getAdministrators()
-        if (response?.success && response?.data) {
-          setAdministrators(response.data)
+        const employeeResponse = await adminApi.getEmployees()
+        if (employeeResponse?.success && employeeResponse?.data) {
+          setEmployees(employeeResponse.data)
         } else {
-          setAdministrators([])
+          setEmployees([])
         }
       } catch (error) {
-        console.error("Failed to fetch administrators:", error)
-        setAdministrators([])
-      } finally {
-        setLoading(false)
+        console.error("Failed to fetch employees:", error)
+        setEmployees([])
       }
+
+      // Fetch users
+      try {
+        const userResponse = await adminApi.get('/auth/users')
+        if (userResponse?.success && userResponse?.users) {
+          setUsers(userResponse.users)
+        } else {
+          setUsers([])
+        }
+      } catch (error) {
+        console.error("Failed to fetch users:", error)
+        setUsers([])
+      }
+
+    } catch (error) {
+      console.error("Failed to fetch data:", error)
+      setAdministrators([])
+      setEmployees([])
+      setUsers([])
+    } finally {
+      setLoading(false)
     }
-    fetchAdministrators()
+  }
+
+  useEffect(() => {
+    fetchAllData()
   }, [])
 
   const handleDeleteAdministrator = async (adminId: string) => {
     try {
-      await adminApi.deleteAdministrator(adminId)
-      setAdministrators(administrators.filter(admin => admin._id !== adminId))
+      if (activeTab === 'administrators') {
+        await adminApi.deleteAdministrator(adminId)
+        setAdministrators(administrators.filter(admin => admin._id !== adminId))
+      } else if (activeTab === 'employees') {
+        await adminApi.deleteEmployee(adminId)
+        setEmployees(employees.filter(emp => emp._id !== adminId))
+      } else if (activeTab === 'users') {
+        // For users, we need to use the auth delete endpoint
+        // Note: The current delete endpoint deletes the current user, not by ID
+        // We may need to create a new admin endpoint for deleting users by ID
+        console.warn('User deletion by admin not yet implemented - requires new backend endpoint')
+        toast.warning('User deletion by admin is not yet implemented. Please contact the user to delete their own account.')
+        return
+      }
     } catch (error) {
-      console.error("Failed to delete administrator:", error)
+      console.error("Failed to delete user:", error)
     }
   }
 
-  const handleEditAdministrator = (admin: Administrator) => {
+  const handleEditAdministrator = (admin: UserManagementItem) => {
     setSelectedAdmin(admin)
+
+    // Handle different user types and their field structures
+    let firstName = '';
+    let lastName = '';
+
+    if ('fullname' in admin) {
+      // For users with fullname field
+      const names = admin.fullname.split(' ');
+      firstName = names[0] || '';
+      lastName = names.slice(1).join(' ') || '';
+    } else {
+      // For administrators and employees with separate firstname/lastname
+      firstName = admin.firstname || '';
+      lastName = admin.lastname || '';
+    }
+
     setFormData({
-      firstname: admin.firstname,
-      lastname: admin.lastname,
+      firstname: firstName,
+      lastname: lastName,
       email: admin.email,
       phonenumber: admin.phonenumber,
-      role: admin.employeeRole?.role || "",
-      status: admin.employeeStatus?.status || "Active",
-      roleId: admin.employeeRole?._id || "",
-      statusId: admin.employeeStatus?._id || "active"
+      role: 'employeeRole' in admin ? admin.employeeRole?.role || "" : 'role' in admin ? admin.role || "" : "",
+      status: 'employeeStatus' in admin ? admin.employeeStatus?.status || "Active" : 'isEmailVerified' in admin ? (admin.isEmailVerified ? "Active" : "Inactive") : "Active",
+      roleId: 'employeeRole' in admin ? admin.employeeRole?._id || "" : "",
+      statusId: 'employeeStatus' in admin ? admin.employeeStatus?._id || "active" : "active",
+      userType: activeTab === 'administrators' ? 'administrator' : activeTab === 'employees' ? 'employee' : 'user'
     })
     setShowEditModal(true)
   }
@@ -165,17 +283,24 @@ export default function AdministratorsPage() {
         statusId: formData.statusId || (formData.status === "Active" ? "active" : "inactive")
       }
 
-      await adminApi.updateAdministrator(selectedAdmin._id, updateData)
+      if (formData.userType === 'administrator') {
+        await adminApi.updateAdministrator(selectedAdmin._id, updateData)
+      } else if (formData.userType === 'employee') {
+        await adminApi.patch(`/admin/employees/${selectedAdmin._id}`, updateData)
+      } else if (formData.userType === 'user') {
+        // For users, we don't have an update endpoint yet
+        console.warn('User update by admin not yet implemented - requires new backend endpoint')
+        toast.warning('User editing by admin is not yet implemented.')
+        return
+      }
+
       setShowEditModal(false)
       setSelectedAdmin(null)
 
-      // Refresh administrators list
-      const response = await adminApi.getAdministrators()
-      if (response?.success && response?.data) {
-        setAdministrators(response.data)
-      }
+      // Refresh data
+      await fetchAllData()
     } catch (error) {
-      console.error("Failed to update administrator:", error)
+      console.error("Failed to update user:", error)
     } finally {
       setLoading(false)
     }
@@ -184,32 +309,62 @@ export default function AdministratorsPage() {
   const handleToggleStatus = async (adminId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
     try {
-      const updatedAdmin = await adminApi.updateAdministratorStatus(adminId, newStatus)
-      setAdministrators(administrators.map(admin => admin._id === adminId ? updatedAdmin.data : admin))
+      if (activeTab === 'administrators') {
+        const updatedAdmin = await adminApi.updateAdministratorStatus(adminId, newStatus)
+        setAdministrators(administrators.map(admin => admin._id === adminId ? updatedAdmin.data : admin))
+      } else if (activeTab === 'employees') {
+        const updatedEmployee = await adminApi.updateEmployeeStatus(adminId, newStatus)
+        setEmployees(employees.map(emp => emp._id === adminId ? updatedEmployee.data : emp))
+      } else if (activeTab === 'users') {
+        // For users, we don't have a status toggle endpoint yet
+        console.warn('User status toggle not yet implemented - requires new backend endpoint')
+        toast.warning('User status management is not yet implemented.')
+        return
+      }
     } catch (error) {
-      console.error("Failed to update administrator status:", error)
+      console.error("Failed to update user status:", error)
     }
   }
 
-  const filteredAdministrators = useMemo(() => {
-    return administrators.filter(admin =>
-      admin.firstname.toLowerCase().includes(filter.toLowerCase()) ||
-      admin.lastname.toLowerCase().includes(filter.toLowerCase()) ||
-      admin.email.toLowerCase().includes(filter.toLowerCase())
-    )
-  }, [administrators, filter])
+  // Get current data based on active tab
+  const getCurrentData = () => {
+    switch (activeTab) {
+      case 'administrators':
+        return administrators
+      case 'employees':
+        return employees
+      case 'users':
+        return users
+      default:
+        return administrators
+    }
+  }
 
-  const paginatedAdministrators = useMemo(() => {
+  const filteredData = useMemo(() => {
+    const currentData = getCurrentData()
+    return currentData.filter(item => {
+      // Handle different field structures for different user types
+      const firstName = 'firstname' in item ? item.firstname : '';
+      const lastName = 'lastname' in item ? item.lastname : '';
+      const fullName = 'fullname' in item ? item.fullname : `${firstName} ${lastName}`.trim();
+
+      return fullName.toLowerCase().includes(filter.toLowerCase()) ||
+        item.email.toLowerCase().includes(filter.toLowerCase()) ||
+        item.phonenumber.includes(filter)
+    })
+  }, [administrators, employees, users, filter, activeTab])
+
+  const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
-    return filteredAdministrators.slice(startIndex, startIndex + itemsPerPage)
-  }, [filteredAdministrators, currentPage, itemsPerPage])
+    return filteredData.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredData, currentPage, itemsPerPage])
 
   return (
     <>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">AMMC Administrators</h1>
-          <p className="text-gray-600 mt-1">Manage AMMC administrative users and their permissions</p>
+          <h1 className="text-2xl font-bold">User Management</h1>
+          <p className="text-gray-600 mt-1">Manage administrators, employees, and users across the platform</p>
         </div>
         <div className="flex gap-4">
           <Button
@@ -217,12 +372,40 @@ export default function AdministratorsPage() {
             className="bg-[#028835] text-white hover:bg-[#026a29] rounded-full"
           >
             <PlusCircle className="mr-2 h-5 w-5" />
-            Add AMMC Admin
+            Add User
           </Button>
           <Button variant="outline" className="text-gray-700">
             Export
           </Button>
         </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="-mb-px flex space-x-8">
+          {[
+            { key: 'administrators', label: 'AMMC Administrators', count: administrators.length },
+            { key: 'employees', label: 'Employees', count: employees.length },
+            { key: 'users', label: 'Platform Users', count: users.length }
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key as typeof activeTab)
+                setCurrentPage(1) // Reset pagination when switching tabs
+              }}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.key
+                ? 'border-[#028835] text-[#028835]'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+            >
+              {tab.label}
+              <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </nav>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -235,7 +418,7 @@ export default function AdministratorsPage() {
           />
         </div>
         {loading ? (
-          <div className="text-center py-12">Loading administrators...</div>
+          <div className="text-center py-12">Loading {activeTab}...</div>
         ) : (
           <Table>
             <TableHeader>
@@ -250,31 +433,59 @@ export default function AdministratorsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedAdministrators.map((admin) => (
-                <TableRow key={admin._id}>
+              {paginatedData.map((item) => (
+                <TableRow key={item._id}>
                   <TableCell><Checkbox /></TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-[#028835] flex items-center justify-center text-white font-bold">
-                          {`${admin.firstname[0]}${admin.lastname[0]}`}
+                          {(() => {
+                            if ('fullname' in item) {
+                              const names = item.fullname.split(' ');
+                              return names.length >= 2 ? `${names[0][0]}${names[names.length - 1][0]}` : `${names[0][0]}${names[0][1] || ''}`;
+                            } else {
+                              return `${item.firstname[0]}${item.lastname[0]}`;
+                            }
+                          })()}
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{`${admin.firstname} ${admin.lastname}`}</div>
-                        <div className="text-sm text-gray-500">{admin.employeeRole?.role || 'N/A'}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {'fullname' in item ? item.fullname : `${item.firstname} ${item.lastname}`}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {'employeeRole' in item ? item.employeeRole?.role || 'N/A' :
+                            'role' in item ? item.role || 'User' : 'N/A'}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{admin.email}</TableCell>
-                  <TableCell>{admin.phonenumber}</TableCell>
+                  <TableCell>{item.email}</TableCell>
+                  <TableCell>{item.phonenumber}</TableCell>
                   <TableCell>
-                    <Switch
-                      checked={admin.employeeStatus?.status === 'Active'}
-                      onCheckedChange={() => handleToggleStatus(admin._id, admin.employeeStatus?.status || 'Inactive')}
-                    />
+                    {activeTab === 'users' ? (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${'isEmailVerified' in item && item.isEmailVerified
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                        {'isEmailVerified' in item && item.isEmailVerified ? 'Verified' : 'Unverified'}
+                      </span>
+                    ) : (
+                      <Switch
+                        checked={
+                          'employeeStatus' in item ? item.employeeStatus?.status === 'Active' :
+                            'isActive' in item ? item.isActive === true : false
+                        }
+                        onCheckedChange={() => handleToggleStatus(
+                          item._id,
+                          'employeeStatus' in item ? item.employeeStatus?.status || 'Inactive' :
+                            'isActive' in item ? (item.isActive ? 'Active' : 'Inactive') : 'Inactive'
+                        )}
+                      />
+                    )}
                   </TableCell>
-                  <TableCell>{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
+                  <TableCell>{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -284,7 +495,7 @@ export default function AdministratorsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditAdministrator(admin)}>
+                        <DropdownMenuItem onClick={() => handleEditAdministrator(item)}>
                           <Edit className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
                         <AlertDialog>
@@ -297,12 +508,12 @@ export default function AdministratorsPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the administrator.
+                                This action cannot be undone. This will permanently delete the {activeTab.slice(0, -1)}.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteAdministrator(admin._id)}>Delete</AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleDeleteAdministrator(item._id)}>Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -316,7 +527,7 @@ export default function AdministratorsPage() {
         )}
         <div className="p-4 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing {paginatedAdministrators.length} of {filteredAdministrators.length} administrators
+            Showing {paginatedData.length} of {filteredData.length} {activeTab}
           </div>
           <div className="flex gap-2">
             <Button
@@ -331,7 +542,7 @@ export default function AdministratorsPage() {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={currentPage * itemsPerPage >= filteredAdministrators.length}
+              disabled={currentPage * itemsPerPage >= filteredData.length}
             >
               Next
             </Button>
@@ -344,7 +555,10 @@ export default function AdministratorsPage() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden">
             <div className="bg-[#028835] text-white p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Add AMMC Administrator</h2>
+                <h2 className="text-xl font-bold">Add {
+                  formData.userType === 'administrator' ? 'AMMC Administrator' :
+                    formData.userType === 'employee' ? 'Employee' : 'Platform User'
+                }</h2>
                 <button
                   onClick={() => setShowAdminSidebar(false)}
                   className="text-green-100 hover:text-white transition-colors"
@@ -355,6 +569,23 @@ export default function AdministratorsPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* User Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  User Type *
+                </label>
+                <select
+                  name="userType"
+                  value={formData.userType}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                  required
+                >
+                  <option value="administrator">AMMC Administrator</option>
+                  <option value="employee">Employee</option>
+                  <option value="user">Platform User</option>
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -416,17 +647,29 @@ export default function AdministratorsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Role *
                 </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                  required
-                >
-                  <option value="">Select a role</option>
-                  <option value="Admin">Admin</option>
-                  <option value="Super Admin">Super Admin</option>
-                </select>
+                {/* Show role select only for administrators and employees (employees are only Surveyors) */}
+                {(formData.userType === 'administrator' || formData.userType === 'employee') && (
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                    required
+                  >
+                    <option value="">Select a role</option>
+                    {formData.userType === 'administrator' && (
+                      <>
+                        <option value="Admin">Admin</option>
+                        <option value="Super Admin">Super Admin</option>
+                      </>
+                    )}
+                    {formData.userType === 'employee' && (
+                      <>
+                        <option value="Surveyor">Surveyor</option>
+                      </>
+                    )}
+                  </select>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
@@ -450,7 +693,10 @@ export default function AdministratorsPage() {
                   ) : (
                     <>
                       <UserPlus className="w-4 h-4" />
-                      <span>Create Administrator</span>
+                      <span>Create {
+                        formData.userType === 'administrator' ? 'Administrator' :
+                          formData.userType === 'employee' ? 'Employee' : 'User'
+                      }</span>
                     </>
                   )}
                 </button>
@@ -460,13 +706,16 @@ export default function AdministratorsPage() {
         </div>
       )}
 
-      {/* Edit Admin Modal */}
+      {/* Edit User Modal */}
       {showEditModal && selectedAdmin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden">
             <div className="bg-blue-600 text-white p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Edit Administrator</h2>
+                <h2 className="text-xl font-bold">Edit {
+                  formData.userType === 'administrator' ? 'Administrator' :
+                    formData.userType === 'employee' ? 'Employee' : 'User'
+                }</h2>
                 <button
                   onClick={() => {
                     setShowEditModal(false)
@@ -549,8 +798,26 @@ export default function AdministratorsPage() {
                   required
                 >
                   <option value="">Select a role</option>
-                  <option value="Admin">Admin</option>
-                  <option value="Super Admin">Super Admin</option>
+                  {formData.userType === 'administrator' && (
+                    <>
+                      <option value="Admin">Admin</option>
+                      <option value="Super Admin">Super Admin</option>
+                    </>
+                  )}
+                  {formData.userType === 'employee' && (
+                    <>
+                      <option value="Surveyor">Surveyor</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Clerk">Clerk</option>
+                      <option value="Analyst">Analyst</option>
+                    </>
+                  )}
+                  {formData.userType === 'user' && (
+                    <>
+                      <option value="Standard User">Standard User</option>
+                      <option value="Premium User">Premium User</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -594,7 +861,10 @@ export default function AdministratorsPage() {
                   ) : (
                     <>
                       <Edit className="w-4 h-4" />
-                      <span>Update Administrator</span>
+                      <span>Update {
+                        formData.userType === 'administrator' ? 'Administrator' :
+                          formData.userType === 'employee' ? 'Employee' : 'User'
+                      }</span>
                     </>
                   )}
                 </button>

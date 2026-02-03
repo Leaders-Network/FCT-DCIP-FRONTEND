@@ -3,6 +3,7 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 const PrivacyPolicy = () => {
   const [preferences, setPreferences] = useState({
@@ -19,7 +20,7 @@ const PrivacyPolicy = () => {
   const handleSave = () => {
     // Placeholder: here you’d connect to backend or localStorage
     console.log("Preferences saved:", preferences);
-    alert("Your cookie preferences have been updated.");
+    toast.success("Your cookie preferences have been updated.");
   };
 
   return (

@@ -24,6 +24,7 @@ import {
     AlertCircle,
     CreditCard
 } from 'lucide-react';
+import { toast } from "sonner"
 
 interface PolicyListProps {
     isAdmin?: boolean;
@@ -59,7 +60,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             if (data.success && data.data) {
                 const paymentData = data.data;
 
-                alert(`✅ Payment Initiated Successfully!\n\nInvoice Number: ${paymentData.invoiceNumber}\nTransaction Reference: ${paymentData.transactionReference}\nAmount: ₦${paymentData.amount}\nInsurance Company: ${paymentData.companyName}\n\nYou will be redirected to complete the payment.`);
+                toast.success(`✅ Payment Initiated Successfully!\n\nInvoice Number: ${paymentData.invoiceNumber}\nTransaction Reference: ${paymentData.transactionReference}\nAmount: ₦${paymentData.amount}\nInsurance Company: ${paymentData.companyName}\n\nYou will be redirected to complete the payment.`);
 
                 // Redirect to NIIP payment page if encrypted reference is provided
                 if (paymentData.encryptTransRef) {
@@ -74,7 +75,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         } catch (error: any) {
             console.error('Payment error:', error);
             const errorMessage = error.response?.data?.message || error.message || 'Failed to initiate payment';
-            alert(`❌ Payment Error\n\n${errorMessage}\n\nPlease try again or contact support.`);
+            toast.error(`❌ Payment Error\n\n${errorMessage}\n\nPlease try again or contact support.`);
         } finally {
             setProcessingPayment(null);
         }
@@ -336,7 +337,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                 <MapPin className="w-4 h-4 text-gray-400" />
                                                 <div>
                                                     <p className="text-gray-600">Location</p>
-                                                    <p className="font-medium truncate">{policy.builder.address}</p>
+                                                    <p className="font-medium truncate text-wrap">{policy.builder.address}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">

@@ -7,6 +7,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { clearAuthTokens } from "@/utils/auth"
+import Swal from "sweetalert2";
+import { useRouter } from 'next/navigation';
 
 interface SurveyorHeaderProps {
   onMenuClick?: () => void;
@@ -19,15 +22,36 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
     .map((word) => word[0])
     .join("")
     .toUpperCase();
+    const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem("surveyorToken");
-    localStorage.removeItem("surveyorName");
-    localStorage.removeItem("surveyorRole");
-    localStorage.removeItem("surveyorOrganization");
-    localStorage.removeItem("surveyorInfo");
-    window.location.href = "/surveyor";
-  };
+          // Handle logout
+        const handleLogout = async () => {
+          const result = await Swal.fire({
+            title: 'Logout?',
+            text: 'Are you sure you want to logout?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            background: isDarkMode ? '#111827' : '#ffffff',
+            color: isDarkMode ? '#ffffff' : '#111827',
+        });
+      
+        if (result.isConfirmed) {
+          clearAuthTokens();
+          localStorage.removeItem("surveyorToken");
+          localStorage.removeItem("surveyorName");
+          localStorage.removeItem("surveyorRole");
+          localStorage.removeItem("surveyorOrganization");
+          localStorage.removeItem("surveyorInfo");
+          window.location.href = "/surveyor";
+          router.push('/surveyor');
+        }
+      };
+      const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">

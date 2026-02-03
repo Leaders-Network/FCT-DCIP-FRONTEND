@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import ChatWidget from "./ChatWidget";
 
 const signUpSchema = z.object({
   fullName: z.string().min(1, "Full Name is required"),
@@ -76,7 +77,7 @@ export default function SignUp() {
               Welcome to Builders-Liability-AMMC
             </h2>
             <p className="text-sm md:text-[1.1rem] leading-relaxed fade-in-text mt-2">
-              Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
+              Enter the verification code sent to your email to finalize your registration and join our mission to build a safer Abuja community.
             </p>
           </div>
         </div>
@@ -176,7 +177,6 @@ function SignUpForm() {
     try {
       signUpSchema.parse({ fullName, email, phone: phoneNumber, password, confirmPassword });
       setErrors({});
-      toast.success("All inputs look good! ✅")
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -331,6 +331,8 @@ function SignUpButton({
     }
 
     setIsLoading(true);
+    toast.loading("Sending OTP to your email...", { id: 'signup-toast' });
+    
     const ApiKey = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
 
     try {
@@ -360,15 +362,24 @@ function SignUpButton({
           }
         } catch (parseError) {
           console.error("Error parsing response:", parseError);
-          // Use default error message if parsing fails
         }
-        toast.error(errorMessage || "Failed to request OTP. ❌");
+        
+        toast.error(errorMessage || "Failed to request OTP", { 
+          id: 'signup-toast',
+          description: "Please try again.",
+          duration: 3000,
+        });
         throw new Error(errorMessage);
       }
 
       await response.json();
 
-      toast.success("OTP sent to your email! ✅");
+      toast.success("OTP sent to your email! 🎉", { 
+        id: 'signup-toast',
+        description: "Please check your inbox and verify your account.",
+        duration: 4000,
+      });
+      
       localStorage.setItem("pendingUser", JSON.stringify({ fullName, phone, email, password }));
       localStorage.setItem("pendingEmail", email);
       router.push("/verify");
@@ -379,9 +390,12 @@ function SignUpButton({
         error instanceof Error ? error.message : "An unexpected error occurred";
 
       setError(message);
-
-      toast.error(message);
-      setError(error instanceof Error ? error.message : "An unexpected error occurred");
+      
+      toast.error(message, { 
+        id: 'signup-toast',
+        description: "Please try again.",
+        duration: 3000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -401,11 +415,12 @@ function SignUpButton({
         className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
           }`}
       >
-        {isLoading ? "Signing Up..." : "Sign Up"}
+        {isLoading ? "Sending OTP..." : "Sign Up"}
         <span className="w-[30px] h-[30px] ml-2 md:ml-5 flex items-center justify-center bg-white rounded-full">
           <MoveRight color="#000000" size={20} />
         </span>
       </button>
+      <ChatWidget />
     </>
   );
 }

@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useAuth } from "@/context/useAuth";
 import { getCookie } from "@/utils/cookies";
 import { getAuthToken } from "@/utils/auth";
+import { toast } from "sonner";
 import {
   MoreVertical,
   Download,
@@ -478,146 +479,6 @@ const Dashview = () => {
                   </button>
                 </div>
 
-                {/* Search and Filter Bar */}
-                <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-200">
-                  <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                    {/* Search Input */}
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search policies by ID, address, property type..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      />
-                      {searchQuery && (
-                        <button
-                          onClick={() => setSearchQuery("")}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Filter Toggle Button */}
-                    <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      className={`flex items-center px-4 py-2.5 border rounded-lg transition-all ${showFilters || hasActiveFilters
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                        }`}
-                    >
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filters
-                      {hasActiveFilters && !showFilters && (
-                        <span className="ml-2 bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                          !
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Clear Filters Button */}
-                    {hasActiveFilters && (
-                      <button
-                        onClick={clearFilters}
-                        className="flex items-center px-4 py-2.5 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-all"
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Advanced Filters Panel */}
-                  {showFilters && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
-                      {/* Status Filter */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select
-                          value={filters.status}
-                          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="all">All Statuses</option>
-                          <option value="submitted">Submitted</option>
-                          <option value="assigned">Assigned</option>
-                          <option value="surveyed">Surveyed</option>
-                          <option value="approved">Approved</option>
-                          <option value="payment_pending">Payment Pending</option>
-                          <option value="completed">Completed</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
-                      </div>
-
-                      {/* Property Type Filter */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                        <select
-                          value={filters.propertyType}
-                          onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="">All Types</option>
-                          <option value="Residential">Residential</option>
-                          <option value="Commercial">Commercial</option>
-                          <option value="Industrial">Industrial</option>
-                        </select>
-                      </div>
-
-                      {/* Sort By Filter */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                        <select
-                          value={filters.sortBy}
-                          onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="newest">Newest First</option>
-                          <option value="oldest">Oldest First</option>
-                          <option value="value-high">Highest Value</option>
-                          <option value="value-low">Lowest Value</option>
-                        </select>
-                      </div>
-
-                      {/* Date From Filter */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-                        <input
-                          type="date"
-                          value={filters.dateFrom}
-                          onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-
-                      {/* Date To Filter */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-                        <input
-                          type="date"
-                          value={filters.dateTo}
-                          onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Results Count */}
-                  <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t border-gray-200 mt-3">
-                    <span>
-                      Showing <span className="font-semibold text-gray-900">{filteredPolicies.length}</span> of{' '}
-                      <span className="font-semibold text-gray-900">{allPolicies.length}</span> policies
-                    </span>
-                    {hasActiveFilters && (
-                      <span className="text-blue-600 font-medium">Filters active</span>
-                    )}
-                  </div>
-                </div>
-
                 {/* Removed MergedReportsSummary - not applicable for Builder Liability policies */}
 
                 {/* Builder Liability Policies List */}
@@ -861,17 +722,23 @@ const Dashview = () => {
                 ×
               </button>
             </div>
-            <div className="p-6">
-              <BuilderLiabilityPolicyForm
-                onSuccess={(policyId) => {
-                  alert('Builder Liability Policy application submitted successfully!');
-                  setShowBuilderLiabilityForm(false);
-                  // Trigger a page refresh to show the new policy
-                  window.location.reload();
-                }}
-                onCancel={() => setShowBuilderLiabilityForm(false)}
-              />
-            </div>
+      <div className="p-6">
+        <BuilderLiabilityPolicyForm
+          onSuccess={(policyId) => {
+            toast.success(
+              "Builder Liability Policy application submitted successfully!"
+            );
+
+            setShowBuilderLiabilityForm(false);
+
+            setTimeout(() => {
+              window.location.reload();
+            }, 3000); // 2 seconds (adjust if needed)
+          }}
+          onCancel={() => setShowBuilderLiabilityForm(false)}
+        />
+      </div>
+
           </div>
         </div>
       )}

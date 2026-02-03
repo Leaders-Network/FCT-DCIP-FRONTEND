@@ -1,3 +1,4 @@
+import ChatWidget from "@/components/ChatWidget"
 import UserLayout from "./_components/UserLayout"
 
 export default function DashboardLayout({
@@ -5,5 +6,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <UserLayout>{children}</UserLayout>
+  return <UserLayout>
+    {children}
+    <ChatWidget />
+  </UserLayout>
 }

@@ -20,6 +20,7 @@ import {
   Calendar,
   ArrowRight
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface PolicyRequest {
   _id: string;
@@ -156,14 +157,14 @@ const EnforcementPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert(`✅ Webhook test successful!\n\nPolicy ${policyId} status updated:\n${data.data.oldStatus} → ${data.data.newStatus}`);
+        toast.success(`✅ Webhook test successful!\n\nPolicy ${policyId} status updated:\n${data.data.oldStatus} → ${data.data.newStatus}`);
         fetchPolicies();
       } else {
-        alert(`❌ Webhook test failed:\n${data.message}`);
+        toast.error(`❌ Webhook test failed:\n${data.message}`);
       }
     } catch (error) {
       console.error('Webhook test failed:', error);
-      alert('❌ Webhook test failed: Network error');
+      toast.error('❌ Webhook test failed: Network error');
     } finally {
       setLoading(false);
     }

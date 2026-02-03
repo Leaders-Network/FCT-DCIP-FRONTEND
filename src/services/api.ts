@@ -380,18 +380,38 @@ export const getSurveyorDualAssignments = async (filters?: {
   }
 };
 
-export const getSurveyorAssignments = async (status?: string, page = 1, limit = 10) => {
+export const getSurveyorAssignments = async (filters?: {
+  status?: string;
+  priority?: string;
+  page?: number;
+  limit?: number;
+}) => {
   try {
+    console.log('🔍 getSurveyorAssignments called with filters:', filters);
+
     const params = new URLSearchParams();
-    if (status && status !== 'all') params.append('status', status);
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    if (filters) {
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters.priority && filters.priority !== 'all') params.append('priority', filters.priority);
+      params.append('page', (filters.page || 1).toString());
+      params.append('limit', (filters.limit || 10).toString());
+    } else {
+      params.append('page', '1');
+      params.append('limit', '10');
+    }
 
     const url = `/surveyor/assignments?${params.toString()}`;
+    console.log('📡 Making API request to:', url);
+    console.log('🔑 Current path for token detection:', window.location.pathname);
+
     const response = await api.get(url);
+    console.log('✅ API response received:', response.data);
+
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyor assignments", error);
+    console.error("❌ Failed to fetch surveyor assignments", error);
+    console.error("Error response:", error.response?.data);
+    console.error("Error status:", error.response?.status);
     throw error;
   }
 };
@@ -1115,6 +1135,12 @@ export const adminApi = {
     return response.data;
   },
 
+  // Create a generic employee (non-surveyor) via admin endpoint
+  createEmployee: async (employeeData: EmployeeRegistrationData) => {
+    const response = await api.post('/admin/employees', employeeData);
+    return response.data;
+  },
+
   deleteAdministrator: async (adminId: string) => {
     const response = await api.delete(`/admin/administrators/${adminId}`);
     return response.data;
@@ -1146,6 +1172,12 @@ export const adminApi = {
 
   createSurveyor: async (surveyorData: Partial<Surveyor>) => {
     const response = await api.post('/admin/surveyor', surveyorData);
+    return response.data;
+  },
+
+  // Register a platform user (admin-initiated)
+  registerUser: async (userData: { fullname: string; email: string; phonenumber?: string; password: string; confirmPassword: string }) => {
+    const response = await api.post('/auth/register', userData);
     return response.data;
   },
 
@@ -1378,6 +1410,41 @@ export const adminApi = {
     const response = await api.delete<T>(url, config);
     return response.data;
   },
+
+  // Generic HTTP methods for adminApi
+  get: async <T = unknown>(endpoint: string, config?: { params?: Record<string, unknown> }) => {
+    const queryParams = new URLSearchParams();
+    if (config?.params) {
+      Object.entries(config.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const url = `${endpoint}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(url);
+    return response.data as T;
+  },
+
+  post: async <T = unknown>(endpoint: string, data?: unknown) => {
+    const response = await api.post(endpoint, data);
+    return response.data as T;
+  },
+
+  patch: async <T = unknown>(endpoint: string, data?: unknown) => {
+    const response = await api.patch(endpoint, data);
+    return response.data as T;
+  },
+
+  put: async <T = unknown>(endpoint: string, data?: unknown) => {
+    const response = await api.put(endpoint, data);
+    return response.data as T;
+  },
+
+  delete: async <T = unknown>(endpoint: string) => {
+    const response = await api.delete(endpoint);
+    return response.data as T;
+  }
 
 };
 

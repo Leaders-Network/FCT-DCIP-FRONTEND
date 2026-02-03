@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LogOut, Menu, User, Home, Shield, Settings, X, MessageSquare, Bell } from "lucide-react"
+import { LogOut, Menu, User, Home, Shield, Settings, X, MessageSquare, Bell, FileText } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { NotificationProvider } from "@/context/NotificationContext"
 import NotificationBell from "@/components/shared/NotificationBell"
@@ -11,6 +11,9 @@ import GlobalSearch from "@/components/shared/GlobalSearch"
 import { useAuth } from "@/context/useAuth"
 import { getCookie } from "@/utils/cookies"
 import { clearAuthTokens } from "@/utils/auth"
+import Swal from "sweetalert2";
+import { useRouter } from 'next/navigation';
+
 
 interface UserLayoutProps {
   children: React.ReactNode
@@ -20,6 +23,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
+  const router = useRouter();
 
   // Handle responsive sidebar
   useEffect(() => {
@@ -75,10 +79,27 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const onLogout = () => {
+    // Handle logout
+  const onLogout = async () => {
+    const result = await Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      background: isDarkMode ? '#111827' : '#ffffff',
+      color: isDarkMode ? '#ffffff' : '#111827',
+  });
+
+  if (result.isConfirmed) {
     clearAuthTokens();
-    logout();
-  };
+    router.push('/login');
+  }
+};
+  const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   // Navigation items for user dashboard
   const navItems = [
@@ -114,6 +135,11 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
       name: "My Inquiries",
       path: "/dashboard/inquiries",
       icon: <MessageSquare className="w-6 h-6" />,
+    },
+    {
+      name: "Claims",
+      path: "/dashboard/claims",
+      icon: <FileText className="w-6 h-6" />,
     },
     {
       name: "Notifications",

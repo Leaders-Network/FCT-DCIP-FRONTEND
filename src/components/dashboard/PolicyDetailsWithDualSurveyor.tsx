@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import DualSurveyorProgress from './DualSurveyorProgress';
 import SurveyorContactsDisplay from './SurveyorContactsDisplay';
 import { getCookie } from '@/utils/cookies';
+import { toast } from "sonner";
 import {
     ArrowLeft,
     FileText,
@@ -704,27 +705,27 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                                                             if (response.success && response.data) {
                                                                 if (response.data.downloadUrl) {
                                                                     window.open(response.data.downloadUrl, '_blank');
-                                                                    alert('AMMC report opened in new tab.');
+                                                                    toast.success('AMMC report opened in new tab.');
                                                                 } else if (response.data.documents && response.data.documents.length > 0) {
                                                                     window.open(response.data.documents[0].cloudinaryUrl, '_blank');
-                                                                    alert('AMMC report opened in new tab.');
+                                                                    toast.success('AMMC report opened in new tab.');
                                                                 } else {
-                                                                    alert('No AMMC report document available');
+                                                                    toast.error('No AMMC report document available');
                                                                 }
                                                             } else {
-                                                                alert('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
+                                                                toast.error('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
                                                             }
                                                         } else {
-                                                            alert('AMMC report not yet available');
+                                                            toast.error('AMMC report not yet available');
                                                         }
                                                     }
                                                 } else {
-                                                    alert('Report not yet available');
+                                                    toast.error('Report not yet available');
                                                 }
                                             }
                                         } catch (error) {
                                             console.error('Download error:', error);
-                                            alert('Failed to download AMMC report');
+                                            toast.error('Failed to download AMMC report');
                                         }
                                     }}
                                     className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -777,27 +778,27 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                                                             if (response.success && response.data) {
                                                                 if (response.data.downloadUrl) {
                                                                     window.open(response.data.downloadUrl, '_blank');
-                                                                    alert('NIA report opened in new tab.');
+                                                                    toast.success('NIA report opened in new tab.');
                                                                 } else if (response.data.documents && response.data.documents.length > 0) {
                                                                     window.open(response.data.documents[0].cloudinaryUrl, '_blank');
-                                                                    alert('NIA report opened in new tab.');
+                                                                    toast.success('NIA report opened in new tab.');
                                                                 } else {
-                                                                    alert('No NIA report document available');
+                                                                    toast.error('No NIA report document available');
                                                                 }
                                                             } else {
-                                                                alert('Failed to download NIA report: ' + (response.message || 'Unknown error'));
+                                                                toast.error('Failed to download NIA report: ' + (response.message || 'Unknown error'));
                                                             }
                                                         } else {
-                                                            alert('NIA report not yet available');
+                                                            toast.error('NIA report not yet available');
                                                         }
                                                     }
                                                 } else {
-                                                    alert('Report not yet available');
+                                                    toast.error('Report not yet available');
                                                 }
                                             }
                                         } catch (error) {
                                             console.error('Download error:', error);
-                                            alert('Failed to download NIA report');
+                                            toast.error('Failed to download NIA report');
                                         }
                                     }}
                                     className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -913,17 +914,17 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                                                         document.body.removeChild(link);
                                                         URL.revokeObjectURL(url);
 
-                                                        alert('Merged report downloaded successfully. Open the HTML file and print to PDF from your browser.');
+                                                        toast.success('Merged report downloaded successfully. Open the HTML file and print to PDF from your browser.');
                                                     } else {
-                                                        alert(response.message || 'Report not yet available for download');
+                                                        toast.error(response.message || 'Report not yet available for download');
                                                     }
                                                 } else {
-                                                    alert('Merged report is still being processed');
+                                                    toast.error('Merged report is still being processed');
                                                 }
                                             }
                                         } catch (error) {
                                             console.error('Download error:', error);
-                                            alert('Failed to download merged report');
+                                            toast.error('Failed to download merged report');
                                         }
                                     }}
                                     className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -945,7 +946,7 @@ const PolicyDetailsWithDualSurveyor: React.FC<PolicyDetailsWithDualSurveyorProps
                 onSubmit={(referenceId) => {
                     console.log('Inquiry submitted:', referenceId);
                     setShowConflictModal(false);
-                    alert(`Your inquiry has been submitted successfully!\nReference ID: ${referenceId}\n\nYou can track your inquiry in the "My Inquiries" section.`);
+                    toast.success(`Your inquiry has been submitted successfully!\nReference ID: ${referenceId}\n\nYou can track your inquiry in the "My Inquiries" section.`);
                 }}
             />
         </div>

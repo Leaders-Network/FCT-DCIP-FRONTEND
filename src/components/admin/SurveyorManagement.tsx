@@ -13,6 +13,7 @@ import {
   Edit
 } from "lucide-react";
 import { Surveyor as BaseSurveyor, Assignment, PolicyRequest } from "@/types/api.types";
+import Swal from "sweetalert2"
 
 type UserIdType = {
   firstname?: string;
@@ -133,21 +134,22 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           search: searchTerm || undefined
         };
 
-        console.log("Fetching surveyors with filters:", filters);
+        console.log("🔍 Fetching surveyors with filters:", filters);
 
         const response = await adminApi.getSurveyors(filters);
 
-        console.log("Surveyor API response:", response);
-        console.log("Surveyors count:", response?.data?.length || 0);
+        console.log("📊 Surveyor API response:", response);
+        console.log("👥 Surveyors count:", response?.data?.length || 0);
 
         if (response?.success && response?.data) {
+          console.log("✅ Setting surveyors data:", response.data);
           setSurveyors(response.data);
         } else {
-          console.warn("No surveyors data in response");
+          console.warn("⚠️ No surveyors data in response");
           setSurveyors([]);
         }
       } catch (error) {
-        console.error("Failed to fetch surveyors:", error);
+        console.error("❌ Failed to fetch surveyors:", error);
         setSurveyors([]);
       } finally {
         setFetching(false);
@@ -171,45 +173,64 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     try {
       const { adminApi } = await import("@/services/api");
 
-      // Fetch comprehensive analytics for the surveyor
-      const surveyorAssignments = assignments.filter(a => a.surveyorId === surveyor._id);
-      const completedAssignments = surveyorAssignments.filter(a => a.status === 'completed');
-      const inProgressAssignments = surveyorAssignments.filter(a => a.status === 'in_progress' || a.status === 'assigned');
-      const rejectedAssignments = surveyorAssignments.filter(a => a.status === 'rejected');
+      // Try to fetch authoritative performance metrics from backend
+      const resp = await adminApi.getSurveyorPerformance(surveyor._id);
 
-      // Calculate performance metrics
-      const totalSurveys = surveyorAssignments.length;
-      const completedSurveys = completedAssignments.length;
-      const currentAssignments = inProgressAssignments.length;
-      const successRate = totalSurveys > 0 ? ((completedSurveys / totalSurveys) * 100).toFixed(1) : '0';
+      // Backend may return metrics under different shapes; normalize safely
+      const backendMetrics = resp?.data || resp?.performance || resp || null;
 
-      // Calculate average completion time (mock data for now)
-      const avgCompletionTime = completedSurveys > 0 ? Math.floor(Math.random() * 7) + 1 : 0;
+      if (backendMetrics) {
+        const performance = {
+          totalSurveys: (backendMetrics.totalSurveys ?? backendMetrics.total_surveys ?? backendMetrics.total) || assignments.filter(a => a.surveyorId === surveyor._id).length,
+          completedSurveys: (backendMetrics.completedSurveys ?? backendMetrics.completed_surveys ?? backendMetrics.completed) || assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'completed').length,
+          currentAssignments: (backendMetrics.currentAssignments ?? backendMetrics.current_assignments ?? backendMetrics.current) || getCurrentAssignments(surveyor._id),
+          rejectedSurveys: (backendMetrics.rejectedSurveys ?? backendMetrics.rejected_surveys ?? backendMetrics.rejected) || assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'rejected').length,
+          successRate: backendMetrics.successRate ?? backendMetrics.success_rate ?? parseFloat((backendMetrics.success || 0).toString()) ?? 0,
+          avgCompletionTime: (backendMetrics.avgCompletionTime ?? backendMetrics.avg_completion_time ?? backendMetrics.avg) || 0,
+          recentActivity: (backendMetrics.recentActivity ?? backendMetrics.recent_activity ?? backendMetrics.recent) || 0,
+          rating: backendMetrics.rating ?? surveyor?.rating ?? 0,
+          joinDate: backendMetrics.joinDate ?? backendMetrics.join_date ?? (surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A'),
+          lastActive: backendMetrics.lastActive ?? backendMetrics.last_active ?? 'N/A'
+        };
 
-      // Recent activity (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentAssignments = surveyorAssignments.filter(a =>
-        new Date(a.createdAt) >= thirtyDaysAgo
-      ).length;
+        setPerformanceData(performance);
+        setShowDetailsModal(true);
+      } else {
+        // If backend doesn't provide metrics, fall back to client-side computation
+        const surveyorAssignments = assignments.filter(a => a.surveyorId === surveyor._id);
+        const completedAssignments = surveyorAssignments.filter(a => a.status === 'completed');
+        const inProgressAssignments = surveyorAssignments.filter(a => a.status === 'in_progress' || a.status === 'assigned');
+        const rejectedAssignments = surveyorAssignments.filter(a => a.status === 'rejected');
 
-      const performance = {
-        totalSurveys,
-        completedSurveys,
-        currentAssignments,
-        rejectedSurveys: rejectedAssignments.length,
-        successRate: parseFloat(successRate),
-        avgCompletionTime,
-        recentActivity: recentAssignments,
-        rating: surveyor?.rating || 0,
-        joinDate: surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A',
-        lastActive: completedAssignments.length > 0
-          ? new Date(Math.max(...completedAssignments.map(a => new Date(a.updatedAt).getTime()))).toLocaleDateString()
-          : 'N/A'
-      };
+        const totalSurveys = surveyorAssignments.length;
+        const completedSurveys = completedAssignments.length;
+        const currentAssignments = inProgressAssignments.length;
+        const successRate = totalSurveys > 0 ? ((completedSurveys / totalSurveys) * 100).toFixed(1) : '0';
 
-      setPerformanceData(performance);
-      setShowDetailsModal(true);
+        const avgCompletionTime = completedSurveys > 0 ? Math.floor(Math.random() * 7) + 1 : 0;
+
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentAssignments = surveyorAssignments.filter(a => new Date(a.createdAt) >= thirtyDaysAgo).length;
+
+        const performance = {
+          totalSurveys,
+          completedSurveys,
+          currentAssignments,
+          rejectedSurveys: rejectedAssignments.length,
+          successRate: parseFloat(successRate),
+          avgCompletionTime,
+          recentActivity: recentAssignments,
+          rating: surveyor?.rating || 0,
+          joinDate: surveyor?.createdAt ? new Date(surveyor.createdAt).toLocaleDateString() : 'N/A',
+          lastActive: completedAssignments.length > 0
+            ? new Date(Math.max(...completedAssignments.map(a => new Date(a.updatedAt).getTime()))).toLocaleDateString()
+            : 'N/A'
+        };
+
+        setPerformanceData(performance);
+        setShowDetailsModal(true);
+      }
     } catch (error) {
       console.error('Failed to fetch surveyor analytics:', error);
       // Fallback to basic metrics
@@ -230,8 +251,92 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }
   };
 
-  // Backend now handles all filtering, so we just use the surveyors directly
-  const filteredSurveyors = surveyors || [];
+  // Get unique specializations from surveyors for dynamic filter options
+  const availableSpecializations = React.useMemo(() => {
+    const specs = new Set<string>();
+    surveyors.forEach(surveyor => {
+      const specializations = surveyor.specializations || surveyor.profile?.specialization || [];
+      if (Array.isArray(specializations)) {
+        specializations.forEach(spec => {
+          if (spec && typeof spec === 'string') {
+            specs.add(spec.toLowerCase());
+          }
+        });
+      }
+    });
+    return Array.from(specs).sort();
+  }, [surveyors]);
+
+  // Get unique statuses from surveyors for dynamic filter options
+  const availableStatuses = React.useMemo(() => {
+    const statuses = new Set<string>();
+    surveyors.forEach(surveyor => {
+      const status = surveyor.status || surveyor.employeeStatus?.status || '';
+      if (status) {
+        statuses.add(status.toLowerCase());
+      }
+    });
+    return Array.from(statuses).sort();
+  }, [surveyors]);
+  const filteredSurveyors = React.useMemo(() => {
+    let filtered = surveyors || [];
+
+    console.log("🔄 Client-side filtering - Initial count:", filtered.length);
+    console.log("🔄 Filters applied:", { searchTerm, statusFilter, specializationFilter });
+
+    // Apply search filter if backend didn't handle it properly
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(surveyor => {
+        const firstName = (surveyor.userId?.firstname || surveyor.firstname || '').toLowerCase();
+        const lastName = (surveyor.userId?.lastname || surveyor.lastname || '').toLowerCase();
+        const email = (surveyor.userId?.email || surveyor.email || '').toLowerCase();
+        const phone = (surveyor.userId?.phonenumber || surveyor.phonenumber || '').toLowerCase();
+        const license = (surveyor.licenseNumber || '').toLowerCase();
+
+        return firstName.includes(searchLower) ||
+          lastName.includes(searchLower) ||
+          email.includes(searchLower) ||
+          phone.includes(searchLower) ||
+          license.includes(searchLower);
+      });
+    }
+
+    // Apply status filter if backend didn't handle it properly
+    if (statusFilter && statusFilter !== "all") {
+      filtered = filtered.filter(surveyor => {
+        const surveyorStatus = (surveyor.status || surveyor.employeeStatus?.status || '').toLowerCase();
+        const filterStatus = statusFilter.toLowerCase();
+
+        // Handle different status formats
+        if (filterStatus === 'active') {
+          return surveyorStatus === 'active' || surveyorStatus === 'available';
+        } else if (filterStatus === 'inactive') {
+          return surveyorStatus === 'inactive' || surveyorStatus === 'unavailable';
+        } else if (filterStatus === 'on leave') {
+          return surveyorStatus === 'on leave' || surveyorStatus === 'busy';
+        }
+
+        return surveyorStatus === filterStatus;
+      });
+    }
+
+    // Apply specialization filter if backend didn't handle it properly
+    if (specializationFilter && specializationFilter !== "all") {
+      filtered = filtered.filter(surveyor => {
+        const specializations = surveyor.specializations || surveyor.profile?.specialization || [];
+        if (Array.isArray(specializations)) {
+          return specializations.some(spec =>
+            spec.toLowerCase().includes(specializationFilter.toLowerCase())
+          );
+        }
+        return false;
+      });
+    }
+
+    console.log("✅ Client-side filtering - Final count:", filtered.length);
+    return filtered;
+  }, [surveyors, searchTerm, statusFilter, specializationFilter]);
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -248,6 +353,24 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         assignment?.surveyorId === surveyorId &&
         assignment?.status === "in_progress"
     ).length;
+  };
+
+  const getFullAddress = (surveyor: Surveyor | null) => {
+    if (!surveyor) return 'N/A';
+    // Prefer structured profile location when available
+    const profileLoc = surveyor.profile?.location;
+    const parts: string[] = [];
+    if (surveyor.address) parts.push(surveyor.address);
+    if (profileLoc?.district) parts.push(profileLoc.district);
+    if (profileLoc?.lga) parts.push(profileLoc.lga);
+    if (profileLoc?.city) parts.push(profileLoc.city);
+    if (profileLoc?.state) parts.push(profileLoc.state);
+
+    if (parts.length > 0) return parts.join(', ');
+
+    // Fallback to individual fields
+    const fallbackParts = [surveyor.district, surveyor.lga, surveyor.city, surveyor.state].filter(Boolean) as string[];
+    return fallbackParts.length ? fallbackParts.join(', ') : 'N/A';
   };
 
   const refetchSurveyors = async () => {
@@ -326,16 +449,43 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     }
   };
 
-  const handleDeleteSurveyor = async (surveyorId: string) => {
-    if (window.confirm('Are you sure you want to delete this surveyor?')) {
-      try {
-        await onDeleteSurveyor(surveyorId);
-        refetchSurveyors();
-      } catch (error) {
-        console.error('Failed to delete surveyor:', error);
+
+    const handleDeleteSurveyor = async (surveyorId: string) => {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel',
+      });
+
+      if (result.isConfirmed) {
+        try {
+          await onDeleteSurveyor(surveyorId);
+          refetchSurveyors();
+
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Surveyor has been deleted successfully.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } catch (error) {
+          console.error('Failed to delete surveyor:', error);
+
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to delete surveyor. Please try again.',
+            icon: 'error',
+          });
+        }
       }
-    }
-  };
+    };
+
 
   const openEditModal = (surveyor: Surveyor) => {
     setSelectedSurveyor(surveyor);
@@ -407,34 +557,57 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search surveyors..."
+              placeholder="Search by name, email, phone, or license..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2"
+              className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={fetching}
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
+            className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={fetching}
           >
             <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="on leave">On Leave</option>
-            <option value="inactive">Inactive</option>
+            {availableStatuses.map(status => (
+              <option key={status} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </option>
+            ))}
+            {/* Fallback options if no dynamic statuses found */}
+            {availableStatuses.length === 0 && (
+              <>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </>
+            )}
           </select>
 
           <select
             value={specializationFilter}
             onChange={(e) => setSpecializationFilter(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
+            className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={fetching}
           >
             <option value="all">All Specializations</option>
-            <option value="residential">Residential</option>
-            <option value="commercial">Commercial</option>
-            <option value="industrial">Industrial</option>
-            <option value="agricultural">Agricultural</option>
+            {availableSpecializations.map(spec => (
+              <option key={spec} value={spec}>
+                {spec.charAt(0).toUpperCase() + spec.slice(1)}
+              </option>
+            ))}
+            {/* Fallback options if no dynamic specializations found */}
+            {availableSpecializations.length === 0 && (
+              <>
+                <option value="residential">Residential</option>
+                <option value="commercial">Commercial</option>
+                <option value="industrial">Industrial</option>
+                <option value="agricultural">Agricultural</option>
+              </>
+            )}
           </select>
 
           <button
@@ -443,10 +616,19 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               setStatusFilter("all");
               setSpecializationFilter("all");
             }}
-            className="border border-gray-300 rounded-md px-3 py-2 hover:bg-gray-50"
+            className="border border-gray-300 rounded-md px-3 py-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={fetching}
           >
             Clear Filters
           </button>
+        </div>
+
+        {/* Results counter */}
+        <div className="mt-3 text-sm text-gray-600">
+          Showing {filteredSurveyors.length} of {surveyors.length} surveyors
+          {(searchTerm || statusFilter !== 'all' || specializationFilter !== 'all') && (
+            <span className="text-blue-600 ml-2">• Filters applied</span>
+          )}
         </div>
       </div>
 
@@ -458,6 +640,31 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           <span className="ml-3 text-gray-600">Loading surveyors...</span>
         </div>
       )}
+
+      {!fetching && filteredSurveyors.length === 0 && (
+        <div className="text-center py-12">
+          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No surveyors found</h3>
+          <p className="text-gray-600 mb-4">
+            {searchTerm || statusFilter !== 'all' || specializationFilter !== 'all'
+              ? 'Try adjusting your search criteria or filters'
+              : 'No surveyors have been added yet'}
+          </p>
+          {(searchTerm || statusFilter !== 'all' || specializationFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("all");
+                setSpecializationFilter("all");
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
+
       <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${fetching ? 'opacity-50 pointer-events-none' : ''}`}>
         {filteredSurveyors.map((surveyor) => (
           <div key={surveyor._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -1026,7 +1233,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                     <p><span className="text-gray-600">Email:</span> {selectedSurveyor.userId?.email || 'N/A'}</p>
                     <p><span className="text-gray-600">Phone:</span> {selectedSurveyor.userId?.phonenumber || 'N/A'}</p>
                     <p><span className="text-gray-600">Emergency Contact:</span> {selectedSurveyor?.emergencyContact || 'N/A'}</p>
-                    <p><span className="text-gray-600">Address:</span> {selectedSurveyor?.address || 'N/A'}</p>
+                    <p><span className="text-gray-600">Address:</span> {getFullAddress(selectedSurveyor)}</p>
                   </div>
                 </div>
                 <div>
