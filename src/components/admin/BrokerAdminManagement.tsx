@@ -203,74 +203,65 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         }
     };
 
-    const handleReactivateBrokerAdmin = async (id: string) => {
-        if (!confirm('Are you sure you want to reactivate this broker admin? This will restore their access.')) {
-            return;
-        }
+const handleDeleteBrokerAdmin = async (id: string, permanent = false) => {
+    const action = permanent ? 'permanently delete' : 'deactivate';
+    const warning = permanent
+        ? 'This will permanently delete the broker admin and all associated data. This action cannot be undone!'
+        : 'This will disable their access but preserve their data for audit purposes.';
 
-        try {
-            const { adminApi } = await import("@/services/api");
+    if (!confirm(`Are you sure you want to ${action} this broker admin? ${warning}`)) {
+        return;
+    }
 
-            const response = await adminApi.patch<{ success: boolean }>(`/broker-admin/management/${id}/reactivate`);
+    try {
+        const { adminApi } = await import("@/services/api");
 
-            const data = (response as unknown as { data?: { success?: boolean } }).data;
+        const endpoint = permanent
+            ? `/broker-admin/management/${id}?permanent=true`
+            : `/broker-admin/management/${id}`;
 
-            if (data?.success) {
-                alert('Broker admin reactivated successfully!');
-                fetchBrokerAdmins();
-                fetchStats();
-            }
-        } catch (error) {
-            console.error("Failed to reactivate broker admin:", error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to reactivate broker admin';
-            alert(errorMessage);
-        }
-        const handleDeleteBrokerAdmin = async (id: string, permanent = false) => {
-            const action = permanent ? 'permanently delete' : 'deactivate';
-            const warning = permanent
-                ? 'This will permanently delete the broker admin and all associated data. This action cannot be undone!'
-                : 'This will disable their access but preserve their data for audit purposes.';
+        const response = await adminApi.delete<{ success: boolean }>(endpoint);
 
-            if (!confirm(`Are you sure you want to ${action} this broker admin? ${warning}`)) {
-                return;
-            }
+        const data = (response as unknown as { data?: { success?: boolean } }).data;
 
-            try {
-                const { adminApi } = await import("@/services/api");
-
-                const endpoint = permanent
-                    ? `/broker-admin/management/${id}?permanent=true`
-                    : `/broker-admin/management/${id}`;
-
-                const response = await adminApi.delete<{ success: boolean }>(endpoint);
-
-                const data = (response as unknown as { data?: { success?: boolean } }).data;
-
-                if (data?.success) {
-                    const message = permanent
-                        ? 'Broker admin permanently deleted!'
-                        : 'Broker admin deactivated successfully!';
-                    alert(message);
-                    fetchBrokerAdmins();
-                    fetchStats();
-                }
-            } catch (error) {
-                console.error(`Failed to ${action} broker admin:`, error);
-                const errorMessage = error instanceof Error ? error.message : `Failed to ${action} broker admin`;
-                alert(errorMessage);
-            }
-        };
-                ?'Broker admin permanently deleted!'
+        if (data?.success) {
+            const message = permanent
+                ? 'Broker admin permanently deleted!'
                 : 'Broker admin deactivated successfully!';
-alert(message);
-fetchBrokerAdmins();
-fetchStats();
+            alert(message);
+            fetchBrokerAdmins();
+            fetchStats();
+        } 
+
+    } catch (error) {
+        console.error(`Failed to ${action} broker admin:`, error);
+        const errorMessage = error instanceof Error ? error.message : `Failed to ${action} broker admin`;
+        alert(errorMessage);
+    }
+};
+
+const handleReactivateBrokerAdmin = async (id: string) => {
+    if (!confirm('Are you sure you want to reactivate this broker admin? This will restore their access.')) {
+        return;
+    }
+
+    try {
+        const { adminApi } = await import("@/services/api");
+
+        const response = await adminApi.patch<{ success: boolean }>(`/broker-admin/management/${id}/reactivate`);
+
+        const data = (response as unknown as { data?: { success?: boolean } }).data;
+
+        if (data?.success) {
+            alert('Broker admin reactivated successfully!');
+            fetchBrokerAdmins();
+            fetchStats();
         }
     } catch (error) {
-    console.error(`Failed to ${action} broker admin:`, error);
-    const errorMessage = error instanceof Error ? error.message : `Failed to ${action} broker admin`;
-    alert(errorMessage);
-}
+        console.error("Failed to reactivate broker admin:", error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to reactivate broker admin';
+        alert(errorMessage);
+    }
 };
 
 const openEditModal = (brokerAdmin: BrokerAdminWithUser) => {
