@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useCreateBuilderLiabilityPolicy } from '@/hooks/useBuilderLiabilityPolicy';
 import {
     BuilderLiabilityPolicyFormData,
+    BuilderLiabilityPolicyData,
     CategoryOfWorkmen,
     Professional
 } from '@/types/builderLiabilityPolicy.types';
@@ -163,8 +164,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         }
 
         // Convert form data to API format
-        const policyData = {
-            status: 'submitted', // Set status to submitted for auto-assignment
+        const policyData: BuilderLiabilityPolicyData = {
+            status: 'submitted',
             builder: {
                 customerEmail: formData.builderEmail,
                 nameOfBuilder: formData.builderName,
@@ -236,7 +237,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="w-full max-w-4xl mx-auto p-4 sm:p-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Builder Liability Policy Application</CardTitle>
@@ -268,14 +269,28 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
                     <form onSubmit={handleSubmit}>
                         <Tabs value={activeTab} onValueChange={setActiveTab}>
-                            <TabsList className="grid w-full grid-cols-6">
-                                <TabsTrigger value="builder">Builder</TabsTrigger>
-                                <TabsTrigger value="organization">Organization</TabsTrigger>
-                                <TabsTrigger value="membership">Membership</TabsTrigger>
-                                <TabsTrigger value="workforce">Workforce</TabsTrigger>
-                                <TabsTrigger value="compliance">Compliance</TabsTrigger>
-                                <TabsTrigger value="project">Project</TabsTrigger>
-                            </TabsList>
+                            <div className="w-full overflow-x-auto">
+                                <TabsList className="flex md:grid md:grid-cols-6 w-max md:w-full min-w-max md:min-w-0">
+                                    <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
+                                        Builder
+                                    </TabsTrigger>
+                                    <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
+                                        Organization
+                                    </TabsTrigger>
+                                    <TabsTrigger value="membership" className="whitespace-nowrap text-xs sm:text-sm">
+                                        Membership
+                                    </TabsTrigger>
+                                    <TabsTrigger value="workforce" className="whitespace-nowrap text-xs sm:text-sm">
+                                        Workforce
+                                    </TabsTrigger>
+                                    <TabsTrigger value="compliance" className="whitespace-nowrap text-xs sm:text-sm">
+                                        Compliance
+                                    </TabsTrigger>
+                                    <TabsTrigger value="project" className="whitespace-nowrap text-xs sm:text-sm">
+                                        Project
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
 
                             <TabsContent value="builder" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

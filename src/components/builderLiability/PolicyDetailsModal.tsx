@@ -116,14 +116,28 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                 </DialogHeader>
 
                 <Tabs defaultValue="builder" className="w-full">
-                    <TabsList className="grid w-full grid-cols-6">
-                        <TabsTrigger value="builder">Builder</TabsTrigger>
-                        <TabsTrigger value="organization">Organization</TabsTrigger>
-                        <TabsTrigger value="project">Project</TabsTrigger>
-                        <TabsTrigger value="workforce">Workforce</TabsTrigger>
-                        <TabsTrigger value="compliance">Compliance</TabsTrigger>
-                        <TabsTrigger value="timeline">Timeline</TabsTrigger>
-                    </TabsList>
+                    <div className="w-full overflow-x-auto">
+                        <TabsList className="flex md:grid md:grid-cols-6 w-max md:w-full min-w-max md:min-w-0">
+                            <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
+                                Builder
+                            </TabsTrigger>
+                            <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
+                                Organization
+                            </TabsTrigger>
+                            <TabsTrigger value="project" className="whitespace-nowrap text-xs sm:text-sm">
+                                Project
+                            </TabsTrigger>
+                            <TabsTrigger value="workforce" className="whitespace-nowrap text-xs sm:text-sm">
+                                Workforce
+                            </TabsTrigger>
+                            <TabsTrigger value="compliance" className="whitespace-nowrap text-xs sm:text-sm">
+                                Compliance
+                            </TabsTrigger>
+                            <TabsTrigger value="timeline" className="whitespace-nowrap text-xs sm:text-sm">
+                                Timeline
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
 
                     {/* Builder Information */}
                     <TabsContent value="builder" className="space-y-4">

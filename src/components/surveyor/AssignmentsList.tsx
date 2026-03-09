@@ -60,12 +60,13 @@ const AssignmentsList = () => {
                 console.error('❌ API response not successful:', response);
                 setAssignments([]);
             }
-        } catch (error) {
+        } catch (error: unknown) {
+            const err = error as { message?: string; response?: { status?: number; data?: unknown } };
             console.error("❌ Failed to fetch assignments:", error);
             console.error("Error details:", {
-                message: error.message,
-                status: error.response?.status,
-                data: error.response?.data
+                message: err.message,
+                status: err.response?.status,
+                data: err.response?.data
             });
             setAssignments([]);
         } finally {

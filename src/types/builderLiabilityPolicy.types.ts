@@ -4,6 +4,8 @@ export interface BuilderIdentity {
     customerEmail: string;
     nameOfBuilder: string;
     rcNumber: string;
+    lga?: string;
+    district?: string;
     identification: {
         identificationTypeId: number;
         identityNo: string | number;
@@ -71,6 +73,9 @@ export interface ProjectInfo {
     extraHazardous: boolean;
     totalEstimateSum: number;
     workDetails?: string;
+    address?: string;
+    lga?: string;
+    district?: string;
 }
 
 export interface MetaInfo {
@@ -149,6 +154,8 @@ export interface BuilderLiabilityPolicyData {
 export interface BuilderLiabilityPolicy extends BuilderLiabilityPolicyData {
     _id: string;
     policyNumber: string;
+    status: BuilderLiabilityPolicyStatus;
+    rejectionReason?: string;
     assignedSurveyors: string[];
     surveyDocument?: DocumentInfo;
     surveyNotes: string;

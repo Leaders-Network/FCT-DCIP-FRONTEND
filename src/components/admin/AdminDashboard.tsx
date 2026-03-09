@@ -455,33 +455,53 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="p-6">
               <div className="space-y-6">
-                {/* Recent Policies */}
+                {/* Recent Policies (Builder Liability) */}
                 {dashboardData?.recentActivity.policies && dashboardData.recentActivity.policies.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
                       <FileText className="w-4 h-4 mr-2 text-blue-500" />
-                      Recent Policy Requests
+                      Recent Policies
                     </h4>
                     <div className="space-y-2">
-                      {dashboardData.recentActivity.policies.slice(0, 3).map((policy) => (
-                        <div key={policy._id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900">
-                              New policy request from <span className="font-medium">{policy.contactDetails.fullName}</span>
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {policy.propertyDetails?.propertyType} • {formatTimeAgo(policy.createdAt)}
-                            </p>
+                      {dashboardData.recentActivity.policies.slice(0, 3).map((policy: any) => {
+                        const label =
+                          policy.builder?.nameOfBuilder ||
+                          policy.builder?.customerEmail ||
+                          policy.policyNumber ||
+                          'Builder Liability Policy';
+
+                        const meta =
+                          policy.project?.coverTypeIdxDetails ||
+                          'Builder Liability';
+
+                        const createdAt = policy.createdAt || policy.created_at || new Date().toISOString();
+
+                        return (
+                          <div key={policy._id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-900">
+                                New policy from <span className="font-medium truncate inline-block max-w-xs align-bottom">{label}</span>
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {meta} • {formatTimeAgo(createdAt)}
+                              </p>
+                            </div>
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                policy.status === 'submitted'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : policy.status === 'assigned'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : policy.status === 'approved' || policy.status === 'completed'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {policy.status}
+                            </span>
                           </div>
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${policy.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            policy.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                              policy.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                'bg-gray-100 text-gray-800'
-                            }`}>
-                            {policy.status}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

@@ -134,7 +134,7 @@ const EnhancedSurveyorDashboard = () => {
 
                 const [dashboardResponse, assignmentsResponse, dualAssignmentsResponse] = await Promise.allSettled([
                     getSurveyorDashboard(),
-                    getSurveyorAssignments("all", 1, 10),
+                    getSurveyorAssignments({ status: "all", page: 1, limit: 10 }),
                     getSurveyorDualAssignments({ status: "all", page: 1, limit: 10 })
                 ]);
 

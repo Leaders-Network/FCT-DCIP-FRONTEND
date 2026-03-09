@@ -190,7 +190,7 @@ export default function AdministratorsPage() {
 
       // Fetch users
       try {
-        const userResponse = await adminApi.get('/auth/users')
+        const userResponse = await adminApi.get<{ success: boolean; users: User[] }>('/auth/users')
         if (userResponse?.success && userResponse?.users) {
           setUsers(userResponse.users)
         } else {
@@ -224,15 +224,13 @@ export default function AdministratorsPage() {
         await adminApi.deleteEmployee(adminId)
         setEmployees(employees.filter(emp => emp._id !== adminId))
       } else if (activeTab === 'users') {
-        // For users, we need to use the auth delete endpoint
-        // Note: The current delete endpoint deletes the current user, not by ID
-        // We may need to create a new admin endpoint for deleting users by ID
-        console.warn('User deletion by admin not yet implemented - requires new backend endpoint')
-        toast.warning('User deletion by admin is not yet implemented. Please contact the user to delete their own account.')
-        return
+        // Admin-driven soft-delete of a platform user
+        await adminApi.deletePlatformUser(adminId)
+        setUsers(users.filter(user => user._id !== adminId))
       }
     } catch (error) {
       console.error("Failed to delete user:", error)
+      toast.error('Failed to delete user. Please try again.')
     }
   }
 
@@ -361,28 +359,30 @@ export default function AdministratorsPage() {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage administrators, employees, and users across the platform</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold truncate">User Management</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+            Manage administrators, employees, and users across the platform
+          </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
           <Button
             onClick={() => setShowAdminSidebar(true)}
-            className="bg-[#028835] text-white hover:bg-[#026a29] rounded-full"
+            className="flex-1 sm:flex-none bg-[#028835] text-white hover:bg-[#026a29] rounded-full whitespace-nowrap"
           >
             <PlusCircle className="mr-2 h-5 w-5" />
             Add User
           </Button>
-          <Button variant="outline" className="text-gray-700">
+          <Button variant="outline" className="flex-1 sm:flex-none text-gray-700 whitespace-nowrap">
             Export
           </Button>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
+      <div className="border-b border-gray-200 mb-6 overflow-x-auto">
+        <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max">
           {[
             { key: 'administrators', label: 'AMMC Administrators', count: administrators.length },
             { key: 'employees', label: 'Employees', count: employees.length },
@@ -409,12 +409,12 @@ export default function AdministratorsPage() {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-4">
+        <div className="p-4 border-b border-gray-100">
           <Input
             placeholder="Filter by name or email..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="max-w-sm"
+            className="w-full sm:max-w-sm"
           />
         </div>
         {loading ? (
@@ -423,13 +423,13 @@ export default function AdministratorsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead><Checkbox /></TableHead>
+                <TableHead className="w-10"><Checkbox /></TableHead>
                 <TableHead>Profile</TableHead>
-                <TableHead>Email Address</TableHead>
-                <TableHead>Phone Number</TableHead>
+                <TableHead className="hidden md:table-cell">Email Address</TableHead>
+                <TableHead className="hidden lg:table-cell">Phone Number</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Date of Reg.</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="hidden md:table-cell">Date of Reg.</TableHead>
+                <TableHead className="w-16 sm:w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -437,7 +437,7 @@ export default function AdministratorsPage() {
                 <TableRow key={item._id}>
                   <TableCell><Checkbox /></TableCell>
                   <TableCell>
-                    <div className="flex items-center">
+                    <div className="flex items-center min-w-0">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-[#028835] flex items-center justify-center text-white font-bold">
                           {(() => {
@@ -450,19 +450,19 @@ export default function AdministratorsPage() {
                           })()}
                         </div>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <div className="ml-4 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate max-w-[180px] sm:max-w-xs">
                           {'fullname' in item ? item.fullname : `${item.firstname} ${item.lastname}`}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs sm:text-sm text-gray-500 truncate max-w-[180px] sm:max-w-xs">
                           {'employeeRole' in item ? item.employeeRole?.role || 'N/A' :
                             'role' in item ? item.role || 'User' : 'N/A'}
                         </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{item.email}</TableCell>
-                  <TableCell>{item.phonenumber}</TableCell>
+                  <TableCell className="hidden md:table-cell max-w-[220px] truncate">{item.email}</TableCell>
+                  <TableCell className="hidden lg:table-cell whitespace-nowrap">{item.phonenumber}</TableCell>
                   <TableCell>
                     {activeTab === 'users' ? (
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${'isEmailVerified' in item && item.isEmailVerified
@@ -485,40 +485,86 @@ export default function AdministratorsPage() {
                       />
                     )}
                   </TableCell>
-                  <TableCell>{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
+                  <TableCell className="hidden md:table-cell whitespace-nowrap">
+                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
+                  </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditAdministrator(item)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the {activeTab.slice(0, -1)}.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteAdministrator(item._id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center gap-1">
+                      {/* Quick delete icon button so it's clearly visible */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
+                            title="Delete from platform"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete this account?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently remove this{' '}
+                              {activeTab === 'administrators'
+                                ? 'administrator'
+                                : activeTab === 'employees'
+                                ? 'employee'
+                                : 'platform user'}{' '}
+                              from the platform.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteAdministrator(item._id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      {/* Overflow menu for other actions (edit, delete) */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditAdministrator(item)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete from Platform
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently remove this{' '}
+                                  {activeTab === 'administrators'
+                                    ? 'administrator'
+                                    : activeTab === 'employees'
+                                    ? 'employee'
+                                    : 'platform user'}{' '}
+                                  from the platform.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteAdministrator(item._id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -380,13 +380,21 @@ export const getSurveyorDualAssignments = async (filters?: {
   }
 };
 
-export const getSurveyorAssignments = async (filters?: {
-  status?: string;
-  priority?: string;
-  page?: number;
-  limit?: number;
-}) => {
+export const getSurveyorAssignments = async (
+  filtersOrStatus?: {
+    status?: string;
+    priority?: string;
+    page?: number;
+    limit?: number;
+  } | string,
+  page = 1,
+  limit = 10
+) => {
   try {
+    const filters = typeof filtersOrStatus === 'string'
+      ? { status: filtersOrStatus, page, limit }
+      : filtersOrStatus;
+
     console.log('🔍 getSurveyorAssignments called with filters:', filters);
 
     const params = new URLSearchParams();
@@ -408,10 +416,11 @@ export const getSurveyorAssignments = async (filters?: {
     console.log('✅ API response received:', response.data);
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown; status?: number } };
     console.error("❌ Failed to fetch surveyor assignments", error);
-    console.error("Error response:", error.response?.data);
-    console.error("Error status:", error.response?.status);
+    console.error("Error response:", err.response?.data);
+    console.error("Error status:", err.response?.status);
     throw error;
   }
 };
@@ -1118,6 +1127,11 @@ export const adminApi = {
     return response.data;
   },
 
+  getAllEmployees: async () => {
+    const response = await api.get('/admin/employees');
+    return response.data;
+  },
+
 
 
   updateEmployeeStatus: async (employeeId: string, status: string) => {
@@ -1181,6 +1195,12 @@ export const adminApi = {
     return response.data;
   },
 
+  // Admin-only: soft-delete a platform user by ID
+  deletePlatformUser: async (userId: string) => {
+    const response = await api.delete(`/auth/users/${userId}`);
+    return response.data;
+  },
+
   updateSurveyor: async (surveyorId: string, surveyorData: Partial<Surveyor>) => {
     const response = await api.patch(`/admin/surveyor/${surveyorId}`, surveyorData);
     return response.data;
@@ -1206,6 +1226,7 @@ export const adminApi = {
     priority?: string;
     surveyorId?: string;
     overdue?: boolean;
+    search?: string;
     page?: number;
     limit?: number;
   }) => {
@@ -1390,28 +1411,7 @@ export const adminApi = {
     return response.data;
   },
 
-  // Generic HTTP methods for dynamic API calls
-  get: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
-    const response = await api.get<T>(url, config);
-    return response.data;
-  },
-
-  post: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
-    const response = await api.post<T>(url, data, config);
-    return response.data;
-  },
-
-  patch: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
-    const response = await api.patch<T>(url, data, config);
-    return response.data;
-  },
-
-  delete: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
-    const response = await api.delete<T>(url, config);
-    return response.data;
-  },
-
-  // Generic HTTP methods for adminApi
+  // Generic HTTP methods for adminApi (preferred helpers)
   get: async <T = unknown>(endpoint: string, config?: { params?: Record<string, unknown> }) => {
     const queryParams = new URLSearchParams();
     if (config?.params) {

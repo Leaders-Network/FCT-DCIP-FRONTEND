@@ -21,6 +21,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
+import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 
 interface PolicyRequest {
   _id: string;
@@ -59,6 +60,28 @@ const EnforcementPage = () => {
   const [filter, setFilter] = useState<'all' | 'approved' | 'payment_pending' | 'completed' | 'rejected'>('all');
   const [searchQuery, setSearchQuery] = useState("");
 
+  const mapPolicyForDisplay = (policy: BuilderLiabilityPolicy): PolicyRequest => ({
+    _id: policy._id,
+    propertyDetails: {
+      propertyType: policy.project?.coverTypeIdxDetails || "Builder Liability",
+      address: policy.project?.address || policy.builder?.address || "N/A",
+      buildingValue: Number(policy.project?.totalEstimateSum || 0),
+    },
+    contactDetails: {
+      fullName: policy.builder?.nameOfBuilder || "N/A",
+      email: policy.builder?.customerEmail || "N/A",
+      phoneNumber: policy.builder?.telNo || "N/A",
+    },
+    requestDetails: {
+      coverageType: policy.project?.coverTypeIdxDetails || "N/A",
+      policyDuration: "N/A",
+    },
+    status: policy.status,
+    createdAt: String(policy.createdAt),
+    updatedAt: String(policy.updatedAt),
+    paymentInfo: policy.paymentInfo as PolicyRequest["paymentInfo"],
+  });
+
   useEffect(() => {
     fetchPolicies();
   }, []);
@@ -80,7 +103,9 @@ const EnforcementPage = () => {
       const completed = completedResponse.data?.policies || [];
       const rejected = rejectedResponse.data?.policies || [];
 
-      setPolicies([...approved, ...paymentPending, ...completed, ...rejected]);
+      setPolicies(
+        [...approved, ...paymentPending, ...completed, ...rejected].map(mapPolicyForDisplay)
+      );
     } catch (error) {
       console.error("Failed to fetch policies:", error);
     } finally {

@@ -12,7 +12,8 @@ import {
   Eye,
   Edit
 } from "lucide-react";
-import { Surveyor as BaseSurveyor, Assignment, PolicyRequest } from "@/types/api.types";
+import { Surveyor as BaseSurveyor } from "@/types/api.types";
+import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import Swal from "sweetalert2"
 
 type UserIdType = {
@@ -24,6 +25,15 @@ type UserIdType = {
 
 type Surveyor = BaseSurveyor & {
   userId?: UserIdType;
+};
+
+type LightweightAssignment = {
+  _id: string;
+  surveyorId: string | null;
+  ammcId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 interface SurveyorManagementProps {
@@ -38,7 +48,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   onDeleteSurveyor,
 }) => {
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignments, setAssignments] = useState<LightweightAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -101,13 +111,13 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         // Fetch assignments
         const assignmentResponse = await builderLiabilityPolicyAPI.getAllPolicies({ status: 'all', page: 1, limit: 100 });
         if (assignmentResponse?.data && Array.isArray(assignmentResponse.data)) {
-          const assignmentData = assignmentResponse.data?.map((policy: PolicyRequest) => ({
+          const assignmentData = assignmentResponse.data?.map((policy: BuilderLiabilityPolicy) => ({
             _id: policy._id,
             surveyorId: policy.assignedSurveyors?.[0] || null,
             ammcId: policy._id,
             status: policy.status,
-            createdAt: policy.createdAt,
-            updatedAt: policy.updatedAt
+            createdAt: String(policy.createdAt),
+            updatedAt: String(policy.updatedAt)
           })) || [];
           setAssignments(assignmentData);
         }

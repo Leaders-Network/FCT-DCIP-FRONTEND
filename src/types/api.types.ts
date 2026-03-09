@@ -106,6 +106,7 @@ export interface PolicyRequest {
   _id: string;
   userId: string;
   policyNumber?: string;
+  assignmentId?: string;
   ammcId?: string | {
     _id: string;
     propertyDetails?: {
@@ -148,6 +149,14 @@ export interface PolicyRequest {
   status: 'pending' | 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed' | 'under_review' | 'revision_required';
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   assignedSurveyors?: string[];
+  builder?: {
+    nameOfBuilder?: string;
+    address?: string;
+  };
+  project?: {
+    address?: string;
+    lga?: string;
+  };
   surveyDocument?: string | {
     name: string;
     url: string;
@@ -223,12 +232,18 @@ export interface Surveyor extends Employee {
   dateOfBirth?: string;
   qualifications?: string[];
   availability?: 'available' | 'busy' | 'unavailable';
+  state?: string;
+  city?: string;
+  lga?: string;
+  district?: string;
   profile?: {
     availability: 'available' | 'busy' | 'unavailable';
     specialization: string[];
     location: {
       state: string;
       city: string;
+      lga?: string;
+      district?: string;
       coordinates?: {
         latitude: number;
         longitude: number;
@@ -295,6 +310,16 @@ export interface PolicyReview {
 // Assignment Management Types
 export interface Assignment {
   _id: string;
+  ammcId?: string | {
+    _id?: string;
+    propertyDetails?: {
+      address?: string;
+      propertyType?: string;
+    };
+    contactDetails?: {
+      fullName?: string;
+    };
+  };
   policyId: string | PolicyRequest;
   surveyorId: string;
   assignedBy: string;
@@ -1153,6 +1178,10 @@ export interface BrokerPolicyRequest extends PolicyRequest {
   claimRequested?: boolean;
   claimRequestedAt?: string;
   claimReason?: string;
+  address?: string;
+  coverageType?: string;
+  buildingValue?: number;
+  submissionDate?: string;
 }
 
 export interface BrokerDashboardData {

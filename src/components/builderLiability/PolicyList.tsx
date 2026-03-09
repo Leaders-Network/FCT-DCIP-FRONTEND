@@ -44,37 +44,51 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
-    const handleProceedToPayment = async (policy: BuilderLiabilityPolicy) => {
+    const handleCalculatePremiumAndPay = async (policy: BuilderLiabilityPolicy) => {
         try {
             setProcessingPayment(policy._id);
 
-            console.log('💳 Initiating payment through backend...');
+            console.log('💳 Calculating premium via NIIP...');
 
-            // Make request to backend payment endpoint (which will proxy to NIIP)
             const api = (await import('@/services/api')).default;
-            const response = await api.post(`/payment/initiate/${policy._id}`);
 
-            const data = response.data;
-            console.log('Payment Response:', data);
+            // Step 1–2: calculate premium via NIIP
+            const premiumResponse = await api.post(`/payment/calculate-premium/${policy._id}`);
+            const premiumData = premiumResponse.data;
 
-            if (data.success && data.data) {
-                const paymentData = data.data;
+            console.log('Premium Response:', premiumData);
 
-                toast.success(`✅ Payment Initiated Successfully!\n\nInvoice Number: ${paymentData.invoiceNumber}\nTransaction Reference: ${paymentData.transactionReference}\nAmount: ₦${paymentData.amount}\nInsurance Company: ${paymentData.companyName}\n\nYou will be redirected to complete the payment.`);
-
-                // Redirect to NIIP payment page if encrypted reference is provided
-                if (paymentData.encryptTransRef) {
-                    window.location.href = `http://uat.niip.ng/payment/${paymentData.encryptTransRef}`;
-                } else {
-                    // Refresh the page to show updated payment status
-                    window.location.reload();
-                }
-            } else {
-                throw new Error(data.message || 'Payment initiation failed');
+            if (!premiumData.success || !premiumData.data) {
+                throw new Error(premiumData.message || 'Premium calculation failed');
             }
+
+            const premiumAmount = premiumData.data.premiumAmount;
+
+            toast.success(
+                `✅ Premium Calculated Successfully!\n\nPremium Amount: ₦${premiumAmount?.toLocaleString?.() ?? premiumAmount}`
+            );
+
+            console.log('💳 Initializing payment on Egolopay...');
+
+            // Step 3–4: initialize payment on Egolopay
+            const egolopayResponse = await api.post(`/payment/egolopay/initialize/${policy._id}`);
+            const egolopayData = egolopayResponse.data;
+
+            console.log('Egolopay Initialize Response:', egolopayData);
+
+            if (!egolopayData.success || !egolopayData.data?.authorizationUrl) {
+                throw new Error(egolopayData.message || 'Failed to initialize payment on Egolopay');
+            }
+
+            toast.success(
+                `✅ Payment Initialized!\n\nYou will be redirected to Egolopay to complete your payment.`
+            );
+
+            const authorizationUrl = egolopayData.data.authorizationUrl as string;
+            window.location.href = authorizationUrl;
         } catch (error: any) {
             console.error('Payment error:', error);
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to initiate payment';
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to process payment';
             toast.error(`❌ Payment Error\n\n${errorMessage}\n\nPlease try again or contact support.`);
         } finally {
             setProcessingPayment(null);
@@ -298,53 +312,59 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 <div className="space-y-4">
                     {filteredPolicies.map((policy) => (
                         <Card key={policy._id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1 space-y-3">
+                            <CardContent className="p-4 sm:p-6">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                    <div className="flex-1 min-w-0 space-y-3">
                                         {/* Header */}
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-gray-900">
+                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="min-w-0">
+                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
                                                     {policy.builder.nameOfBuilder}
                                                 </h3>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="text-xs sm:text-sm text-gray-600 break-words">
                                                     Policy #{policy.policyNumber}
                                                 </p>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2 justify-end sm:flex-none">
                                                 {getStatusBadge(getActualStatus(policy) as BuilderLiabilityPolicyStatus)}
                                                 {getPriorityBadge(policy.priority || 'medium')}
                                             </div>
                                         </div>
 
                                         {/* Details Grid */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                                            <div className="flex items-center gap-2">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <User className="w-4 h-4 text-gray-400" />
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-gray-600">Builder</p>
-                                                    <p className="font-medium">{policy.builder.nameOfBuilder}</p>
+                                                    <p className="font-medium break-words">
+                                                        {policy.builder.nameOfBuilder}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <Building className="w-4 h-4 text-gray-400" />
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-gray-600">Project Value</p>
-                                                    <p className="font-medium">{formatCurrency(policy.project.totalEstimateSum)}</p>
+                                                    <p className="font-medium break-words">
+                                                        {formatCurrency(policy.project.totalEstimateSum)}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <MapPin className="w-4 h-4 text-gray-400" />
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-gray-600">Location</p>
-                                                    <p className="font-medium truncate text-wrap">{policy.builder.address}</p>
+                                                    <p className="font-medium break-words">
+                                                        {policy.builder.address}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <Calendar className="w-4 h-4 text-gray-400" />
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-gray-600">Submitted</p>
-                                                    <p className="font-medium">
+                                                    <p className="font-medium break-words">
                                                         {new Date(policy.createdAt).toLocaleDateString()}
                                                     </p>
                                                 </div>
@@ -352,27 +372,29 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                         </div>
 
                                         {/* Additional Info */}
-                                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                <span>RC: {policy.builder.rcNumber}</span>
-                                                <span>Coverage: {policy.project.coverTypeIdxDetails}</span>
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-gray-100">
+                                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                                                <span className="break-all">RC: {policy.builder.rcNumber}</span>
+                                                <span className="break-words">
+                                                    Coverage: {policy.project.coverTypeIdxDetails}
+                                                </span>
                                                 {policy.project.extraHazardous && (
-                                                    <Badge variant="outline" className="text-xs">
+                                                    <Badge variant="outline" className="text-[10px] sm:text-xs">
                                                         Extra Hazardous
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2 justify-end">
                                                 {/* Show payment button only if survey is completed and approved */}
                                                 {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'approve' && (
                                                     <Button
                                                         size="sm"
                                                         className="bg-green-600 hover:bg-green-700"
-                                                        onClick={() => handleProceedToPayment(policy)}
+                                                        onClick={() => handleCalculatePremiumAndPay(policy)}
                                                         disabled={processingPayment === policy._id}
                                                     >
                                                         <CreditCard className="w-4 h-4 mr-2" />
-                                                        {processingPayment === policy._id ? 'Processing...' : 'Proceed to Payment'}
+                                                        {processingPayment === policy._id ? 'Processing...' : 'Calculate Premium'}
                                                     </Button>
                                                 )}
                                                 {/* Show rejection message if rejected */}

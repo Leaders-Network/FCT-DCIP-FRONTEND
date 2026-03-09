@@ -38,8 +38,8 @@ const ContactsPage: React.FC = () => {
 
                     // Try to get assignment information for the latest policy
                     try {
-                        const { getUserAssignmentByAmmcId } = await import('@/services/api');
-                        const assignmentResponse = await getUserAssignmentByAmmcId(latestPolicy._id);
+                        const { getUserAssignmentByPolicyId } = await import('@/services/api');
+                        const assignmentResponse = await getUserAssignmentByPolicyId(latestPolicy._id);
 
                         if (assignmentResponse.success && assignmentResponse.data) {
                             const assignment = assignmentResponse.data;

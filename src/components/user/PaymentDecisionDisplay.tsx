@@ -479,20 +479,20 @@ const PaymentDecisionDisplay: React.FC<PaymentDecisionDisplayProps> = ({
 
                 {/* Insurance Platform Information */}
                 {paymentDecision.canProceedToInsurance && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-center space-x-3 mb-3">
-                            <Shield className="w-5 h-5 text-green-600" />
-                            <h4 className="font-medium text-green-800">Ready for Insurance</h4>
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div className="flex items-center space-x-3 mb-3">
+                                <Shield className="w-5 h-5 text-green-600" />
+                                <h4 className="font-medium text-green-800">Ready for Payment</h4>
+                            </div>
+                            <p className="text-sm text-green-800 mb-3">
+                                Your policy has been approved and the premium can now be calculated and paid securely
+                                through the configured payment platform.
+                            </p>
+                            <div className="flex items-center space-x-2 text-xs text-green-700">
+                                <Info className="w-3 h-3" />
+                                <span>Secure connection to the payment provider</span>
+                            </div>
                         </div>
-                        <p className="text-sm text-green-800 mb-3">
-                            Your policy has been approved and you can now proceed to purchase insurance coverage.
-                            You'll be redirected to the Nigerian Insurance Industry Portal (NIIP) to complete your insurance purchase.
-                        </p>
-                        <div className="flex items-center space-x-2 text-xs text-green-700">
-                            <Info className="w-3 h-3" />
-                            <span>Secure connection to NIIP platform</span>
-                        </div>
-                    </div>
                 )}
             </div>
         </div>

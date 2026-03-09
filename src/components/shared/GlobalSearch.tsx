@@ -86,9 +86,18 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
 
             // Search Assignments
             try {
-                const assignmentsResponse = await adminApi.getAssignments({ search: searchQuery, limit: 3 });
+                const assignmentsResponse = await adminApi.getAssignments({ limit: 50 });
                 if (assignmentsResponse.success && assignmentsResponse.data) {
-                    assignmentsResponse.data.forEach((assignment: any) => {
+                    const filteredAssignments = assignmentsResponse.data
+                        .filter((assignment: any) => {
+                            const builderName = (assignment.policyId?.builder?.nameOfBuilder || '').toLowerCase();
+                            const status = (assignment.status || '').toLowerCase();
+                            const surveyorName = `${assignment.surveyorId?.firstname || ''} ${assignment.surveyorId?.lastname || ''}`.toLowerCase();
+                            return builderName.includes(lowerQuery) || status.includes(lowerQuery) || surveyorName.includes(lowerQuery);
+                        })
+                        .slice(0, 3);
+
+                    filteredAssignments.forEach((assignment: any) => {
                         const policyInfo = assignment.policyId;
                         const surveyorInfo = assignment.surveyorId;
                         results.push({
@@ -112,9 +121,10 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
             // Search Administrators (if applicable)
             if (lowerQuery.includes('admin') || lowerQuery.includes('staff') || lowerQuery.includes('employee')) {
                 try {
-                    const employeesResponse = await adminApi.getAllEmployees();
-                    if (employeesResponse.success && employeesResponse.allStaff?.sanitizedEmployees) {
-                        const filteredEmployees = employeesResponse.allStaff.sanitizedEmployees.filter((employee: any) => {
+                    const employeesResponse = await adminApi.getEmployees();
+                    const employees = employeesResponse?.allStaff?.sanitizedEmployees || employeesResponse?.data || [];
+                    if (Array.isArray(employees) && employees.length > 0) {
+                        const filteredEmployees = employees.filter((employee: any) => {
                             const fullName = `${employee.firstname || ''} ${employee.lastname || ''}`.toLowerCase();
                             const email = (employee.email || '').toLowerCase();
                             const role = (employee.employeeRole?.role || '').toLowerCase();

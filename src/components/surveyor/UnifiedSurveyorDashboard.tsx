@@ -105,7 +105,7 @@ const UnifiedSurveyorDashboard = () => {
         
         try {
             // Fetch surveyor's assignments using surveyor-specific endpoint
-            const assignmentsResponse = await getSurveyorAssignments('all', 1, 100);
+            const assignmentsResponse = await getSurveyorAssignments({ status: 'all', page: 1, limit: 100 });
 
             const fetchedAssignments = assignmentsResponse?.data?.assignments || [];
             setAssignments(fetchedAssignments);

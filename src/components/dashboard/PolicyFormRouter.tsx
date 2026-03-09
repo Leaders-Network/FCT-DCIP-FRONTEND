@@ -54,7 +54,7 @@ export const PolicyFormRouter: React.FC<PolicyFormRouterProps> = ({
     <Toaster richColors position="top-right" />
     if (selectedPolicyType === 'builder-liability' || defaultPolicyType === 'builder-liability') {
         return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
                 <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto">
                     <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
                         <div className="flex items-center space-x-4">
@@ -81,7 +81,7 @@ export const PolicyFormRouter: React.FC<PolicyFormRouterProps> = ({
 
     // Show Builder Liability Policy form directly - no more policy type selection
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-2 sm:z-50 p-2 sm:p-4">
             <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto">
                 <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
                     <h2 className="text-xl font-bold">Builder Liability Policy Application</h2>

@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -739,8 +739,15 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => {
-                            setSelectedPolicy(policy);
-                            setShowDetailsModal(true);
+                            // If this is a Builder Liability Policy, show the rich BL details modal
+                            if ((policy as any).isBuilderLiabilityPolicy && (policy as any).originalBLPolicy) {
+                              setSelectedBLPolicy((policy as ExtendedPolicyRequest).originalBLPolicy as BuilderLiabilityPolicy);
+                              setShowBLPolicyModal(true);
+                            } else {
+                              // Fallback to legacy modal for old policy types
+                              setSelectedPolicy(policy);
+                              setShowDetailsModal(true);
+                            }
                           }}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                         >
@@ -957,7 +964,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
         </div>
       )}
 
-      {/* Policy Details Modal */}
+      {/* Legacy Policy Details Modal */}
       {showDetailsModal && selectedPolicy && (
         <LegacyPolicyDetailsModal
           policy={toPolicyRequest(selectedPolicy)}
@@ -965,6 +972,18 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
           onClose={() => {
             setShowDetailsModal(false);
             setSelectedPolicy(null);
+          }}
+        />
+      )}
+
+      {/* Builder Liability Policy Details Modal */}
+      {showBLPolicyModal && selectedBLPolicy && (
+        <PolicyDetailsModal
+          policy={selectedBLPolicy}
+          isOpen={showBLPolicyModal}
+          onClose={() => {
+            setShowBLPolicyModal(false);
+            setSelectedBLPolicy(null);
           }}
         />
       )}
