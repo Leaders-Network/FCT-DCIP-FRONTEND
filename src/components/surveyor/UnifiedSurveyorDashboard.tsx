@@ -85,6 +85,7 @@ const StatCard = ({ icon, label, value, color, subtitle }: StatCardProps) => (
 
 const UnifiedSurveyorDashboard = () => {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
+    const [surveyor, setSurveyor] = useState({ firstName: '', lastName: '' });
     const [stats, setStats] = useState({
         total: 0,
         assigned: 0,
@@ -110,6 +111,15 @@ const UnifiedSurveyorDashboard = () => {
             const fetchedAssignments = assignmentsResponse?.data?.assignments || [];
             setAssignments(fetchedAssignments);
 
+            // Extract surveyor info from first assignment or use defaults
+            if (fetchedAssignments.length > 0) {
+                const surveyorInfo = fetchedAssignments[0].surveyorId;
+                setSurveyor({
+                    firstName: surveyorInfo?.firstname || '',
+                    lastName: surveyorInfo?.lastname || ''
+                });
+            }
+
             // Calculate stats
             const total = fetchedAssignments.length;
             const assigned = fetchedAssignments.filter((a: Assignment) => a.status === 'assigned').length;
@@ -133,9 +143,6 @@ const UnifiedSurveyorDashboard = () => {
             setLoading(false);
         }
     };
-
-    const surveyorName = typeof window !== 'undefined' ? localStorage.getItem("surveyorName") || "Surveyor" : "Surveyor";
-    const firstName = surveyorName.split(" ")[0];
 
     const recentAssignments = assignments.slice(0, 5);
 
@@ -238,7 +245,7 @@ const UnifiedSurveyorDashboard = () => {
             <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-6 text-white">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">Welcome back, {firstName}!</h1>
+                        <h1 className="text-3xl font-bold">Welcome back, {surveyor.firstName} {surveyor.lastName}!</h1>
                         <p className="mt-1 opacity-90">
                             Unified Surveyor Dashboard - LGA-Based Assignment System
                         </p>
