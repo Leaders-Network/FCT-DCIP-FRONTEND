@@ -63,18 +63,32 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('/api/notifications', {
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            if (!token) {
+                setNotifications([]);
+                setNotificationCount(0);
+                return;
+            }
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            const response = await fetch(`${baseUrl}/notifications`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
             if (response.ok) {
                 const data = await response.json();
-                setNotifications(data.notifications || []);
-                setNotificationCount(data.unreadCount || 0);
+                setNotifications(data.data?.notifications || data.notifications || []);
+                setNotificationCount(data.data?.unreadCount || data.unreadCount || 0);
+            } else {
+                setNotifications([]);
+                setNotificationCount(0);
             }
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
+            setNotifications([]);
+            setNotificationCount(0);
         }
     };
 
@@ -129,10 +143,15 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const handleNotificationClick = async (notificationId: string) => {
         try {
-            await fetch(`/api/notifications/${notificationId}/read`, {
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            if (!token) return;
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            await fetch(`${baseUrl}/notifications/${notificationId}/read`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
             fetchNotifications();
@@ -143,10 +162,15 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const markAllAsRead = async () => {
         try {
-            await fetch('/api/notifications/mark-all-read', {
+            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            if (!token) return;
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            await fetch(`${baseUrl}/notifications/mark-all-read`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
             fetchNotifications();
