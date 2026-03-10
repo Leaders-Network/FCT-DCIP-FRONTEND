@@ -14,8 +14,22 @@ import {
     Database,
     Zap
 } from 'lucide-react';
+import { isDevRoutesEnabled } from '@/utils/devRoutes';
 
 export default function DebugMergedReportsPage() {
+    if (!isDevRoutesEnabled()) {
+        return (
+            <div className="container mx-auto p-6">
+                <div className="p-6 border rounded-lg bg-white">
+                    <h1 className="text-xl font-semibold text-gray-900">Not available</h1>
+                    <p className="text-gray-600 mt-2">
+                        This page is disabled in production builds.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<import('@/types/survey.types').StatusType | null>(null);
     const [missingReports, setMissingReports] = useState<import('@/types/survey.types').MissingReportsType | null>(null);

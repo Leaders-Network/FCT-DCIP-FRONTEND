@@ -6,7 +6,6 @@ import { BuilderLiabilityPolicyList } from '@/components/builderLiability/Policy
 // import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
 import ReportSection from "@/components/dashboard/ReportSection";
 // REMOVED: MergedReportsSummary - not applicable for Builder Liability policies
-import NotificationTester from "@/components/shared/NotificationTester";
 import { PolicyRequest } from "@/types/api.types";
 import Image from "next/image";
 import { useAuth } from "@/context/useAuth";

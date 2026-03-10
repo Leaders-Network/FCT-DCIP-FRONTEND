@@ -22,15 +22,16 @@ import {
   AddPropertyPayload
 } from "@/types/api.types";
 import { ApiError } from "@/utils/errorHandling";
+import { API_CONFIG } from "@/constants";
 
 // Import Builder Liability Policy API
 import { builderLiabilityPolicyAPI } from "./builderLiabilityPolicyApi";
 
 
 // Constants
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
-
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "4a8612b0162373aff93c2088780b42e77d06b22b9906a58f5940054b192695134262a4c481b9713426922f29b7bd44ea64dcc6e13a3d22d0f7d05044e9ca626c";
+const API_BASE_URL = API_CONFIG.BASE_URL;
+const API_KEY = API_CONFIG.API_KEY;
+const DEBUG_API = process.env.NEXT_PUBLIC_DEBUG_API === "true";
 
 import { getAuthToken } from "@/utils/auth";
 import { getCookie, deleteCookie } from "@/utils/cookies";
@@ -92,21 +93,24 @@ api.interceptors.request.use(
     // If no specific type detected, getAuthToken will use fallback priority
 
     const token = getAuthToken(tokenType);
-    console.log("Auth Token:", token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
-    console.log("Token Type:", tokenType || 'auto-detect');
+    if (DEBUG_API) {
+      console.log("Auth Token:", token ? `Present (${token.substring(0, 20)}...)` : "Missing");
+      console.log("Token Type:", tokenType || "auto-detect");
+    }
 
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
 
-    console.log("Request Headers:", {
-      'Content-Type': config.headers['Content-Type'],
-      'apikey': config.headers['apikey'] ? `${config.headers['apikey'].substring(0, 20)}...` : 'Missing',
-      'Authorization': config.headers['Authorization'] || 'Missing'
-    });
-
-    // Debug: Log full API key for troubleshooting
-    console.log("Full API Key:", config.headers['apikey']);
+    if (DEBUG_API) {
+      console.log("Request Headers:", {
+        "Content-Type": config.headers["Content-Type"],
+        apikey: config.headers["apikey"]
+          ? `${String(config.headers["apikey"]).substring(0, 20)}...`
+          : "Missing",
+        Authorization: config.headers["Authorization"] || "Missing",
+      });
+    }
 
     return config;
   },
@@ -122,13 +126,22 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error("API Response Error:", {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method
-    });
+    if (DEBUG_API) {
+      console.error("API Response Error:", {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+      });
+    } else {
+      console.error(
+        "API Response Error:",
+        error.response?.status,
+        error.config?.method,
+        error.config?.url
+      );
+    }
 
     // Handle specific error cases
     if (error.response?.status === 401) {

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { CreditCard, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from "sonner";
+import { isDevRoutesEnabled } from '@/utils/devRoutes';
 
 interface TestResult {
     success: boolean;
@@ -17,6 +18,21 @@ interface TestResult {
 }
 
 export default function TestPaymentPage() {
+    if (!isDevRoutesEnabled()) {
+        return (
+            <div className="min-h-screen bg-gray-50 py-8">
+                <div className="max-w-4xl mx-auto px-4">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h1 className="text-xl font-semibold text-gray-900">Not available</h1>
+                        <p className="text-gray-600 mt-2">
+                            This page is disabled in production builds.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const [policyId, setPolicyId] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<TestResult | null>(null);

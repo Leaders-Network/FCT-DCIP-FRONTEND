@@ -1,37 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import React from "react";
 import Sidebar from "@/components/admin/Sidebar";
 import Header from "@/components/admin/Header";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { useResponsiveSidebar } from "@/hooks/useResponsiveSidebar";
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Detect mobile size
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-
-      if (!mobile) {
-        setSidebarOpen(true); // desktop keeps sidebar open
-      }
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  // Auto close sidebar on route change (mobile only)
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  }, [pathname, isMobile]);
+  const { isMobile, sidebarOpen, setSidebarOpen, toggleSidebar } = useResponsiveSidebar();
 
   return (
     <NotificationProvider>
@@ -51,7 +26,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          <Header onMenuClick={toggleSidebar} />
 
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
             {children}
