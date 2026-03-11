@@ -81,7 +81,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         workDetails: '',
 
         // Meta Info
-        productId: 1,
+        // NIIP Builder's Liability product
+        productId: 48,
         salesOutlet: '',
         brokerAgentName: '',
 
@@ -90,10 +91,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     });
 
     const [activeTab, setActiveTab] = useState<string>('builder');
-
-    // Builder location fields
-    const [builderLga, setBuilderLga] = useState<string>('');
-    const [builderDistrict, setBuilderDistrict] = useState<string>('');
 
     // Project location fields (kept separate to avoid Type issues if types were reverted)
     const [projectAddress, setProjectAddress] = useState<string>('');
@@ -170,8 +167,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 customerEmail: formData.builderEmail,
                 nameOfBuilder: formData.builderName,
                 rcNumber: formData.rcNumber,
-                lga: builderLga,
-                district: builderDistrict,
                 identification: {
                     identificationTypeId: formData.identificationType,
                     identityNo: formData.identificationNumber
@@ -369,38 +364,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         onChange={(e) => handleInputChange('builderAddress', e.target.value)}
                                         required
                                     />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="builderLga">Builder LGA *</Label>
-                                        <Select value={builderLga} onValueChange={setBuilderLga}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select LGA" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {FCT_LOCATIONS.map((lga) => (
-                                                    <SelectItem key={lga.value} value={lga.value}>
-                                                        {lga.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="builderDistrict">Builder District *</Label>
-                                        <Select value={builderDistrict} onValueChange={setBuilderDistrict} disabled={!builderLga}>
-                                            <SelectTrigger disabled={!builderLga}>
-                                                <SelectValue placeholder={builderLga ? "Select District" : "Select LGA first"} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {builderLga && getDistrictsByLGA(builderLga).map((district) => (
-                                                    <SelectItem key={district.value} value={district.value}>
-                                                        {district.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
                                 </div>
                             </TabsContent>
 
