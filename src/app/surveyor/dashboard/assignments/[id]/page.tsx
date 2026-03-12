@@ -9,7 +9,7 @@ interface AssignmentDetailPageProps {
 
 export default function AssignmentDetailPage({ params }: AssignmentDetailPageProps) {
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="mx-auto w-full max-w-7xl">
       <AssignmentDetail assignmentId={params.id} />
     </div>
   );

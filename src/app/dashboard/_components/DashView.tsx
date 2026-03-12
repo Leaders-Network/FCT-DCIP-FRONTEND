@@ -59,6 +59,7 @@ const Dashview = () => {
     completed: 0,
     paymentPending: 0
   });
+  const [statsError, setStatsError] = useState<string | null>(null);
   const [recentInsurances, setRecentInsurances] = useState<PolicyRequest[]>([]);
   const [surveyedPolicies, setSurveyedPolicies] = useState<PolicyRequest[]>([]);
   const [allPolicies, setAllPolicies] = useState<PolicyRequest[]>([]);
@@ -179,12 +180,14 @@ const Dashview = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        setStatsError(null);
         const token = getAuthToken('user');
         if (!token) {
           // Not logged in, set empty state
           setStats({ active: 0, expired: 0, pending: 0, collaborators: 0, completed: 0, paymentPending: 0 });
           setRecentInsurances([]);
           setSurveyedPolicies([]);
+          setStatsError('You are not logged in.');
           setLoading(false);
           return;
         }
@@ -197,7 +200,11 @@ const Dashview = () => {
           limit: 100
         });
 
-        const allPolicyData = (response.data.policies || []) as any[];
+        if (!response?.success) {
+          throw new Error((response as any)?.message || 'Failed to fetch policies');
+        }
+
+        const allPolicyData = ((response as any)?.data?.policies || []) as any[];
 
         // Calculate stats from policies based on payment flow
         const completedPolicies = allPolicyData.filter((p: any) => p.status === 'completed');
@@ -251,6 +258,12 @@ const Dashview = () => {
 
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
+        const message =
+          (error as any)?.response?.data?.message ||
+          (error as any)?.message ||
+          "Failed to load dashboard statistics.";
+        setStatsError(message);
+        toast.error(message);
         // Set fallback values if API fails
         setStats({
           active: 0,
@@ -275,6 +288,12 @@ const Dashview = () => {
         <h1 className="text-[23px] font-extrabold pb-4">
           Hello {getUserName()}
         </h1>
+
+        {statsError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {statsError}
+          </div>
+        )}
 
         {/* Full-width Banner */}
         <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] lg:h-[160px] relative mb-6">

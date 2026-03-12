@@ -34,12 +34,26 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
 
+  const normalizeSurveyor = (surveyor: Surveyor | Record<string, unknown>): Surveyor => {
+    const safeSurveyor = surveyor as Surveyor & { userId?: { firstname?: string; lastname?: string; email?: string; phonenumber?: string } };
+    return {
+      ...safeSurveyor,
+      firstname: safeSurveyor.firstname || safeSurveyor.userId?.firstname || '',
+      lastname: safeSurveyor.lastname || safeSurveyor.userId?.lastname || '',
+      email: safeSurveyor.email || safeSurveyor.userId?.email || '',
+      phonenumber: safeSurveyor.phonenumber || safeSurveyor.userId?.phonenumber || ''
+    };
+  };
+
   useEffect(() => {
     const fetchSurveyors = async () => {
       try {
         const response = await adminApi.getSurveyors({ status: 'active' });
         if (response?.data) {
-          setAvailableSurveyors(response.data);
+          const normalized = Array.isArray(response.data)
+            ? response.data.map(normalizeSurveyor)
+            : [];
+          setAvailableSurveyors(normalized);
         } else {
           setAvailableSurveyors([]);
         }

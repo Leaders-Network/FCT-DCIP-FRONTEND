@@ -86,6 +86,17 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+  const normalizeSurveyor = (surveyor: Surveyor | Record<string, unknown>): Surveyor => {
+    const safeSurveyor = surveyor as Surveyor & { userId?: { firstname?: string; lastname?: string; email?: string; phonenumber?: string } };
+    return {
+      ...safeSurveyor,
+      firstname: safeSurveyor.firstname || safeSurveyor.userId?.firstname || '',
+      lastname: safeSurveyor.lastname || safeSurveyor.userId?.lastname || '',
+      email: safeSurveyor.email || safeSurveyor.userId?.email || '',
+      phonenumber: safeSurveyor.phonenumber || safeSurveyor.userId?.phonenumber || ''
+    };
+  };
+
   // New state for Builder Liability Policies
   const [selectedBLPolicy, setSelectedBLPolicy] = useState<BuilderLiabilityPolicy | null>(null);
   const [showBLPolicyModal, setShowBLPolicyModal] = useState(false);
@@ -135,7 +146,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     try {
       // Fetch surveyors and Builder Liability Policies
       const surveyorsResponse = await adminApi.getSurveyors();
-      setSurveyors(surveyorsResponse.data);
+      const normalizedSurveyors = Array.isArray(surveyorsResponse?.data)
+        ? surveyorsResponse.data.map(normalizeSurveyor)
+        : [];
+      setSurveyors(normalizedSurveyors);
 
       // Fetch Builder Liability Policies using both hooks and direct API call
       fetchBLPolicies();
