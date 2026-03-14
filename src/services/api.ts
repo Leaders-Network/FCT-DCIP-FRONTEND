@@ -1777,5 +1777,16 @@ export const brokerAdminAPI = {
     const endpoint = `/broker-admin/analytics${period ? `?period=${period}` : ''}`;
     const response = await api.get(endpoint);
     return response.data;
+  },
+
+  // --- Demo-only mock underwriter data ---
+  getMockAssignedPolicies: async (): Promise<import("../types/api.types").UnderwriterMockListResponse> => {
+    const response = await api.get('/broker-admin/policies/mock-assigned');
+    return response.data;
+  },
+
+  getMockPolicyDetail: async (policyId: string): Promise<import("../types/api.types").UnderwriterMockPolicyResponse> => {
+    const response = await api.get(`/broker-admin/policies/${policyId}/underwriter-preview`);
+    return response.data;
   }
 };

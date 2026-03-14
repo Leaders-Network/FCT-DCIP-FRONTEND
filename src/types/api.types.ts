@@ -310,17 +310,9 @@ export interface PolicyReview {
 // Assignment Management Types
 export interface Assignment {
   _id: string;
-  ammcId?: string | {
-    _id?: string;
-    propertyDetails?: {
-      address?: string;
-      propertyType?: string;
-    };
-    contactDetails?: {
-      fullName?: string;
-    };
-  };
   policyId: string | PolicyRequest;
+  // Legacy/alias: some endpoints return ammcId; keep for backward compatibility
+  ammcId?: string | PolicyRequest;
   surveyorId: string;
   assignedBy: string;
   assignedAt: string;
@@ -1243,6 +1235,138 @@ export interface BrokerStatusUpdateResponse {
   success: boolean;
   message: string;
   claim: BrokerPolicyRequest;
+}
+
+// --- Underwriter mock preview (demo-only) ---
+export interface UnderwriterMockPolicy {
+  policyId: string;
+  policyNumber: string;
+  status: string;
+  brokerStatus?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  deadline?: string;
+  builder: {
+    nameOfBuilder: string;
+    rcNumber: string;
+    customerEmail: string;
+    telNo: string;
+    address: string;
+    identification?: {
+      identificationTypeId: number;
+      identityNo: string | number;
+    };
+  };
+  organization?: {
+    niobRegNo?: string;
+    yearOfIncorporation?: string;
+    areaOfSpecialization?: string;
+    noOfPermanentStaff?: number;
+    noOfFloors?: number;
+  };
+  membership?: {
+    MembershipStatusId: number;
+    MembershipName?: string;
+    MembershipNo?: string;
+    ProfessionalBodyName?: string;
+  };
+  workforce?: {
+    categoryOfWorkmen?: Array<{
+      categoryOfWorkmen: string;
+      numberOfEmployment: string;
+      yearsOfEmployment: string;
+    }>;
+    professionals?: Array<{
+      surname: string;
+      otherName: string;
+      age: number;
+      gender: string;
+      nationality: string;
+      profession: string;
+      qualification: string;
+      yearsInEmployment: number;
+    }>;
+    contractStaffCount?: number;
+    bloodRelationsCount?: number;
+  };
+  compliance?: {
+    HasInsurance?: boolean;
+    HasInsuranceDetails?: string;
+    investigation?: boolean;
+    investigationDetails?: string;
+    disciplinaryCommittee?: boolean;
+    disciplinaryCommitteeDetails?: string;
+    legalSuitDetails?: string;
+    preEmploymentCheck?: boolean;
+    preEmploymentCheckDetails?: string;
+    PracticeOutsideNigeria?: string;
+  };
+  project: {
+    workDetails?: string;
+    totalEstimateSum?: number;
+    address?: string;
+    lga?: string;
+    district?: string;
+    coverTypeIdxDetails?: string;
+  };
+  paymentInfo?: {
+    status?: string;
+    amount?: number;
+    transactionId?: string;
+    paidAt?: string;
+    initiatedAt?: string;
+    method?: string;
+  };
+  survey?: {
+    status?: string;
+    surveyor?: {
+      name?: string;
+      email?: string;
+      phone?: string;
+    };
+    surveyDate?: string;
+    recommendations?: string;
+    estimatedValue?: number;
+    structuralAssessment?: string;
+    riskFactors?: string;
+    photos?: Array<{ url: string; description?: string; timestamp?: string }>;
+    surveyDocument?: { name?: string; url?: string; publicId?: string };
+  };
+  documents?: Array<{
+    fileName: string;
+    category: string;
+    cloudinaryUrl?: string;
+    isVerified?: boolean;
+    description?: string;
+    documentType?: string;
+  }>;
+  statusHistory?: Array<{
+    status: string;
+    changedAt?: string;
+    reason?: string;
+    changedBy?: string;
+  }>;
+  adminNotes?: string;
+  brokerNotes?: string;
+  meta?: {
+    ProductId?: number;
+    date?: string;
+    salesOutlet?: string;
+    brokerOrAgentName?: string;
+  };
+}
+
+export interface UnderwriterMockListResponse {
+  success: boolean;
+  message: string;
+  source: string;
+  data: { count: number; policies: UnderwriterMockPolicy[] };
+}
+
+export interface UnderwriterMockPolicyResponse {
+  success: boolean;
+  message: string;
+  source: string;
+  data: { policy: UnderwriterMockPolicy };
 }
 
 export type UserReportsResponse = ApiSuccessResponse<{
