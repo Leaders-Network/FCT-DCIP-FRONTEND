@@ -206,44 +206,47 @@ const Dashview = () => {
 
         const allPolicyData = ((response as any)?.data?.policies || []) as any[];
 
-        // Calculate stats from policies based on payment flow
-        const completedPolicies = allPolicyData.filter((p: any) => p.status === 'completed');
+        // Helper: derive the latest status (statusHistory wins)
+        const deriveStatus = (p: any) => {
+          if (Array.isArray(p.statusHistory) && p.statusHistory.length > 0) {
+            const latest = p.statusHistory[p.statusHistory.length - 1];
+            return latest.status || p.status;
+          }
+          return p.status;
+        };
 
-        // Approved = policies that have been successfully paid for
-        const paidPolicies = allPolicyData.filter(
-          (p: any) => p.paymentInfo?.status === 'paid'
-        );
+        // Classify policies for dashboard cards
+        const approvedPolicies: any[] = [];
+        const rejectedPolicies: any[] = [];
+        const pendingPolicies: any[] = [];
+        const assignedPolicies: any[] = [];
+        const completedPolicies: any[] = [];
 
-        // Rejected = policies whose payment was rejected/failed
-        const rejectedPolicies = allPolicyData.filter(
-          (p: any) =>
-            p.paymentInfo?.status === 'rejected' ||
-            p.paymentInfo?.status === 'failed'
-        );
-
-        // Pending = policies awaiting payment (approved or payment_pending but not yet paid/rejected)
-        const pendingPaymentPolicies = allPolicyData.filter((p: any) => {
+        allPolicyData.forEach((p: any) => {
+          const status = deriveStatus(p);
           const payStatus = p.paymentInfo?.status;
-          const isAwaitingPaymentStatus =
-            p.status === 'payment_pending' || p.status === 'approved';
-          const hasNoFinalPaymentDecision =
-            payStatus !== 'paid' && payStatus !== 'rejected' && payStatus !== 'failed';
-          return isAwaitingPaymentStatus && hasNoFinalPaymentDecision;
+
+          const isPaid = payStatus === 'paid';
+          const isRejected = payStatus === 'rejected' || payStatus === 'failed' || status === 'rejected';
+          const isCompleted = status === 'completed' || isPaid;
+          const isApproved = isPaid || status === 'approved' || status === 'completed';
+          const isPending = ['payment_pending', 'submitted', 'draft', 'requires_more_info', 'sent_to_user', 'surveyed'].includes(status);
+          const isAssigned = status === 'assigned';
+
+          if (isApproved) approvedPolicies.push(p);
+          if (isRejected) rejectedPolicies.push(p);
+          if (isPending) pendingPolicies.push(p);
+          if (isAssigned) assignedPolicies.push(p);
+          if (isCompleted) completedPolicies.push(p);
         });
 
-        // Assigned = policies that have been assigned to surveyors
-        const assignedPolicies = allPolicyData.filter(
-          (p: any) => p.status === 'assigned'
-        );
-
-        // Update stats according to the clarified definitions
         setStats({
-          active: paidPolicies.length, // Approved (paid) policies
-          expired: rejectedPolicies.length, // Rejected (not paid) policies
-          pending: pendingPaymentPolicies.length, // Pending (awaiting payment)
-          collaborators: assignedPolicies.length, // Assigned to surveyors
+          active: approvedPolicies.length,
+          expired: rejectedPolicies.length,
+          pending: pendingPolicies.length,
+          collaborators: assignedPolicies.length,
           completed: completedPolicies.length,
-          paymentPending: pendingPaymentPolicies.length
+          paymentPending: pendingPolicies.length
         });
 
         // Set recent builder liabilities (first 5 items from all policies)
