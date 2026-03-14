@@ -30,7 +30,7 @@ type Surveyor = BaseSurveyor & {
 type LightweightAssignment = {
   _id: string;
   surveyorId: string | null;
-  ammcId: string;
+  policyId: string;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -114,7 +114,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           const assignmentData = assignmentResponse.data?.map((policy: BuilderLiabilityPolicy) => ({
             _id: policy._id,
             surveyorId: policy.assignedSurveyors?.[0] || null,
-            ammcId: policy._id,
+            policyId: policy._id,
             status: policy.status,
             createdAt: String(policy.createdAt),
             updatedAt: String(policy.updatedAt)

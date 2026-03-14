@@ -556,7 +556,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
             {/* Min Insurance Value Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Min Insurance Value (â‚¦)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Min Insurance Value (₦)</label>
               <input
                 type="number"
                 placeholder="0"
@@ -568,7 +568,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
             {/* Max Insurance Value Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Insurance Value (â‚¦)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Insurance Value (₦)</label>
               <input
                 type="number"
                 placeholder="âˆž"
@@ -738,7 +738,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                     <td className="px-6 py-4">
                       <div>
                         <p className="text-sm font-medium text-gray-900">{policy.requestDetails.coverageType}</p>
-                        <p className="text-xs text-gray-500">â‚¦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
                         <p className="text-xs text-gray-500">{policy.requestDetails.policyDuration}</p>
                       </div>
                     </td>

@@ -1,5 +1,6 @@
 'use client';
 
+import type React from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { brokerAdminAPI } from '@/services/api';
@@ -16,13 +17,19 @@ import {
     RefreshCw,
     X,
     Calendar,
-    User
+    User,
+    Shield,
+    Layers,
+    DollarSign,
+    ClipboardList,
+    Images
 } from 'lucide-react';
 import type {
     BrokerDashboardData,
     BrokerPolicyRequest,
     BrokerClaimFilters,
-    BrokerStatusUpdateRequest
+    BrokerStatusUpdateRequest,
+    UnderwriterMockPolicy
 } from '@/types/api.types';
 
 interface StatCardProps {
@@ -54,14 +61,19 @@ export default function BrokerAdminDashboard() {
     const router = useRouter();
     const [dashboardData, setDashboardData] = useState<BrokerDashboardData | null>(null);
     const [claims, setClaims] = useState<BrokerPolicyRequest[]>([]);
+    const [mockPolicies, setMockPolicies] = useState<UnderwriterMockPolicy[]>([]);
     const [loading, setLoading] = useState(true);
+    const [mockLoading, setMockLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [mockError, setMockError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'under_review' | 'rejected' | 'completed'>('all');
     const [refreshing, setRefreshing] = useState(false);
 
     // Modal state
     const [selectedClaim, setSelectedClaim] = useState<BrokerPolicyRequest | null>(null);
+    const [selectedMock, setSelectedMock] = useState<UnderwriterMockPolicy | null>(null);
+    const [mockDetailLoading, setMockDetailLoading] = useState(false);
     const [modalLoading, setModalLoading] = useState(false);
     const [modalError, setModalError] = useState<string | null>(null);
     const [updating, setUpdating] = useState(false);
@@ -72,6 +84,7 @@ export default function BrokerAdminDashboard() {
     useEffect(() => {
         fetchDashboardData();
         fetchClaims();
+        fetchMockPolicies();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statusFilter]);
 
@@ -108,6 +121,39 @@ export default function BrokerAdminDashboard() {
             setError('Failed to load claims');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchMockPolicies = async () => {
+        try {
+            setMockLoading(true);
+            setMockError(null);
+            const res = await brokerAdminAPI.getMockAssignedPolicies();
+            if (res.success && res.data?.policies) {
+                setMockPolicies(res.data.policies);
+            } else {
+                setMockError('No mock policies available');
+            }
+        } catch (err) {
+            console.error('Failed to fetch mock policies:', err);
+            setMockError('Failed to load mock underwriter data');
+        } finally {
+            setMockLoading(false);
+        }
+    };
+
+    const fetchMockDetail = async (policyId: string) => {
+        try {
+            setMockDetailLoading(true);
+            const res = await brokerAdminAPI.getMockPolicyDetail(policyId);
+            if (res.success && res.data?.policy) {
+                setSelectedMock(res.data.policy);
+            }
+        } catch (err) {
+            console.error('Failed to fetch mock policy detail:', err);
+            setMockError('Failed to load policy detail');
+        } finally {
+            setMockDetailLoading(false);
         }
     };
 
@@ -204,6 +250,8 @@ export default function BrokerAdminDashboard() {
         });
     };
 
+    const formatStatus = (status?: string) => status ? status.replace(/_/g, ' ').toUpperCase() : 'N/A';
+
     if (loading && !dashboardData) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -267,6 +315,184 @@ export default function BrokerAdminDashboard() {
                     />
                 </div>
             )}
+
+            {/* Mock Underwriter Policies (Demo) */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                <div className="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-900">Underwriter Demo Policies (Mock)</h2>
+                        <p className="text-sm text-gray-600">Fetched from mock endpoints to preview full policy payloads.</p>
+                    </div>
+                    <button
+                        onClick={fetchMockPolicies}
+                        className="inline-flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50"
+                        disabled={mockLoading}
+                    >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${mockLoading ? 'animate-spin' : ''}`} />
+                        Refresh mock data
+                    </button>
+                </div>
+
+                {mockError && (
+                    <div className="mb-3 rounded-md bg-red-50 border border-red-200 p-3 text-red-800 text-sm flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        {mockError}
+                    </div>
+                )}
+
+                {mockLoading ? (
+                    <div className="flex items-center justify-center py-6 text-gray-600 text-sm">Loading mock policies...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {mockPolicies.map((policy) => (
+                            <div
+                                key={policy.policyId}
+                                className={`border rounded-lg p-4 hover:shadow-sm transition cursor-pointer ${selectedMock?.policyId === policy.policyId ? 'border-indigo-500' : 'border-gray-200'}`}
+                                onClick={() => {
+                                    setSelectedMock(policy);
+                                    fetchMockDetail(policy.policyId);
+                                }}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-md font-semibold text-gray-900">{policy.policyNumber}</h3>
+                                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge((policy.brokerStatus as string) || 'pending')}`}>
+                                        {formatStatus(policy.brokerStatus || policy.status)}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-700 font-medium">{policy.builder.nameOfBuilder}</p>
+                                <p className="text-xs text-gray-500">{policy.project.address}</p>
+                                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
+                                    <div>
+                                        <p className="text-gray-500">Sum Insured</p>
+                                        <p className="font-semibold">
+                                            {formatCurrency(policy.project.totalEstimateSum)}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Payment</p>
+                                        <p className="font-semibold">{formatStatus(policy.paymentInfo?.status)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Surveyor</p>
+                                        <p className="font-semibold text-gray-700">
+                                            {policy.survey?.surveyor?.name || 'Pending'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Priority</p>
+                                        <p className="font-semibold capitalize">{policy.priority || 'medium'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {mockPolicies.length === 0 && !mockError && (
+                            <div className="col-span-full text-center text-gray-500 text-sm py-4">
+                                No mock policies to display.
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {selectedMock && (
+                    <div className="mt-6 border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900">Mock Policy Detail</h3>
+                                <p className="text-sm text-gray-600">{selectedMock.policyNumber} · {selectedMock.builder.nameOfBuilder}</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {mockDetailLoading && <span className="text-xs text-gray-500">Refreshing…</span>}
+                                <button
+                                    onClick={() => setSelectedMock(null)}
+                                    className="text-sm text-indigo-600 hover:text-indigo-800"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <SectionCard icon={User} title="Builder">
+                                <KeyValue label="Builder" value={`${selectedMock.builder.nameOfBuilder} (${selectedMock.builder.rcNumber})`} />
+                                <KeyValue label="Email / Phone" value={`${selectedMock.builder.customerEmail} · ${selectedMock.builder.telNo}`} />
+                                <KeyValue label="Address" value={selectedMock.builder.address} />
+                                {selectedMock.builder.identification && (
+                                    <KeyValue label="ID" value={`${selectedMock.builder.identification.identificationTypeId} - ${selectedMock.builder.identification.identityNo}`} />
+                                )}
+                            </SectionCard>
+
+                            <SectionCard icon={Layers} title="Project">
+                                <KeyValue label="Description" value={selectedMock.project.workDetails || 'Project details pending'} />
+                                <KeyValue label="Location" value={`${selectedMock.project.address || '—'} (${selectedMock.project.district || ''} ${selectedMock.project.lga || ''})`} />
+                                <KeyValue label="Cover Type" value={selectedMock.project.coverTypeIdxDetails} />
+                                <KeyValue label="Sum Insured" value={formatCurrency(selectedMock.project.totalEstimateSum)} />
+                            </SectionCard>
+
+                            <SectionCard icon={Shield} title="Compliance & Membership">
+                                <KeyValue label="Membership" value={selectedMock.membership ? `${selectedMock.membership.MembershipName || ''} ${selectedMock.membership.MembershipNo || ''}` : '—'} />
+                                <KeyValue label="Insurance" value={selectedMock.compliance?.HasInsurance ? selectedMock.compliance.HasInsuranceDetails : 'No prior cover'} />
+                                <KeyValue label="Disciplinary" value={selectedMock.compliance?.disciplinaryCommittee ? selectedMock.compliance.disciplinaryCommitteeDetails : 'None disclosed'} />
+                                <KeyValue label="Practice Outside Nigeria" value={selectedMock.compliance?.PracticeOutsideNigeria || 'No'} />
+                            </SectionCard>
+
+                            <SectionCard icon={ClipboardList} title="Workforce">
+                                <KeyValue label="Contract Staff" value={selectedMock.workforce?.contractStaffCount ?? '—'} />
+                                <KeyValue label="Blood Relations" value={selectedMock.workforce?.bloodRelationsCount ?? '—'} />
+                                <div className="mt-2">
+                                    <p className="text-xs font-semibold text-gray-700">Categories</p>
+                                    <ul className="text-xs text-gray-600 list-disc ml-4">
+                                        {(selectedMock.workforce?.categoryOfWorkmen || []).map((c, idx) => (
+                                            <li key={idx}>{c.categoryOfWorkmen} · {c.numberOfEmployment} staff · {c.yearsOfEmployment} yrs</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="mt-2">
+                                    <p className="text-xs font-semibold text-gray-700">Professionals</p>
+                                    <ul className="text-xs text-gray-600 list-disc ml-4">
+                                        {(selectedMock.workforce?.professionals || []).map((p, idx) => (
+                                            <li key={idx}>{p.surname} {p.otherName} — {p.profession} ({p.qualification}), {p.yearsInEmployment} yrs</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </SectionCard>
+
+                            <SectionCard icon={DollarSign} title="Payment">
+                                <KeyValue label="Status" value={formatStatus(selectedMock.paymentInfo?.status)} />
+                                <KeyValue label="Amount" value={formatCurrency(selectedMock.paymentInfo?.amount)} />
+                                <KeyValue label="Transaction ID" value={selectedMock.paymentInfo?.transactionId || '—'} />
+                                <KeyValue label="Method" value={selectedMock.paymentInfo?.method || '—'} />
+                                <KeyValue label="Paid At" value={selectedMock.paymentInfo?.paidAt ? formatDate(selectedMock.paymentInfo.paidAt) : '—'} />
+                            </SectionCard>
+
+                            <SectionCard icon={FileText} title="Survey">
+                                <KeyValue label="Surveyor" value={selectedMock.survey?.surveyor?.name || 'Unassigned'} />
+                                <KeyValue label="Survey Date" value={selectedMock.survey?.surveyDate ? formatDate(selectedMock.survey.surveyDate) : '—'} />
+                                <KeyValue label="Assessment" value={selectedMock.survey?.structuralAssessment || '—'} />
+                                <KeyValue label="Risks" value={selectedMock.survey?.riskFactors || '—'} />
+                                <KeyValue label="Recommendations" value={selectedMock.survey?.recommendations || '—'} />
+                                <KeyValue label="Estimated Value" value={formatCurrency(selectedMock.survey?.estimatedValue)} />
+                                {selectedMock.survey?.surveyDocument?.url && (
+                                    <div className="mt-2">
+                                        <p className="text-xs font-semibold text-gray-700">Survey Report</p>
+                                        <a
+                                            href={selectedMock.survey.surveyDocument.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-indigo-600 text-sm hover:underline"
+                                        >
+                                            Download survey document
+                                        </a>
+                                    </div>
+                                )}
+                            </SectionCard>
+
+                            <SectionCard icon={ClipboardList} title="Notes" fullWidth>
+                                <KeyValue label="Admin Notes" value={selectedMock.adminNotes || '—'} />
+                            </SectionCard>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Filters and Search */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
@@ -582,3 +808,25 @@ export default function BrokerAdminDashboard() {
         </div>
     );
 }
+
+const SectionCard: React.FC<{
+    title: string;
+    icon: React.ComponentType<{ className?: string }>;
+    children: React.ReactNode;
+    fullWidth?: boolean;
+}> = ({ title, icon: Icon, children, fullWidth }) => (
+    <div className={`bg-white border border-gray-200 rounded-lg p-4 ${fullWidth ? 'col-span-full' : ''}`}>
+        <div className="flex items-center gap-2 mb-3">
+            <Icon className="w-4 h-4 text-indigo-500" />
+            <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
+        </div>
+        <div className="space-y-2">{children}</div>
+    </div>
+);
+
+const KeyValue: React.FC<{ label: string; value?: string | number | null }> = ({ label, value }) => (
+    <div className="text-sm">
+        <p className="text-gray-500 text-xs uppercase tracking-wide">{label}</p>
+        <p className="text-gray-800">{value ?? '—'}</p>
+    </div>
+);

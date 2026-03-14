@@ -78,7 +78,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
     }
     try {
       const assignmentData = {
-        ammcId: selectedPolicy!._id,
+        policyId: selectedPolicy!._id,
         surveyorId: newAssignmentData.surveyorId,
         assignedBy: user?._id,
         deadline: new Date(newAssignmentData.deadline).toISOString(),
