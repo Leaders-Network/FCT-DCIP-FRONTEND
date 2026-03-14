@@ -46,7 +46,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [showPremiumModal, setShowPremiumModal] = useState(false);
     const [premiumState, setPremiumState] = useState<Record<string, {
         premiumDetails: any;
-        nextAction?: { url: string; method: string; label?: string };
+        nextAction?: { url: string; method: string; label?: string; type?: string };
     }>>({});
     const [calculatingPremium, setCalculatingPremium] = useState<string | null>(null);
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
@@ -76,7 +76,6 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                             }
                         },
                         nextAction: {
-                            type: 'initialize_payment',
                             label: 'Proceed to payment',
                             method: 'POST',
                             url: `/payment/egolopay/initialize/${policy._id}`
