@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
+import { PremiumDetailsModal } from './PremiumDetailsModal';
 import {
     Eye,
     Search,
@@ -42,11 +43,18 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
     const [selectedPolicy, setSelectedPolicy] = useState<BuilderLiabilityPolicy | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [showPremiumModal, setShowPremiumModal] = useState(false);
+    const [premiumState, setPremiumState] = useState<Record<string, {
+        premiumDetails: any;
+        nextAction?: { url: string; method: string; label?: string };
+    }>>({});
+    const [calculatingPremium, setCalculatingPremium] = useState<string | null>(null);
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+    const [premiumModalPolicyId, setPremiumModalPolicyId] = useState<string | null>(null);
 
-    const handleCalculatePremiumAndPay = async (policy: BuilderLiabilityPolicy) => {
+    const handleCalculatePremium = async (policy: BuilderLiabilityPolicy) => {
         try {
-            setProcessingPayment(policy._id);
+            setCalculatingPremium(policy._id);
 
             console.log('💳 Calculating premium via NIIP...');
 
@@ -62,30 +70,61 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 throw new Error(premiumData.message || 'Premium calculation failed');
             }
 
-            const premiumAmount = premiumData.data.premiumAmount;
+            const premiumDetails = premiumData.data.premiumDetails || { amount: premiumData.data.premiumAmount };
+            const nextAction = premiumData.data.nextAction
+                ? { ...premiumData.data.nextAction, url: normalizeApiPath(premiumData.data.nextAction.url) }
+                : undefined;
 
-            toast.success(
-                `✅ Premium Calculated Successfully!\n\nPremium Amount: ₦${premiumAmount?.toLocaleString?.() ?? premiumAmount}`
-            );
+            setPremiumState(prev => ({
+                ...prev,
+                [policy._id]: {
+                    premiumDetails,
+                    nextAction
+                }
+            }));
 
-            console.log('💳 Initializing payment on Egolopay...');
+            setPremiumModalPolicyId(policy._id);
+            setShowPremiumModal(true);
+        } catch (error: any) {
+            console.error('Payment error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to process payment';
+            toast.error(`❌ Payment Error\n\n${errorMessage}\n\nPlease try again or contact support.`);
+        } finally {
+            setCalculatingPremium(null);
+        }
+    };
 
-            // Step 3–4: initialize payment on Egolopay
-            const egolopayResponse = await api.post(`/payment/egolopay/initialize/${policy._id}`);
-            const egolopayData = egolopayResponse.data;
+    const normalizeApiPath = (path?: string) => {
+        if (!path) return '';
+        // Remove any leading /api/v1 since the axios baseURL already includes it
+        const cleaned = path.replace(/^\/?api\/v1/, '');
+        return cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+    };
 
-            console.log('Egolopay Initialize Response:', egolopayData);
+    const handleProceedToPayment = async (policy: BuilderLiabilityPolicy) => {
+        const state = premiumState[policy._id];
+        const nextAction = state?.nextAction;
 
-            if (!egolopayData.success || !egolopayData.data?.authorizationUrl) {
-                throw new Error(egolopayData.message || 'Failed to initialize payment on Egolopay');
+        try {
+            setProcessingPayment(policy._id);
+
+            const api = (await import('@/services/api')).default;
+            const url = normalizeApiPath(nextAction?.url || `/payment/egolopay/initialize/${policy._id}`);
+            const method = (nextAction?.method || 'POST').toUpperCase();
+
+            const response = method === 'GET'
+                ? await api.get(url)
+                : await api.post(url);
+
+            const data = response.data;
+            console.log('Egolopay Initialize Response:', data);
+
+            if (!data.success || !data.data?.authorizationUrl) {
+                throw new Error(data.message || 'Failed to initialize payment on Egolopay');
             }
 
-            toast.success(
-                `✅ Payment Initialized!\n\nYou will be redirected to Egolopay to complete your payment.`
-            );
-
-            const authorizationUrl = egolopayData.data.authorizationUrl as string;
-            window.location.href = authorizationUrl;
+            toast.success(`✅ Payment Initialized! Redirecting to Egolopay...`);
+            window.location.href = data.data.authorizationUrl as string;
         } catch (error: any) {
             console.error('Payment error:', error);
             const errorMessage = error.response?.data?.message || error.message || 'Failed to process payment';
@@ -387,15 +426,37 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                             <div className="flex flex-wrap items-center gap-2 justify-end">
                                                 {/* Show payment button only if survey is completed and approved */}
                                                 {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'approve' && (
-                                                    <Button
-                                                        size="sm"
-                                                        className="bg-green-600 hover:bg-green-700"
-                                                        onClick={() => handleCalculatePremiumAndPay(policy)}
-                                                        disabled={processingPayment === policy._id}
-                                                    >
-                                                        <CreditCard className="w-4 h-4 mr-2" />
-                                                        {processingPayment === policy._id ? 'Processing...' : 'Calculate Premium'}
-                                                    </Button>
+                                                    <>
+                                                        <Button
+                                                            size="sm"
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                            onClick={() => premiumState[policy._id]
+                                                                ? handleProceedToPayment(policy)
+                                                                : handleCalculatePremium(policy)}
+                                                            disabled={processingPayment === policy._id || calculatingPremium === policy._id}
+                                                        >
+                                                            <CreditCard className="w-4 h-4 mr-2" />
+                                                            {processingPayment === policy._id
+                                                                ? 'Processing...'
+                                                                : premiumState[policy._id]
+                                                                    ? 'Proceed to Payment'
+                                                                    : calculatingPremium === policy._id
+                                                                        ? 'Calculating...'
+                                                                        : 'Calculate Premium'}
+                                                        </Button>
+                                                        {premiumState[policy._id] && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => {
+                                                                    setPremiumModalPolicyId(policy._id);
+                                                                    setShowPremiumModal(true);
+                                                                }}
+                                                            >
+                                                                View Premium
+                                                            </Button>
+                                                        )}
+                                                    </>
                                                 )}
                                                 {/* Show rejection message if rejected */}
                                                 {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'reject' && (
@@ -434,6 +495,20 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 policy={selectedPolicy}
                 isOpen={showDetailsModal}
                 onClose={handleCloseModal}
+            />
+            <PremiumDetailsModal
+                isOpen={showPremiumModal}
+                onClose={() => setShowPremiumModal(false)}
+                premiumDetails={premiumModalPolicyId ? premiumState[premiumModalPolicyId]?.premiumDetails : null}
+                policy={premiumModalPolicyId ? policies.find(p => p._id === premiumModalPolicyId) || null : null}
+                onProceed={() => {
+                    if (!premiumModalPolicyId) return;
+                    const policy = policies.find(p => p._id === premiumModalPolicyId);
+                    if (policy) {
+                        handleProceedToPayment(policy);
+                    }
+                }}
+                loading={processingPayment === premiumModalPolicyId}
             />
         </div>
     );
