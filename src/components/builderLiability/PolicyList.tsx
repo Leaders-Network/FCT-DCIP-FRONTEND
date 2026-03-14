@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useBuilderLiabilityPolicies } from '@/hooks/useBuilderLiabilityPolicy';
 import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
 import { BuilderLiabilityPolicy, BuilderLiabilityPolicyStatus } from '@/types/builderLiabilityPolicy.types';
@@ -51,6 +51,42 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [calculatingPremium, setCalculatingPremium] = useState<string | null>(null);
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
     const [premiumModalPolicyId, setPremiumModalPolicyId] = useState<string | null>(null);
+
+    // Seed premium state from already-calculated policies so buttons don't regress on reload
+    useEffect(() => {
+        setPremiumState((prev) => {
+            const next = { ...prev };
+            policies.forEach((policy) => {
+                const calculatedAmount = (policy as any)?.paymentInfo?.amount;
+                if (calculatedAmount && !next[policy._id]) {
+                    next[policy._id] = {
+                        premiumDetails: {
+                            amount: calculatedAmount,
+                            currency: 'NGN',
+                            invoiceNumber: (policy as any)?.paymentInfo?.niipInvoice || (policy as any)?.niipPayload?.invoiceNumber || null,
+                            transactionReference: (policy as any)?.paymentInfo?.niipReference || (policy as any)?.niipPayload?.transactionReference || null,
+                            builder: {
+                                name: policy.builder.nameOfBuilder,
+                                email: policy.builder.customerEmail,
+                                phone: policy.builder.telNo
+                            },
+                            estimates: {
+                                declaredProjectSum: policy.project.totalEstimateSum,
+                                surveyorEstimate: (policy as any)?.surveyorEstimatedValue || null
+                            }
+                        },
+                        nextAction: {
+                            type: 'initialize_payment',
+                            label: 'Proceed to payment',
+                            method: 'POST',
+                            url: `/payment/egolopay/initialize/${policy._id}`
+                        }
+                    };
+                }
+            });
+            return next;
+        });
+    }, [policies]);
 
     const handleCalculatePremium = async (policy: BuilderLiabilityPolicy) => {
         try {
