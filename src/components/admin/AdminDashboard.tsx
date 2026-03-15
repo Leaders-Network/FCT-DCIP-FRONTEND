@@ -12,7 +12,8 @@ import {
   Star,
   Activity,
   RefreshCw,
-  Bell
+  Bell,
+  FileDown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -21,12 +22,14 @@ import {
   getAdminAlerts,
   getAdminSurveyors
 } from '@/services/api';
+import { builderLiabilityPolicyAPI } from "@/services/builderLiabilityPolicyApi";
 import {
   DashboardData,
   QuickStats,
   AdminAlert,
   Surveyor
 } from '@/types/api.types';
+import { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { toast } from "sonner";
 
 interface SurveyorPerformance {
@@ -49,6 +52,7 @@ const AdminDashboard: React.FC = () => {
   const [quickStats, setQuickStats] = useState<QuickStats | null>(null);
   const [alerts, setAlerts] = useState<AdminAlert[]>([]);
   const [topPerformers, setTopPerformers] = useState<SurveyorPerformance[]>([]);
+  const [exporting, setExporting] = useState(false);
 
   // UI State
   const [activeTab, setActiveTab] = useState<'overview' | 'alerts'>('overview');
@@ -117,6 +121,100 @@ const AdminDashboard: React.FC = () => {
     setRefreshing(true);
     await fetchDashboardData();
     setRefreshing(false);
+  };
+
+  const csvEscape = (value: unknown): string => {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (/[",\n]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const buildCsv = (policies: BuilderLiabilityPolicy[]) => {
+    const headers = [
+      'Policy Number',
+      'Status',
+      'Priority',
+      'Builder Name',
+      'RC Number',
+      'Builder Email',
+      'Builder Phone',
+      'Project Address',
+      'District',
+      'LGA',
+      'Cover Type',
+      'Sum Insured',
+      'Payment Status',
+      'Premium Amount (NGN)',
+      'Created At',
+      'Updated At'
+    ];
+
+    const rows = policies.map((p) => {
+      const builder = p.builder || {} as any;
+      const project = p.project || {} as any;
+      const payment = (p as any).paymentInfo || {};
+      return [
+        csvEscape(p.policyNumber || ''),
+        csvEscape(p.status || ''),
+        csvEscape(p.priority || ''),
+        csvEscape(builder.nameOfBuilder || ''),
+        csvEscape(builder.rcNumber || ''),
+        csvEscape(builder.customerEmail || ''),
+        csvEscape(builder.telNo || ''),
+        csvEscape(project.address || ''),
+        csvEscape(project.district || ''),
+        csvEscape(project.lga || ''),
+        csvEscape(project.coverTypeIdxDetails || ''),
+        csvEscape(project.totalEstimateSum ?? ''),
+        csvEscape(payment.status || ''),
+        csvEscape(payment.amount ?? ''),
+        csvEscape(p.createdAt || ''),
+        csvEscape(p.updatedAt || '')
+      ].join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+  };
+
+  const downloadCsv = (csv: string) => {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `policies-${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPolicies = async () => {
+    try {
+      setExporting(true);
+      let page = 1;
+      const limit = 200;
+      let all: BuilderLiabilityPolicy[] = [];
+      // paginate until no more
+      while (true) {
+        const res = await builderLiabilityPolicyAPI.getAllPolicies({ page, limit, sortBy: 'createdAt', sortOrder: 'desc' });
+        if (res.success && res.data?.policies) {
+          all = all.concat(res.data.policies);
+          if (!res.data.pagination?.hasMore) break;
+          page += 1;
+        } else {
+          throw new Error('Failed to fetch policies');
+        }
+      }
+      const csv = buildCsv(all);
+      downloadCsv(csv);
+      toast.success(`Exported ${all.length} policies to CSV`);
+    } catch (err: any) {
+      console.error('Export failed', err);
+      toast.error(err?.message || 'Failed to export policies');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const getActivityIcon = (type: string) => {
@@ -226,6 +324,17 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Export CSV */}
+            <button
+              onClick={exportPolicies}
+              disabled={exporting}
+              className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              title="Export all policies as CSV"
+            >
+              <FileDown className={`w-4 h-4 ${exporting ? 'animate-pulse' : ''}`} />
+              <span className="text-sm font-medium">{exporting ? 'Exporting…' : 'Export CSV'}</span>
+            </button>
+
             {/* Alerts Badge */}
             {alerts.length > 0 && (
               <button
