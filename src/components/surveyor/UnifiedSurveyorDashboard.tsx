@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getSurveyorAssignments } from "@/services/api";
+import DashboardErrorBanner from "@/components/shared/DashboardErrorBanner";
 
 interface Assignment {
     _id: string;
@@ -113,6 +114,7 @@ const UnifiedSurveyorDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [friendlyError, setFriendlyError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchSurveyorData();
@@ -121,33 +123,40 @@ const UnifiedSurveyorDashboard = () => {
     const fetchSurveyorData = async () => {
         setLoading(true);
         setError(null);
+        setFriendlyError(null);
         
         try {
             // Fetch surveyor's assignments using surveyor-specific endpoint
             const assignmentsResponse = await getSurveyorAssignments({ status: 'all', page: 1, limit: 100 });
 
             const fetchedAssignments = assignmentsResponse?.data?.assignments || [];
-            setAssignments(fetchedAssignments);
+            if (fetchedAssignments.length) {
+                setAssignments(fetchedAssignments);
 
-            // Calculate stats
-            const total = fetchedAssignments.length;
-            const assigned = fetchedAssignments.filter((a: Assignment) => a.status === 'assigned').length;
-            const inProgress = fetchedAssignments.filter((a: Assignment) =>
-                a.status === 'accepted' || a.status === 'in_progress'
-            ).length;
-            const completed = fetchedAssignments.filter((a: Assignment) => a.status === 'completed').length;
+                // Calculate stats
+                const total = fetchedAssignments.length;
+                const assigned = fetchedAssignments.filter((a: Assignment) => a.status === 'assigned').length;
+                const inProgress = fetchedAssignments.filter((a: Assignment) =>
+                    a.status === 'accepted' || a.status === 'in_progress'
+                ).length;
+                const completed = fetchedAssignments.filter((a: Assignment) => a.status === 'completed').length;
 
-            setStats({
-                total,
-                assigned,
-                inProgress,
-                completed,
-                rating: 4.5 // This should come from surveyor profile
-            });
+                setStats({
+                    total,
+                    assigned,
+                    inProgress,
+                    completed,
+                    rating: 4.5 // This should come from surveyor profile
+                });
+            } else {
+                setAssignments([]);
+                setFriendlyError("No surveyor assignments found. If this seems wrong, please contact the Gladfaith team.");
+            }
 
         } catch (err) {
             console.error("Failed to fetch surveyor data:", err);
             setError("Failed to load dashboard data. Please try again later.");
+            setFriendlyError("We couldn't load your survey dashboard right now. Please refresh or contact the Gladfaith team.");
         } finally {
             setLoading(false);
         }
@@ -235,7 +244,7 @@ const UnifiedSurveyorDashboard = () => {
         );
     }
 
-    if (error) {
+    if (error && !friendlyError) {
         return (
             <div className="flex flex-col items-center justify-center h-64 bg-red-50 border border-red-200 rounded-lg">
                 <AlertCircle className="h-12 w-12 text-red-500" />
@@ -253,6 +262,9 @@ const UnifiedSurveyorDashboard = () => {
 
     return (
         <div className="space-y-8">
+            {friendlyError && (
+                <DashboardErrorBanner message={friendlyError} />
+            )}
             {/* Header */}
             <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-6 text-white">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

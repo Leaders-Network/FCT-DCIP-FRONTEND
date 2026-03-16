@@ -31,6 +31,7 @@ import {
 } from '@/types/api.types';
 import { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { toast } from "sonner";
+import DashboardErrorBanner from "@/components/shared/DashboardErrorBanner";
 
 interface SurveyorPerformance {
   id: string;
@@ -46,6 +47,7 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [friendlyError, setFriendlyError] = useState<string | null>(null);
 
   // API Data States
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -64,6 +66,7 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
+    setFriendlyError(null);
 
     try {
       // Fetch all dashboard data from the new API endpoints
@@ -82,16 +85,22 @@ const AdminDashboard: React.FC = () => {
       // Handle dashboard data
       if (dashboardResponse.status === 'fulfilled' && dashboardResponse.value.success) {
         setDashboardData(dashboardResponse.value.data);
+      } else if (dashboardResponse.status === 'fulfilled') {
+        setFriendlyError(dashboardResponse.value.message || 'Dashboard data unavailable.');
       }
 
       // Handle quick stats
       if (quickStatsResponse.status === 'fulfilled' && quickStatsResponse.value.success) {
         setQuickStats(quickStatsResponse.value.data);
+      } else if (quickStatsResponse.status === 'fulfilled' && !quickStatsResponse.value.success) {
+        setFriendlyError(prev => prev || quickStatsResponse.value.message || 'Quick stats unavailable.');
       }
 
       // Handle alerts
       if (alertsResponse.status === 'fulfilled' && alertsResponse.value.success) {
         setAlerts(alertsResponse.value.data || []);
+      } else if (alertsResponse.status === 'fulfilled' && !alertsResponse.value.success) {
+        setFriendlyError(prev => prev || alertsResponse.value.message || 'Alerts unavailable.');
       }
 
       // Handle top performers
@@ -112,6 +121,7 @@ const AdminDashboard: React.FC = () => {
     } catch (error: unknown) {
       console.error('Failed to fetch dashboard data:', error);
       setError('Failed to load dashboard data. Please try refreshing.');
+      setFriendlyError('We couldn’t load the admin dashboard right now. Please refresh, and contact the Gladfaith team if it keeps failing.');
     } finally {
       setLoading(false);
     }
@@ -362,7 +372,10 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Error Message */}
-        {error && (
+        {friendlyError && (
+          <DashboardErrorBanner message={friendlyError} className="mb-6" />
+        )}
+        {error && !friendlyError && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center">
               <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />

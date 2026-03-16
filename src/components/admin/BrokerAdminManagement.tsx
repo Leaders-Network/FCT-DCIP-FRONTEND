@@ -17,7 +17,8 @@ import {
     XCircle,
     AlertCircle
 } from "lucide-react";
-import { BrokerAdmin } from "@/types/api.types";
+import { useAuth } from "@/context/useAuth";
+import { BrokerAdmin, Employee } from "@/types/api.types";
 
 // Extended BrokerAdmin interface for management UI with populated userId
 interface BrokerAdminWithUser extends Omit<BrokerAdmin, 'userId'> {
@@ -65,11 +66,24 @@ interface BrokerAdminManagementProps {
     onDeleteBrokerAdmin?: (id: string) => Promise<void>;
 }
 
+const isEmployee = (user: unknown): user is Employee => {
+    return (
+        typeof user === "object" &&
+        user !== null &&
+        "employeeRole" in user &&
+        typeof (user as Employee).employeeRole === "object" &&
+        (user as Employee).employeeRole !== null &&
+        "role" in (user as Employee).employeeRole
+    );
+};
+
 const BrokerAdminManagement = ({
     onCreateBrokerAdmin,
     onUpdateBrokerAdmin,
     onDeleteBrokerAdmin,
 }: BrokerAdminManagementProps) => {
+    const { user } = useAuth();
+    const isSuperAdmin = isEmployee(user) && user.employeeRole.role === "Super-admin";
     const [brokerAdmins, setBrokerAdmins] = useState<BrokerAdminWithUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -432,13 +446,15 @@ const BrokerAdminManagement = ({
                         </select>
                     </div>
                 </div>
-                <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                    <Plus className="w-5 h-5" />
-                    Add Broker Admin
-                </button>
+                {isSuperAdmin && (
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add Broker Admin
+                    </button>
+                )}
             </div>
         </div>
 

@@ -8,6 +8,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { brokerAdminAPI } from "@/services/api";
+import { removeAuthToken } from "@/utils/auth";
 
 interface BrokerHeaderProps {
     onMenuClick?: () => void;
@@ -19,13 +21,15 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
         email: string;
         organization: string;
         brokerFirmName?: string;
+        firstname?: string;
+        lastname?: string;
     } | null>(null);
     const [notifications, setNotifications] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         // Get admin info from localStorage
-        const storedAdminInfo = localStorage.getItem("niaAdminInfo");
+        const storedAdminInfo = localStorage.getItem("brokerAdminInfo");
         if (storedAdminInfo) {
             setAdminInfo(JSON.parse(storedAdminInfo));
         }
@@ -42,7 +46,10 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
         console.log("Searching for:", searchQuery);
     };
 
-    const adminName = adminInfo?.fullname || "Broker Admin";
+    const adminName =
+        adminInfo?.fullname ||
+        [adminInfo?.firstname, adminInfo?.lastname].filter(Boolean).join(" ").trim() ||
+        "Broker Admin";
 
     const initials = adminName
         .split(" ")
@@ -144,7 +151,20 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
 
                                 <DropdownMenuSeparator />
 
-                                <DropdownMenuItem className="text-red-600">
+                                <DropdownMenuItem
+                                    className="text-red-600"
+                                    onSelect={async () => {
+                                        try {
+                                            await brokerAdminAPI.logout();
+                                        } catch (error) {
+                                            console.error("Broker admin logout failed:", error);
+                                        } finally {
+                                            removeAuthToken('broker-admin');
+                                            localStorage.removeItem('brokerAdminInfo');
+                                            window.location.href = '/broker-admin/login';
+                                        }
+                                    }}
+                                >
                                     <LogOut className="mr-2 h-4 w-4" />
                                     <span>Logout</span>
                                 </DropdownMenuItem>
