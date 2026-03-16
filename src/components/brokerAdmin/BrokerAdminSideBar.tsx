@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { brokerAdminAPI } from "@/services/api";
+import { removeAuthToken } from "@/utils/auth";
 import {
     Home,
     Users,
@@ -216,6 +218,17 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
                     className={`flex items-center w-full px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${!showExpanded ? "justify-center" : ""
                         }`}
                     title={!showExpanded ? "Logout" : ""}
+                    onClick={async () => {
+                        try {
+                            await brokerAdminAPI.logout();
+                        } catch (error) {
+                            console.error("Broker admin logout failed:", error);
+                        } finally {
+                            removeAuthToken('broker-admin');
+                            localStorage.removeItem('brokerAdminInfo');
+                            router.push('/broker-admin/login');
+                        }
+                    }}
                 >
                     <LogOut className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"}`} />
                     {showExpanded && <span>Logout</span>}

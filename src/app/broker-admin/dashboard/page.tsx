@@ -24,6 +24,7 @@ import {
     ClipboardList,
     Images
 } from 'lucide-react';
+import DashboardErrorBanner from '@/components/shared/DashboardErrorBanner';
 import type {
     BrokerDashboardData,
     BrokerPolicyRequest,
@@ -66,6 +67,7 @@ export default function BrokerAdminDashboard() {
     const [mockLoading, setMockLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [mockError, setMockError] = useState<string | null>(null);
+    const [dashboardError, setDashboardError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'under_review' | 'rejected' | 'completed'>('all');
     const [refreshing, setRefreshing] = useState(false);
@@ -90,12 +92,16 @@ export default function BrokerAdminDashboard() {
 
     const fetchDashboardData = async () => {
         try {
+            setDashboardError(null);
             const response = await brokerAdminAPI.getDashboardData();
             if (response.success && response.data) {
                 setDashboardData(response.data);
+            } else {
+                setDashboardError(response.message || 'Failed to fetch dashboard data.');
             }
         } catch (err) {
             console.error('Failed to fetch dashboard data:', err);
+            setDashboardError('Unable to load broker dashboard data. Please contact the Gladfaith team if this persists.');
         }
     };
 
@@ -281,39 +287,43 @@ export default function BrokerAdminDashboard() {
             </div>
 
             {/* Statistics */}
-            {dashboardData && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                    <StatCard
-                        icon={FileText}
-                        label="Total Claims"
-                        value={dashboardData.statistics.total}
-                        color="blue"
-                    />
-                    <StatCard
-                        icon={Clock}
-                        label="Pending"
-                        value={dashboardData.statistics.pending}
-                        color="yellow"
-                    />
-                    <StatCard
-                        icon={TrendingUp}
-                        label="Under Review"
-                        value={dashboardData.statistics.under_review}
-                        color="indigo"
-                    />
-                    <StatCard
-                        icon={CheckCircle}
-                        label="Completed"
-                        value={dashboardData.statistics.completed}
-                        color="green"
-                    />
-                    <StatCard
-                        icon={XCircle}
-                        label="Rejected"
-                        value={dashboardData.statistics.rejected}
-                        color="red"
-                    />
-                </div>
+            {dashboardError ? (
+                <DashboardErrorBanner message={dashboardError} className="mb-8" />
+            ) : (
+                dashboardData && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                        <StatCard
+                            icon={FileText}
+                            label="Total Claims"
+                            value={dashboardData.statistics.total}
+                            color="blue"
+                        />
+                        <StatCard
+                            icon={Clock}
+                            label="Pending"
+                            value={dashboardData.statistics.pending}
+                            color="yellow"
+                        />
+                        <StatCard
+                            icon={TrendingUp}
+                            label="Under Review"
+                            value={dashboardData.statistics.under_review}
+                            color="indigo"
+                        />
+                        <StatCard
+                            icon={CheckCircle}
+                            label="Completed"
+                            value={dashboardData.statistics.completed}
+                            color="green"
+                        />
+                        <StatCard
+                            icon={XCircle}
+                            label="Rejected"
+                            value={dashboardData.statistics.rejected}
+                            color="red"
+                        />
+                    </div>
+                )
             )}
 
             {/* Mock Underwriter Policies (Demo) */}
