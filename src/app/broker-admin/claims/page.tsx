@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { brokerAdminAPI } from '@/services/api';
+import { brokerAdminAPI, triggerCsvDownload } from '@/services/api';
+import ExportCsvPanel from '@/components/shared/ExportCsvPanel';
 import {
     FileText,
     AlertCircle,
@@ -211,6 +212,16 @@ export default function BrokerClaimsListPage() {
                     </button>
                 </div>
             </div>
+
+            {/* Export Panel */}
+            <ExportCsvPanel
+                onExport={async (startDate, endDate) => {
+                    const csv = await brokerAdminAPI.exportClaimsCsv(startDate, endDate);
+                    triggerCsvDownload(csv, 'broker_claims.csv');
+                }}
+                buttonLabel="Export Claims CSV"
+                className="mb-6"
+            />
 
             {/* Filters and Search */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">

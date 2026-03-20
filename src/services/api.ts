@@ -1779,14 +1779,116 @@ export const brokerAdminAPI = {
     return response.data;
   },
 
-  // --- Demo-only mock underwriter data ---
-  getMockAssignedPolicies: async (): Promise<import("../types/api.types").UnderwriterMockListResponse> => {
-    const response = await api.get('/broker-admin/policies/mock-assigned');
+  // Export claims as CSV
+  exportClaimsCsv: async (startDate?: string, endDate?: string): Promise<string> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const url = `/broker-admin/claims/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await api.get(url, { responseType: 'text' });
+    return response.data as string;
+  },
+
+  // Get completed policies
+  getCompletedPolicies: async (filters?: {
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    companyName?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+  }): Promise<import("../types/api.types").BrokerCompletedPoliciesResponse> => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+
+    const url = `/broker-admin/policies/completed${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await api.get(url);
     return response.data;
   },
 
-  getMockPolicyDetail: async (policyId: string): Promise<import("../types/api.types").UnderwriterMockPolicyResponse> => {
-    const response = await api.get(`/broker-admin/policies/${policyId}/underwriter-preview`);
+  // Get completed policy by ID
+  getCompletedPolicyById: async (policyId: string): Promise<import("../types/api.types").BrokerCompletedPolicyDetailResponse> => {
+    const response = await api.get(`/broker-admin/policies/completed/${policyId}`);
     return response.data;
+  },
+
+  // Export completed policies as CSV
+  exportCompletedPoliciesCsv: async (startDate?: string, endDate?: string, companyName?: string): Promise<string> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('dateFrom', startDate);
+    if (endDate) params.append('dateTo', endDate);
+    if (companyName) params.append('companyName', companyName);
+
+    const url = `/broker-admin/policies/completed/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await api.get(url, { responseType: 'text' });
+    return response.data as string;
   }
+};
+
+// ─── CSV Export helpers (one per dashboard) ────────────────────────────────
+
+/**
+ * Download AMMC Admin policies as a CSV string.
+ */
+export const exportAmmcPoliciesCsv = async (
+  startDate?: string,
+  endDate?: string
+): Promise<string> => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  const url = `/admin/dashboard/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await api.get(url, { responseType: 'text' });
+  return response.data as string;
+};
+
+/**
+ * Download NIA Admin assignments as a CSV string.
+ */
+export const exportNiaAssignmentsCsv = async (
+  startDate?: string,
+  endDate?: string
+): Promise<string> => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  const url = `/nia-admin/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await api.get(url, { responseType: 'text' });
+  return response.data as string;
+};
+
+/**
+ * Download Surveyor assignments as a CSV string.
+ */
+export const exportSurveyorCsv = async (
+  startDate?: string,
+  endDate?: string
+): Promise<string> => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  const url = `/surveyor/assignments/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await api.get(url, { responseType: 'text' });
+  return response.data as string;
+};
+
+/** Shared helper: trigger a browser file download from a CSV string. */
+export const triggerCsvDownload = (csvData: string, filename: string) => {
+  const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+  const href = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(href);
 };
