@@ -1,4 +1,4 @@
-
+import type { BuilderLiabilityPolicy } from './builderLiabilityPolicy.types';
 import { ApiResponse, ApiSuccessResponse, ApiErrorResponse, RecommendationAction, PaginationData } from './utility.types';
 export type { ApiResponse, RecommendationAction, PaginationData };
 
@@ -1237,136 +1237,61 @@ export interface BrokerStatusUpdateResponse {
   claim: BrokerPolicyRequest;
 }
 
-// --- Underwriter mock preview (demo-only) ---
-export interface UnderwriterMockPolicy {
-  policyId: string;
-  policyNumber: string;
+export interface BrokerCompletedPolicySurveyor {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phonenumber?: string;
+}
+
+export interface BrokerCompletedPolicyHistoryEntry {
   status: string;
-  brokerStatus?: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
-  deadline?: string;
-  builder: {
-    nameOfBuilder: string;
-    rcNumber: string;
-    customerEmail: string;
-    telNo: string;
-    address: string;
-    identification?: {
-      identificationTypeId: number;
-      identityNo: string | number;
+  changedAt: string;
+  reason?: string;
+  changedBy?: string | {
+    _id: string;
+    firstname: string;
+    lastname: string;
+    email?: string;
+  };
+}
+
+export interface BrokerCompletedPolicy extends Omit<BuilderLiabilityPolicy, 'assignedSurveyors' | 'statusHistory' | 'surveyDocument'> {
+  brokerCompanyName?: string;
+  completedAt?: string;
+  surveyDocument?: string | {
+    name?: string;
+    url?: string;
+    publicId?: string;
+  } | null;
+  assignedSurveyors?: BrokerCompletedPolicySurveyor[];
+  statusHistory?: BrokerCompletedPolicyHistoryEntry[];
+  brokerAssignedTo?: {
+    _id: string;
+    brokerFirmName?: string;
+    profile?: {
+      department?: string;
+      position?: string;
     };
-  };
-  organization?: {
-    niobRegNo?: string;
-    yearOfIncorporation?: string;
-    areaOfSpecialization?: string;
-    noOfPermanentStaff?: number;
-    noOfFloors?: number;
-  };
-  membership?: {
-    MembershipStatusId: number;
-    MembershipName?: string;
-    MembershipNo?: string;
-    ProfessionalBodyName?: string;
-  };
-  workforce?: {
-    categoryOfWorkmen?: Array<{
-      categoryOfWorkmen: string;
-      numberOfEmployment: string;
-      yearsOfEmployment: string;
-    }>;
-    professionals?: Array<{
-      surname: string;
-      otherName: string;
-      age: number;
-      gender: string;
-      nationality: string;
-      profession: string;
-      qualification: string;
-      yearsInEmployment: number;
-    }>;
-    contractStaffCount?: number;
-    bloodRelationsCount?: number;
-  };
-  compliance?: {
-    HasInsurance?: boolean;
-    HasInsuranceDetails?: string;
-    investigation?: boolean;
-    investigationDetails?: string;
-    disciplinaryCommittee?: boolean;
-    disciplinaryCommitteeDetails?: string;
-    legalSuitDetails?: string;
-    preEmploymentCheck?: boolean;
-    preEmploymentCheckDetails?: string;
-    PracticeOutsideNigeria?: string;
-  };
-  project: {
-    workDetails?: string;
-    totalEstimateSum?: number;
-    address?: string;
-    lga?: string;
-    district?: string;
-    coverTypeIdxDetails?: string;
-  };
-  paymentInfo?: {
-    status?: string;
-    amount?: number;
-    transactionId?: string;
-    paidAt?: string;
-    initiatedAt?: string;
-    method?: string;
-  };
-  survey?: {
-    status?: string;
-    surveyor?: {
-      name?: string;
-      email?: string;
-      phone?: string;
-    };
-    surveyDate?: string;
-    recommendations?: string;
-    estimatedValue?: number;
-    structuralAssessment?: string;
-    riskFactors?: string;
-    photos?: Array<{ url: string; description?: string; timestamp?: string }>;
-    surveyDocument?: { name?: string; url?: string; publicId?: string };
-  };
-  documents?: Array<{
-    fileName: string;
-    category: string;
-    cloudinaryUrl?: string;
-    isVerified?: boolean;
-    description?: string;
-    documentType?: string;
-  }>;
-  statusHistory?: Array<{
-    status: string;
-    changedAt?: string;
-    reason?: string;
-    changedBy?: string;
-  }>;
-  adminNotes?: string;
+  } | null;
   brokerNotes?: string;
-  meta?: {
-    ProductId?: number;
-    date?: string;
-    salesOutlet?: string;
-    brokerOrAgentName?: string;
-  };
+  surveyorEstimatedValue?: number | null;
+  surveyorRecommendation?: 'approve' | 'reject' | 'request_more_info' | null;
 }
 
-export interface UnderwriterMockListResponse {
+export interface BrokerCompletedPoliciesResponse {
   success: boolean;
-  message: string;
-  source: string;
-  data: { count: number; policies: UnderwriterMockPolicy[] };
+  policies: BrokerCompletedPolicy[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
 }
 
-export interface UnderwriterMockPolicyResponse {
+export interface BrokerCompletedPolicyDetailResponse {
   success: boolean;
-  message: string;
-  source: string;
-  data: { policy: UnderwriterMockPolicy };
+  policy: BrokerCompletedPolicy;
 }
 
 export type UserReportsResponse = ApiSuccessResponse<{

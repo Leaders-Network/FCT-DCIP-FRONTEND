@@ -12,7 +12,9 @@ import {
     TrendingUp
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
+import { exportNiaAssignmentsCsv, triggerCsvDownload } from '@/services/api';
 import DashboardErrorBanner from '@/components/shared/DashboardErrorBanner';
+import ExportCsvPanel from '@/components/shared/ExportCsvPanel';
 
 interface DashboardStats {
     totalSurveyors: number;
@@ -344,6 +346,15 @@ const NIAAdminDashboard = () => {
                     </a>
                 </div>
             </div>
+
+            {/* CSV Export */}
+            <ExportCsvPanel
+                onExport={async (startDate, endDate) => {
+                    const csv = await exportNiaAssignmentsCsv(startDate, endDate);
+                    triggerCsvDownload(csv, 'nia_assignments.csv');
+                }}
+                buttonLabel="Export Assignments CSV"
+            />
         </div>
     );
 };

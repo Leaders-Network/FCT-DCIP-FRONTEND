@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Clock, MapPin, Calendar, Eye, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { getSurveyorAssignments } from "@/services/api";
+import { getSurveyorAssignments, exportSurveyorCsv, triggerCsvDownload } from "@/services/api";
+import ExportCsvPanel from "@/components/shared/ExportCsvPanel";
 
 interface Assignment {
     _id: string;
@@ -137,6 +138,15 @@ const AssignmentsList = () => {
                     </select>
                 </div>
             </div>
+
+            {/* CSV Export Panel */}
+            <ExportCsvPanel
+                onExport={async (startDate, endDate) => {
+                    const csv = await exportSurveyorCsv(startDate, endDate);
+                    triggerCsvDownload(csv, 'my_assignments.csv');
+                }}
+                buttonLabel="Export Assignments CSV"
+            />
 
             {/* Assignments List */}
             {assignments.length === 0 ? (

@@ -13,7 +13,9 @@ import { useRouter } from 'next/navigation';
 import AssignSurveyorModal from './AssignSurveyorModal';
 import { PolicyDetailsModal } from '@/components/builderLiability/PolicyDetailsModal';
 import { toast } from "sonner";
-import Swal from "sweetalert2"
+import Swal from "sweetalert2";
+import ExportCsvPanel from '@/components/shared/ExportCsvPanel';
+import { exportAmmcPoliciesCsv, triggerCsvDownload } from '@/services/api';
 
 // Legacy imports for backward compatibility during transition
 import { PolicyRequest } from '@/types/api.types';
@@ -447,6 +449,15 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Insurance Policy Management</h2>
       </div>
+
+      {/* CSV Export Panel */}
+      <ExportCsvPanel
+        onExport={async (startDate, endDate) => {
+          const csv = await exportAmmcPoliciesCsv(startDate, endDate);
+          triggerCsvDownload(csv, 'ammc_policies.csv');
+        }}
+        buttonLabel="Export Policies CSV"
+      />
 
       {/* Search and Filter Bar */}
       <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">

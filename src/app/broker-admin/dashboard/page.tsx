@@ -1,9 +1,8 @@
-'use client';
+﻿'use client';
 
 import type React from 'react';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { brokerAdminAPI } from '@/services/api';
+import { useState, useEffect, useCallback } from 'react';
+import { brokerAdminAPI, triggerCsvDownload } from '@/services/api';
 import {
     FileText,
     Clock,
@@ -22,7 +21,11 @@ import {
     Layers,
     DollarSign,
     ClipboardList,
-    Images
+    Images,
+    Download,
+    Building2,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import DashboardErrorBanner from '@/components/shared/DashboardErrorBanner';
 import type {
@@ -30,7 +33,7 @@ import type {
     BrokerPolicyRequest,
     BrokerClaimFilters,
     BrokerStatusUpdateRequest,
-    UnderwriterMockPolicy
+    BrokerCompletedPolicy
 } from '@/types/api.types';
 
 interface StatCardProps {
@@ -59,14 +62,10 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color, tr
 );
 
 export default function BrokerAdminDashboard() {
-    const router = useRouter();
     const [dashboardData, setDashboardData] = useState<BrokerDashboardData | null>(null);
     const [claims, setClaims] = useState<BrokerPolicyRequest[]>([]);
-    const [mockPolicies, setMockPolicies] = useState<UnderwriterMockPolicy[]>([]);
     const [loading, setLoading] = useState(true);
-    const [mockLoading, setMockLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [mockError, setMockError] = useState<string | null>(null);
     const [dashboardError, setDashboardError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'under_review' | 'rejected' | 'completed'>('all');
@@ -74,8 +73,6 @@ export default function BrokerAdminDashboard() {
 
     // Modal state
     const [selectedClaim, setSelectedClaim] = useState<BrokerPolicyRequest | null>(null);
-    const [selectedMock, setSelectedMock] = useState<UnderwriterMockPolicy | null>(null);
-    const [mockDetailLoading, setMockDetailLoading] = useState(false);
     const [modalLoading, setModalLoading] = useState(false);
     const [modalError, setModalError] = useState<string | null>(null);
     const [updating, setUpdating] = useState(false);
@@ -83,12 +80,40 @@ export default function BrokerAdminDashboard() {
     const [notes, setNotes] = useState('');
     const [reason, setReason] = useState('');
 
+    // ── Completed Policies state ──────────────────────────────────────────────
+    const [completedPolicies, setCompletedPolicies] = useState<BrokerCompletedPolicy[]>([]);
+    const [completedLoading, setCompletedLoading] = useState(false);
+    const [completedError, setCompletedError] = useState<string | null>(null);
+    const [completedPage, setCompletedPage] = useState(1);
+    const [completedTotalPages, setCompletedTotalPages] = useState(1);
+    const [completedTotal, setCompletedTotal] = useState(0);
+    const [selectedCompletedPolicy, setSelectedCompletedPolicy] = useState<BrokerCompletedPolicy | null>(null);
+    const [completedPolicyModalOpen, setCompletedPolicyModalOpen] = useState(false);
+    const [completedPolicyModalLoading, setCompletedPolicyModalLoading] = useState(false);
+    const [completedPolicyModalError, setCompletedPolicyModalError] = useState<string | null>(null);
+    // Completed policies filters
+    const [cpSearch, setCpSearch] = useState('');
+    const [cpCompanyName, setCpCompanyName] = useState('');
+    const [cpDateFrom, setCpDateFrom] = useState('');
+    const [cpDateTo, setCpDateTo] = useState('');
+    // Applied filter values (only sent when "Apply" is clicked)
+    const [appliedCpSearch, setAppliedCpSearch] = useState('');
+    const [appliedCpCompanyName, setAppliedCpCompanyName] = useState('');
+    const [appliedCpDateFrom, setAppliedCpDateFrom] = useState('');
+    const [appliedCpDateTo, setAppliedCpDateTo] = useState('');
+    const [csvExporting, setCsvExporting] = useState(false);
+
     useEffect(() => {
         fetchDashboardData();
         fetchClaims();
-        fetchMockPolicies();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statusFilter]);
+
+    // Fetch completed policies whenever applied filters or page changes
+    useEffect(() => {
+        fetchCompletedPolicies();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [appliedCpSearch, appliedCpCompanyName, appliedCpDateFrom, appliedCpDateTo, completedPage]);
 
     const fetchDashboardData = async () => {
         try {
@@ -130,47 +155,106 @@ export default function BrokerAdminDashboard() {
         }
     };
 
-    const fetchMockPolicies = async () => {
-        try {
-            setMockLoading(true);
-            setMockError(null);
-            const res = await brokerAdminAPI.getMockAssignedPolicies();
-            if (res.success && res.data?.policies) {
-                setMockPolicies(res.data.policies);
-            } else {
-                setMockError('No mock policies available');
-            }
-        } catch (err) {
-            console.error('Failed to fetch mock policies:', err);
-            setMockError('Failed to load mock underwriter data');
-        } finally {
-            setMockLoading(false);
-        }
-    };
-
-    const fetchMockDetail = async (policyId: string) => {
-        try {
-            setMockDetailLoading(true);
-            const res = await brokerAdminAPI.getMockPolicyDetail(policyId);
-            if (res.success && res.data?.policy) {
-                setSelectedMock(res.data.policy);
-            }
-        } catch (err) {
-            console.error('Failed to fetch mock policy detail:', err);
-            setMockError('Failed to load policy detail');
-        } finally {
-            setMockDetailLoading(false);
-        }
-    };
-
     const handleRefresh = async () => {
         setRefreshing(true);
-        await Promise.all([fetchDashboardData(), fetchClaims()]);
+        await Promise.all([fetchDashboardData(), fetchClaims(), fetchCompletedPolicies()]);
         setRefreshing(false);
     };
 
     const handleSearch = () => {
         fetchClaims();
+    };
+
+    // ── Completed Policies helpers ────────────────────────────────────────────
+    const fetchCompletedPolicies = useCallback(async () => {
+        setCompletedLoading(true);
+        setCompletedError(null);
+        try {
+            const res = await brokerAdminAPI.getCompletedPolicies({
+                search: appliedCpSearch || undefined,
+                companyName: appliedCpCompanyName || undefined,
+                dateFrom: appliedCpDateFrom || undefined,
+                dateTo: appliedCpDateTo || undefined,
+                page: completedPage,
+                limit: 10
+            });
+            if (res.success) {
+                setCompletedPolicies(res.policies ?? []);
+                setCompletedTotal(res.total ?? 0);
+                setCompletedTotalPages(res.totalPages ?? 1);
+            } else {
+                setCompletedError('Failed to load completed policies.');
+            }
+        } catch {
+            setCompletedError('Failed to load completed policies.');
+        } finally {
+            setCompletedLoading(false);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [appliedCpSearch, appliedCpCompanyName, appliedCpDateFrom, appliedCpDateTo, completedPage]);
+
+    const handleApplyCpFilters = () => {
+        setAppliedCpSearch(cpSearch);
+        setAppliedCpCompanyName(cpCompanyName);
+        setAppliedCpDateFrom(cpDateFrom);
+        setAppliedCpDateTo(cpDateTo);
+        setCompletedPage(1);
+    };
+
+    const handleClearCpFilters = () => {
+        setCpSearch('');
+        setCpCompanyName('');
+        setCpDateFrom('');
+        setCpDateTo('');
+        setAppliedCpSearch('');
+        setAppliedCpCompanyName('');
+        setAppliedCpDateFrom('');
+        setAppliedCpDateTo('');
+        setCompletedPage(1);
+    };
+
+    const handleExportCompletedCsv = async () => {
+        setCsvExporting(true);
+        try {
+            const csvData = await brokerAdminAPI.exportCompletedPoliciesCsv(
+                appliedCpDateFrom || undefined,
+                appliedCpDateTo || undefined,
+                appliedCpCompanyName || undefined
+            );
+            triggerCsvDownload(csvData, 'completed_policies.csv');
+        } catch {
+            setCompletedError('Failed to export CSV.');
+        } finally {
+            setCsvExporting(false);
+        }
+    };
+
+    const handleViewCompletedPolicy = async (policyId: string) => {
+        setCompletedPolicyModalOpen(true);
+        setCompletedPolicyModalLoading(true);
+        setCompletedPolicyModalError(null);
+        setSelectedCompletedPolicy(null);
+
+        try {
+            const res = await brokerAdminAPI.getCompletedPolicyById(policyId);
+            if (res.success && res.policy) {
+                setSelectedCompletedPolicy(res.policy);
+            } else {
+                setCompletedPolicyModalError('Completed policy not found.');
+            }
+        } catch (err) {
+            console.error('Failed to fetch completed policy detail:', err);
+            setCompletedPolicyModalError(err instanceof Error ? err.message : 'Failed to load policy details.');
+        } finally {
+            setCompletedPolicyModalLoading(false);
+        }
+    };
+
+    const closeCompletedPolicyModal = () => {
+        setCompletedPolicyModalOpen(false);
+        setSelectedCompletedPolicy(null);
+        setCompletedPolicyModalError(null);
+        setCompletedPolicyModalLoading(false);
     };
 
     const getStatusBadge = (status: string) => {
@@ -326,184 +410,6 @@ export default function BrokerAdminDashboard() {
                 )
             )}
 
-            {/* Mock Underwriter Policies (Demo) */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-                <div className="flex items-center justify-between mb-3">
-                    <div>
-                        <h2 className="text-lg font-semibold text-gray-900">Underwriter Demo Policies (Mock)</h2>
-                        <p className="text-sm text-gray-600">Fetched from mock endpoints to preview full policy payloads.</p>
-                    </div>
-                    <button
-                        onClick={fetchMockPolicies}
-                        className="inline-flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50"
-                        disabled={mockLoading}
-                    >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${mockLoading ? 'animate-spin' : ''}`} />
-                        Refresh mock data
-                    </button>
-                </div>
-
-                {mockError && (
-                    <div className="mb-3 rounded-md bg-red-50 border border-red-200 p-3 text-red-800 text-sm flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4" />
-                        {mockError}
-                    </div>
-                )}
-
-                {mockLoading ? (
-                    <div className="flex items-center justify-center py-6 text-gray-600 text-sm">Loading mock policies...</div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {mockPolicies.map((policy) => (
-                            <div
-                                key={policy.policyId}
-                                className={`border rounded-lg p-4 hover:shadow-sm transition cursor-pointer ${selectedMock?.policyId === policy.policyId ? 'border-indigo-500' : 'border-gray-200'}`}
-                                onClick={() => {
-                                    setSelectedMock(policy);
-                                    fetchMockDetail(policy.policyId);
-                                }}
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-md font-semibold text-gray-900">{policy.policyNumber}</h3>
-                                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge((policy.brokerStatus as string) || 'pending')}`}>
-                                        {formatStatus(policy.brokerStatus || policy.status)}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-gray-700 font-medium">{policy.builder.nameOfBuilder}</p>
-                                <p className="text-xs text-gray-500">{policy.project.address}</p>
-                                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
-                                    <div>
-                                        <p className="text-gray-500">Sum Insured</p>
-                                        <p className="font-semibold">
-                                            {formatCurrency(policy.project.totalEstimateSum)}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-500">Payment</p>
-                                        <p className="font-semibold">{formatStatus(policy.paymentInfo?.status)}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-500">Surveyor</p>
-                                        <p className="font-semibold text-gray-700">
-                                            {policy.survey?.surveyor?.name || 'Pending'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-500">Priority</p>
-                                        <p className="font-semibold capitalize">{policy.priority || 'medium'}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        {mockPolicies.length === 0 && !mockError && (
-                            <div className="col-span-full text-center text-gray-500 text-sm py-4">
-                                No mock policies to display.
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {selectedMock && (
-                    <div className="mt-6 border rounded-lg p-4 bg-gray-50">
-                        <div className="flex items-center justify-between mb-3">
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-900">Mock Policy Detail</h3>
-                                <p className="text-sm text-gray-600">{selectedMock.policyNumber} · {selectedMock.builder.nameOfBuilder}</p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                {mockDetailLoading && <span className="text-xs text-gray-500">Refreshing…</span>}
-                                <button
-                                    onClick={() => setSelectedMock(null)}
-                                    className="text-sm text-indigo-600 hover:text-indigo-800"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <SectionCard icon={User} title="Builder">
-                                <KeyValue label="Builder" value={`${selectedMock.builder.nameOfBuilder} (${selectedMock.builder.rcNumber})`} />
-                                <KeyValue label="Email / Phone" value={`${selectedMock.builder.customerEmail} · ${selectedMock.builder.telNo}`} />
-                                <KeyValue label="Address" value={selectedMock.builder.address} />
-                                {selectedMock.builder.identification && (
-                                    <KeyValue label="ID" value={`${selectedMock.builder.identification.identificationTypeId} - ${selectedMock.builder.identification.identityNo}`} />
-                                )}
-                            </SectionCard>
-
-                            <SectionCard icon={Layers} title="Project">
-                                <KeyValue label="Description" value={selectedMock.project.workDetails || 'Project details pending'} />
-                                <KeyValue label="Location" value={`${selectedMock.project.address || '—'} (${selectedMock.project.district || ''} ${selectedMock.project.lga || ''})`} />
-                                <KeyValue label="Cover Type" value={selectedMock.project.coverTypeIdxDetails} />
-                                <KeyValue label="Sum Insured" value={formatCurrency(selectedMock.project.totalEstimateSum)} />
-                            </SectionCard>
-
-                            <SectionCard icon={Shield} title="Compliance & Membership">
-                                <KeyValue label="Membership" value={selectedMock.membership ? `${selectedMock.membership.MembershipName || ''} ${selectedMock.membership.MembershipNo || ''}` : '—'} />
-                                <KeyValue label="Insurance" value={selectedMock.compliance?.HasInsurance ? selectedMock.compliance.HasInsuranceDetails : 'No prior cover'} />
-                                <KeyValue label="Disciplinary" value={selectedMock.compliance?.disciplinaryCommittee ? selectedMock.compliance.disciplinaryCommitteeDetails : 'None disclosed'} />
-                                <KeyValue label="Practice Outside Nigeria" value={selectedMock.compliance?.PracticeOutsideNigeria || 'No'} />
-                            </SectionCard>
-
-                            <SectionCard icon={ClipboardList} title="Workforce">
-                                <KeyValue label="Contract Staff" value={selectedMock.workforce?.contractStaffCount ?? '—'} />
-                                <KeyValue label="Blood Relations" value={selectedMock.workforce?.bloodRelationsCount ?? '—'} />
-                                <div className="mt-2">
-                                    <p className="text-xs font-semibold text-gray-700">Categories</p>
-                                    <ul className="text-xs text-gray-600 list-disc ml-4">
-                                        {(selectedMock.workforce?.categoryOfWorkmen || []).map((c, idx) => (
-                                            <li key={idx}>{c.categoryOfWorkmen} · {c.numberOfEmployment} staff · {c.yearsOfEmployment} yrs</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="mt-2">
-                                    <p className="text-xs font-semibold text-gray-700">Professionals</p>
-                                    <ul className="text-xs text-gray-600 list-disc ml-4">
-                                        {(selectedMock.workforce?.professionals || []).map((p, idx) => (
-                                            <li key={idx}>{p.surname} {p.otherName} — {p.profession} ({p.qualification}), {p.yearsInEmployment} yrs</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </SectionCard>
-
-                            <SectionCard icon={DollarSign} title="Payment">
-                                <KeyValue label="Status" value={formatStatus(selectedMock.paymentInfo?.status)} />
-                                <KeyValue label="Amount" value={formatCurrency(selectedMock.paymentInfo?.amount)} />
-                                <KeyValue label="Transaction ID" value={selectedMock.paymentInfo?.transactionId || '—'} />
-                                <KeyValue label="Method" value={selectedMock.paymentInfo?.method || '—'} />
-                                <KeyValue label="Paid At" value={selectedMock.paymentInfo?.paidAt ? formatDate(selectedMock.paymentInfo.paidAt) : '—'} />
-                            </SectionCard>
-
-                            <SectionCard icon={FileText} title="Survey">
-                                <KeyValue label="Surveyor" value={selectedMock.survey?.surveyor?.name || 'Unassigned'} />
-                                <KeyValue label="Survey Date" value={selectedMock.survey?.surveyDate ? formatDate(selectedMock.survey.surveyDate) : '—'} />
-                                <KeyValue label="Assessment" value={selectedMock.survey?.structuralAssessment || '—'} />
-                                <KeyValue label="Risks" value={selectedMock.survey?.riskFactors || '—'} />
-                                <KeyValue label="Recommendations" value={selectedMock.survey?.recommendations || '—'} />
-                                <KeyValue label="Estimated Value" value={formatCurrency(selectedMock.survey?.estimatedValue)} />
-                                {selectedMock.survey?.surveyDocument?.url && (
-                                    <div className="mt-2">
-                                        <p className="text-xs font-semibold text-gray-700">Survey Report</p>
-                                        <a
-                                            href={selectedMock.survey.surveyDocument.url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="text-indigo-600 text-sm hover:underline"
-                                        >
-                                            Download survey document
-                                        </a>
-                                    </div>
-                                )}
-                            </SectionCard>
-
-                            <SectionCard icon={ClipboardList} title="Notes" fullWidth>
-                                <KeyValue label="Admin Notes" value={selectedMock.adminNotes || '—'} />
-                            </SectionCard>
-                        </div>
-                    </div>
-                )}
-            </div>
-
             {/* Filters and Search */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
                 <div className="flex flex-col md:flex-row gap-4">
@@ -639,6 +545,484 @@ export default function BrokerAdminDashboard() {
                     </table>
                 </div>
             </div>
+
+
+            {/* Completed Policies Section */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-8">
+                {/* Section header */}
+                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            Completed Policies (NIIP)
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                            All paid and completed policies, filterable by date range and insurer name.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">{completedTotal} record{completedTotal !== 1 ? 's' : ''}</span>
+                        <button
+                            onClick={handleExportCompletedCsv}
+                            disabled={csvExporting}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+                        >
+                            {csvExporting ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Download className="w-4 h-4" />
+                            )}
+                            {csvExporting ? 'Exporting...' : 'Download CSV'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filter bar */}
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                    <div className="flex flex-col md:flex-row gap-3 flex-wrap">
+                        {/* Search */}
+                        <div className="relative flex-1 min-w-[180px]">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Search policy number or builder..."
+                                value={cpSearch}
+                                onChange={(e) => setCpSearch(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleApplyCpFilters()}
+                                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+
+                        {/* Broker company name filter */}
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Insurance company name..."
+                                value={cpCompanyName}
+                                onChange={(e) => setCpCompanyName(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleApplyCpFilters()}
+                                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+
+                        {/* Date From */}
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="date"
+                                value={cpDateFrom}
+                                onChange={(e) => setCpDateFrom(e.target.value)}
+                                className="pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+
+                        {/* Date To */}
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="date"
+                                value={cpDateTo}
+                                onChange={(e) => setCpDateTo(e.target.value)}
+                                className="pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+
+                        {/* Apply / Clear */}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleApplyCpFilters}
+                                className="inline-flex items-center gap-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+                            >
+                                <Filter className="w-4 h-4" />
+                                Apply
+                            </button>
+                            {(appliedCpSearch || appliedCpCompanyName || appliedCpDateFrom || appliedCpDateTo) && (
+                                <button
+                                    onClick={handleClearCpFilters}
+                                    className="inline-flex items-center gap-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm"
+                                >
+                                    <X className="w-4 h-4" />
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Error */}
+                {completedError && (
+                    <div className="px-6 py-3 bg-red-50 border-b border-red-100 flex items-center gap-2 text-red-700 text-sm">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        {completedError}
+                    </div>
+                )}
+
+                {/* Table */}
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy Number</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Builder Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGA</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sum Insured (N)</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />Insurance Company</span>
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed At</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {completedLoading ? (
+                                <tr>
+                                    <td colSpan={8} className="px-6 py-10 text-center">
+                                        <div className="flex justify-center">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : completedPolicies.length > 0 ? (
+                                completedPolicies.map((policy) => {
+                                    const brokerCompany = policy.brokerCompanyName || '';
+                                    return (
+                                        <tr
+                                            key={policy._id}
+                                            className="hover:bg-gray-50 cursor-pointer"
+                                            onClick={() => handleViewCompletedPolicy(policy._id)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === 'Enter' || event.key === ' ') {
+                                                    event.preventDefault();
+                                                    handleViewCompletedPolicy(policy._id);
+                                                }
+                                            }}
+                                            tabIndex={0}
+                                        >
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {policy.policyNumber || policy._id}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-900">
+                                                {policy.builder.nameOfBuilder || 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                {policy.builder.customerEmail || 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                {policy.project.lga || 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                                                {policy.project.totalEstimateSum != null
+                                                    ? formatCurrency(Number(policy.project.totalEstimateSum))
+                                                    : 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-900">
+                                                {brokerCompany ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                        <Building2 className="w-3 h-3" />
+                                                        {brokerCompany}
+                                                    </span>
+                                                ) : 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {policy.completedAt ? formatDate(policy.completedAt) : 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button
+                                                    type="button"
+                                                    onClick={(event) => {
+                                                        event.preventDefault();
+                                                        event.stopPropagation();
+                                                        handleViewCompletedPolicy(policy._id);
+                                                    }}
+                                                    className="inline-flex items-center text-indigo-600 hover:text-indigo-900"
+                                                >
+                                                    <Eye className="w-4 h-4 mr-1" />
+                                                    View details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                                        <CheckCircle className="w-10 h-10 mx-auto text-gray-300 mb-3" />
+                                        <p className="text-sm">No completed policies found.</p>
+                                        {(appliedCpSearch || appliedCpCompanyName || appliedCpDateFrom || appliedCpDateTo) && (
+                                            <button onClick={handleClearCpFilters} className="mt-2 text-indigo-600 text-sm hover:underline">Clear filters</button>
+                                        )}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                {completedTotalPages > 1 && (
+                    <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                        <p className="text-sm text-gray-600">
+                            Page {completedPage} of {completedTotalPages} - {completedTotal} total
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setCompletedPage(p => Math.max(1, p - 1))}
+                                disabled={completedPage === 1}
+                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                            >
+                                <ChevronLeft className="w-4 h-4 mr-1" /> Prev
+                            </button>
+                            <button
+                                onClick={() => setCompletedPage(p => Math.min(completedTotalPages, p + 1))}
+                                disabled={completedPage === completedTotalPages}
+                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                            >
+                                Next <ChevronRight className="w-4 h-4 ml-1" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {completedPolicyModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-start justify-between">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">Completed Policy Details</h2>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    {selectedCompletedPolicy?.policyNumber || 'Loading policy...'}
+                                </p>
+                            </div>
+                            <button onClick={closeCompletedPolicyModal} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            {completedPolicyModalLoading && (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
+                                </div>
+                            )}
+
+                            {completedPolicyModalError && (
+                                <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4">
+                                    <div className="flex items-center gap-3">
+                                        <AlertCircle className="w-5 h-5 text-red-400" />
+                                        <p className="text-red-800">{completedPolicyModalError}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!completedPolicyModalLoading && selectedCompletedPolicy && (
+                                <>
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                            <p className="text-xs uppercase tracking-wide text-gray-500">Status</p>
+                                            <div className="mt-2">
+                                                <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusBadge(selectedCompletedPolicy.status)}`}>
+                                                    {formatStatus(selectedCompletedPolicy.status)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                            <p className="text-xs uppercase tracking-wide text-gray-500">Insurance Company</p>
+                                            <p className="mt-2 text-sm font-semibold text-gray-900">
+                                                {selectedCompletedPolicy.brokerCompanyName || selectedCompletedPolicy.meta?.brokerOrAgentName || 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                            <p className="text-xs uppercase tracking-wide text-gray-500">Sum Insured</p>
+                                            <p className="mt-2 text-sm font-semibold text-gray-900">
+                                                {formatCurrency(selectedCompletedPolicy.project.totalEstimateSum)}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                            <p className="text-xs uppercase tracking-wide text-gray-500">Completed At</p>
+                                            <p className="mt-2 text-sm font-semibold text-gray-900">
+                                                {selectedCompletedPolicy.completedAt ? formatDate(selectedCompletedPolicy.completedAt) : 'N/A'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        <SectionCard icon={User} title="Builder">
+                                            <KeyValue label="Builder" value={selectedCompletedPolicy.builder.nameOfBuilder} />
+                                            <KeyValue label="RC Number" value={selectedCompletedPolicy.builder.rcNumber} />
+                                            <KeyValue label="Email" value={selectedCompletedPolicy.builder.customerEmail} />
+                                            <KeyValue label="Phone" value={selectedCompletedPolicy.builder.telNo} />
+                                            <KeyValue label="Address" value={selectedCompletedPolicy.builder.address} />
+                                            <KeyValue
+                                                label="Identification"
+                                                value={selectedCompletedPolicy.builder.identification
+                                                    ? `${selectedCompletedPolicy.builder.identification.identificationTypeId} - ${selectedCompletedPolicy.builder.identification.identityNo}`
+                                                    : 'N/A'}
+                                            />
+                                        </SectionCard>
+
+                                        <SectionCard icon={Layers} title="Project">
+                                            <KeyValue label="Cover Type" value={selectedCompletedPolicy.project.coverTypeIdxDetails} />
+                                            <KeyValue label="Category" value={selectedCompletedPolicy.project.categoryOfContractorId} />
+                                            <KeyValue label="Location" value={selectedCompletedPolicy.project.address || 'N/A'} />
+                                            <KeyValue label="District / LGA" value={`${selectedCompletedPolicy.project.district || 'N/A'} / ${selectedCompletedPolicy.project.lga || 'N/A'}`} />
+                                            <KeyValue label="Work Details" value={selectedCompletedPolicy.project.workDetails || 'N/A'} />
+                                            <KeyValue label="Extra Hazardous" value={selectedCompletedPolicy.project.extraHazardous ? 'Yes' : 'No'} />
+                                        </SectionCard>
+
+                                        <SectionCard icon={Building2} title="Organization">
+                                            <KeyValue label="Specialization" value={selectedCompletedPolicy.organization.areaOfSpecialization || 'N/A'} />
+                                            <KeyValue
+                                                label="Year of Incorporation"
+                                                value={selectedCompletedPolicy.organization.yearOfIncorporation
+                                                    ? formatDate(String(selectedCompletedPolicy.organization.yearOfIncorporation))
+                                                    : 'N/A'}
+                                            />
+                                            <KeyValue label="Permanent Staff" value={selectedCompletedPolicy.organization.noOfPermanentStaff} />
+                                            <KeyValue label="Floors" value={selectedCompletedPolicy.organization.noOfFloors} />
+                                            <KeyValue label="NIOB Registration" value={selectedCompletedPolicy.organization.niobRegNo || 'N/A'} />
+                                        </SectionCard>
+
+                                        <SectionCard icon={DollarSign} title="Payment">
+                                            <KeyValue label="Payment Status" value={formatStatus(selectedCompletedPolicy.paymentInfo?.status)} />
+                                            <KeyValue label="Amount" value={formatCurrency(selectedCompletedPolicy.paymentInfo?.amount)} />
+                                            <KeyValue label="Transaction ID" value={selectedCompletedPolicy.paymentInfo?.transactionId || 'N/A'} />
+                                            <KeyValue label="Method" value={selectedCompletedPolicy.paymentInfo?.method || 'N/A'} />
+                                            <KeyValue
+                                                label="Paid At"
+                                                value={selectedCompletedPolicy.paymentInfo?.paidAt
+                                                    ? formatDate(String(selectedCompletedPolicy.paymentInfo.paidAt))
+                                                    : 'N/A'}
+                                            />
+                                        </SectionCard>
+
+                                        <SectionCard icon={Shield} title="Membership & Compliance">
+                                            <KeyValue
+                                                label="Membership"
+                                                value={selectedCompletedPolicy.membership.MembershipName || selectedCompletedPolicy.membership.ProfessionalBodyName || 'N/A'}
+                                            />
+                                            <KeyValue label="Membership Number" value={selectedCompletedPolicy.membership.MembershipNo || 'N/A'} />
+                                            <KeyValue
+                                                label="Existing Insurance"
+                                                value={selectedCompletedPolicy.compliance.HasInsurance
+                                                    ? selectedCompletedPolicy.compliance.HasInsuranceDetails || 'Yes'
+                                                    : 'No'}
+                                            />
+                                            <KeyValue
+                                                label="Investigation"
+                                                value={selectedCompletedPolicy.compliance.investigation
+                                                    ? selectedCompletedPolicy.compliance.investigationDetails || 'Yes'
+                                                    : 'No'}
+                                            />
+                                            <KeyValue
+                                                label="Disciplinary Committee"
+                                                value={selectedCompletedPolicy.compliance.disciplinaryCommittee
+                                                    ? selectedCompletedPolicy.compliance.disciplinaryCommitteeDetails || 'Yes'
+                                                    : 'No'}
+                                            />
+                                            <KeyValue label="Practice Outside Nigeria" value={selectedCompletedPolicy.compliance.PracticeOutsideNigeria} />
+                                        </SectionCard>
+
+                                        <SectionCard icon={ClipboardList} title="Workforce">
+                                            <KeyValue label="Contract Staff" value={selectedCompletedPolicy.workforce.contractStaffCount} />
+                                            <KeyValue label="Blood Relations" value={selectedCompletedPolicy.workforce.bloodRelationsCount} />
+                                            <div className="pt-2">
+                                                <p className="text-xs font-semibold text-gray-700">Categories</p>
+                                                <div className="mt-2 space-y-2">
+                                                    {selectedCompletedPolicy.workforce.categoryOfWorkmen.map((category, index) => (
+                                                        <div key={`${category.categoryOfWorkmen}-${index}`} className="rounded-md bg-gray-50 border border-gray-200 p-2 text-xs text-gray-700">
+                                                            {category.categoryOfWorkmen} - {category.numberOfEmployment} staff - {category.yearsOfEmployment} years
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="pt-2">
+                                                <p className="text-xs font-semibold text-gray-700">Professionals</p>
+                                                <div className="mt-2 space-y-2">
+                                                    {selectedCompletedPolicy.workforce.professionals.map((professional, index) => (
+                                                        <div key={`${professional.surname}-${professional.otherName}-${index}`} className="rounded-md bg-gray-50 border border-gray-200 p-2 text-xs text-gray-700">
+                                                            {professional.surname} {professional.otherName} - {professional.profession} ({professional.qualification})
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </SectionCard>
+
+                                        <SectionCard icon={FileText} title="Survey & Notes">
+                                            <KeyValue label="Recommendation" value={selectedCompletedPolicy.surveyorRecommendation ? formatStatus(selectedCompletedPolicy.surveyorRecommendation) : 'N/A'} />
+                                            <KeyValue label="Estimated Value" value={formatCurrency(selectedCompletedPolicy.surveyorEstimatedValue ?? undefined)} />
+                                            <KeyValue
+                                                label="Assigned Surveyors"
+                                                value={selectedCompletedPolicy.assignedSurveyors && selectedCompletedPolicy.assignedSurveyors.length > 0
+                                                    ? selectedCompletedPolicy.assignedSurveyors.map((surveyor) => `${surveyor.firstname} ${surveyor.lastname}`).join(', ')
+                                                    : 'N/A'}
+                                            />
+                                            <KeyValue label="Survey Notes" value={selectedCompletedPolicy.surveyNotes || 'N/A'} />
+                                            <KeyValue label="Admin Notes" value={selectedCompletedPolicy.adminNotes || 'N/A'} />
+                                            <KeyValue label="Broker Notes" value={selectedCompletedPolicy.brokerNotes || 'N/A'} />
+                                            {selectedCompletedPolicy.surveyDocument && typeof selectedCompletedPolicy.surveyDocument !== 'string' && selectedCompletedPolicy.surveyDocument.url && (
+                                                <a
+                                                    href={selectedCompletedPolicy.surveyDocument.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-medium pt-2"
+                                                >
+                                                    <Download className="w-4 h-4 mr-1" />
+                                                    Open survey document
+                                                </a>
+                                            )}
+                                        </SectionCard>
+
+                                        <SectionCard icon={Images} title="Documents">
+                                            {selectedCompletedPolicy.documents && selectedCompletedPolicy.documents.length > 0 ? (
+                                                <div className="space-y-2">
+                                                    {selectedCompletedPolicy.documents.map((document, index) => (
+                                                        <div key={`${document.fileName}-${index}`} className="rounded-md bg-gray-50 border border-gray-200 p-3">
+                                                            <p className="text-sm font-medium text-gray-900">{document.fileName}</p>
+                                                            <p className="text-xs text-gray-600 mt-1">
+                                                                {document.category} | {document.documentType} | {document.isVerified ? 'Verified' : 'Pending verification'}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-500">No additional documents attached.</p>
+                                            )}
+                                        </SectionCard>
+
+                                        <SectionCard icon={Clock} title="Timeline" fullWidth>
+                                            {selectedCompletedPolicy.statusHistory && selectedCompletedPolicy.statusHistory.length > 0 ? (
+                                                <div className="space-y-3">
+                                                    {selectedCompletedPolicy.statusHistory.map((entry, index) => (
+                                                        <div key={`${entry.status}-${entry.changedAt}-${index}`} className="rounded-md border border-gray-200 bg-gray-50 p-3">
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <p className="text-sm font-semibold text-gray-900">{formatStatus(entry.status)}</p>
+                                                                <p className="text-xs text-gray-500">{formatDate(entry.changedAt)}</p>
+                                                            </div>
+                                                            {entry.reason && (
+                                                                <p className="text-sm text-gray-600 mt-2">{entry.reason}</p>
+                                                            )}
+                                                            {entry.changedBy && typeof entry.changedBy !== 'string' && (
+                                                                <p className="text-xs text-gray-500 mt-2">
+                                                                    Updated by {entry.changedBy.firstname} {entry.changedBy.lastname}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-500">No status history available.</p>
+                                            )}
+                                        </SectionCard>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Claim Detail Modal - Same as claims page */}
             {selectedClaim && (
