@@ -27,6 +27,43 @@ import {
 } from 'lucide-react';
 import { toast } from "sonner"
 
+// Load Egolopay SDK dynamically (singleton)
+type SdkLoadError = Error & { tried?: string[] };
+
+const loadEgoloPaySDK = (sdkUrl?: string) => {
+    const resolvedSdkUrl = process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL || sdkUrl;
+
+    return new Promise<void>((resolve, reject) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((window as any).EgolePay) return resolve();
+        if (!resolvedSdkUrl) {
+            const err: SdkLoadError = Object.assign(new Error('Missing Egolopay SDK URL'), { tried: [] });
+            reject(err);
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = resolvedSdkUrl;
+        script.async = true;
+        script.onload = () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((window as any).EgolePay) {
+                resolve();
+                return;
+            }
+            script.remove();
+            const err: SdkLoadError = Object.assign(new Error('Egolopay SDK loaded without EgolePay global'), { tried: [resolvedSdkUrl] });
+            reject(err);
+        };
+        script.onerror = () => {
+            script.remove();
+            const err: SdkLoadError = Object.assign(new Error('Failed to load Egolopay SDK'), { tried: [resolvedSdkUrl] });
+            reject(err);
+        };
+        document.body.appendChild(script);
+    });
+};
+
 interface PolicyListProps {
     isAdmin?: boolean;
     onPolicySelect?: (policy: BuilderLiabilityPolicy) => void;
@@ -138,32 +175,66 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
     const handleProceedToPayment = async (policy: BuilderLiabilityPolicy) => {
         const state = premiumState[policy._id];
-        const nextAction = state?.nextAction;
+        const amount = state?.premiumDetails?.amount || (policy as any)?.paymentInfo?.amount;
+        const email = policy.builder.customerEmail;
+        const referenceNumber = `BL_${policy.policyNumber || policy._id}_${Date.now()}`;
+        const sdkUrl = process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL;
+        const apiKey = process.env.NEXT_PUBLIC_EGOLEPAY_BROWSER_KEY || process.env.NEXT_PUBLIC_EGOLEPAY_PUBLIC_KEY;
 
         try {
             setProcessingPayment(policy._id);
 
-            const api = (await import('@/services/api')).default;
-            const url = normalizeApiPath(nextAction?.url || `/payment/egolopay/initialize/${policy._id}`);
-            const method = (nextAction?.method || 'POST').toUpperCase();
-
-            const response = method === 'GET'
-                ? await api.get(url)
-                : await api.post(url);
-
-            const data = response.data;
-            console.log('Egolopay Initialize Response:', data);
-
-            if (!data.success || !data.data?.authorizationUrl) {
-                throw new Error(data.message || 'Failed to initialize payment on Egolopay');
+            if (!amount || !email) {
+                throw new Error('Premium amount or email missing; calculate premium first.');
+            }
+            if (!sdkUrl) {
+                throw new Error('Egolopay SDK URL is not configured');
+            }
+            if (!apiKey) {
+                throw new Error('Egolopay browser key is not configured');
             }
 
-            toast.success(`✅ Payment Initialized! Redirecting to Egolopay...`);
-            window.location.href = data.data.authorizationUrl as string;
+            await loadEgoloPaySDK(sdkUrl);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const EgolePay = (window as any).EgolePay;
+            if (!EgolePay) {
+                throw new Error('Egolopay SDK failed to load');
+            }
+
+            const api = (await import('@/services/api')).default;
+
+            new EgolePay({
+                apiKey,
+                referenceNumber,
+                amount,
+                email,
+                onSuccess: async () => {
+                    try {
+                        await api.post('/payment/egolopay/verify', {
+                            reference: referenceNumber,
+                            policyId: policy._id,
+                            amount
+                        });
+                        toast.success('Payment completed!');
+                        fetchPolicies();
+                    } catch (verifyErr: any) {
+                        const msg = verifyErr?.response?.data?.message || verifyErr?.message || 'Verification failed';
+                        toast.error(`Verification error\n\n${msg}`);
+                    }
+                },
+                onError: (sdkError: { message?: string }) => {
+                    toast.error(sdkError?.message || 'Egolopay checkout failed');
+                },
+                onClose: () => {
+                    toast.info('Payment window closed');
+                }
+            });
         } catch (error: any) {
             console.error('Payment error:', error);
+            const attempted = error?.tried ? `\nTried: ${error.tried.join(', ')}` : '';
             const errorMessage = error.response?.data?.message || error.message || 'Failed to process payment';
-            toast.error(`❌ Payment Error\n\n${errorMessage}\n\nPlease try again or contact support.`);
+            toast.error(`Payment Error\n\n${errorMessage}${attempted ? '\n\n' + attempted : ''}\n\nPlease try again or contact support.`);
         } finally {
             setProcessingPayment(null);
         }
@@ -550,3 +621,4 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 };
 
 export default BuilderLiabilityPolicyList;
+
