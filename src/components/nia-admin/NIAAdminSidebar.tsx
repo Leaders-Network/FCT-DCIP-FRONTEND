@@ -17,6 +17,7 @@ import {
     ChevronRight,
     X
 } from "lucide-react";
+import { clearAuthTokens } from "@/utils/auth";
 
 interface NIAAdminSidebarProps {
     isOpen?: boolean;
@@ -38,6 +39,7 @@ const NIAAdminSidebar: React.FC<NIAAdminSidebarProps> = ({
     };
 
     const handleLogout = () => {
+        clearAuthTokens();
         localStorage.removeItem("niaAdminToken");
         localStorage.removeItem("niaAdminInfo");
         localStorage.removeItem("organization");
