@@ -58,12 +58,12 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
             icon: FileText,
             description: "View Claims"
         },
-        {
-            href: "#",
-            label: "Analytics",
-            icon: BarChart3,
-            description: "Performance analytics"
-        },
+        // {
+        //     href: "#",
+        //     label: "Analytics",
+        //     icon: BarChart3,
+        //     description: "Performance analytics"
+        // },
         {
             href: "/broker-admin/administrators",
             label: "Administrators",

@@ -43,8 +43,10 @@ export default function BrokerAdminLogin() {
             console.log('Login response:', response);
 
             if (response.success && response.token) {
+                const responseTokenType = response.user?.tokenType === 'super-admin' ? 'super-admin' : 'broker-admin';
+
                 // Store token and user info
-                setAuthToken(response.token, 'broker-admin');
+                setAuthToken(response.token, responseTokenType);
                 localStorage.setItem('brokerAdminInfo', JSON.stringify({
                     ...response.user,
                     brokerAdmin: response.brokerAdmin

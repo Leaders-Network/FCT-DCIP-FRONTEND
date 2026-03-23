@@ -9,6 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Assignment, Surveyor, PolicyRequest } from "@/types/api.types";
+import { clearAuthTokens, decodeToken, getAuthToken } from "@/utils/auth";
 
 interface Notification {
     _id: string;
@@ -50,11 +51,24 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
     const [showSearchResults, setShowSearchResults] = useState(false);
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
+    const getDashboardToken = (): string | null => {
+        return getAuthToken('nia-admin') || localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+    };
+
     useEffect(() => {
         // Get admin info from localStorage
         const storedAdminInfo = localStorage.getItem("niaAdminInfo");
         if (storedAdminInfo) {
             setAdminInfo(JSON.parse(storedAdminInfo));
+        } else {
+            const decoded = decodeToken(getDashboardToken() || undefined) as { fullname?: string } | null;
+            if (decoded?.fullname) {
+                setAdminInfo({
+                    fullname: decoded.fullname,
+                    email: '',
+                    organization: 'AMMC'
+                });
+            }
         }
 
         // Fetch notifications
@@ -63,7 +77,7 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const fetchNotifications = async () => {
         try {
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getDashboardToken();
             if (!token) {
                 setNotifications([]);
                 setNotificationCount(0);
@@ -93,6 +107,7 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
     };
 
     const handleLogout = () => {
+        clearAuthTokens();
         localStorage.removeItem("niaAdminToken");
         localStorage.removeItem("niaAdminInfo");
         localStorage.removeItem("organization");
@@ -104,16 +119,21 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
         if (!searchQuery.trim()) return;
 
         try {
+            const token = getDashboardToken();
+            if (!token) {
+                return;
+            }
+
             // Search across multiple resources
             const [assignmentsRes, surveyorsRes, policiesRes] = await Promise.all([
                 fetch(`/api/nia-admin/assignments?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 }),
                 fetch(`/api/nia-admin/surveyors?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 }),
                 fetch(`/api/nia-admin/policies?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
 
@@ -143,7 +163,7 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const handleNotificationClick = async (notificationId: string) => {
         try {
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getDashboardToken();
             if (!token) return;
 
             const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
@@ -162,7 +182,7 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const markAllAsRead = async () => {
         try {
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getDashboardToken();
             if (!token) return;
 
             const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';

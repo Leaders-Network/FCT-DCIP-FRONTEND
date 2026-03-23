@@ -1124,16 +1124,16 @@ export interface BrokerAdminLoginResponse {
     id: string;
     email: string;
     fullname: string;
-    organization: 'Broker';
+    organization: 'Broker' | 'AMMC' | 'NIA';
     role: string;
-    tokenType: 'broker-admin';
+    tokenType: 'broker-admin' | 'super-admin';
   };
   brokerAdmin: {
     id: string;
     brokerFirmName: string;
     permissions: BrokerAdmin['permissions'];
     settings: BrokerAdmin['settings'];
-  };
+  } | null;
 }
 
 export interface BrokerAdminVerifyResponse {
@@ -1141,9 +1141,9 @@ export interface BrokerAdminVerifyResponse {
   user: {
     id: string;
     fullname: string;
-    organization: 'Broker';
+    organization: 'Broker' | 'AMMC' | 'NIA';
     role: string;
-    tokenType: 'broker-admin';
+    tokenType: 'broker-admin' | 'super-admin';
   };
   brokerAdmin: {
     id: string;
@@ -1151,7 +1151,7 @@ export interface BrokerAdminVerifyResponse {
     permissions: BrokerAdmin['permissions'];
     settings: BrokerAdmin['settings'];
     status: 'active' | 'inactive' | 'suspended';
-  };
+  } | null;
 }
 
 export interface BrokerClaimStatusHistory {

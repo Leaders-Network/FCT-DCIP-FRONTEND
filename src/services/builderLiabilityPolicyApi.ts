@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getAuthToken } from "@/utils/auth";
+import { getCookie } from "@/utils/cookies";
 import {
     BuilderIdentity,
     OrganizationInfo,
@@ -34,6 +35,27 @@ const builderLiabilityApi = axios.create({
     },
 });
 
+const getContextToken = (tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor' | 'broker-admin') => {
+    // Strict token lookup by context to avoid accidental cross-role token usage
+    // (for example, using an admin token on user dashboard routes).
+    switch (tokenType) {
+        case 'user':
+            return getCookie('userToken') || getCookie('token') || getCookie('authToken');
+        case 'admin':
+            return getCookie('adminToken') || getCookie('token') || getCookie('authToken');
+        case 'super-admin':
+            return getCookie('superAdminToken') || getCookie('adminToken') || getCookie('token') || getCookie('authToken');
+        case 'nia-admin':
+            return getCookie('niaAdminToken') || getCookie('token') || getCookie('authToken');
+        case 'surveyor':
+            return getCookie('surveyorToken') || getCookie('token') || getCookie('authToken');
+        case 'broker-admin':
+            return getCookie('brokerAdminToken') || getCookie('token') || getCookie('authToken');
+        default:
+            return null;
+    }
+};
+
 // Request interceptor
 builderLiabilityApi.interceptors.request.use(
     (config) => {
@@ -56,7 +78,7 @@ builderLiabilityApi.interceptors.request.use(
             tokenType = 'user';
         }
 
-        const token = getAuthToken(tokenType);
+        const token = tokenType ? getContextToken(tokenType) : getAuthToken(tokenType);
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
