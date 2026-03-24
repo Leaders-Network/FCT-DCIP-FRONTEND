@@ -1,20 +1,29 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { BuilderLiabilityPolicy } from '@/types/builderLiabilityPolicy.types';
 import { CreditCard, FileText, User, Phone, Mail, Building2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+
+type PaymentEnvironment = 'test' | 'live';
 
 interface PremiumDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
     premiumDetails: any;
     policy: BuilderLiabilityPolicy | null;
-    onProceed: () => void;
+    onProceed: (payload: {
+        reference: string;
+        amount: number;
+        email: string;
+        environment: PaymentEnvironment;
+    }) => void;
     loading?: boolean;
 }
 
@@ -27,6 +36,10 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
     loading = false
 }) => {
     if (!premiumDetails || !policy) return null;
+    const [reference, setReference] = useState('');
+    const [amount, setAmount] = useState<number>(0);
+    const [email, setEmail] = useState('');
+    const [environment, setEnvironment] = useState<PaymentEnvironment>('test');
 
     const copyField = (label: string, value?: string | number | null) => {
         if (!value) return;
@@ -34,15 +47,48 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
         toast.success(`${label} copied`);
     };
 
-    const amount = premiumDetails.amount ?? premiumDetails.premiumAmount;
+    const premiumAmount = premiumDetails.amount ?? premiumDetails.premiumAmount;
     const currency = premiumDetails.currency || 'NGN';
+    const defaultEmail = premiumDetails.builder?.email || policy.builder.customerEmail || '';
+    const defaultReference = premiumDetails.transactionReference || premiumDetails.invoiceNumber || '';
 
     const formatCurrency = (value: number) =>
         new Intl.NumberFormat('en-NG', { style: 'currency', currency }).format(value);
 
+    useEffect(() => {
+        setAmount(Number(premiumAmount) || 0);
+        setEmail(defaultEmail);
+        const generatedReference = String(defaultReference || `TXN_${Date.now()}`);
+        setReference(generatedReference.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 50));
+        setEnvironment('test');
+    }, [premiumAmount, defaultEmail, defaultReference, policy._id, policy.policyNumber, isOpen]);
+
+    const handleProceed = () => {
+        if (!reference.trim()) {
+            toast.error('Please enter a reference number');
+            return;
+        }
+        if (!amount || amount < 100) {
+            toast.error('Amount must be at least ₦100');
+            return;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            toast.error('Please enter a valid email');
+            return;
+        }
+
+        onProceed({
+            reference: reference.trim().replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 50),
+            amount,
+            email: email.trim(),
+            environment
+        });
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-xl">
+            <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5 text-green-600" />
@@ -127,13 +173,74 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
                     <div className="border-t pt-3 flex items-center justify-between text-sm text-gray-700">
                         <span>Proceeding will redirect you to Egolepay to complete payment.</span>
                     </div>
+
+                    <Card>
+                        <CardContent className="p-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="egolepay-reference">Reference Number</Label>
+                                <Input
+                                    id="egolepay-reference"
+                                    value={reference}
+                                    onChange={(e) => setReference(e.target.value)}
+                                    maxLength={50}
+                                    placeholder="Enter reference"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="egolepay-amount">Amount (NGN)</Label>
+                                <Input
+                                    id="egolepay-amount"
+                                    type="number"
+                                    min={100}
+                                    step={0.01}
+                                    value={amount}
+                                    onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="egolepay-email">Email</Label>
+                                <Input
+                                    id="egolepay-email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="name@example.com"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Environment</Label>
+                                <div className="flex items-center gap-4 text-sm">
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="egolepay-environment"
+                                            value="test"
+                                            checked={environment === 'test'}
+                                            onChange={() => setEnvironment('test')}
+                                        />
+                                        Test (Sandbox)
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="egolepay-environment"
+                                            value="live"
+                                            checked={environment === 'live'}
+                                            onChange={() => setEnvironment('live')}
+                                        />
+                                        Live (Production)
+                                    </label>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
                     <Button variant="outline" onClick={onClose} disabled={loading}>
                         Close
                     </Button>
-                    <Button onClick={onProceed} disabled={loading} className="bg-green-600 hover:bg-green-700">
+                    <Button onClick={handleProceed} disabled={loading} className="bg-green-600 hover:bg-green-700">
                         {loading ? 'Processing...' : 'Proceed to payment'}
                     </Button>
                 </DialogFooter>
