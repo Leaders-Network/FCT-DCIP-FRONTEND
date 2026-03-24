@@ -84,6 +84,26 @@ const handleLogin = async (e: React.FormEvent) => {
       sameSite: "lax",
     });
 
+    setCookie("surveyorName", fullName, {
+      expires: 7,
+      path: "/",
+      secure: window.location.protocol === "https:",
+      sameSite: "lax",
+    });
+
+    setCookie("surveyorId", employee._id, {
+      expires: 7,
+      path: "/",
+      secure: window.location.protocol === "https:",
+      sameSite: "lax",
+    });
+
+    localStorage.setItem("surveyorName", fullName);
+    localStorage.setItem("surveyorId", employee._id);
+    localStorage.setItem("surveyorOrganization", organization);
+    localStorage.setItem("surveyorInfo", JSON.stringify(surveyorInfo));
+    window.dispatchEvent(new Event("surveyor-name-updated"));
+
     toast.success(`Welcome back, ${fullName}!`);
 
     // Small delay to ensure cookies persist

@@ -27,6 +27,8 @@ type Surveyor = BaseSurveyor & {
   userId?: UserIdType;
 };
 
+type FormAvailability = "available" | "busy" | "on-leave";
+
 type LightweightAssignment = {
   _id: string;
   surveyorId: string | null;
@@ -91,8 +93,13 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     maxAssignments: 5,
     dateOfBirth: "",
     qualifications: [] as string[],
-    availability: "available" as "available" | "busy" | "unavailable"
+    availability: "available" as FormAvailability
   });
+
+  const mapAvailabilityFromApi = (availability?: string): FormAvailability => {
+    if (availability === "busy" || availability === "on-leave") return availability;
+    return "available";
+  };
 
   // Initial load
   useEffect(() => {
@@ -322,9 +329,9 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         if (filterStatus === 'active') {
           return surveyorStatus === 'active' || surveyorStatus === 'available';
         } else if (filterStatus === 'inactive') {
-          return surveyorStatus === 'inactive' || surveyorStatus === 'unavailable';
+          return surveyorStatus === 'inactive' || surveyorStatus === 'unavailable' || surveyorStatus === 'on-leave';
         } else if (filterStatus === 'on leave') {
-          return surveyorStatus === 'on leave' || surveyorStatus === 'busy';
+          return surveyorStatus === 'on leave' || surveyorStatus === 'on-leave' || surveyorStatus === 'busy';
         }
 
         return surveyorStatus === filterStatus;
@@ -448,8 +455,31 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const handleUpdateSurveyor = async () => {
     if (!selectedSurveyor) return;
     try {
+      const updatedProfile = {
+        ...(selectedSurveyor.profile || {}),
+        specialization: formData.specializations,
+        experience: formData.experience,
+        availability: formData.availability,
+        location: {
+          ...(selectedSurveyor.profile?.location || {}),
+          state: formData.state,
+          city: formData.city,
+          lga: formData.lga,
+          district: formData.district
+        }
+      };
+
       await onUpdateSurveyor(selectedSurveyor._id, {
-        ...formData,
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        phonenumber: formData.phonenumber,
+        profile: updatedProfile,
+        licenseNumber: formData.licenseNumber,
+        address: formData.address,
+        emergencyContact: formData.emergencyContact,
+        role: formData.role,
+        rating: formData.rating,
         status: formData.status as "active" | "inactive" | "suspended"
       });
       setShowEditModal(false);
@@ -508,7 +538,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       phonenumber: surveyor.userId?.phonenumber || surveyor.phonenumber || "",
       specializations: surveyor.profile?.specialization || surveyor.specializations || [],
       licenseNumber: surveyor.licenseNumber || "",
-      address: surveyor.profile?.location?.state || surveyor.address || "",
+      address: surveyor.address || "",
       state: surveyor.profile?.location?.state || "",
       city: surveyor.profile?.location?.city || "",
       lga: surveyor.profile?.location?.lga || "",
@@ -518,11 +548,11 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       role: surveyor.role || "Surveyor",
       status: surveyor.status || "active",
       rating: surveyor.rating || 0,
-      experience: surveyor.experience || 0,
+      experience: surveyor.profile?.experience || surveyor.experience || 0,
       maxAssignments: surveyor.maxAssignments || 5,
       dateOfBirth: surveyor.dateOfBirth || "",
       qualifications: surveyor.qualifications || [],
-      availability: surveyor.availability || "available"
+      availability: mapAvailabilityFromApi(surveyor.profile?.availability || surveyor.availability)
     });
     setShowEditModal(true);
   };
@@ -708,18 +738,18 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   License: {surveyor?.licenseNumber || 'N/A'}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-semibold">Experience:</span> {surveyor?.experience || 0} years
+                  <span className="font-semibold">Experience:</span> {surveyor?.profile?.experience || surveyor?.experience || 0} years
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <span className="font-semibold">Max Assignments:</span> {surveyor?.maxAssignments || 5}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <span className="font-semibold">Availability:</span>
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${surveyor?.availability === 'available' ? 'bg-green-100 text-green-800' :
-                    surveyor?.availability === 'busy' ? 'bg-yellow-100 text-yellow-800' :
+                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${(surveyor?.profile?.availability || surveyor?.availability) === 'available' ? 'bg-green-100 text-green-800' :
+                    (surveyor?.profile?.availability || surveyor?.availability) === 'busy' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                    {surveyor?.availability || 'Available'}
+                    {surveyor?.profile?.availability || surveyor?.availability || 'available'}
                   </span>
                 </div>
               </div>
@@ -753,7 +783,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <div>
                   <p className="text-xs text-gray-600 mb-1">Specializations:</p>
                   <div className="flex flex-wrap gap-1">
-                    {surveyor.specializations?.map((spec, index) => (
+                    {(surveyor.profile?.specialization || surveyor.specializations || []).map((spec, index) => (
                       <span key={index} className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                         {spec}
                       </span>
@@ -1074,12 +1104,12 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                       </label>
                       <select
                         value={formData.availability}
-                        onChange={(e) => setFormData({ ...formData, availability: e.target.value as "available" | "busy" | "unavailable" })}
+                        onChange={(e) => setFormData({ ...formData, availability: e.target.value as FormAvailability })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       >
                         <option value="available">Available</option>
                         <option value="busy">Busy</option>
-                        <option value="unavailable">Unavailable</option>
+                        <option value="on-leave">On Leave</option>
                       </select>
                     </div>
 
@@ -1250,14 +1280,14 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <h4 className="font-medium text-gray-900 mb-2">Professional Information</h4>
                   <div className="space-y-2 text-sm">
                     <p><span className="text-gray-600">License:</span> {selectedSurveyor?.licenseNumber || 'N/A'}</p>
-                    <p><span className="text-gray-600">Experience:</span> {selectedSurveyor?.experience || 0} years</p>
+                    <p><span className="text-gray-600">Experience:</span> {selectedSurveyor?.profile?.experience || selectedSurveyor?.experience || 0} years</p>
                     <p><span className="text-gray-600">Max Assignments:</span> {selectedSurveyor?.maxAssignments || 5}</p>
                     <p><span className="text-gray-600">Availability:</span>
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${selectedSurveyor?.availability === 'available' ? 'bg-green-100 text-green-800' :
-                        selectedSurveyor?.availability === 'busy' ? 'bg-yellow-100 text-yellow-800' :
+                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${(selectedSurveyor?.profile?.availability || selectedSurveyor?.availability) === 'available' ? 'bg-green-100 text-green-800' :
+                        (selectedSurveyor?.profile?.availability || selectedSurveyor?.availability) === 'busy' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
-                        {selectedSurveyor?.availability || 'Available'}
+                        {selectedSurveyor?.profile?.availability || selectedSurveyor?.availability || 'available'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Status:</span> {selectedSurveyor?.status || 'N/A'}</p>
@@ -1323,7 +1353,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Specializations</h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedSurveyor.specializations?.map((spec, index) => (
+                  {(selectedSurveyor.profile?.specialization || selectedSurveyor.specializations || []).map((spec, index) => (
                     <span key={index} className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
                       {spec}
                     </span>
