@@ -49,7 +49,7 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
                         Premium calculated
                     </DialogTitle>
                     <DialogDescription>
-                        Review the premium before proceeding to Egolopay payment.
+                        Review the premium before proceeding to Egolepay payment.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -125,7 +125,7 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
                     </Card>
 
                     <div className="border-t pt-3 flex items-center justify-between text-sm text-gray-700">
-                        <span>Proceeding will redirect you to Egolopay to complete payment.</span>
+                        <span>Proceeding will redirect you to Egolepay to complete payment.</span>
                     </div>
                 </div>
 

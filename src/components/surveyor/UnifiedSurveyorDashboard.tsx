@@ -17,7 +17,8 @@ import {
     Award
 } from "lucide-react";
 import Link from "next/link";
-import { getSurveyorAssignments } from "@/services/api";
+import { getSurveyorAssignments, getSurveyorProfile } from "@/services/api";
+import { getCookie } from "@/utils/cookies";
 import DashboardErrorBanner from "@/components/shared/DashboardErrorBanner";
 
 interface Assignment {
@@ -115,9 +116,65 @@ const UnifiedSurveyorDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [friendlyError, setFriendlyError] = useState<string | null>(null);
+    const [surveyorName, setSurveyorName] = useState("Surveyor");
 
     useEffect(() => {
         fetchSurveyorData();
+    }, []);
+
+    useEffect(() => {
+        const safeName = (value?: string) => {
+            const name = (value || "").trim().replace(/\s+/g, " ");
+            if (!name || name.toLowerCase() === "surveyor") return null;
+            return name;
+        };
+
+        const applyName = (value?: string) => {
+            const name = safeName(value);
+            if (name) {
+                setSurveyorName(name);
+                localStorage.setItem("surveyorName", name);
+                return true;
+            }
+            return false;
+        };
+
+        const hydrateName = async () => {
+            const fromStorage = localStorage.getItem("surveyorName");
+            if (applyName(fromStorage || undefined)) return;
+
+            const infoCookie = getCookie("surveyorInfo");
+            if (infoCookie) {
+                try {
+                    const parsed = JSON.parse(infoCookie) as { name?: string };
+                    if (applyName(parsed?.name)) return;
+                } catch (error) {
+                    console.error("Failed to parse surveyorInfo cookie:", error);
+                }
+            }
+
+            const nameCookie = getCookie("surveyorName");
+            if (applyName(nameCookie || undefined)) return;
+
+            try {
+                const profileResponse = await getSurveyorProfile();
+                const surveyor = profileResponse?.data;
+                const firstName = surveyor?.userId?.firstname || "";
+                const lastName = surveyor?.userId?.lastname || "";
+                applyName(`${firstName} ${lastName}`);
+            } catch (error) {
+                console.error("Failed to hydrate surveyor name:", error);
+            }
+        };
+
+        const onNameUpdated = () => {
+            const value = localStorage.getItem("surveyorName");
+            applyName(value || undefined);
+        };
+
+        hydrateName();
+        window.addEventListener("surveyor-name-updated", onNameUpdated);
+        return () => window.removeEventListener("surveyor-name-updated", onNameUpdated);
     }, []);
 
     const fetchSurveyorData = async () => {
@@ -162,7 +219,6 @@ const UnifiedSurveyorDashboard = () => {
         }
     };
 
-    const surveyorName = typeof window !== 'undefined' ? localStorage.getItem("surveyorName") || "Surveyor" : "Surveyor";
     const firstName = surveyorName.split(" ")[0];
 
     const recentAssignments = assignments.slice(0, 5);

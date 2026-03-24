@@ -27,17 +27,17 @@ import {
 } from 'lucide-react';
 import { toast } from "sonner"
 
-// Load Egolopay SDK dynamically (singleton)
+// Load Egolepay SDK dynamically (singleton)
 type SdkLoadError = Error & { tried?: string[] };
 
-const loadEgoloPaySDK = (sdkUrl?: string) => {
+const loadEgolePaySDK = (sdkUrl?: string) => {
     const resolvedSdkUrl = process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL || sdkUrl;
 
     return new Promise<void>((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((window as any).EgolePay) return resolve();
         if (!resolvedSdkUrl) {
-            const err: SdkLoadError = Object.assign(new Error('Missing Egolopay SDK URL'), { tried: [] });
+            const err: SdkLoadError = Object.assign(new Error('Missing Egolepay SDK URL'), { tried: [] });
             reject(err);
             return;
         }
@@ -52,12 +52,12 @@ const loadEgoloPaySDK = (sdkUrl?: string) => {
                 return;
             }
             script.remove();
-            const err: SdkLoadError = Object.assign(new Error('Egolopay SDK loaded without EgolePay global'), { tried: [resolvedSdkUrl] });
+            const err: SdkLoadError = Object.assign(new Error('Egolepay SDK loaded without EgolePay global'), { tried: [resolvedSdkUrl] });
             reject(err);
         };
         script.onerror = () => {
             script.remove();
-            const err: SdkLoadError = Object.assign(new Error('Failed to load Egolopay SDK'), { tried: [resolvedSdkUrl] });
+            const err: SdkLoadError = Object.assign(new Error('Failed to load Egolepay SDK'), { tried: [resolvedSdkUrl] });
             reject(err);
         };
         document.body.appendChild(script);
@@ -115,7 +115,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                         nextAction: {
                             label: 'Proceed to payment',
                             method: 'POST',
-                            url: `/payment/egolopay/initialize/${policy._id}`
+                            url: `/payment/Egolepay/initialize/${policy._id}`
                         }
                     };
                 }
@@ -188,18 +188,18 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 throw new Error('Premium amount or email missing; calculate premium first.');
             }
             if (!sdkUrl) {
-                throw new Error('Egolopay SDK URL is not configured');
+                throw new Error('Egolepay SDK URL is not configured');
             }
             if (!apiKey) {
-                throw new Error('Egolopay browser key is not configured');
+                throw new Error('Egolepay browser key is not configured');
             }
 
-            await loadEgoloPaySDK(sdkUrl);
+            await loadEgolePaySDK(sdkUrl);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const EgolePay = (window as any).EgolePay;
             if (!EgolePay) {
-                throw new Error('Egolopay SDK failed to load');
+                throw new Error('Egolepay SDK failed to load');
             }
 
             const api = (await import('@/services/api')).default;
@@ -211,7 +211,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 email,
                 onSuccess: async () => {
                     try {
-                        await api.post('/payment/egolopay/verify', {
+                        await api.post('/payment/Egolepay/verify', {
                             reference: referenceNumber,
                             policyId: policy._id,
                             amount
@@ -224,7 +224,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                     }
                 },
                 onError: (sdkError: { message?: string }) => {
-                    toast.error(sdkError?.message || 'Egolopay checkout failed');
+                    toast.error(sdkError?.message || 'Egolepay checkout failed');
                 },
                 onClose: () => {
                     toast.info('Payment window closed');

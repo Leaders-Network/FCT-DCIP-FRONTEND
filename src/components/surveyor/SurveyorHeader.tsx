@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Bell, Search, Menu } from "lucide-react";
 import {
   DropdownMenu,
@@ -8,6 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { clearAuthTokens } from "@/utils/auth"
+import { getCookie } from "@/utils/cookies";
+import { getSurveyorProfile } from "@/services/api";
 import Swal from "sweetalert2";
 import { useRouter } from 'next/navigation';
 
@@ -16,41 +18,96 @@ interface SurveyorHeaderProps {
 }
 
 const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
-  const surveyorName = typeof window !== 'undefined' ? localStorage.getItem("surveyorName") || "Surveyor" : "Surveyor";
+  const [surveyorName, setSurveyorName] = useState("Surveyor");
   const initials = surveyorName
     .split(" ")
     .map((word) => word[0])
     .join("")
     .toUpperCase();
-    const router = useRouter();
+  const router = useRouter();
+  const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-          // Handle logout
-        const handleLogout = async () => {
-          const result = await Swal.fire({
-            title: 'Logout?',
-            text: 'Are you sure you want to logout?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, logout',
-            cancelButtonText: 'Cancel',
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#6b7280',
-            background: isDarkMode ? '#111827' : '#ffffff',
-            color: isDarkMode ? '#ffffff' : '#111827',
-        });
-      
-        if (result.isConfirmed) {
-          clearAuthTokens();
-          localStorage.removeItem("surveyorToken");
-          localStorage.removeItem("surveyorName");
-          localStorage.removeItem("surveyorRole");
-          localStorage.removeItem("surveyorOrganization");
-          localStorage.removeItem("surveyorInfo");
-          window.location.href = "/surveyor";
-          router.push('/surveyor');
+  useEffect(() => {
+    const safeName = (value?: string) => {
+      const name = (value || "").trim().replace(/\s+/g, " ");
+      if (!name || name.toLowerCase() === "surveyor") return null;
+      return name;
+    };
+
+    const applyName = (value?: string) => {
+      const name = safeName(value);
+      if (name) {
+        setSurveyorName(name);
+        localStorage.setItem("surveyorName", name);
+        return true;
+      }
+      return false;
+    };
+
+    const hydrateName = async () => {
+      const fromStorage = localStorage.getItem("surveyorName");
+      if (applyName(fromStorage || undefined)) return;
+
+      const infoCookie = getCookie("surveyorInfo");
+      if (infoCookie) {
+        try {
+          const parsed = JSON.parse(infoCookie) as { name?: string };
+          if (applyName(parsed?.name)) return;
+        } catch (error) {
+          console.error("Failed to parse surveyorInfo cookie:", error);
         }
-      };
-      const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+
+      const nameCookie = getCookie("surveyorName");
+      if (applyName(nameCookie || undefined)) return;
+
+      try {
+        const profileResponse = await getSurveyorProfile();
+        const surveyor = profileResponse?.data;
+        const firstName = surveyor?.userId?.firstname || "";
+        const lastName = surveyor?.userId?.lastname || "";
+        applyName(`${firstName} ${lastName}`);
+      } catch (error) {
+        console.error("Failed to hydrate surveyor name:", error);
+      }
+    };
+
+    const onNameUpdated = () => {
+      const value = localStorage.getItem("surveyorName");
+      applyName(value || undefined);
+    };
+
+    hydrateName();
+    window.addEventListener("surveyor-name-updated", onNameUpdated);
+    return () => window.removeEventListener("surveyor-name-updated", onNameUpdated);
+  }, []);
+
+  // Handle logout
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      background: isDarkMode ? '#111827' : '#ffffff',
+      color: isDarkMode ? '#ffffff' : '#111827',
+    });
+
+    if (result.isConfirmed) {
+      clearAuthTokens();
+      localStorage.removeItem("surveyorToken");
+      localStorage.removeItem("surveyorName");
+      localStorage.removeItem("surveyorRole");
+      localStorage.removeItem("surveyorOrganization");
+      localStorage.removeItem("surveyorInfo");
+      localStorage.removeItem("surveyorId");
+      router.push('/surveyor');
+    }
+  };
 
 
   return (

@@ -231,14 +231,15 @@ export interface Surveyor extends Employee {
   maxAssignments?: number;
   dateOfBirth?: string;
   qualifications?: string[];
-  availability?: 'available' | 'busy' | 'unavailable';
+  availability?: 'available' | 'busy' | 'unavailable' | 'on-leave';
   state?: string;
   city?: string;
   lga?: string;
   district?: string;
   profile?: {
-    availability: 'available' | 'busy' | 'unavailable';
+    availability: 'available' | 'busy' | 'unavailable' | 'on-leave';
     specialization: string[];
+    experience?: number;
     location: {
       state: string;
       city: string;
@@ -249,7 +250,7 @@ export interface Surveyor extends Employee {
         longitude: number;
       };
     };
-    workSchedule: {
+    workSchedule?: {
       monday: { start: string; end: string; available: boolean };
       tuesday: { start: string; end: string; available: boolean };
       wednesday: { start: string; end: string; available: boolean };
