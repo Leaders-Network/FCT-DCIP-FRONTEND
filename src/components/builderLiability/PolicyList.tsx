@@ -29,39 +29,317 @@ import { toast } from "sonner"
 
 // Load Egolepay SDK dynamically (singleton)
 type SdkLoadError = Error & { tried?: string[] };
+type PaymentEnvironment = 'test' | 'live';
+type EgolePayResponse = {
+    reference?: string;
+    [key: string]: unknown;
+};
+type EgolePayConfig = {
+    apiKey: string;
+    reference: string;
+    amount: number;
+    email: string;
+    customerName?: string;
+    phone?: string;
+    onSuccess: (response: EgolePayResponse) => void;
+    onCancel?: (info: unknown) => void;
+    onError?: (error: { message?: string }) => void;
+    onClose?: (info?: unknown) => void;
+    onStepChange?: (step: string) => void;
+};
+type EgolePayCtor = new (config: EgolePayConfig) => unknown;
+
+declare global {
+    interface Window {
+        EgolePay?: EgolePayCtor;
+    }
+}
+
+let sdkLoaderPromise: Promise<void> | null = null;
+let loadedEgoleSdkUrl: string | null = null;
+let loadingEgoleSdkUrl: string | null = null;
+const EGOLEPAY_CUSTOMER_PATCH_VERSION = 5;
+const EGOLEPAY_FETCH_PATCH_VERSION = 5;
+
+type EgolePayRuntime = {
+    __customerPatched?: boolean;
+    __customerPatchVersion?: number;
+    prototype?: {
+        createTransaction?: () => Promise<void>;
+    };
+};
+
+type FetchPatchedWindow = Window & {
+    __egolepayFetchPatched?: boolean;
+    __egolepayOriginalFetch?: typeof window.fetch;
+    __egolepayFetchPatchVersion?: number;
+    __egolepayForcedApiBaseUrl?: string;
+};
+
+type EgolePayPatchedInstance = {
+    showOverlay: (message: string) => void;
+    hideOverlay: () => void;
+    showErrorModal: (message: string) => void;
+    showPaymentOptionsPopup: () => void;
+    baseUrl: string;
+    apiKey: string;
+    amount: number;
+    reference: string;
+    email: string;
+    customerName?: string;
+    phone?: string;
+    transactionReference?: string;
+    totalAmount?: number;
+    serviceFee?: number;
+};
 
 const loadEgolePaySDK = (sdkUrl?: string) => {
-    const resolvedSdkUrl = process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL || sdkUrl;
+    const resolvedSdkUrl = sdkUrl;
 
     return new Promise<void>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((window as any).EgolePay) return resolve();
         if (!resolvedSdkUrl) {
             const err: SdkLoadError = Object.assign(new Error('Missing Egolepay SDK URL'), { tried: [] });
             reject(err);
             return;
         }
 
-        const script = document.createElement('script');
-        script.src = resolvedSdkUrl;
-        script.async = true;
-        script.onload = () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((window as any).EgolePay) {
-                resolve();
-                return;
-            }
-            script.remove();
-            const err: SdkLoadError = Object.assign(new Error('Egolepay SDK loaded without EgolePay global'), { tried: [resolvedSdkUrl] });
-            reject(err);
-        };
-        script.onerror = () => {
-            script.remove();
-            const err: SdkLoadError = Object.assign(new Error('Failed to load Egolepay SDK'), { tried: [resolvedSdkUrl] });
-            reject(err);
-        };
-        document.body.appendChild(script);
+        const existingScript = document.querySelector(`script[src="${resolvedSdkUrl}"]`) as HTMLScriptElement | null;
+
+        if (window.EgolePay && existingScript && loadedEgoleSdkUrl === resolvedSdkUrl) {
+            resolve();
+            return;
+        }
+
+        if (sdkLoaderPromise && loadingEgoleSdkUrl === resolvedSdkUrl) {
+            sdkLoaderPromise.then(resolve).catch(reject);
+            return;
+        }
+
+        // If switching SDK URLs (test <-> live), clear previous runtime and script
+        if (window.EgolePay && loadedEgoleSdkUrl && loadedEgoleSdkUrl !== resolvedSdkUrl) {
+            delete window.EgolePay;
+            const previousScript = document.querySelector(`script[src="${loadedEgoleSdkUrl}"]`);
+            previousScript?.remove();
+        }
+
+        sdkLoaderPromise = new Promise<void>((innerResolve, innerReject) => {
+            const script = document.createElement('script');
+            script.src = resolvedSdkUrl;
+            script.async = true;
+            script.dataset.egolepaySdk = "true";
+            script.onload = () => {
+                if (window.EgolePay) {
+                    loadedEgoleSdkUrl = resolvedSdkUrl;
+                    innerResolve();
+                    return;
+                }
+                script.remove();
+                const err: SdkLoadError = Object.assign(new Error('Egolepay SDK loaded without EgolePay global'), { tried: [resolvedSdkUrl] });
+                innerReject(err);
+            };
+            script.onerror = () => {
+                script.remove();
+                const err: SdkLoadError = Object.assign(new Error('Failed to load Egolepay SDK'), { tried: [resolvedSdkUrl] });
+                innerReject(err);
+            };
+            document.body.appendChild(script);
+        });
+        loadingEgoleSdkUrl = resolvedSdkUrl;
+
+        sdkLoaderPromise
+            .then(() => resolve())
+            .catch((error) => reject(error))
+            .finally(() => {
+                sdkLoaderPromise = null;
+                loadingEgoleSdkUrl = null;
+            });
     });
+};
+
+const getForcedEgolePayApiBaseUrl = (sdkUrl?: string) => {
+    if (!sdkUrl) return '';
+    try {
+        const parsed = new URL(sdkUrl);
+        if (/apigateway-test\.egolepay\.com$/i.test(parsed.hostname)) {
+            return `${parsed.origin}/api/StandardPaymentGateway`;
+        }
+        if (/apigateway\.egolepay\.com$/i.test(parsed.hostname)) {
+            return `${parsed.origin}/api/v1`;
+        }
+        return '';
+    } catch {
+        return '';
+    }
+};
+
+const patchEgolePayCustomerPayloadToObject = () => {
+    const EgolePay = window.EgolePay as unknown as EgolePayRuntime | undefined;
+    if (!EgolePay) return;
+    if (EgolePay.__customerPatchVersion === EGOLEPAY_CUSTOMER_PATCH_VERSION) return;
+    const proto = EgolePay.prototype;
+    if (!proto?.createTransaction) return;
+
+    proto.createTransaction = async function (this: EgolePayPatchedInstance) {
+        this.showOverlay("Creating transaction...");
+        const normalizedEmail = String(this.email || '').trim();
+        const normalizedName =
+            String(this.customerName || '').trim() ||
+            (normalizedEmail ? normalizedEmail.split('@')[0] : 'customer');
+        const normalizedPhone = String(this.phone || '').trim();
+
+        const payload = {
+            amount: this.amount,
+            reference: this.reference,
+            customer: {
+                email: normalizedEmail,
+                name: normalizedName,
+                phone: normalizedPhone
+            }
+        };
+
+        try {
+            const response = await fetch(`${this.baseUrl}/transactions`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${this.apiKey}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data?.Message || data?.message || "Failed to create transaction");
+            }
+            if (!(data?.Status === true || data?.status === true)) {
+                throw new Error(data?.Message || data?.message || "Transaction creation failed");
+            }
+
+            const responseData = data?.Data || data?.data;
+            if (!responseData) {
+                throw new Error("No data returned from API");
+            }
+
+            this.transactionReference = responseData.reference || responseData.Reference;
+            this.totalAmount = responseData.totalAmount || responseData.TotalAmount || this.amount;
+            this.serviceFee = responseData.fee || responseData.Fee || 0;
+            this.hideOverlay();
+            this.showPaymentOptionsPopup();
+        } catch (error: unknown) {
+            this.hideOverlay();
+            const message = error instanceof Error ? error.message : "Failed to initialize payment. Please try again.";
+            this.showErrorModal(message);
+        }
+    };
+
+    EgolePay.__customerPatched = true;
+    EgolePay.__customerPatchVersion = EGOLEPAY_CUSTOMER_PATCH_VERSION;
+};
+
+const patchEgolePayTransactionFetchPayload = () => {
+    const win = window as FetchPatchedWindow;
+    if (win.__egolepayFetchPatchVersion === EGOLEPAY_FETCH_PATCH_VERSION) return;
+
+    if (win.__egolepayFetchPatched && win.__egolepayOriginalFetch) {
+        window.fetch = win.__egolepayOriginalFetch;
+    }
+
+    const originalFetch = (win.__egolepayOriginalFetch || window.fetch.bind(window)).bind(window);
+    win.__egolepayOriginalFetch = originalFetch;
+
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        let rewrittenInput: RequestInfo | URL = input;
+        try {
+            const urlValue =
+                typeof input === 'string'
+                    ? input
+                    : input instanceof URL
+                        ? input.toString()
+                        : input.url;
+
+            const method =
+                (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+            const parsedUrl = new URL(urlValue, window.location.origin);
+            const isEgoleTransactionCreate =
+                /egolepay\.com/i.test(parsedUrl.hostname) &&
+                /\/transactions\/?$/.test(parsedUrl.pathname) &&
+                method === 'POST';
+            const forcedApiBaseUrl = win.__egolepayForcedApiBaseUrl || '';
+
+            if (forcedApiBaseUrl && /paywebbackoffice-test\.egolepay\.com$/i.test(parsedUrl.hostname)) {
+                const forcedBase = new URL(forcedApiBaseUrl);
+                const rewrittenUrl = `${forcedBase.origin}${parsedUrl.pathname}${parsedUrl.search}`;
+                rewrittenInput =
+                    typeof input === 'string'
+                        ? rewrittenUrl
+                        : input instanceof URL
+                            ? new URL(rewrittenUrl)
+                            : new Request(rewrittenUrl, input);
+            }
+
+            if (isEgoleTransactionCreate && typeof init?.body === 'string') {
+                const rawPayload = JSON.parse(init.body) as Record<string, unknown>;
+                const customer = rawPayload.customer;
+                const parsedAmount = Number(rawPayload.amount);
+                const normalizedAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
+                const normalizedReference =
+                    typeof rawPayload.reference === 'string' && rawPayload.reference.trim()
+                        ? rawPayload.reference.trim()
+                        : `TXN_${Date.now()}`;
+
+                let normalizedEmail = '';
+                let normalizedName = '';
+                let normalizedPhone = '';
+                if (typeof customer === 'string' && customer.trim()) {
+                    normalizedEmail = customer.trim();
+                } else if (customer && typeof customer === 'object' && !Array.isArray(customer)) {
+                    const customerObject = customer as Record<string, unknown>;
+                    normalizedEmail =
+                        (typeof customerObject.email === 'string' && customerObject.email.trim()) || '';
+                    normalizedName =
+                        (typeof customerObject.name === 'string' && customerObject.name.trim()) || '';
+                    normalizedPhone =
+                        (typeof customerObject.phone === 'string' && customerObject.phone.trim()) || '';
+                }
+
+                if (!normalizedEmail && typeof rawPayload.email === 'string') {
+                    normalizedEmail = rawPayload.email.trim();
+                }
+                if (!normalizedName) {
+                    normalizedName =
+                        (typeof rawPayload.customerName === 'string' && rawPayload.customerName.trim()) ||
+                        (normalizedEmail ? normalizedEmail.split('@')[0] : 'customer');
+                }
+                if (!normalizedPhone && typeof rawPayload.phone === 'string') {
+                    normalizedPhone = rawPayload.phone.trim();
+                }
+
+                if (normalizedEmail) {
+                    const canonicalPayload = {
+                        amount: normalizedAmount,
+                        reference: normalizedReference,
+                        customer: {
+                            email: normalizedEmail,
+                            name: normalizedName,
+                            phone: normalizedPhone
+                        }
+                    };
+                    const nextInit: RequestInit = {
+                        ...init,
+                        body: JSON.stringify(canonicalPayload)
+                    };
+                    return originalFetch(rewrittenInput, nextInit);
+                }
+            }
+        } catch (error) {
+            console.warn('Egolepay fetch payload patch warning:', error);
+        }
+
+        return originalFetch(rewrittenInput, init);
+    };
+
+    win.__egolepayFetchPatched = true;
+    win.__egolepayFetchPatchVersion = EGOLEPAY_FETCH_PATCH_VERSION;
 };
 
 interface PolicyListProps {
@@ -173,13 +451,28 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         return cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
     };
 
-    const handleProceedToPayment = async (policy: BuilderLiabilityPolicy) => {
+    const handleProceedToPayment = async (
+        policy: BuilderLiabilityPolicy,
+        payload?: {
+            reference: string;
+            amount: number;
+            email: string;
+            environment: PaymentEnvironment;
+        }
+    ) => {
         const state = premiumState[policy._id];
-        const amount = state?.premiumDetails?.amount || (policy as any)?.paymentInfo?.amount;
-        const email = policy.builder.customerEmail;
-        const referenceNumber = `BL_${policy.policyNumber || policy._id}_${Date.now()}`;
-        const sdkUrl = process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL;
-        const apiKey = process.env.NEXT_PUBLIC_EGOLEPAY_BROWSER_KEY || process.env.NEXT_PUBLIC_EGOLEPAY_PUBLIC_KEY;
+        const amount = payload?.amount || state?.premiumDetails?.amount || (policy as any)?.paymentInfo?.amount;
+        const email = payload?.email || policy.builder.customerEmail;
+        const rawReference = payload?.reference || `TXN_${Date.now()}`;
+        const reference = rawReference.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 50);
+        const environment = payload?.environment || 'test';
+        const testSdkUrl = process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL || process.env.NEXT_PUBLIC_EGOLEPAY_TEST_SDK_URL;
+        const liveSdkUrl = process.env.NEXT_PUBLIC_EGOLEPAY_LIVE_SDK_URL;
+        const sdkUrl = environment === 'test' ? testSdkUrl : liveSdkUrl;
+        const testApiKey = process.env.NEXT_PUBLIC_EGOLEPAY_TEST_PUBLIC_KEY || process.env.NEXT_PUBLIC_EGOLEPAY_PUBLIC_KEY;
+        const liveApiKey = process.env.NEXT_PUBLIC_EGOLEPAY_LIVE_PUBLIC_KEY;
+        const apiKey = environment === 'test' ? testApiKey : liveApiKey;
+        const isMethodNotAllowed = (message?: string) => /405|method not allowed/i.test(message || '');
 
         try {
             setProcessingPayment(policy._id);
@@ -191,49 +484,116 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 throw new Error('Egolepay SDK URL is not configured');
             }
             if (!apiKey) {
-                throw new Error('Egolepay browser key is not configured');
+                throw new Error(`Egolepay ${environment} public key is not configured`);
+            }
+            if (apiKey.includes('...')) {
+                throw new Error(`Egolepay ${environment} public key looks like a placeholder; set the full pk_${environment}_... key`);
+            }
+            if (apiKey.startsWith('sk_')) {
+                throw new Error('Invalid Egolepay key for frontend: secret keys (sk_*) must not be used in browser');
+            }
+            if (environment === 'live' && !apiKey.includes('live')) {
+                throw new Error('Live environment selected but key does not look like a live public key');
+            }
+            if (environment === 'live' && sdkUrl?.includes('-test')) {
+                throw new Error('Live environment selected but test SDK URL detected');
+            }
+            if (environment === 'test' && sdkUrl?.includes('api.egolepay.com')) {
+                throw new Error('Test environment selected but live SDK URL detected');
             }
 
-            await loadEgolePaySDK(sdkUrl);
+            const api = (await import('@/services/api')).default;
+            let runtimeReference = reference;
+            let runtimeAmount = amount;
+            let runtimeEmail = email;
+            let runtimeSdkUrl = sdkUrl;
+            let runtimeApiKey = apiKey;
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const EgolePay = (window as any).EgolePay;
+            // Always initialize payment first so backend records are created even if SDK checks fail.
+            try {
+                const initializePath = normalizeApiPath(state?.nextAction?.url) || `/payment/Egolepay/initialize/${policy._id}`;
+                const initializeResponse = await api.post(initializePath);
+                const initializeData = initializeResponse?.data?.data || {};
+
+                runtimeReference = String(initializeData.reference || initializeData.referenceNumber || runtimeReference);
+                runtimeAmount = Number(initializeData.amount || runtimeAmount);
+                runtimeEmail = String(initializeData.email || runtimeEmail);
+                runtimeSdkUrl = String(initializeData.sdkUrl || runtimeSdkUrl);
+                runtimeApiKey = String(initializeData.browserKey || initializeData.publicKey || runtimeApiKey);
+
+                // Force test payments to use the configured frontend SDK URL.
+                if (environment === 'test' && testSdkUrl) {
+                    runtimeSdkUrl = testSdkUrl;
+                }
+            } catch (initializeError) {
+                console.warn('Payment initialization warning:', initializeError);
+                // Continue with local values as fallback.
+            }
+
+            (window as FetchPatchedWindow).__egolepayForcedApiBaseUrl = getForcedEgolePayApiBaseUrl(runtimeSdkUrl);
+
+            await loadEgolePaySDK(runtimeSdkUrl);
+            patchEgolePayTransactionFetchPayload();
+            patchEgolePayCustomerPayloadToObject();
+
+            const EgolePay = window.EgolePay;
             if (!EgolePay) {
                 throw new Error('Egolepay SDK failed to load');
             }
 
-            const api = (await import('@/services/api')).default;
-
             new EgolePay({
-                apiKey,
-                referenceNumber,
-                amount,
-                email,
-                onSuccess: async () => {
+                apiKey: runtimeApiKey,
+                reference: runtimeReference,
+                amount: runtimeAmount,
+                email: runtimeEmail,
+                customerName: (policy.builder.nameOfBuilder || runtimeEmail.split('@')[0]).slice(0, 80),
+                phone: (policy.builder.telNo || '').replace(/[^\d+]/g, '') || '08000000000',
+                onSuccess: async (response) => {
                     try {
+                        const verifyReference = response?.reference || runtimeReference;
                         await api.post('/payment/Egolepay/verify', {
-                            reference: referenceNumber,
+                            reference: verifyReference,
                             policyId: policy._id,
-                            amount
+                            amount: runtimeAmount
                         });
                         toast.success('Payment completed!');
+                        setShowPremiumModal(false);
                         fetchPolicies();
                     } catch (verifyErr: any) {
                         const msg = verifyErr?.response?.data?.message || verifyErr?.message || 'Verification failed';
                         toast.error(`Verification error\n\n${msg}`);
                     }
                 },
-                onError: (sdkError: { message?: string }) => {
-                    toast.error(sdkError?.message || 'Egolepay checkout failed');
+                onCancel: () => {
+                    toast.error('Payment cancelled');
+                },
+                onError: (sdkError) => {
+                    const sdkMessage = sdkError?.message || 'Egolepay checkout failed';
+                    if (isMethodNotAllowed(sdkMessage)) {
+                        toast.info('Payment initialization saved. Gateway transaction check returned 405, please retry or confirm with Egolepay support.');
+                        setShowPremiumModal(false);
+                        fetchPolicies();
+                        return;
+                    }
+                    toast.error(sdkMessage);
                 },
                 onClose: () => {
                     toast.info('Payment window closed');
+                },
+                onStepChange: (step) => {
+                    console.log('EgolePay step changed:', step);
                 }
             });
         } catch (error: any) {
             console.error('Payment error:', error);
             const attempted = error?.tried ? `\nTried: ${error.tried.join(', ')}` : '';
             const errorMessage = error.response?.data?.message || error.message || 'Failed to process payment';
+            if (isMethodNotAllowed(errorMessage)) {
+                toast.info('Payment initialization completed, but gateway transaction check returned 405. Please retry shortly.');
+                setShowPremiumModal(false);
+                fetchPolicies();
+                return;
+            }
             toast.error(`Payment Error\n\n${errorMessage}${attempted ? '\n\n' + attempted : ''}\n\nPlease try again or contact support.`);
         } finally {
             setProcessingPayment(null);
@@ -536,9 +896,14 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                         <Button
                                                             size="sm"
                                                             className="bg-green-600 hover:bg-green-700"
-                                                            onClick={() => premiumState[policy._id]
-                                                                ? handleProceedToPayment(policy)
-                                                                : handleCalculatePremium(policy)}
+                                                            onClick={() => {
+                                                                if (premiumState[policy._id]) {
+                                                                    setPremiumModalPolicyId(policy._id);
+                                                                    setShowPremiumModal(true);
+                                                                } else {
+                                                                    handleCalculatePremium(policy);
+                                                                }
+                                                            }}
                                                             disabled={processingPayment === policy._id || calculatingPremium === policy._id}
                                                         >
                                                             <CreditCard className="w-4 h-4 mr-2" />
@@ -607,11 +972,11 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 onClose={() => setShowPremiumModal(false)}
                 premiumDetails={premiumModalPolicyId ? premiumState[premiumModalPolicyId]?.premiumDetails : null}
                 policy={premiumModalPolicyId ? policies.find(p => p._id === premiumModalPolicyId) || null : null}
-                onProceed={() => {
+                onProceed={(payload) => {
                     if (!premiumModalPolicyId) return;
                     const policy = policies.find(p => p._id === premiumModalPolicyId);
                     if (policy) {
-                        handleProceedToPayment(policy);
+                        handleProceedToPayment(policy, payload);
                     }
                 }}
                 loading={processingPayment === premiumModalPolicyId}
