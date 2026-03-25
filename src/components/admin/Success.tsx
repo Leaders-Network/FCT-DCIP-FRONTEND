@@ -8,7 +8,20 @@ const Success = () => {
   const router = useRouter();
 
   const handleProceedToLogin = () => {
-    router.push('/admin/login'); // Adjust this path to your login page
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    let loginRoute = '/admin/login';
+
+    if (currentPath.includes('/nia-admin')) {
+      loginRoute = '/nia-admin/login';
+    } else if (currentPath.includes('/broker-admin')) {
+      loginRoute = '/broker-admin/login';
+    } else if (currentPath.includes('/surveyor')) {
+      loginRoute = '/surveyor';
+    } else if (currentPath.includes('/dashboard') || currentPath.includes('/reset-password')) {
+      loginRoute = '/login';
+    }
+
+    router.push(loginRoute);
   };
 
   return (

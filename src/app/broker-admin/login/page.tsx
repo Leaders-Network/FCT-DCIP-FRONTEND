@@ -153,6 +153,16 @@ export default function BrokerAdminLogin() {
                         </div>
                     </div>
 
+                    <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500"> </span>
+                        <a
+                            href="/broker-admin/reset-password"
+                            className="text-indigo-600 hover:text-indigo-700"
+                        >
+                            Forgot password?
+                        </a>
+                    </div>
+
                     {error && (
                         <div className="rounded-md bg-red-50 p-4">
                             <div className="flex">
