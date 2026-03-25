@@ -57,7 +57,8 @@ const Dashview = () => {
     pending: 0,
     collaborators: 0,
     completed: 0,
-    paymentPending: 0
+    paymentPending: 0,
+    inProgress: 0
   });
   const [statsError, setStatsError] = useState<string | null>(null);
   const [recentInsurances, setRecentInsurances] = useState<PolicyRequest[]>([]);
@@ -184,7 +185,7 @@ const Dashview = () => {
         const token = getAuthToken('user');
         if (!token) {
           // Not logged in, set empty state
-          setStats({ active: 0, expired: 0, pending: 0, collaborators: 0, completed: 0, paymentPending: 0 });
+          setStats({ active: 0, expired: 0, pending: 0, collaborators: 0, completed: 0, paymentPending: 0, inProgress: 0 });
           setRecentInsurances([]);
           setSurveyedPolicies([]);
           setStatsError('You are not logged in.');
@@ -221,6 +222,8 @@ const Dashview = () => {
         const pendingPolicies: any[] = [];
         const assignedPolicies: any[] = [];
         const completedPolicies: any[] = [];
+        const paymentDuePolicies: any[] = [];
+        const inProgressPolicies: any[] = [];
 
         allPolicyData.forEach((p: any) => {
           const status = deriveStatus(p);
@@ -229,15 +232,19 @@ const Dashview = () => {
           const isPaid = payStatus === 'paid';
           const isRejected = payStatus === 'rejected' || payStatus === 'failed' || status === 'rejected';
           const isCompleted = status === 'completed' || isPaid;
+          const isPaymentDue = status === 'payment_pending' || payStatus === 'pending';
           const isApproved = isPaid || status === 'approved' || status === 'completed';
-          const isPending = ['payment_pending', 'submitted', 'draft', 'requires_more_info', 'sent_to_user', 'surveyed'].includes(status);
+          const isPending = ['payment_pending', 'submitted', 'draft', 'requires_more_info', 'sent_to_user', 'surveyed', 'approved', 'revision_required'].includes(status);
           const isAssigned = status === 'assigned';
+          const isInProgress = !isCompleted && !isRejected && !isPaymentDue;
 
           if (isApproved) approvedPolicies.push(p);
           if (isRejected) rejectedPolicies.push(p);
           if (isPending) pendingPolicies.push(p);
           if (isAssigned) assignedPolicies.push(p);
           if (isCompleted) completedPolicies.push(p);
+          if (isPaymentDue) paymentDuePolicies.push(p);
+          if (isInProgress) inProgressPolicies.push(p);
         });
 
         setStats({
@@ -246,7 +253,8 @@ const Dashview = () => {
           pending: pendingPolicies.length,
           collaborators: assignedPolicies.length,
           completed: completedPolicies.length,
-          paymentPending: pendingPolicies.length
+          paymentPending: paymentDuePolicies.length,
+          inProgress: inProgressPolicies.length
         });
 
         // Set recent builder liabilities (first 5 items from all policies)
@@ -274,7 +282,8 @@ const Dashview = () => {
           pending: 0,
           collaborators: 0,
           completed: 0,
-          paymentPending: 0
+          paymentPending: 0,
+          inProgress: 0
         });
       } finally {
         setLoading(false);
@@ -629,7 +638,7 @@ const Dashview = () => {
                     <Clock className="w-4 h-4 text-blue-600 mr-2" />
                     <span className="text-sm font-medium text-gray-700">In Progress</span>
                   </div>
-                  <span className="text-lg font-bold text-blue-600">{stats.pending + stats.active}</span>
+                  <span className="text-lg font-bold text-blue-600">{stats.inProgress}</span>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
                   <div className="flex items-center">
