@@ -1833,6 +1833,26 @@ export const brokerAdminAPI = {
   }
 };
 
+export const adminEnforcementAPI = {
+  getCompletedPolicies: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<import("@/types/builderLiabilityPolicy.types").GetPoliciesResponse> => {
+    const query = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          query.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await api.get(`/admin/enforcement/policies/completed${query.toString() ? `?${query.toString()}` : ''}`);
+    return response.data;
+  }
+};
+
 // ─── CSV Export helpers (one per dashboard) ────────────────────────────────
 
 /**
