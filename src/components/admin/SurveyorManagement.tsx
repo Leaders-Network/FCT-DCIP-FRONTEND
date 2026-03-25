@@ -17,6 +17,7 @@ import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.type
 import Swal from "sweetalert2"
 
 type UserIdType = {
+  _id?: string;
   firstname?: string;
   lastname?: string;
   email?: string;
