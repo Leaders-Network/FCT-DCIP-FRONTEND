@@ -89,8 +89,8 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border-0 bg-transparent p-0 shadow-none">
-                <div className="overflow-hidden rounded-[28px] border border-orange-100 bg-[radial-gradient(circle_at_top,#fff1e7,transparent_34%),linear-gradient(180deg,#fffdf9_0%,#fff7ef_100%)] shadow-[0_24px_80px_rgba(249,115,22,0.18)]">
+            <DialogContent className="max-h-[92vh] w-[95vw] max-w-3xl overflow-y-auto border-0 bg-transparent p-0 shadow-none sm:w-full">
+                <div className="overflow-hidden rounded-2xl border border-orange-100 bg-[radial-gradient(circle_at_top,#fff1e7,transparent_34%),linear-gradient(180deg,#fffdf9_0%,#fff7ef_100%)] shadow-[0_24px_80px_rgba(249,115,22,0.18)] sm:rounded-[28px]">
                     <DialogHeader className="border-b border-orange-100/80 px-6 pb-5 pt-6 sm:px-8">
                         <div className="flex items-start justify-between gap-4">
                             <div className="space-y-3">
@@ -108,7 +108,7 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
                                     Review the premium and payer details below, then launch EgolePay from this same modal.
                                 </DialogDescription>
                             </div>
-                            <div className="grid gap-2 text-right text-sm text-slate-600">
+                            <div className="grid gap-2 text-left text-sm text-slate-600 sm:text-right">
                                 <span className="font-medium">Policy #{policy.policyNumber}</span>
                                 <span>{builderName}</span>
                             </div>
