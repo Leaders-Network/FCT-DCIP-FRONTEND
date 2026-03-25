@@ -706,7 +706,6 @@ export default function AdministratorsPage() {
                     {formData.userType === 'administrator' && (
                       <>
                         <option value="Admin">Admin</option>
-                        <option value="Super Admin">Super Admin</option>
                       </>
                     )}
                     {formData.userType === 'employee' && (
@@ -847,7 +846,6 @@ export default function AdministratorsPage() {
                   {formData.userType === 'administrator' && (
                     <>
                       <option value="Admin">Admin</option>
-                      <option value="Super Admin">Super Admin</option>
                     </>
                   )}
                   {formData.userType === 'employee' && (
