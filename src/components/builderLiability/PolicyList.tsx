@@ -236,8 +236,42 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                     customerName,
                     phone,
                     metadata,
-                    onSuccess: () => {
-                        toast.success('EgolePay payment completed successfully');
+                    onSuccess: async (response) => {
+                        try {
+                            const result = await builderLiabilityPolicyAPI.confirmEgolepayPayment(
+                                reference,
+                                (response as Record<string, unknown>) || {},
+                                policy._id
+                            );
+
+                            if (result.niipWithdrawal?.success) {
+                                toast.success('Payment confirmed and NIIP wallet withdrawal completed');
+                            } else if (result.niipWithdrawal?.skipped) {
+                                toast.message(`Payment confirmed, but NIIP withdrawal was skipped: ${result.niipWithdrawal.reason}`);
+                            } else if (result.niipWithdrawal?.success === false) {
+                                toast.error(
+                                    `Payment confirmed, but NIIP withdrawal failed: ${
+                                        result.niipWithdrawal.error ||
+                                        result.niipWithdrawal.body?.error ||
+                                        result.niipWithdrawal.body?.message ||
+                                        'Unknown NIIP error'
+                                    }`
+                                );
+                            } else if (result.niipWithdrawal?.error) {
+                                toast.error(`Payment confirmed, but NIIP withdrawal failed: ${result.niipWithdrawal.error}`);
+                            } else {
+                                toast.success(result.message || 'EgolePay payment completed successfully');
+                            }
+
+                            await fetchPolicies();
+                        } catch (confirmError: any) {
+                            console.error('EgolePay confirmation error:', confirmError);
+                            const errorMessage =
+                                confirmError.response?.data?.message ||
+                                confirmError.message ||
+                                'Payment succeeded, but backend confirmation failed';
+                            toast.error(errorMessage);
+                        }
                     },
                     onCancel: () => {
                         toast.message('EgolePay payment was cancelled');
@@ -291,13 +325,29 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
     // Helper function to get the actual current status from statusHistory if available
     const getActualStatus = (policy: BuilderLiabilityPolicy): string => {
-        // If statusHistory exists and has entries, use the most recent status
-        if (policy.statusHistory && policy.statusHistory.length > 0) {
-            const latestStatus = policy.statusHistory[policy.statusHistory.length - 1];
-            return latestStatus.status;
+        const latestStatus =
+            policy.statusHistory && policy.statusHistory.length > 0
+                ? policy.statusHistory[policy.statusHistory.length - 1]?.status
+                : policy.status;
+
+        const paymentAlreadyCompleted =
+            policy.paymentInfo?.status === 'paid' || Boolean(policy.paymentInfo?.paidAt);
+
+        // Backward-compatibility for older records that were marked completed
+        // immediately after survey submission, before the payment flow ran.
+        if (latestStatus === 'completed' && !paymentAlreadyCompleted) {
+            if ((policy as any).surveyorRecommendation === 'approve') {
+                return 'payment_pending';
+            }
+            if ((policy as any).surveyorRecommendation === 'reject') {
+                return 'rejected';
+            }
+            if ((policy as any).surveyorRecommendation === 'request_more_info') {
+                return 'requires_more_info';
+            }
         }
-        // Otherwise, use the policy status field
-        return policy.status || 'draft';
+
+        return latestStatus || 'draft';
     };
 
     // Filter policies based on search and filters
@@ -321,7 +371,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             assigned: { color: 'bg-blue-100 text-blue-800', icon: AlertCircle, label: 'Assigned' },
             surveyed: { color: 'bg-purple-100 text-purple-800', icon: Eye, label: 'Surveyed' },
             approved: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Approved' },
-            payment_pending: { color: 'bg-orange-100 text-orange-800', icon: CreditCard, label: 'Payment Pending' },
+            payment_pending: { color: 'bg-orange-100 text-orange-800', icon: CreditCard, label: 'Awaiting Payment' },
             rejected: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Rejected' },
             requires_more_info: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             revision_required: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
@@ -437,7 +487,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                 <SelectItem value="assigned">Assigned</SelectItem>
                                 <SelectItem value="surveyed">Surveyed</SelectItem>
                                 <SelectItem value="approved">Approved</SelectItem>
-                                <SelectItem value="payment_pending">Payment Pending</SelectItem>
+                                <SelectItem value="payment_pending">Awaiting Payment</SelectItem>
                                 <SelectItem value="rejected">Rejected</SelectItem>
                                 <SelectItem value="completed">Completed</SelectItem>
                             </SelectContent>
@@ -552,8 +602,8 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                 )}
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2 justify-end">
-                                                {/* Show payment button only if survey is completed and approved */}
-                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'approve' && (
+                                                {/* Show payment button only once the survey is approved and awaiting payment */}
+                                                {getActualStatus(policy) === 'payment_pending' && (policy as any).surveyorRecommendation === 'approve' && (
                                                     <>
                                                         <Button
                                                             size="sm"
@@ -569,14 +619,14 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                     </>
                                                 )}
                                                 {/* Show rejection message if rejected */}
-                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'reject' && (
+                                                {getActualStatus(policy) === 'rejected' && (policy as any).surveyorRecommendation === 'reject' && (
                                                     <Badge className="bg-red-100 text-red-800">
                                                         <XCircle className="w-3 h-3 mr-1" />
                                                         Policy Rejected
                                                     </Badge>
                                                 )}
                                                 {/* Show info needed message */}
-                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'request_more_info' && (
+                                                {getActualStatus(policy) === 'requires_more_info' && (policy as any).surveyorRecommendation === 'request_more_info' && (
                                                     <Badge className="bg-amber-100 text-amber-800">
                                                         <AlertCircle className="w-3 h-3 mr-1" />
                                                         More Info Required

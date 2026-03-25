@@ -267,6 +267,44 @@ export const builderLiabilityPolicyAPI = {
             console.error("Failed to validate Builder Liability Policy section:", error);
             throw error;
         }
+    },
+
+    confirmEgolepayPayment: async (
+        reference: string,
+        gatewayResponse: Record<string, unknown>,
+        policyId?: string
+    ): Promise<{
+        success: boolean;
+        message: string;
+        data?: unknown;
+        niipWithdrawal?: {
+            success?: boolean;
+            skipped?: boolean;
+            reason?: string;
+            status?: number;
+            body?: {
+                error?: string;
+                message?: string;
+                raw?: string;
+                niipUrl?: string;
+                statusCode?: number;
+                looksLike404Page?: boolean;
+                [key: string]: unknown;
+            };
+            error?: string;
+        };
+    }> => {
+        try {
+            const response = await builderLiabilityApi.post('/payment/Egolepay/confirm', {
+                reference,
+                gatewayResponse,
+                policyId
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Failed to confirm EgolePay payment:", error);
+            throw error;
+        }
     }
 };
 

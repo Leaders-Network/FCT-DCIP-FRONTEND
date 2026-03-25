@@ -43,13 +43,27 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 
     // Helper function to get the actual current status from statusHistory if available
     const getActualStatus = (policy: BuilderLiabilityPolicy): string => {
-        // If statusHistory exists and has entries, use the most recent status
-        if (policy.statusHistory && policy.statusHistory.length > 0) {
-            const latestStatus = policy.statusHistory[policy.statusHistory.length - 1];
-            return latestStatus.status;
+        const latestStatus =
+            policy.statusHistory && policy.statusHistory.length > 0
+                ? policy.statusHistory[policy.statusHistory.length - 1]?.status
+                : policy.status;
+
+        const paymentAlreadyCompleted =
+            policy.paymentInfo?.status === 'paid' || Boolean(policy.paymentInfo?.paidAt);
+
+        if (latestStatus === 'completed' && !paymentAlreadyCompleted) {
+            if ((policy as any).surveyorRecommendation === 'approve') {
+                return 'payment_pending';
+            }
+            if ((policy as any).surveyorRecommendation === 'reject') {
+                return 'rejected';
+            }
+            if ((policy as any).surveyorRecommendation === 'request_more_info') {
+                return 'requires_more_info';
+            }
         }
-        // Otherwise, use the policy status field
-        return policy.status || 'draft';
+
+        return latestStatus || 'draft';
     };
 
     const formatCurrency = (amount: number) => {
@@ -74,7 +88,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
             assigned: { color: 'bg-blue-100 text-blue-800', icon: AlertCircle, label: 'Assigned' },
             surveyed: { color: 'bg-purple-100 text-purple-800', icon: Eye, label: 'Surveyed' },
             approved: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Approved' },
-            payment_pending: { color: 'bg-orange-100 text-orange-800', icon: CreditCard, label: 'Payment Pending' },
+            payment_pending: { color: 'bg-orange-100 text-orange-800', icon: CreditCard, label: 'Awaiting Payment' },
             rejected: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Rejected' },
             requires_more_info: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             revision_required: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
@@ -555,7 +569,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                     <Button variant="outline" onClick={onClose}>
                         Close
                     </Button>
-                    {policy.status === 'approved' && (
+                    {getActualStatus(policy) === 'payment_pending' && (
                         <Button className="bg-green-600 hover:bg-green-700">
                             <CreditCard className="w-4 h-4 mr-2" />
                             Complete Payment
