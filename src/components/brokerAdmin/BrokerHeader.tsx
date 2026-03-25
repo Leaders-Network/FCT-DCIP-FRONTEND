@@ -293,12 +293,12 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
                                     </div>
                                 </div>
 
-                                <DropdownMenuItem onSelect={() => window.location.href = '/nia-admin/profile'}>
+                                <DropdownMenuItem onSelect={() => window.location.href = '/broker-admin/settings'}>
                                     <User className="mr-2 h-4 w-4" />
                                     <span>Profile</span>
                                 </DropdownMenuItem>
 
-                                <DropdownMenuItem onSelect={() => window.location.href = '/nia-admin/settings'}>
+                                <DropdownMenuItem onSelect={() => window.location.href = '/broker-admin/settings'}>
                                     <Settings className="mr-2 h-4 w-4" />
                                     <span>Settings</span>
                                 </DropdownMenuItem>

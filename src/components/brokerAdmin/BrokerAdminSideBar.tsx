@@ -71,7 +71,7 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
             description: "Manage broker admins"
         },
         {
-            href: "#",
+            href: "/broker-admin/settings",
             label: "Settings",
             icon: Settings,
             description: "Admin settings"

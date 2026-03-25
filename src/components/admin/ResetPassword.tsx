@@ -26,6 +26,8 @@ const ResetPassword = () => {
       let otpRoute = '/admin/otp';
       if (currentPath.includes('/nia-admin')) {
         otpRoute = '/nia-admin/otp';
+      } else if (currentPath.includes('/broker-admin')) {
+        otpRoute = '/broker-admin/otp';
       } else if (currentPath.includes('/surveyor')) {
         otpRoute = '/surveyor/otp';
       }

@@ -87,6 +87,8 @@ const OTPAuthentication = () => {
         let newPasswordRoute = '/admin/new-password';
         if (currentPath.includes('/nia-admin')) {
           newPasswordRoute = '/nia-admin/new-password';
+        } else if (currentPath.includes('/broker-admin')) {
+          newPasswordRoute = '/broker-admin/new-password';
         } else if (currentPath.includes('/surveyor')) {
           newPasswordRoute = '/surveyor/new-password';
         }

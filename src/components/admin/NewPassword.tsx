@@ -52,6 +52,8 @@ const NewPassword = () => {
       let successRoute = '/admin/registration-success';
       if (currentPath.includes('/nia-admin')) {
         successRoute = '/nia-admin/registration-success';
+      } else if (currentPath.includes('/broker-admin')) {
+        successRoute = '/broker-admin/registration-success';
       } else if (currentPath.includes('/surveyor')) {
         successRoute = '/surveyor/registration-success';
       }
