@@ -357,7 +357,7 @@ export default function BrokerAdminDashboard() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Broker Admin Dashboard</h1>
-                        <p className="text-sm text-gray-600 mt-1">Manage insurance claims and policy requests</p>
+                        <p className="text-sm text-gray-600 mt-1">Manage insurance claims and track completed policies</p>
                     </div>
                     <button
                         onClick={handleRefresh}
@@ -375,7 +375,7 @@ export default function BrokerAdminDashboard() {
                 <DashboardErrorBanner message={dashboardError} className="mb-8" />
             ) : (
                 dashboardData && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
                         <StatCard
                             icon={FileText}
                             label="Total Claims"
@@ -405,6 +405,12 @@ export default function BrokerAdminDashboard() {
                             label="Rejected"
                             value={dashboardData.statistics.rejected}
                             color="red"
+                        />
+                        <StatCard
+                            icon={Shield}
+                            label="Completed Policies"
+                            value={dashboardData.statistics.completedPolicies}
+                            color="green"
                         />
                     </div>
                 )
@@ -927,7 +933,6 @@ export default function BrokerAdminDashboard() {
 
                                         <SectionCard icon={ClipboardList} title="Workforce">
                                             <KeyValue label="Contract Staff" value={selectedCompletedPolicy.workforce.contractStaffCount} />
-                                            <KeyValue label="Blood Relations" value={selectedCompletedPolicy.workforce.bloodRelationsCount} />
                                             <div className="pt-2">
                                                 <p className="text-xs font-semibold text-gray-700">Categories</p>
                                                 <div className="mt-2 space-y-2">
@@ -960,8 +965,6 @@ export default function BrokerAdminDashboard() {
                                                     : 'N/A'}
                                             />
                                             <KeyValue label="Survey Notes" value={selectedCompletedPolicy.surveyNotes || 'N/A'} />
-                                            <KeyValue label="Admin Notes" value={selectedCompletedPolicy.adminNotes || 'N/A'} />
-                                            <KeyValue label="Broker Notes" value={selectedCompletedPolicy.brokerNotes || 'N/A'} />
                                             {selectedCompletedPolicy.surveyDocument && typeof selectedCompletedPolicy.surveyDocument !== 'string' && selectedCompletedPolicy.surveyDocument.url && (
                                                 <a
                                                     href={selectedCompletedPolicy.surveyDocument.url}

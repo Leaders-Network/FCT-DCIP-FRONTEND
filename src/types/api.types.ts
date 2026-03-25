@@ -1183,6 +1183,7 @@ export interface BrokerDashboardData {
     under_review: number;
     rejected: number;
     completed: number;
+    completedPolicies: number;
     total: number;
   };
   averageProcessingTime: number;
