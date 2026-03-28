@@ -14,9 +14,11 @@ import {
   Eye,
   UserCheck,
   Calendar,
-  Building
+  Building,
+  Download
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
+import { downloadSubmissionZipByAssignment } from '@/services/api';
 
 interface Assignment {
   _id: string;
@@ -65,6 +67,16 @@ const AutomatedAssignmentsPage = () => {
   });
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [isDownloadingDocs, setIsDownloadingDocs] = useState(false);
+
+  const handleDownloadDocs = async (assignmentId: string) => {
+    setIsDownloadingDocs(true);
+    try {
+      await downloadSubmissionZipByAssignment(assignmentId);
+    } finally {
+      setIsDownloadingDocs(false);
+    }
+  };
 
   useEffect(() => {
     fetchAssignments();
@@ -571,13 +583,25 @@ const AutomatedAssignmentsPage = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Close
-              </button>
+            <div className="p-6 border-t border-gray-200 flex justify-between items-center">
+              {selectedAssignment.status === 'completed' && (
+                <button
+                  onClick={() => handleDownloadDocs(selectedAssignment._id)}
+                  disabled={isDownloadingDocs}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  <Download className="w-4 h-4" />
+                  {isDownloadingDocs ? 'Downloading...' : 'Download Survey Docs'}
+                </button>
+              )}
+              <div className="ml-auto">
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

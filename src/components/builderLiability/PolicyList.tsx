@@ -238,9 +238,45 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                     metadata,
                     onSuccess: async (response) => {
                         try {
+                            const responseObj = (response as Record<string, unknown>) || {};
+                            const transactionItemsRaw = (responseObj as any)?.transactionItems;
+                            const firstItem = Array.isArray(transactionItemsRaw) ? transactionItemsRaw[0] : null;
+                            const pickRef = (...candidates: any[]) => {
+                                for (const candidate of candidates) {
+                                    if (Array.isArray(candidate)) {
+                                        const found = candidate.find((val) => val != null && String(val).trim() !== '');
+                                        if (found != null && String(found).trim() !== '') {
+                                            return found;
+                                        }
+                                        continue;
+                                    }
+                                    if (candidate != null && String(candidate).trim() !== '') {
+                                        return candidate;
+                                    }
+                                }
+                                return undefined;
+                            };
+                            const normalizedGatewayResponse = {
+                                ...responseObj,
+                                transactionReference: pickRef(
+                                    (responseObj as any)?.transactionReference,
+                                    (responseObj as any)?.data?.transactionReference,
+                                    (responseObj as any)?.TxnRef,
+                                    firstItem?.TxnRef,
+                                    firstItem?.txnRef
+                                ),
+                                paymentReference: pickRef(
+                                    (responseObj as any)?.paymentReference,
+                                    (responseObj as any)?.data?.paymentReference,
+                                    (responseObj as any)?.PaymentRef,
+                                    firstItem?.PaymentRef,
+                                    firstItem?.paymentRef
+                                ),
+                                transactionItems: Array.isArray(transactionItemsRaw) ? transactionItemsRaw : undefined
+                            };
                             const result = await builderLiabilityPolicyAPI.confirmEgolepayPayment(
                                 reference,
-                                (response as Record<string, unknown>) || {},
+                                normalizedGatewayResponse,
                                 policy._id
                             );
 

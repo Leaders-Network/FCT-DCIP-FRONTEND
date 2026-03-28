@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw, Download } from "lucide-react";
 import { Assignment, SurveySubmissionData, SurveySubmissionResult, DualAssignment } from "@/types/api.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionModal from "./SurveySubmissionModal";
 import SurveySubmissionConfirmation from "./SurveySubmissionConfirmation";
+import { downloadSubmissionZipByAssignment } from "@/services/api";
 
 interface AssignmentDetailProps {
   assignmentId: string;
@@ -48,6 +49,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
   const [showSurveyForm, setShowSurveyForm] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<SurveySubmissionResult | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -124,6 +126,15 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       window.open(`tel:${policy.builder.telNo || ''}`);
     } else if (method === 'email') {
       window.open(`mailto:${policy.builder.customerEmail || ''}`);
+    }
+  };
+
+  const handleDownloadDocs = async () => {
+    setIsDownloading(true);
+    try {
+      await downloadSubmissionZipByAssignment(assignmentId);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -612,7 +623,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Start Survey */}
       {assignment.status === 'assigned' && (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="p-6">
@@ -639,6 +650,30 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <p className="text-sm text-gray-500 mt-3 text-center">
               Make sure to contact the builder before visiting the construction site
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Completed Assignment – Download Documents */}
+      {assignment.status === 'completed' && (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+              Survey Completed
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              This assignment has been completed and the survey documents have been submitted.
+              You can download a ZIP archive of all submitted survey documents below.
+            </p>
+            <button
+              onClick={handleDownloadDocs}
+              disabled={isDownloading}
+              className="flex items-center gap-2 bg-[#028835] text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Download className="h-5 w-5" />
+              {isDownloading ? 'Downloading...' : 'Download Survey Documents'}
+            </button>
           </div>
         </div>
       )}
