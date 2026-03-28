@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import {
   EmployeeRegistrationData,
   EmployeeLoginResponse,
@@ -468,6 +468,46 @@ export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyor submissions", error);
+    throw error;
+  }
+};
+
+/** Download all survey documents for a submission as a ZIP archive (by submission ID). */
+export const downloadSubmissionZip = async (submissionId: string): Promise<void> => {
+  try {
+    const endpoint = '/submission/' + submissionId + '/download-zip';
+    const response = await api.get(endpoint, { responseType: 'blob' });
+    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }));
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'survey-documents-' + submissionId + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Failed to download submission zip', error);
+    alert('Could not download the survey documents. Please try again.');
+    throw error;
+  }
+};
+
+/** Download all survey documents for a submission as a ZIP archive (by assignment ID). */
+export const downloadSubmissionZipByAssignment = async (assignmentId: string): Promise<void> => {
+  try {
+    const endpoint = '/submission/assignment/' + assignmentId + '/download-zip';
+    const response = await api.get(endpoint, { responseType: 'blob' });
+    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }));
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'survey-documents-assignment-' + assignmentId + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Failed to download assignment submission zip', error);
+    alert('Could not download the survey documents. Please try again.');
     throw error;
   }
 };
