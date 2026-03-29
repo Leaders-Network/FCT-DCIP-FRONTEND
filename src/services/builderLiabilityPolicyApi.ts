@@ -305,6 +305,49 @@ export const builderLiabilityPolicyAPI = {
             console.error("Failed to confirm EgolePay payment:", error);
             throw error;
         }
+    },
+
+    // Retry NIIP withdrawal for a policy
+    retryNiipWithdrawal: async (policyId: string): Promise<any> => {
+        try {
+            const response = await builderLiabilityApi.post(`/payment/niip/retry/${policyId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to retry NIIP withdrawal:", error);
+            throw error;
+        }
+    },
+
+    // Calculate NIIP premium for an approved policy
+    calculatePremium: async (policyId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            premiumAmount: number;
+            premiumDetails: {
+                amount: number;
+                currency?: string;
+                invoiceNumber?: string | null;
+                transactionReference?: string | null;
+                company?: Record<string, unknown>;
+                builder?: Record<string, unknown>;
+                estimates?: Record<string, unknown>;
+            };
+            nextAction?: {
+                type: string;
+                label: string;
+                method?: string;
+                url?: string;
+            };
+        };
+    }> => {
+        try {
+            const response = await builderLiabilityApi.post(`/payment/calculate-premium/${policyId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to calculate premium:", error);
+            throw error;
+        }
     }
 };
 

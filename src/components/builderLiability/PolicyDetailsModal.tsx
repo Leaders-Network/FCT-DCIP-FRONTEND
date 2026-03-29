@@ -2,11 +2,13 @@
 
 import React from 'react';
 import { BuilderLiabilityPolicy } from '@/types/builderLiabilityPolicy.types';
+import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 import {
     Building,
     User,
@@ -25,7 +27,9 @@ import {
     CreditCard,
     Eye,
     Download,
-    X
+    X,
+    Loader2,
+    Receipt
 } from 'lucide-react';
 
 interface PolicyDetailsModalProps {
@@ -39,6 +43,28 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
     isOpen,
     onClose
 }) => {
+    const [isCalculatingPremium, setIsCalculatingPremium] = React.useState(false);
+    const [premiumResult, setPremiumResult] = React.useState<null | {
+        premiumAmount: number;
+        premiumDetails?: {
+            amount?: number;
+            currency?: string;
+            invoiceNumber?: string | null;
+            transactionReference?: string | null;
+        };
+        nextAction?: {
+            type: string;
+            label: string;
+            method?: string;
+            url?: string;
+        } | null;
+    }>(null);
+
+    React.useEffect(() => {
+        setPremiumResult(null);
+        setIsCalculatingPremium(false);
+    }, [policy?._id, isOpen]);
+
     if (!policy) return null;
 
     // Helper function to get the actual current status from statusHistory if available
@@ -63,7 +89,59 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
             }
         }
 
+        if (policy.status === 'paid_niip_failed') {
+            return 'paid_niip_failed';
+        }
+
         return latestStatus || 'draft';
+    };
+
+    const actualStatus = getActualStatus(policy);
+    const resolvedAction =
+        premiumResult?.nextAction ||
+        policy.primaryAction ||
+        policy.nextAction ||
+        policy.workflow?.nextAction ||
+        policy.availableActions?.[0] ||
+        null;
+    const shouldShowCalculatePremiumButton = Boolean(
+        policy.showCalculatePremiumButton ||
+        (policy.canCalculatePremium && !policy.premiumCalculated) ||
+        resolvedAction?.type === 'calculate_premium' ||
+        (actualStatus === 'approved' &&
+            (policy as any).surveyorRecommendation === 'approve' &&
+            !policy.premiumCalculated)
+    );
+    const shouldShowProceedToPaymentButton = Boolean(
+        policy.canProceedToPayment ||
+        resolvedAction?.type === 'initialize_payment' ||
+        actualStatus === 'payment_pending'
+    );
+
+    const handleCalculatePremium = async () => {
+        try {
+            setIsCalculatingPremium(true);
+            const response = await builderLiabilityPolicyAPI.calculatePremium(policy._id);
+            setPremiumResult({
+                premiumAmount: response.data?.premiumAmount,
+                premiumDetails: response.data?.premiumDetails,
+                nextAction: response.data?.nextAction || null
+            });
+
+            toast.success(
+                response.data?.premiumDetails?.invoiceNumber
+                    ? `Premium calculated. Invoice ${response.data.premiumDetails.invoiceNumber} is ready.`
+                    : 'Premium calculated successfully.'
+            );
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                'Failed to calculate premium';
+            toast.error(message);
+        } finally {
+            setIsCalculatingPremium(false);
+        }
     };
 
     const formatCurrency = (amount: number) => {
@@ -93,7 +171,8 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
             requires_more_info: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             revision_required: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             completed: { color: 'bg-emerald-100 text-emerald-800', icon: CheckCircle, label: 'Completed' },
-            sent_to_user: { color: 'bg-cyan-100 text-cyan-800', icon: CheckCircle, label: 'Sent to User' }
+            sent_to_user: { color: 'bg-cyan-100 text-cyan-800', icon: CheckCircle, label: 'Sent to User' },
+            paid_niip_failed: { color: 'bg-rose-100 text-rose-800', icon: AlertCircle, label: 'Payment OK, NIIP Failed' }
         };
 
         const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.submitted;
@@ -565,15 +644,94 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                     </TabsContent>
                 </Tabs>
 
-                <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
-                    <Button variant="outline" onClick={onClose}>
+                {premiumResult?.premiumDetails && (
+                    <Card className="mt-6 border-orange-200 bg-orange-50">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-orange-900">
+                                <Receipt className="w-5 h-5" />
+                                Premium Calculation Result
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="text-sm font-medium text-orange-700">Premium Amount</label>
+                                <p className="text-base font-semibold text-orange-950">
+                                    {formatCurrency(Number(premiumResult.premiumDetails.amount || premiumResult.premiumAmount || 0))}
+                                </p>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-orange-700">Invoice Number</label>
+                                <p className="text-base font-semibold text-orange-950">
+                                    {premiumResult.premiumDetails.invoiceNumber || 'N/A'}
+                                </p>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-orange-700">NIIP Reference</label>
+                                <p className="text-base font-semibold text-orange-950 break-all">
+                                    {premiumResult.premiumDetails.transactionReference || 'N/A'}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6 pt-4 border-t">
+                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
                         Close
                     </Button>
-                    {getActualStatus(policy) === 'payment_pending' && (
-                        <Button className="bg-green-600 hover:bg-green-700">
-                            <CreditCard className="w-4 h-4 mr-2" />
-                            Complete Payment
+                    
+                    {/* Survey Download Action */}
+                    {policy.surveyDocument?.downloadPath && (
+                        <Button 
+                            variant="outline"
+                            className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 w-full sm:w-auto"
+                            onClick={() => {
+                                const url = `${process.env.NEXT_PUBLIC_API_URL || ''}${policy.surveyDocument?.downloadPath}`;
+                                window.open(url, '_blank');
+                            }}
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download Survey Report
                         </Button>
+                    )}
+
+                    {shouldShowCalculatePremiumButton && (
+                        <Button
+                            className="bg-amber-600 hover:bg-amber-700 w-full sm:w-auto"
+                            onClick={handleCalculatePremium}
+                            disabled={isCalculatingPremium}
+                        >
+                            {isCalculatingPremium ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                                <Receipt className="w-4 h-4 mr-2" />
+                            )}
+                            {isCalculatingPremium ? 'Calculating...' : 'Calculate Premium'}
+                        </Button>
+                    )}
+
+                    {shouldShowProceedToPaymentButton && (
+                        <Button
+                            className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+                            onClick={() => toast.info('Proceed to Payment is available, but checkout is still handled from the policy list flow.')}
+                        >
+                            <CreditCard className="w-4 h-4 mr-2" />
+                            {resolvedAction?.label || 'Proceed to Payment'}
+                        </Button>
+                    )}
+
+                    {/* NIIP Retry Info */}
+                    {actualStatus === 'paid_niip_failed' && (
+                        <div className="bg-rose-50 p-3 rounded-lg border border-rose-100 text-xs text-rose-800 w-full">
+                            <p className="font-semibold flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                Action Required
+                            </p>
+                            <p className="mt-1">
+                                Your payment was received, but the NIIP automated withdrawal failed. 
+                                An administrator will manually reconcile this. You do not need to pay again.
+                            </p>
+                        </div>
                     )}
                 </div>
             </DialogContent>

@@ -5,9 +5,13 @@ export interface Policy {
     policyNumber: string;
     policyType: string;
     coverageType: string;
-    policyDuration: string;
-    address: string;
+    policyDuration?: string;
+    address?: string;
     status: string;
+    paymentStatus?: string;
+    claimEligible?: boolean;
+    builderName?: string;
+    totalEstimateSum?: number;
     createdAt: string;
 }
 
@@ -33,6 +37,8 @@ export interface PolicyDetails {
         phone: string;
     };
     status: string;
+    paymentStatus?: string;
+    claimEligible?: boolean;
     createdAt: string;
 }
 
