@@ -97,8 +97,7 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
         if (section === 'surveyors') {
             let count = 0;
             if (ammcSurveyor) count++;
-            if (niaSurveyor) count++;
-            return `${count}/2 assigned`;
+            return `${count}/1 assigned`;
         } else {
             return 'Available 24/7';
         }
@@ -131,10 +130,6 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                         <div className="flex items-center space-x-1">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span>AMMC</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span>NIA</span>
                         </div>
                     </div>
                 </div>
@@ -185,17 +180,6 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                                     rating: ammcSurveyor.rating,
                                     lastActive: ammcSurveyor.lastActive
                                 } : undefined}
-                                niaSurveyor={niaSurveyor ? {
-                                    name: niaSurveyor.name,
-                                    email: niaSurveyor.email,
-                                    phone: niaSurveyor.phone || '',
-                                    organization: niaSurveyor.organization || 'NIA',
-                                    licenseNumber: niaSurveyor.licenseNumber,
-                                    specialization: niaSurveyor.specialization,
-                                    experience: niaSurveyor.experience,
-                                    rating: niaSurveyor.rating,
-                                    lastActive: niaSurveyor.lastActive
-                                } : undefined}
                                 assignmentStatus={assignmentStatus}
                                 showContactActions={showContactActions}
                             />
@@ -240,12 +224,6 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                                     organization: ammcAdmin.organization || 'AMMC',
                                     title: ammcAdmin.title || '',
                                     department: ammcAdmin.department || ''
-                                } : undefined}
-                                niaAdmin={niaAdmin ? {
-                                    ...niaAdmin,
-                                    organization: niaAdmin.organization || 'NIA',
-                                    title: niaAdmin.title || '',
-                                    department: niaAdmin.department || ''
                                 } : undefined}
                                 showContactActions={showContactActions}
                                 showConflictRaiseButton={true}

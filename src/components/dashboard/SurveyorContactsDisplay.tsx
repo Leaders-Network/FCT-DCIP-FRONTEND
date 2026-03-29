@@ -5,7 +5,6 @@ import {
     Users,
     Mail,
     Phone,
-    MapPin,
     Building2,
     MessageCircle,
     Calendar,
@@ -13,9 +12,7 @@ import {
     Award,
     ExternalLink,
     Copy,
-    CheckCircle,
-    Shield,
-    HelpCircle
+    CheckCircle
 } from 'lucide-react';
 import AdminContactDisplay from './AdminContactDisplay';
 
@@ -48,6 +45,7 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
     showAdminContacts = false
 }) => {
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    const assignedSurveyor = ammcSurveyor || niaSurveyor;
 
     const copyToClipboard = async (text: string, field: string) => {
         try {
@@ -57,14 +55,6 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
         } catch (err) {
             console.error('Failed to copy text: ', err);
         }
-    };
-
-    const getOrganizationColor = (org: 'AMMC' | 'NIA') => {
-        return org === 'AMMC' ? 'green' : 'blue';
-    };
-
-    const getOrganizationName = (org: 'AMMC' | 'NIA') => {
-        return org === 'AMMC' ? 'Abuja Municipal Area Council' : 'Nigerian Insurers Association';
     };
 
     const formatLastActive = (lastActive?: string) => {
@@ -80,36 +70,27 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
     };
 
     const SurveyorCard: React.FC<{ surveyor: SurveyorContact; isAssigned: boolean }> = ({ surveyor, isAssigned }) => {
-        const orgColor = getOrganizationColor(surveyor.organization);
-
         return (
             <div className={`border-2 rounded-lg p-6 transition-all ${isAssigned
-                ? `border-${orgColor}-200 bg-${orgColor}-50`
+                ? 'border-green-200 bg-green-50'
                 : 'border-gray-200 bg-gray-50'
                 }`}>
-                {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${isAssigned
-                            ? `bg-${orgColor}-100`
-                            : 'bg-gray-100'
-                            }`}>
-                            <Building2 className={`h-6 w-6 ${isAssigned
-                                ? `text-${orgColor}-600`
-                                : 'text-gray-400'
-                                }`} />
+                        <div className={`p-2 rounded-lg ${isAssigned ? 'bg-green-100' : 'bg-gray-100'}`}>
+                            <Building2 className={`h-6 w-6 ${isAssigned ? 'text-green-600' : 'text-gray-400'}`} />
                         </div>
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900">
-                                {surveyor.organization} Surveyor
+                                AMMC Surveyor
                             </h3>
                             <p className="text-sm text-gray-600">
-                                {getOrganizationName(surveyor.organization)}
+                                Abuja Municipal Area Council
                             </p>
                         </div>
                     </div>
                     <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isAssigned
-                        ? `bg-${orgColor}-100 text-${orgColor}-800`
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-600'
                         }`}>
                         {isAssigned ? 'Assigned' : 'Not Assigned'}
@@ -118,10 +99,8 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
 
                 {isAssigned ? (
                     <div className="space-y-4">
-                        {/* Surveyor Profile */}
                         <div className="flex items-center space-x-4">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${orgColor === 'green' ? 'bg-green-600' : 'bg-blue-600'
-                                }`}>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold bg-green-600">
                                 {surveyor.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                             </div>
                             <div className="flex-1">
@@ -143,7 +122,6 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                             )}
                         </div>
 
-                        {/* Contact Information */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
@@ -153,11 +131,11 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                                 {showContactActions && (
                                     <div className="flex items-center space-x-2">
                                         <button
-                                            onClick={() => copyToClipboard(surveyor.email, `${surveyor.organization}-email`)}
+                                            onClick={() => copyToClipboard(surveyor.email, 'ammc-email')}
                                             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                                             title="Copy email"
                                         >
-                                            {copiedField === `${surveyor.organization}-email` ? (
+                                            {copiedField === 'ammc-email' ? (
                                                 <CheckCircle className="w-4 h-4 text-green-500" />
                                             ) : (
                                                 <Copy className="w-4 h-4" />
@@ -182,11 +160,11 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                                 {showContactActions && (
                                     <div className="flex items-center space-x-2">
                                         <button
-                                            onClick={() => copyToClipboard(surveyor.phone, `${surveyor.organization}-phone`)}
+                                            onClick={() => copyToClipboard(surveyor.phone, 'ammc-phone')}
                                             className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                                             title="Copy phone"
                                         >
-                                            {copiedField === `${surveyor.organization}-phone` ? (
+                                            {copiedField === 'ammc-phone' ? (
                                                 <CheckCircle className="w-4 h-4 text-green-500" />
                                             ) : (
                                                 <Copy className="w-4 h-4" />
@@ -204,7 +182,6 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                             </div>
                         </div>
 
-                        {/* Specializations */}
                         {surveyor.specialization && surveyor.specialization.length > 0 && (
                             <div>
                                 <p className="text-sm font-medium text-gray-700 mb-2">Specializations</p>
@@ -212,10 +189,7 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                                     {surveyor.specialization.map((spec, index) => (
                                         <span
                                             key={index}
-                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${orgColor === 'green'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-blue-100 text-blue-800'
-                                                }`}
+                                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
                                         >
                                             {spec}
                                         </span>
@@ -224,7 +198,6 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                             </div>
                         )}
 
-                        {/* Last Active */}
                         {surveyor.lastActive && (
                             <div className="flex items-center space-x-2 text-sm text-gray-600">
                                 <Clock className="w-4 h-4" />
@@ -232,20 +205,22 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                             </div>
                         )}
 
-                        {/* Contact Actions */}
                         {showContactActions && (
                             <div className="flex items-center space-x-3 pt-4 border-t border-gray-200">
-                                <button className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${orgColor === 'green'
-                                    ? 'bg-green-600 text-white hover:bg-green-700'
-                                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                                    }`}>
+                                <a
+                                    href={`mailto:${surveyor.email}`}
+                                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
+                                >
                                     <MessageCircle className="w-4 h-4" />
                                     <span>Contact Surveyor</span>
-                                </button>
-                                <button className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                </a>
+                                <a
+                                    href={`tel:${surveyor.phone}`}
+                                    className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
                                     <Calendar className="w-4 h-4" />
-                                    <span>Schedule Meeting</span>
-                                </button>
+                                    <span>Call Surveyor</span>
+                                </a>
                             </div>
                         )}
                     </div>
@@ -254,7 +229,7 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                         <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                         <h4 className="text-lg font-medium text-gray-900 mb-2">No Surveyor Assigned</h4>
                         <p className="text-sm text-gray-600 mb-4">
-                            A {surveyor.organization} surveyor will be assigned to your property survey soon.
+                            An AMMC surveyor will be assigned to your property survey soon.
                         </p>
                         <div className="inline-flex items-center px-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-600">
                             <Clock className="w-4 h-4 mr-2" />
@@ -268,12 +243,11 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-xl font-bold text-gray-900">Surveyor Contacts</h2>
                     <p className="text-sm text-gray-600 mt-1">
-                        Contact information for your assigned surveyors from both organizations
+                        Contact information for your assigned surveyor
                     </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -281,14 +255,9 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                         <span className="text-xs text-gray-600">AMMC</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="text-xs text-gray-600">NIA</span>
-                    </div>
                 </div>
             </div>
 
-            {/* Assignment Status Summary */}
             <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -296,67 +265,52 @@ const SurveyorContactsDisplay: React.FC<SurveyorContactsDisplayProps> = ({
                         <div>
                             <p className="text-sm font-medium text-gray-900">Assignment Status</p>
                             <p className="text-xs text-gray-600">
-                                {assignmentStatus === 'unassigned' && 'No surveyors assigned yet'}
-                                {assignmentStatus === 'partially_assigned' && 'One surveyor assigned, waiting for second'}
-                                {assignmentStatus === 'fully_assigned' && 'Both surveyors assigned'}
+                                {assignmentStatus === 'unassigned' && 'No surveyor assigned yet'}
+                                {assignmentStatus === 'partially_assigned' && 'Surveyor assigned'}
+                                {assignmentStatus === 'fully_assigned' && 'Surveyor assigned'}
                             </p>
                         </div>
                     </div>
                     <div className="text-right">
                         <p className="text-sm font-bold text-gray-900">
-                            {assignmentStatus === 'unassigned' && '0/2'}
-                            {assignmentStatus === 'partially_assigned' && '1/2'}
-                            {assignmentStatus === 'fully_assigned' && '2/2'}
+                            {assignmentStatus === 'unassigned' && '0/1'}
+                            {assignmentStatus === 'partially_assigned' && '1/1'}
+                            {assignmentStatus === 'fully_assigned' && '1/1'}
                         </p>
                         <p className="text-xs text-gray-600">Assigned</p>
                     </div>
                 </div>
             </div>
 
-            {/* Surveyor Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* AMMC Surveyor Card */}
+            <div className="grid grid-cols-1 gap-6">
                 <SurveyorCard
-                    surveyor={ammcSurveyor || {
+                    surveyor={assignedSurveyor || {
                         name: '',
                         email: '',
                         phone: '',
                         organization: 'AMMC'
                     }}
-                    isAssigned={!!ammcSurveyor}
-                />
-
-                {/* NIA Surveyor Card */}
-                <SurveyorCard
-                    surveyor={niaSurveyor || {
-                        name: '',
-                        email: '',
-                        phone: '',
-                        organization: 'NIA'
-                    }}
-                    isAssigned={!!niaSurveyor}
+                    isAssigned={!!assignedSurveyor}
                 />
             </div>
 
-            {/* Coordination Tips */}
-            {(ammcSurveyor || niaSurveyor) && (
+            {assignedSurveyor && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-start space-x-3">
                         <MessageCircle className="w-5 h-5 text-blue-600 mt-0.5" />
                         <div>
                             <h4 className="text-sm font-medium text-blue-900 mb-2">Coordination Tips</h4>
                             <ul className="text-sm text-blue-800 space-y-1">
-                                <li>• Both surveyors will coordinate to avoid scheduling conflicts</li>
-                                <li>• You may be contacted by either surveyor to arrange property access</li>
-                                <li>• Each surveyor will conduct an independent assessment</li>
-                                <li>• Final report will combine findings from both organizations</li>
+                                <li>• Your assigned surveyor may contact you to arrange property access</li>
+                                <li>• Keep your phone and email reachable during the survey window</li>
+                                <li>• Share access constraints early to avoid delays</li>
+                                <li>• Contact the AMMC administrator if you need clarification or support</li>
                             </ul>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Admin Contacts Section */}
             {showAdminContacts && (
                 <div className="mt-8">
                     <AdminContactDisplay

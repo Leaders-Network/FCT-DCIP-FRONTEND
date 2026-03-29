@@ -216,16 +216,6 @@ const AdminContactDisplay: React.FC<AdminContactDisplayProps> = ({
         officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
     };
 
-    const defaultNIAAdmin: AdminContact = {
-        name: 'NIA Survey Administrator',
-        email: 'admin@nia.org.ng',
-        phone: '+234-9-876-5432',
-        organization: 'NIA',
-        title: 'Survey Operations Manager',
-        department: 'Insurance Assessment Division',
-        officeHours: 'Mon-Fri 9:00 AM - 6:00 PM'
-    };
-
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -269,12 +259,8 @@ const AdminContactDisplay: React.FC<AdminContactDisplayProps> = ({
             )}
 
             {/* Admin Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* AMMC Admin Card */}
+            <div className="grid grid-cols-1 gap-6">
                 <AdminCard admin={ammcAdmin || defaultAMMCAdmin} />
-
-                {/* NIA Admin Card */}
-                <AdminCard admin={niaAdmin || defaultNIAAdmin} />
             </div>
 
             {/* Contact Guidelines */}

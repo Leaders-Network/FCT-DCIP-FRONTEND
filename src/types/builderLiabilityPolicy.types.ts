@@ -86,7 +86,7 @@ export interface MetaInfo {
 }
 
 export interface PaymentInfo {
-    status: 'pending' | 'paid' | 'rejected' | 'failed';
+    status: 'not_started' | 'pending' | 'paid' | 'rejected' | 'failed';
     amount?: number;
     transactionId?: string;
     method?: 'external_payment_service' | 'bank_transfer' | 'card' | 'other';
@@ -95,6 +95,37 @@ export interface PaymentInfo {
     rejectedAt?: Date | string;
     reason?: string;
     webhookData?: Record<string, unknown>;
+}
+
+export interface PolicyAction {
+    type: 'calculate_premium' | 'initialize_payment' | string;
+    label: string;
+    method?: string;
+    url?: string;
+}
+
+export interface PolicyWorkflow {
+    currentStage: 'premium_calculation' | 'payment_ready' | string;
+    premiumCalculated: boolean;
+    canCalculatePremium: boolean;
+    canInitializePayment: boolean;
+    nextAction?: PolicyAction | null;
+}
+
+export interface AssignedSurveyorContact {
+    surveyorId: string;
+    name: string;
+    email: string;
+    phone: string;
+    organization?: 'AMMC' | 'NIA';
+    licenseNumber?: string;
+    address?: string;
+    emergencyContact?: string;
+    specialization?: string[];
+    experience?: number;
+    rating?: number;
+    availability?: string;
+    assignedAt?: Date | string;
 }
 
 export interface StatusHistoryEntry {
@@ -120,6 +151,11 @@ export interface DocumentInfo {
     isVerified: boolean;
     verifiedBy?: string;
     verifiedAt?: Date | string;
+    downloadPath?: string;
+    storageType?: string;
+    name?: string;
+    submissionId?: string;
+    fileId?: string;
 }
 
 export type BuilderLiabilityPolicyStatus =
@@ -133,7 +169,8 @@ export type BuilderLiabilityPolicyStatus =
     | 'requires_more_info'
     | 'revision_required'
     | 'completed'
-    | 'sent_to_user';
+    | 'sent_to_user'
+    | 'paid_niip_failed';
 
 export type BuilderLiabilityPolicyPriority = 'low' | 'medium' | 'high' | 'urgent';
 
@@ -164,6 +201,20 @@ export interface BuilderLiabilityPolicy extends BuilderLiabilityPolicyData {
     deadline: Date | string;
     statusHistory: StatusHistoryEntry[];
     niipPayload?: Record<string, unknown>;
+    nextAction?: PolicyAction | null;
+    primaryAction?: PolicyAction | null;
+    availableActions?: PolicyAction[];
+    actionLabel?: string | null;
+    actionUrl?: string | null;
+    actionMethod?: string | null;
+    calculatePremiumUrl?: string | null;
+    showCalculatePremiumButton?: boolean;
+    canCalculatePremium?: boolean;
+    canProceedToPayment?: boolean;
+    premiumCalculated?: boolean;
+    assignedSurveyorContacts?: AssignedSurveyorContact[];
+    primaryAssignedSurveyorContact?: AssignedSurveyorContact | null;
+    workflow?: PolicyWorkflow;
     createdAt: Date | string;
     updatedAt: Date | string;
 }

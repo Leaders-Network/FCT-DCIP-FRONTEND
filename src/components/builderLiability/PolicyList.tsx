@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PremiumDetailsModal } from './PremiumDetailsModal';
+import PaymentResultModal, { PaymentConfirmationResult } from './PaymentResultModal';
 import {
     Eye,
     Search,
@@ -23,7 +24,8 @@ import {
     CheckCircle,
     XCircle,
     AlertCircle,
-    CreditCard
+    CreditCard,
+    RefreshCw
 } from 'lucide-react';
 import { toast } from "sonner"
 
@@ -65,7 +67,14 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         premiumDetails: any;
     }>>({});
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+    const [processingPremium, setProcessingPremium] = useState<string | null>(null);
     const [premiumModalPolicyId, setPremiumModalPolicyId] = useState<string | null>(null);
+    const [retryLoading, setRetryLoading] = useState<string | null>(null);
+    const [paymentResultModal, setPaymentResultModal] = useState<{
+        isOpen: boolean;
+        result: PaymentConfirmationResult;
+        policyId?: string;
+    } | null>(null);
     const egolePayApiKey = process.env.NEXT_PUBLIC_EGOLEPAY_API_KEY || '';
     const egolePayMerchantId =
         process.env.NEXT_PUBLIC_EGOLEPAY_MERCHANT_ID ||
@@ -154,6 +163,48 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
         setPremiumModalPolicyId(policy._id);
         setShowPremiumModal(true);
+    };
+
+    const handleCalculatePremium = async (policy: BuilderLiabilityPolicy) => {
+        try {
+            setProcessingPremium(policy._id);
+            const response = await builderLiabilityPolicyAPI.calculatePremium(policy._id);
+            const premiumDetails = response.data?.premiumDetails;
+
+            setPremiumState((prev) => ({
+                ...prev,
+                [policy._id]: {
+                    premiumDetails: {
+                        amount: premiumDetails?.amount ?? response.data?.premiumAmount ?? 0,
+                        currency: premiumDetails?.currency || 'NGN',
+                        invoiceNumber: premiumDetails?.invoiceNumber || null,
+                        transactionReference: premiumDetails?.transactionReference || null,
+                        builder: {
+                            name: policy.builder.nameOfBuilder,
+                            email: policy.builder.customerEmail,
+                            phone: policy.builder.telNo
+                        },
+                        estimates: {
+                            declaredProjectSum: policy.project.totalEstimateSum,
+                            surveyorEstimate: (policy as any)?.surveyorEstimatedValue || null
+                        }
+                    }
+                }
+            }));
+
+            toast.success(response.message || 'Premium calculated successfully');
+            setPremiumModalPolicyId(policy._id);
+            setShowPremiumModal(true);
+            await fetchPolicies();
+        } catch (error: any) {
+            toast.error(
+                error?.response?.data?.message ||
+                error?.message ||
+                'Failed to calculate premium'
+            );
+        } finally {
+            setProcessingPremium(null);
+        }
     };
 
     const getPaymentPayload = (
@@ -281,22 +332,15 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                             );
 
                             if (result.niipWithdrawal?.success) {
+                                // Both payment + NIIP succeeded — just show a brief toast
                                 toast.success('Payment confirmed and NIIP wallet withdrawal completed');
-                            } else if (result.niipWithdrawal?.skipped) {
-                                toast.message(`Payment confirmed, but NIIP withdrawal was skipped: ${result.niipWithdrawal.reason}`);
-                            } else if (result.niipWithdrawal?.success === false) {
-                                toast.error(
-                                    `Payment confirmed, but NIIP withdrawal failed: ${
-                                        result.niipWithdrawal.error ||
-                                        result.niipWithdrawal.body?.error ||
-                                        result.niipWithdrawal.body?.message ||
-                                        'Unknown NIIP error'
-                                    }`
-                                );
-                            } else if (result.niipWithdrawal?.error) {
-                                toast.error(`Payment confirmed, but NIIP withdrawal failed: ${result.niipWithdrawal.error}`);
                             } else {
-                                toast.success(result.message || 'EgolePay payment completed successfully');
+                                // Any non-full-success case — open the rich modal
+                                setPaymentResultModal({
+                                    isOpen: true,
+                                    result: result as PaymentConfirmationResult,
+                                    policyId: policy._id,
+                                });
                             }
 
                             await fetchPolicies();
@@ -332,6 +376,35 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
         void launchPayment();
     };
+
+    const handleRetryNiipWithdrawal = async (policy: BuilderLiabilityPolicy) => {
+        try {
+            setRetryLoading(policy._id);
+            const response = await builderLiabilityPolicyAPI.retryNiipWithdrawal(policy._id);
+
+            if (response.niipWithdrawal?.success) {
+                toast.success(response.message || "NIIP wallet withdrawal successful");
+                // Refresh policies to update status to 'completed'
+                await fetchPolicies();
+            } else {
+                // Show the result modal even on partial failure so they can see the HTML error
+                setPaymentResultModal({
+                    isOpen: true,
+                    result: {
+                        ...response,
+                        // Ensure success is true if NIIP failed but payment is known-good (which it is for retries)
+                        success: true 
+                    },
+                    policyId: policy._id,
+                });
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to retry NIIP withdrawal");
+        } finally {
+            setRetryLoading(null);
+        }
+    };
+
     const handleViewDetails = async (policy: BuilderLiabilityPolicy) => {
         try {
             // Fetch the complete policy data by ID to get all fields
@@ -386,6 +459,34 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         return latestStatus || 'draft';
     };
 
+    const getResolvedAction = (policy: BuilderLiabilityPolicy) =>
+        policy.primaryAction ||
+        policy.nextAction ||
+        policy.workflow?.nextAction ||
+        policy.availableActions?.[0] ||
+        null;
+
+    const shouldShowCalculatePremium = (policy: BuilderLiabilityPolicy) => {
+        const action = getResolvedAction(policy);
+        return Boolean(
+            policy.showCalculatePremiumButton ||
+            (policy.canCalculatePremium && !policy.premiumCalculated) ||
+            action?.type === 'calculate_premium' ||
+            (getActualStatus(policy) === 'approved' &&
+                (policy as any).surveyorRecommendation === 'approve' &&
+                !policy.premiumCalculated)
+        );
+    };
+
+    const shouldShowProceedToPayment = (policy: BuilderLiabilityPolicy) => {
+        const action = getResolvedAction(policy);
+        return Boolean(
+            policy.canProceedToPayment ||
+            action?.type === 'initialize_payment' ||
+            getActualStatus(policy) === 'payment_pending'
+        );
+    };
+
     // Filter policies based on search and filters
     const filteredPolicies = policies.filter(policy => {
         const matchesSearch = !searchQuery ||
@@ -412,7 +513,8 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             requires_more_info: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             revision_required: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             completed: { color: 'bg-emerald-100 text-emerald-800', icon: CheckCircle, label: 'Completed' },
-            sent_to_user: { color: 'bg-cyan-100 text-cyan-800', icon: CheckCircle, label: 'Sent to User' }
+            sent_to_user: { color: 'bg-cyan-100 text-cyan-800', icon: CheckCircle, label: 'Sent to User' },
+            paid_niip_failed: { color: 'bg-rose-100 text-rose-800', icon: AlertCircle, label: 'Payment OK, NIIP Failed' }
         };
 
         const config = statusConfig[status] || statusConfig.submitted;
@@ -526,6 +628,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                 <SelectItem value="payment_pending">Awaiting Payment</SelectItem>
                                 <SelectItem value="rejected">Rejected</SelectItem>
                                 <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="paid_niip_failed">NIIP Failed</SelectItem>
                             </SelectContent>
                         </Select>
                         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
@@ -639,13 +742,26 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2 justify-end">
                                                 {/* Show payment button only once the survey is approved and awaiting payment */}
-                                                {getActualStatus(policy) === 'payment_pending' && (policy as any).surveyorRecommendation === 'approve' && (
+                                                {shouldShowCalculatePremium(policy) && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-amber-600 hover:bg-amber-700"
+                                                        onClick={() => handleCalculatePremium(policy)}
+                                                        disabled={processingPremium === policy._id}
+                                                    >
+                                                        <CreditCard className="w-4 h-4 mr-2" />
+                                                        {processingPremium === policy._id
+                                                            ? 'Calculating...'
+                                                            : 'Calculate Premium'}
+                                                    </Button>
+                                                )}
+                                                {shouldShowProceedToPayment(policy) && (
                                                     <>
                                                         <Button
                                                             size="sm"
                                                             className="bg-green-600 hover:bg-green-700"
                                                             onClick={() => openPaymentModal(policy)}
-                                                            disabled={processingPayment === policy._id}
+                                                            disabled={processingPayment === policy._id || processingPremium === policy._id}
                                                         >
                                                             <CreditCard className="w-4 h-4 mr-2" />
                                                             {processingPayment === policy._id
@@ -653,6 +769,19 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                                 : 'Proceed to Payment'}
                                                         </Button>
                                                     </>
+                                                )}
+                                                {getActualStatus(policy) === 'paid_niip_failed' && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-orange-600 hover:bg-orange-700"
+                                                        onClick={() => handleRetryNiipWithdrawal(policy)}
+                                                        disabled={retryLoading === policy._id}
+                                                    >
+                                                        <RefreshCw className={`w-4 h-4 mr-2 ${retryLoading === policy._id ? 'animate-spin' : ''}`} />
+                                                        {retryLoading === policy._id
+                                                            ? 'Retrying...'
+                                                            : 'Retry NIIP Withdrawal'}
+                                                    </Button>
                                                 )}
                                                 {/* Show rejection message if rejected */}
                                                 {getActualStatus(policy) === 'rejected' && (policy as any).surveyorRecommendation === 'reject' && (
@@ -706,10 +835,20 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 }}
                 loading={processingPayment === premiumModalPolicyId}
             />
+            {paymentResultModal && (
+                <PaymentResultModal
+                    isOpen={paymentResultModal.isOpen}
+                    result={paymentResultModal.result}
+                    onClose={() => setPaymentResultModal(null)}
+                    onRetry={() => {
+                        const policy = policies.find(p => p._id === paymentResultModal.policyId);
+                        if (policy) handleRetryNiipWithdrawal(policy);
+                    }}
+                    retryLoading={paymentResultModal.policyId ? retryLoading === paymentResultModal.policyId : false}
+                />
+            )}
         </div>
     );
 };
 
 export default BuilderLiabilityPolicyList;
-
-

@@ -1,21 +1,74 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import ContactManagementHub from '@/components/dashboard/ContactManagementHub';
-import { ContactData, SurveyorContactInfo, ConflictInquiryData } from '@/types/api.types';
+import { ContactData, ConflictInquiryData, AdminContactInfo, SurveyorContactInfo } from '@/types/api.types';
 import { getAuthToken } from '@/utils/auth';
 import { toast } from "sonner";
+import type { BuilderLiabilityPolicy, AssignedSurveyorContact } from '@/types/builderLiabilityPolicy.types';
+
+const DEFAULT_AMMC_ADMIN: AdminContactInfo = {
+    name: 'Dr. Michael Okonkwo',
+    email: 'admin@ammc.gov.ng',
+    phone: '+234-9-234-5678',
+    organization: 'AMMC',
+    title: 'Survey Department Administrator',
+    department: 'Property Assessment Division',
+    officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
+};
+
+const createDefaultContactData = (overrides: Partial<ContactData> = {}): ContactData => ({
+    ammcSurveyor: null,
+    niaSurveyor: null,
+    assignmentStatus: 'unassigned',
+    ammcAdmin: DEFAULT_AMMC_ADMIN,
+    niaAdmin: null,
+    policyId: null,
+    mergedReportId: null,
+    hasConflicts: false,
+    ...overrides
+});
+
+const mapSurveyorContact = (contact: AssignedSurveyorContact): SurveyorContactInfo => ({
+    name: contact.name,
+    email: contact.email,
+    phone: contact.phone,
+    organization: contact.organization,
+    licenseNumber: contact.licenseNumber,
+    specialization: contact.specialization,
+    experience: contact.experience,
+    rating: contact.rating,
+    lastActive: contact.assignedAt ? new Date(contact.assignedAt).toISOString() : new Date().toISOString()
+});
+
+const buildContactDataFromPolicy = (policy: BuilderLiabilityPolicy): ContactData => {
+    const contacts = Array.isArray(policy.assignedSurveyorContacts) ? policy.assignedSurveyorContacts : [];
+    const ammcSurveyorContact = contacts.find((contact) => contact.organization === 'AMMC') || null;
+    const niaSurveyorContact = contacts.find((contact) => contact.organization === 'NIA') || null;
+    const fallbackContact = contacts.find(Boolean) || null;
+    const contactCount = [ammcSurveyorContact, niaSurveyorContact].filter(Boolean).length;
+    const assignmentStatus =
+        contactCount === 0
+            ? 'unassigned'
+            : contactCount === 1
+                ? 'partially_assigned'
+                : 'fully_assigned';
+
+    return createDefaultContactData({
+        ammcSurveyor: ammcSurveyorContact
+            ? mapSurveyorContact(ammcSurveyorContact)
+            : fallbackContact && fallbackContact.organization !== 'NIA'
+                ? mapSurveyorContact(fallbackContact)
+                : null,
+        niaSurveyor: null,
+        assignmentStatus: ammcSurveyorContact || fallbackContact ? 'fully_assigned' : assignmentStatus,
+        policyId: policy._id,
+        mergedReportId: null,
+        hasConflicts: policy.status === 'surveyed'
+    });
+};
 
 const ContactsPage: React.FC = () => {
-    const [contactData, setContactData] = useState<ContactData>({
-        ammcSurveyor: null,
-        niaSurveyor: null,
-        assignmentStatus: 'unassigned',
-        ammcAdmin: null,
-        niaAdmin: null,
-        policyId: null,
-        mergedReportId: null,
-        hasConflicts: false
-    });
+    const [contactData, setContactData] = useState<ContactData>(createDefaultContactData());
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -31,192 +84,27 @@ const ContactsPage: React.FC = () => {
                 }
 
                 const { builderLiabilityPolicyAPI } = await import("@/services/api");
-                const policiesResponse = await builderLiabilityPolicyAPI.getUserPolicies({ status: 'all', page: 1, limit: 1 });
+                const policiesResponse = await builderLiabilityPolicyAPI.getUserPolicies({
+                    status: 'all',
+                    page: 1,
+                    limit: 20
+                });
 
                 if (policiesResponse?.data?.policies?.length > 0) {
-                    const latestPolicy = policiesResponse.data.policies[0];
+                    const policies = policiesResponse.data.policies as BuilderLiabilityPolicy[];
+                    const selectedPolicy =
+                        policies.find((policy) => Array.isArray(policy.assignedSurveyorContacts) && policy.assignedSurveyorContacts.length > 0) ||
+                        policies[0];
 
-                    // Try to get assignment information for the latest policy
-                    try {
-                        const { getUserAssignmentByPolicyId } = await import('@/services/api');
-                        const assignmentResponse = await getUserAssignmentByPolicyId(latestPolicy._id);
-
-                        if (assignmentResponse.success && assignmentResponse.data) {
-                            const assignment = assignmentResponse.data;
-
-                            // Mock surveyor data based on assignment
-                            const mockAMMCSurveyor: SurveyorContactInfo = {
-                                name: assignment.surveyorId?.firstname + ' ' + assignment.surveyorId?.lastname || 'AMMC Surveyor',
-                                email: assignment.surveyorId?.email || 'surveyor@ammc.gov.ng',
-                                phone: assignment.surveyorId?.phoneNumber || '+234-803-123-4567',
-                                organization: 'AMMC',
-                                licenseNumber: assignment.surveyorId?.licenseNumber || 'AMMC-2024-001',
-                                specialization: assignment.surveyorId?.specialization || ['residential', 'commercial'],
-                                experience: assignment.surveyorId?.experience || 8,
-                                rating: 4.7,
-                                lastActive: new Date().toISOString()
-                            };
-
-                            // For now, we'll use mock NIA surveyor data
-                            const mockNIASurveyor: SurveyorContactInfo = {
-                                name: 'Sarah Okafor',
-                                email: 's.okafor@nia.org.ng',
-                                phone: '+234-807-987-6543',
-                                organization: 'NIA',
-                                licenseNumber: 'NIA-2024-045',
-                                specialization: ['structural', 'valuation'],
-                                experience: 12,
-                                rating: 4.9,
-                                lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-                            };
-
-                            setContactData({
-                                ammcSurveyor: mockAMMCSurveyor,
-                                niaSurveyor: mockNIASurveyor,
-                                assignmentStatus: 'fully_assigned',
-                                ammcAdmin: {
-                                    name: 'Dr. Michael Okonkwo',
-                                    email: 'admin@ammc.gov.ng',
-                                    phone: '+234-9-234-5678',
-                                    organization: 'AMMC',
-                                    title: 'Survey Department Administrator',
-                                    department: 'Property Assessment Division',
-                                    officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
-                                },
-                                niaAdmin: {
-                                    name: 'Mrs. Fatima Abdullahi',
-                                    email: 'admin@nia.org.ng',
-                                    phone: '+234-9-876-5432',
-                                    organization: 'NIA',
-                                    title: 'Survey Operations Manager',
-                                    department: 'Insurance Assessment Division',
-                                    officeHours: 'Mon-Fri 9:00 AM - 6:00 PM',
-                                    emergencyContact: true
-                                },
-                                policyId: latestPolicy._id,
-                                mergedReportId: `MR-${latestPolicy._id.substring(0, 8)}`,
-                                hasConflicts: latestPolicy.status === 'surveyed' // Show conflict option for surveyed policies
-                            });
-                        } else {
-                            // No assignment found, show default admin contacts only
-                            setContactData({
-                                ammcSurveyor: null,
-                                niaSurveyor: null,
-                                assignmentStatus: 'unassigned',
-                                ammcAdmin: {
-                                    name: 'Dr. Michael Okonkwo',
-                                    email: 'admin@ammc.gov.ng',
-                                    phone: '+234-9-234-5678',
-                                    organization: 'AMMC',
-                                    title: 'Survey Department Administrator',
-                                    department: 'Property Assessment Division',
-                                    officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
-                                },
-                                niaAdmin: {
-                                    name: 'Mrs. Fatima Abdullahi',
-                                    email: 'admin@nia.org.ng',
-                                    phone: '+234-9-876-5432',
-                                    organization: 'NIA',
-                                    title: 'Survey Operations Manager',
-                                    department: 'Insurance Assessment Division',
-                                    officeHours: 'Mon-Fri 9:00 AM - 6:00 PM',
-                                    emergencyContact: true
-                                },
-                                policyId: latestPolicy._id,
-                                mergedReportId: null,
-                                hasConflicts: false
-                            });
-                        }
-                    } catch (assignmentError) {
-                        console.log('No assignment found, showing admin contacts only');
-                        setContactData({
-                            ammcSurveyor: null,
-                            niaSurveyor: null,
-                            assignmentStatus: 'unassigned',
-                            ammcAdmin: {
-                                name: 'Dr. Michael Okonkwo',
-                                email: 'admin@ammc.gov.ng',
-                                phone: '+234-9-234-5678',
-                                organization: 'AMMC',
-                                title: 'Survey Department Administrator',
-                                department: 'Property Assessment Division',
-                                officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
-                            },
-                            niaAdmin: {
-                                name: 'Mrs. Fatima Abdullahi',
-                                email: 'admin@nia.org.ng',
-                                phone: '+234-9-876-5432',
-                                organization: 'NIA',
-                                title: 'Survey Operations Manager',
-                                department: 'Insurance Assessment Division',
-                                officeHours: 'Mon-Fri 9:00 AM - 6:00 PM',
-                                emergencyContact: true
-                            },
-                            policyId: latestPolicy._id,
-                            mergedReportId: null,
-                            hasConflicts: false
-                        });
-                    }
+                    setContactData(buildContactDataFromPolicy(selectedPolicy));
                 } else {
                     // No policies found, show default admin contacts
-                    setContactData({
-                        ammcSurveyor: null,
-                        niaSurveyor: null,
-                        assignmentStatus: 'unassigned',
-                        ammcAdmin: {
-                            name: 'Dr. Michael Okonkwo',
-                            email: 'admin@ammc.gov.ng',
-                            phone: '+234-9-234-5678',
-                            organization: 'AMMC',
-                            title: 'Survey Department Administrator',
-                            department: 'Property Assessment Division',
-                            officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
-                        },
-                        niaAdmin: {
-                            name: 'Mrs. Fatima Abdullahi',
-                            email: 'admin@nia.org.ng',
-                            phone: '+234-9-876-5432',
-                            organization: 'NIA',
-                            title: 'Survey Operations Manager',
-                            department: 'Insurance Assessment Division',
-                            officeHours: 'Mon-Fri 9:00 AM - 6:00 PM',
-                            emergencyContact: true
-                        },
-                        policyId: null,
-                        mergedReportId: null,
-                        hasConflicts: false
-                    });
+                    setContactData(createDefaultContactData());
                 }
             } catch (error) {
                 console.error('Failed to fetch contact data:', error);
                 // Set default admin contacts on error
-                setContactData({
-                    ammcSurveyor: null,
-                    niaSurveyor: null,
-                    assignmentStatus: 'unassigned',
-                    ammcAdmin: {
-                        name: 'Dr. Michael Okonkwo',
-                        email: 'admin@ammc.gov.ng',
-                        phone: '+234-9-234-5678',
-                        organization: 'AMMC',
-                        title: 'Survey Department Administrator',
-                        department: 'Property Assessment Division',
-                        officeHours: 'Mon-Fri 8:00 AM - 5:00 PM'
-                    },
-                    niaAdmin: {
-                        name: 'Mrs. Fatima Abdullahi',
-                        email: 'admin@nia.org.ng',
-                        phone: '+234-9-876-5432',
-                        organization: 'NIA',
-                        title: 'Survey Operations Manager',
-                        department: 'Insurance Assessment Division',
-                        officeHours: 'Mon-Fri 9:00 AM - 6:00 PM',
-                        emergencyContact: true
-                    },
-                    policyId: null,
-                    mergedReportId: null,
-                    hasConflicts: false
-                });
+                setContactData(createDefaultContactData());
             } finally {
                 setLoading(false);
             }
