@@ -56,8 +56,16 @@ interface ConflictInquiry {
 interface PolicyOption {
     _id: string;
     policyNumber?: string;
-    propertyDetails?: {
+    builder?: {
         address: string;
+        nameOfBuilder?: string;
+    };
+    project?: {
+        address?: string;
+        coverTypeIdxDetails?: string;
+    };
+    propertyDetails?: {
+        address?: string;
         propertyType?: string;
     };
     status?: string;
@@ -93,6 +101,25 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
     const [policies, setPolicies] = useState<PolicyOption[]>([]);
     const [loadingPolicies, setLoadingPolicies] = useState(false);
 
+    const getPolicyAddress = (policy: PolicyOption) =>
+        policy.project?.address ||
+        policy.builder?.address ||
+        policy.propertyDetails?.address ||
+        'No address';
+
+    const getPolicyType = (policy: PolicyOption) =>
+        policy.project?.coverTypeIdxDetails ||
+        policy.propertyDetails?.propertyType ||
+        'Builder Liability Policy';
+
+    const getPolicyLabel = (policy: PolicyOption) => {
+        const policyNumberLabel = policy.policyNumber || `Policy ${policy._id.slice(-6)}`;
+        const address = getPolicyAddress(policy);
+        return `${policyNumberLabel} - ${address.substring(0, 50)}${address.length > 50 ? '...' : ''}`;
+    };
+
+    const selectedPolicy = policies.find((policy) => policy._id === formData.policyId);
+
     // Load user info from cookies and fetch policies on mount
     useEffect(() => {
         if (isOpen) {
@@ -124,6 +151,8 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
 
             setFormData(prev => ({
                 ...prev,
+                policyId: policyId || prev.policyId,
+                reportId: effectiveReportId || prev.reportId,
                 userContact: {
                     ...prev.userContact,
                     email,
@@ -412,10 +441,23 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                     </option>
                                     {policies.map((policy) => (
                                         <option key={policy._id} value={policy._id}>
-                                            {policy.propertyDetails?.propertyType || 'Property'} - {policy.propertyDetails?.address?.substring(0, 40) || 'No address'}...
+                                            {getPolicyLabel(policy)}
                                         </option>
                                     ))}
                                 </select>
+                                {selectedPolicy && (
+                                    <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                                        <p className="text-sm font-medium text-blue-900">
+                                            {selectedPolicy.policyNumber || 'Selected Policy'}
+                                        </p>
+                                        <p className="mt-1 text-xs text-blue-800">
+                                            {getPolicyType(selectedPolicy)}
+                                        </p>
+                                        <p className="mt-1 text-xs text-blue-700">
+                                            {getPolicyAddress(selectedPolicy)}
+                                        </p>
+                                    </div>
+                                )}
                                 {policies.length === 0 && !loadingPolicies && (
                                     <p className="text-xs text-gray-500 mt-1">
                                         No completed policies found. You can only raise inquiries for completed policies.
