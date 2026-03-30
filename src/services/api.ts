@@ -1657,20 +1657,12 @@ export const dualAssignmentAPI = {
 export const tokenManager = {
   // Get the appropriate token based on user type
   getToken: (userType?: 'ammc' | 'nia' | 'user'): string | null => {
-    if (typeof window === 'undefined') return null;
-
     if (userType === 'nia') {
-      return getCookie('niaAdminToken');
+      return getAuthToken('nia-admin');
     } else if (userType === 'ammc') {
-      return getCookie('adminToken') ||
-        getCookie('token') ||
-        getCookie('authToken');
+      return getAuthToken('admin');
     } else {
-      // Try all possible token sources
-      return getCookie('niaAdminToken') ||
-        getCookie('adminToken') ||
-        getCookie('token') ||
-        getCookie('authToken');
+      return getAuthToken();
     }
   },
 

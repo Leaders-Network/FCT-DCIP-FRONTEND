@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { getAuthToken } from '@/utils/auth';
 import {
     UserPlus,
     Search,
@@ -61,8 +62,7 @@ const NIAAdministratorsPage = () => {
     const fetchNIAAdmins = async () => {
         try {
             setLoading(true);
-            // Try NIA admin token first, then fall back to regular token
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getAuthToken('nia-admin');
 
             if (!token) {
                 // If not authenticated as NIA admin, show a friendly message but don't throw
@@ -103,8 +103,7 @@ const NIAAdministratorsPage = () => {
     const handleCreateAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            // Try NIA admin token first, then fall back to regular token
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getAuthToken('nia-admin');
 
             if (!token) {
                 throw new Error('No authentication token found');
@@ -167,7 +166,7 @@ const NIAAdministratorsPage = () => {
         if (!selectedAdmin) return;
 
         try {
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getAuthToken('nia-admin');
 
             if (!token) {
                 throw new Error('No authentication token found');
@@ -228,7 +227,7 @@ const NIAAdministratorsPage = () => {
         if (!selectedAdmin) return;
 
         try {
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getAuthToken('nia-admin');
 
             if (!token) {
                 throw new Error('No authentication token found');

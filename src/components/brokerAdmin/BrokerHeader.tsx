@@ -49,7 +49,7 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
     }, []);
 
     const getDashboardToken = (): string | null => {
-        return getAuthToken('broker-admin') || localStorage.getItem('brokerAdminToken') || localStorage.getItem('token');
+        return getAuthToken('broker-admin');
     };
 
     const fetchNotifications = async () => {

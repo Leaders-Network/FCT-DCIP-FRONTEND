@@ -82,6 +82,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (email: string, password: string, userType: 'user' | 'employee') => {
     try {
+      removeAuthToken();
+
       if (userType === 'employee') {
         const response = await loginEmployee(email, password);
         const { token, employee } = response.data;

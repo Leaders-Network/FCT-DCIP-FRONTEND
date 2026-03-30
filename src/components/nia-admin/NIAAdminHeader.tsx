@@ -52,7 +52,7 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
     const getDashboardToken = (): string | null => {
-        return getAuthToken('nia-admin') || localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+        return getAuthToken('nia-admin');
     };
 
     useEffect(() => {

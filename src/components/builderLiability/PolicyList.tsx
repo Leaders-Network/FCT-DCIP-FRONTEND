@@ -120,7 +120,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
             const sdkUrl =
                 process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL ||
-                'https://apigateway-test.egolepay.com/pulsebridge-standard.js';
+                'https://pulsebridge.egolepay.com/pulsebridge-v0.0.js';
 
             const currentScript = document.querySelector(`script[src="${sdkUrl}"]`) as HTMLScriptElement | null;
             if (currentScript) {
