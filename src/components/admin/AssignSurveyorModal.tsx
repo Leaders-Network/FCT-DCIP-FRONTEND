@@ -34,12 +34,26 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
 
+  const normalizeSurveyor = (surveyor: Surveyor | Record<string, unknown>): Surveyor => {
+    const safeSurveyor = surveyor as Surveyor & { userId?: { firstname?: string; lastname?: string; email?: string; phonenumber?: string } };
+    return {
+      ...safeSurveyor,
+      firstname: safeSurveyor.firstname || safeSurveyor.userId?.firstname || '',
+      lastname: safeSurveyor.lastname || safeSurveyor.userId?.lastname || '',
+      email: safeSurveyor.email || safeSurveyor.userId?.email || '',
+      phonenumber: safeSurveyor.phonenumber || safeSurveyor.userId?.phonenumber || ''
+    };
+  };
+
   useEffect(() => {
     const fetchSurveyors = async () => {
       try {
         const response = await adminApi.getSurveyors({ status: 'active' });
         if (response?.data) {
-          setAvailableSurveyors(response.data);
+          const normalized = Array.isArray(response.data)
+            ? response.data.map(normalizeSurveyor)
+            : [];
+          setAvailableSurveyors(normalized);
         } else {
           setAvailableSurveyors([]);
         }
@@ -64,7 +78,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
     }
     try {
       const assignmentData = {
-        ammcId: selectedPolicy!._id,
+        policyId: selectedPolicy!._id,
         surveyorId: newAssignmentData.surveyorId,
         assignedBy: user?._id,
         deadline: new Date(newAssignmentData.deadline).toISOString(),
@@ -82,7 +96,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
 
   const handleReassignSurveyor = async () => {
     try {
-      const assignmentResponse = await adminApi.getAssignmentByAmmcId(selectedPolicy!._id);
+      const assignmentResponse = await adminApi.getAssignmentById(selectedPolicy!.assignmentId!);
       if (!assignmentResponse.success || !assignmentResponse.data) {
         setError('Could not find assignment for the selected policy.');
         return;

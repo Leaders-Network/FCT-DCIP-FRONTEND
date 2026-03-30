@@ -1,20 +1,40 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Download, ExternalLink, CheckCircle, Clock, FileText, XCircle, Trash2, MoreVertical, Shield, Eye, AlertTriangle } from "lucide-react";
-import { PolicyRequest, UserReport } from "@/types/api.types";
+import { UserReport } from "@/types/api.types";
+import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { builderLiabilityPolicyAPI, userReportAPI } from "@/services/api";
 import MergedReportDetailsModal from "@/components/user/MergedReportDetailsModal";
 import { toast } from "sonner";
 
 interface PolicyCompletionProps { }
 
+interface CompletedPolicy {
+  _id: string;
+  propertyDetails: {
+    propertyType: string;
+    address: string;
+    buildingValue: number;
+  };
+  requestDetails: {
+    coverageType: string;
+    policyDuration: string;
+  };
+  status: string;
+  updatedAt: string;
+  surveyNotes?: string;
+  adminNotes?: string;
+  rejectionReason?: string;
+  surveyDocument?: string | { url: string };
+}
+
 const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
-  const [completedPolicies, setCompletedPolicies] = useState<PolicyRequest[]>([]);
-  const [rejectedPolicies, setRejectedPolicies] = useState<PolicyRequest[]>([]);
+  const [completedPolicies, setCompletedPolicies] = useState<CompletedPolicy[]>([]);
+  const [rejectedPolicies, setRejectedPolicies] = useState<CompletedPolicy[]>([]);
   const [mergedReports, setMergedReports] = useState<UserReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [policyToDelete, setPolicyToDelete] = useState<PolicyRequest | null>(null);
+  const [policyToDelete, setPolicyToDelete] = useState<CompletedPolicy | null>(null);
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,6 +42,27 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [selectedPolicyForClaim, setSelectedPolicyForClaim] = useState<string | null>(null);
   const [claimSubmitting, setClaimSubmitting] = useState(false);
   const [claimReason, setClaimReason] = useState('');
+
+  const mapPolicyForDisplay = (policy: BuilderLiabilityPolicy): CompletedPolicy => ({
+    _id: policy._id,
+    propertyDetails: {
+      propertyType: policy.project?.coverTypeIdxDetails || "Builder Liability",
+      address: policy.project?.address || policy.builder?.address || "N/A",
+      buildingValue: Number(policy.project?.totalEstimateSum || 0),
+    },
+    requestDetails: {
+      coverageType: policy.project?.coverTypeIdxDetails || "N/A",
+      policyDuration: "N/A",
+    },
+    status: policy.status,
+    updatedAt: String(policy.updatedAt),
+    surveyNotes: policy.surveyNotes,
+    adminNotes: policy.adminNotes,
+    rejectionReason: policy.rejectionReason,
+    surveyDocument: policy.surveyDocument?.cloudinaryUrl
+      ? { url: policy.surveyDocument.cloudinaryUrl }
+      : undefined,
+  });
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -57,8 +98,8 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
         const completed = completedResponse.data.policies || [];
 
         // Separate completed and rejected policies
-        setCompletedPolicies([...approved, ...surveyed, ...completed]);
-        setRejectedPolicies(rejected);
+        setCompletedPolicies([...approved, ...surveyed, ...completed].map(mapPolicyForDisplay));
+        setRejectedPolicies(rejected.map(mapPolicyForDisplay));
 
         // Set merged reports (these are the new dual surveyor reports)
         if (reportsResponse.success) {
@@ -78,7 +119,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
     window.open(documentUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handleDeletePolicy = async (policy: PolicyRequest) => {
+  const handleDeletePolicy = async (policy: CompletedPolicy) => {
     try {
       await builderLiabilityPolicyAPI.deletePolicy(policy._id);
       setCompletedPolicies(prev => prev.filter(p => p._id !== policy._id));

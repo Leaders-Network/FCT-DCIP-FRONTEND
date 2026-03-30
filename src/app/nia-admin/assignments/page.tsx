@@ -67,6 +67,27 @@ const NIAAutomatedAssignmentsPage = () => {
     fetchAssignments();
   }, [filters]);
 
+  const buildStatsFromAssignments = (items: Assignment[]): AssignmentStats => {
+    const byStatus: Record<string, number> = {};
+    const byPriority: Record<string, number> = {};
+
+    let overdueCount = 0;
+    for (const item of items) {
+      byStatus[item.status] = (byStatus[item.status] || 0) + 1;
+      byPriority[item.priority] = (byPriority[item.priority] || 0) + 1;
+      if (new Date(item.deadline) < new Date() && item.status !== 'completed' && item.status !== 'cancelled') {
+        overdueCount += 1;
+      }
+    }
+
+    return {
+      total: items.length,
+      byStatus,
+      byPriority,
+      overdueCount
+    };
+  };
+
   const fetchAssignments = async () => {
     try {
       setLoading(true);
@@ -84,14 +105,11 @@ const NIAAutomatedAssignmentsPage = () => {
 
       const params: AssignmentParams = {
         page: 1,
-        limit: 100,
+        limit: 200,
         sortBy: 'assignedAt',
         sortOrder: 'desc'
       };
 
-      if (filters.status !== 'all') {
-        params.status = filters.status;
-      }
       if (filters.priority !== 'all') {
         params.priority = filters.priority;
       }
@@ -99,32 +117,67 @@ const NIAAutomatedAssignmentsPage = () => {
         params.search = filters.search;
       }
 
-      const response = await adminApi.getAssignments(params);
+      // Some backend deployments default to returning only `completed` when `status` is omitted.
+      // To ensure the "All Statuses" view actually shows everything, explicitly fetch each status and merge.
+      if (filters.status === 'all') {
+        const statuses: Array<Assignment['status']> = ['assigned', 'accepted', 'in_progress', 'completed', 'rejected', 'cancelled'];
 
-      if (response.success) {
-        setAssignments(response.data.assignments || []);
+        const responses = await Promise.all(
+          statuses.map((status) => adminApi.getAssignments({ ...params, status }))
+        );
 
-        // Transform statistics to match frontend expectations
-        const statusBreakdown = response.data.statistics?.statusBreakdown || [];
-        const byStatus: Record<string, number> = {};
-        statusBreakdown.forEach((item: { _id: string; count: number }) => {
-          byStatus[item._id] = item.count;
-        });
+        const firstError = responses.find((r) => !r?.success);
+        if (firstError && !firstError.success) {
+          throw new Error(firstError.message || 'Failed to load assignments');
+        }
 
-        const priorityBreakdown = response.data.statistics?.priorityBreakdown || [];
-        const byPriority: Record<string, number> = {};
-        priorityBreakdown.forEach((item: { _id: string; count: number }) => {
-          byPriority[item._id] = item.count;
-        });
+        const merged = new Map<string, Assignment>();
+        for (const r of responses) {
+          for (const item of (r?.data?.assignments || []) as Assignment[]) {
+            merged.set(item._id, item);
+          }
+        }
 
-        setStats({
-          total: response.data.pagination?.totalRecords || 0,
-          byStatus,
-          byPriority,
-          overdueCount: response.data.statistics?.overdueAssignments || 0
-        });
+        const mergedAssignments = Array.from(merged.values()).sort(
+          (a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime()
+        );
+
+        setAssignments(mergedAssignments);
+        setStats(buildStatsFromAssignments(mergedAssignments));
       } else {
-        throw new Error(response.message || 'Failed to load assignments');
+        const response = await adminApi.getAssignments({ ...params, status: filters.status });
+
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to load assignments');
+        }
+
+        const list = (response.data.assignments || []) as Assignment[];
+        setAssignments(list);
+
+        // Prefer server-side stats when available; fall back to local stats otherwise.
+        const statusBreakdown = response.data.statistics?.statusBreakdown || [];
+        const priorityBreakdown = response.data.statistics?.priorityBreakdown || [];
+
+        if (statusBreakdown.length || priorityBreakdown.length) {
+          const byStatus: Record<string, number> = {};
+          statusBreakdown.forEach((item: { _id: string; count: number }) => {
+            byStatus[item._id] = item.count;
+          });
+
+          const byPriority: Record<string, number> = {};
+          priorityBreakdown.forEach((item: { _id: string; count: number }) => {
+            byPriority[item._id] = item.count;
+          });
+
+          setStats({
+            total: response.data.pagination?.totalRecords || list.length,
+            byStatus,
+            byPriority,
+            overdueCount: response.data.statistics?.overdueAssignments || 0
+          });
+        } else {
+          setStats(buildStatsFromAssignments(list));
+        }
       }
     } catch (error) {
       console.error('NIA Assignments fetch error:', error);
@@ -140,6 +193,7 @@ const NIAAutomatedAssignmentsPage = () => {
       accepted: { color: 'bg-green-100 text-green-800', label: 'Accepted', icon: CheckCircle },
       in_progress: { color: 'bg-yellow-100 text-yellow-800', label: 'In Progress', icon: Clock },
       completed: { color: 'bg-emerald-100 text-emerald-800', label: 'Completed', icon: CheckCircle },
+      rejected: { color: 'bg-orange-100 text-orange-800', label: 'Rejected', icon: AlertTriangle },
       cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled', icon: AlertTriangle }
     };
 
@@ -284,6 +338,7 @@ const NIAAutomatedAssignmentsPage = () => {
             <option value="accepted">Accepted</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
+            <option value="rejected">Rejected</option>
             <option value="cancelled">Cancelled</option>
           </select>
 

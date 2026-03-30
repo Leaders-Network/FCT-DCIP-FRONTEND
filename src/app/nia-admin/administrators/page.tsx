@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { getAuthToken } from '@/utils/auth';
 import {
     UserPlus,
     Search,
@@ -61,14 +62,17 @@ const NIAAdministratorsPage = () => {
     const fetchNIAAdmins = async () => {
         try {
             setLoading(true);
-            // Try NIA admin token first, then fall back to regular token
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getAuthToken('nia-admin');
 
             if (!token) {
-                throw new Error('No authentication token found');
+                // If not authenticated as NIA admin, show a friendly message but don't throw
+                setError('You must be logged in as a NIA administrator to view this page.');
+                setAdmins([]);
+                return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/nia-admin`, {
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            const response = await fetch(`${baseUrl}/nia-admin`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -83,12 +87,14 @@ const NIAAdministratorsPage = () => {
 
             if (data.success) {
                 setAdmins(data.data.niaAdmins || []);
+                setError(null);
             } else {
                 throw new Error(data.message || 'Failed to load administrators');
             }
         } catch (error) {
             console.error('NIA admins fetch error:', error);
             setError(error instanceof Error ? error.message : 'Failed to load administrators');
+            setAdmins([]);
         } finally {
             setLoading(false);
         }
@@ -97,8 +103,7 @@ const NIAAdministratorsPage = () => {
     const handleCreateAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            // Try NIA admin token first, then fall back to regular token
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getAuthToken('nia-admin');
 
             if (!token) {
                 throw new Error('No authentication token found');
@@ -161,7 +166,7 @@ const NIAAdministratorsPage = () => {
         if (!selectedAdmin) return;
 
         try {
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getAuthToken('nia-admin');
 
             if (!token) {
                 throw new Error('No authentication token found');
@@ -222,7 +227,7 @@ const NIAAdministratorsPage = () => {
         if (!selectedAdmin) return;
 
         try {
-            const token = localStorage.getItem('niaAdminToken') || localStorage.getItem('token');
+            const token = getAuthToken('nia-admin');
 
             if (!token) {
                 throw new Error('No authentication token found');

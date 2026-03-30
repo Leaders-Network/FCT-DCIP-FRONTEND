@@ -14,7 +14,7 @@ import {
     Eye
 } from 'lucide-react';
 import api from '@/services/api';
-import type { BrokerPolicyRequest, BrokerClaimStatusHistory } from '@/types/api.types';
+import type { BrokerPolicyRequest } from '@/types/api.types';
 
 // Use the proper type from api.types.ts
 type Claim = BrokerPolicyRequest;
@@ -286,11 +286,13 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                                         <div>
                                             <p className="text-xs text-gray-500 mb-1">Submitted</p>
                                             <p className="text-sm font-medium text-gray-900">
-                                                {new Date(claim.submissionDate).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric'
-                                                })}
+                                                {claim.submissionDate
+                                                    ? new Date(claim.submissionDate).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })
+                                                    : 'N/A'}
                                             </p>
                                         </div>
                                     </div>
@@ -320,7 +322,9 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                                 {/* Actions */}
                                 <div className="flex items-center justify-between">
                                     <p className="text-xs text-gray-500">
-                                        Last updated: {lastUpdate ? formatDate(lastUpdate.changedAt) : formatDate(claim.submissionDate)}
+                                        Last updated: {lastUpdate
+                                            ? formatDate(lastUpdate.changedAt)
+                                            : formatDate(claim.submissionDate || claim.updatedAt)}
                                     </p>
                                     <button
                                         onClick={() => handleViewDetails(claim)}
@@ -484,41 +488,6 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                                 <div className="text-center py-8">
                                     <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                                     <p className="text-gray-600">Unable to load claim details</p>
-                                </div>
-                            )}
-
-                            {/* Status History - Not available in list view */}
-                            {false && selectedClaim.brokerStatusHistory && selectedClaim.brokerStatusHistory.length > 0 && (
-                                <div className="mb-6">
-                                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Status History</h4>
-                                    <div className="space-y-3">
-                                        {selectedClaim.brokerStatusHistory.map((history: BrokerClaimStatusHistory, index: number) => {
-                                            const config = getStatusConfig(history.status);
-                                            const HistoryIcon = config.icon;
-                                            return (
-                                                <div key={index} className={`p-4 rounded-lg border ${config.bg} ${config.border}`}>
-                                                    <div className="flex items-start gap-3">
-                                                        <HistoryIcon className={`w-5 h-5 ${config.text} flex-shrink-0 mt-0.5`} />
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center justify-between mb-1">
-                                                                <span className={`font-semibold ${config.text}`}>
-                                                                    {config.label}
-                                                                </span>
-                                                                <span className="text-xs text-gray-600">
-                                                                    {formatDate(history.changedAt)}
-                                                                </span>
-                                                            </div>
-                                                            {history.notes && (
-                                                                <p className="text-sm text-gray-700">
-                                                                    {history.notes}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
                                 </div>
                             )}
 

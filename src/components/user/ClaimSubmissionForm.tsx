@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, X, CheckCircle, AlertCircle, Loader2, Search } from 'lucide-react';
 import type { Policy, FormErrors, ClaimRequest } from '@/types/claims';
 import api from '@/services/api';
 
@@ -21,9 +21,44 @@ const ClaimSubmissionForm: React.FC<ClaimSubmissionFormProps> = ({
     const [policyDetails, setPolicyDetails] = useState<Policy | null>(null);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [isValidatingPolicy, setIsValidatingPolicy] = useState(false);
+    const [isSearchingPolicies, setIsSearchingPolicies] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [policySearchResults, setPolicySearchResults] = useState<Policy[]>([]);
+    const [showPolicySuggestions, setShowPolicySuggestions] = useState(false);
     const [errors, setErrors] = useState<FormErrors>({});
     const [successMessage, setSuccessMessage] = useState('');
+
+    const searchEligiblePolicies = async (searchTerm: string) => {
+        const trimmedSearchTerm = searchTerm.trim();
+        if (trimmedSearchTerm.length < 2) {
+            setPolicySearchResults([]);
+            return;
+        }
+
+        setIsSearchingPolicies(true);
+
+        try {
+            const response = await api.get('/policy/search', {
+                params: {
+                    userId,
+                    query: trimmedSearchTerm,
+                    claimEligibleOnly: true
+                }
+            });
+
+            const data = response.data;
+            if (data.success) {
+                setPolicySearchResults(data.policies || []);
+                setShowPolicySuggestions(true);
+            } else {
+                setPolicySearchResults([]);
+            }
+        } catch (error) {
+            setPolicySearchResults([]);
+        } finally {
+            setIsSearchingPolicies(false);
+        }
+    };
 
     const validatePolicyNumber = async (policyNum: string) => {
         if (!policyNum.trim()) {
@@ -36,7 +71,7 @@ const ClaimSubmissionForm: React.FC<ClaimSubmissionFormProps> = ({
 
         try {
             const response = await api.get(
-                `/builder-liability-policy/validate/${encodeURIComponent(policyNum)}?userId=${userId}`
+                `/builder-liability-policy/validate/${encodeURIComponent(policyNum)}?userId=${userId}&claimEligibleOnly=true`
             );
 
             const data = response.data;
@@ -64,11 +99,23 @@ const ClaimSubmissionForm: React.FC<ClaimSubmissionFormProps> = ({
 
     const handlePolicyNumberChange = (value: string) => {
         setPolicyNumber(value);
-        if (value.trim().length > 3) {
-            validatePolicyNumber(value);
-        } else {
-            setPolicyDetails(null);
+        setPolicyDetails(null);
+        setErrors(prev => ({ ...prev, policyNumber: undefined }));
+
+        if (!value.trim()) {
+            setPolicySearchResults([]);
+            setShowPolicySuggestions(false);
+            return;
         }
+
+        searchEligiblePolicies(value);
+    };
+
+    const handlePolicySelect = async (policy: Policy) => {
+        setPolicyNumber(policy.policyNumber);
+        setShowPolicySuggestions(false);
+        setPolicySearchResults([]);
+        await validatePolicyNumber(policy.policyNumber);
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,18 +274,71 @@ const ClaimSubmissionForm: React.FC<ClaimSubmissionFormProps> = ({
                             type="text"
                             value={policyNumber}
                             onChange={(e) => handlePolicyNumberChange(e.target.value)}
+                            onFocus={() => {
+                                if (policySearchResults.length > 0) {
+                                    setShowPolicySuggestions(true);
+                                }
+                            }}
+                            onBlur={() => {
+                                window.setTimeout(() => {
+                                    setShowPolicySuggestions(false);
+                                }, 150);
+                                if (policyNumber.trim().length > 3) {
+                                    validatePolicyNumber(policyNumber);
+                                }
+                            }}
                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.policyNumber ? 'border-red-500' : 'border-gray-300'
                                 }`}
-                            placeholder="Enter policy number"
+                            placeholder="Search completed and paid policies"
                         />
+                        {!isValidatingPolicy && !isSearchingPolicies && (
+                            <Search className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                        )}
                         {isValidatingPolicy && (
                             <Loader2 className="absolute right-3 top-3 w-5 h-5 text-blue-600 animate-spin" />
                         )}
+                        {!isValidatingPolicy && isSearchingPolicies && (
+                            <Loader2 className="absolute right-3 top-3 w-5 h-5 text-blue-600 animate-spin" />
+                        )}
                     </div>
+                    {showPolicySuggestions && (policySearchResults.length > 0 || (policyNumber.trim().length >= 2 && !isSearchingPolicies)) && (
+                        <div className="mt-2 border border-gray-200 rounded-lg bg-white shadow-lg overflow-hidden">
+                            {policySearchResults.length > 0 ? (
+                                <div className="max-h-64 overflow-y-auto">
+                                    {policySearchResults.map((policy) => (
+                                        <button
+                                            key={policy._id}
+                                            type="button"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={() => handlePolicySelect(policy)}
+                                            className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                                        >
+                                            <p className="text-sm font-medium text-gray-900">{policy.policyNumber}</p>
+                                            <p className="text-xs text-gray-600 mt-1">
+                                                {policy.coverageType}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {policy.address || policy.builderName || 'Address unavailable'}
+                                            </p>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="px-4 py-3 text-sm text-gray-600">
+                                    No completed and paid policies match your search.
+                                </div>
+                            )}
+                        </div>
+                    )}
                     {errors.policyNumber && (
                         <p className="mt-1 text-sm text-red-600 flex items-center">
                             <AlertCircle className="w-4 h-4 mr-1" />
                             {errors.policyNumber}
+                        </p>
+                    )}
+                    {!errors.policyNumber && (
+                        <p className="mt-1 text-xs text-gray-500">
+                            Only completed and paid policies are eligible for claims.
                         </p>
                     )}
                     {policyDetails && (
@@ -247,6 +347,11 @@ const ClaimSubmissionForm: React.FC<ClaimSubmissionFormProps> = ({
                                 <CheckCircle className="w-4 h-4 mr-2" />
                                 Policy found: {policyDetails.policyType} - {policyDetails.coverageType}
                             </p>
+                            {(policyDetails.address || policyDetails.builderName) && (
+                                <p className="text-xs text-green-700 mt-2">
+                                    {policyDetails.address || policyDetails.builderName}
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>

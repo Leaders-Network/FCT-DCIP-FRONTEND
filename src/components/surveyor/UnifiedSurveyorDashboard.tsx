@@ -17,7 +17,9 @@ import {
     Award
 } from "lucide-react";
 import Link from "next/link";
-import { getSurveyorAssignments } from "@/services/api";
+import { getSurveyorAssignments, getSurveyorProfile } from "@/services/api";
+import { getCookie } from "@/utils/cookies";
+import DashboardErrorBanner from "@/components/shared/DashboardErrorBanner";
 
 interface Assignment {
     _id: string;
@@ -64,15 +66,34 @@ interface StatCardProps {
     icon: React.ComponentType<{ className?: string }>;
     label: string;
     value: string | number;
-    color: string;
+    color: 'blue' | 'yellow' | 'purple' | 'green' | 'orange';
     subtitle?: string;
 }
 
 const StatCard = ({ icon, label, value, color, subtitle }: StatCardProps) => (
+    // Avoid dynamic Tailwind classes so production builds keep the styles.
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div className="flex items-center">
-            <div className={`p-2 bg-${color}-100 rounded-lg flex-shrink-0`}>
-                {React.createElement(icon, { className: `h-6 w-6 text-${color}-600` })}
+            <div
+                className={[
+                    "p-2 rounded-lg flex-shrink-0",
+                    color === "blue" ? "bg-blue-100" : "",
+                    color === "yellow" ? "bg-yellow-100" : "",
+                    color === "purple" ? "bg-purple-100" : "",
+                    color === "green" ? "bg-green-100" : "",
+                    color === "orange" ? "bg-orange-100" : ""
+                ].filter(Boolean).join(" ")}
+            >
+                {React.createElement(icon, {
+                    className: [
+                        "h-6 w-6",
+                        color === "blue" ? "text-blue-600" : "",
+                        color === "yellow" ? "text-yellow-600" : "",
+                        color === "purple" ? "text-purple-600" : "",
+                        color === "green" ? "text-green-600" : "",
+                        color === "orange" ? "text-orange-600" : ""
+                    ].filter(Boolean).join(" ")
+                })}
             </div>
             <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-600">{label}</p>
@@ -95,54 +116,111 @@ const UnifiedSurveyorDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [friendlyError, setFriendlyError] = useState<string | null>(null);
+    const [surveyorName, setSurveyorName] = useState("Surveyor");
 
     useEffect(() => {
         fetchSurveyorData();
     }, []);
 
+    useEffect(() => {
+        const safeName = (value?: string) => {
+            const name = (value || "").trim().replace(/\s+/g, " ");
+            if (!name || name.toLowerCase() === "surveyor") return null;
+            return name;
+        };
+
+        const applyName = (value?: string) => {
+            const name = safeName(value);
+            if (name) {
+                setSurveyorName(name);
+                localStorage.setItem("surveyorName", name);
+                return true;
+            }
+            return false;
+        };
+
+        const hydrateName = async () => {
+            const fromStorage = localStorage.getItem("surveyorName");
+            if (applyName(fromStorage || undefined)) return;
+
+            const infoCookie = getCookie("surveyorInfo");
+            if (infoCookie) {
+                try {
+                    const parsed = JSON.parse(infoCookie) as { name?: string };
+                    if (applyName(parsed?.name)) return;
+                } catch (error) {
+                    console.error("Failed to parse surveyorInfo cookie:", error);
+                }
+            }
+
+            const nameCookie = getCookie("surveyorName");
+            if (applyName(nameCookie || undefined)) return;
+
+            try {
+                const profileResponse = await getSurveyorProfile();
+                const surveyor = profileResponse?.data;
+                const firstName = surveyor?.userId?.firstname || "";
+                const lastName = surveyor?.userId?.lastname || "";
+                applyName(`${firstName} ${lastName}`);
+            } catch (error) {
+                console.error("Failed to hydrate surveyor name:", error);
+            }
+        };
+
+        const onNameUpdated = () => {
+            const value = localStorage.getItem("surveyorName");
+            applyName(value || undefined);
+        };
+
+        hydrateName();
+        window.addEventListener("surveyor-name-updated", onNameUpdated);
+        return () => window.removeEventListener("surveyor-name-updated", onNameUpdated);
+    }, []);
+
     const fetchSurveyorData = async () => {
         setLoading(true);
         setError(null);
+        setFriendlyError(null);
         
         try {
             // Fetch surveyor's assignments using surveyor-specific endpoint
-            const assignmentsResponse = await getSurveyorAssignments('all', 1, 100);
+            const assignmentsResponse = await getSurveyorAssignments({ status: 'all', page: 1, limit: 100 });
 
             const fetchedAssignments = assignmentsResponse?.data?.assignments || [];
-            setAssignments(fetchedAssignments);
+            if (fetchedAssignments.length) {
+                setAssignments(fetchedAssignments);
 
-            // Extract surveyor info from first assignment or use defaults
-            if (fetchedAssignments.length > 0) {
-                const surveyorInfo = fetchedAssignments[0].surveyorId;
-                setSurveyor({
-                    firstName: surveyorInfo?.firstname || '',
-                    lastName: surveyorInfo?.lastname || ''
+                // Calculate stats
+                const total = fetchedAssignments.length;
+                const assigned = fetchedAssignments.filter((a: Assignment) => a.status === 'assigned').length;
+                const inProgress = fetchedAssignments.filter((a: Assignment) =>
+                    a.status === 'accepted' || a.status === 'in_progress'
+                ).length;
+                const completed = fetchedAssignments.filter((a: Assignment) => a.status === 'completed').length;
+
+                setStats({
+                    total,
+                    assigned,
+                    inProgress,
+                    completed,
+                    rating: 4.5 // This should come from surveyor profile
                 });
+            } else {
+                setAssignments([]);
+                setFriendlyError("No surveyor assignments found. If this seems wrong, please contact the Gladfaith team.");
             }
-
-            // Calculate stats
-            const total = fetchedAssignments.length;
-            const assigned = fetchedAssignments.filter((a: Assignment) => a.status === 'assigned').length;
-            const inProgress = fetchedAssignments.filter((a: Assignment) =>
-                a.status === 'accepted' || a.status === 'in_progress'
-            ).length;
-            const completed = fetchedAssignments.filter((a: Assignment) => a.status === 'completed').length;
-
-            setStats({
-                total,
-                assigned,
-                inProgress,
-                completed,
-                rating: 4.5 // This should come from surveyor profile
-            });
 
         } catch (err) {
             console.error("Failed to fetch surveyor data:", err);
             setError("Failed to load dashboard data. Please try again later.");
+            setFriendlyError("We couldn't load your survey dashboard right now. Please refresh or contact the Gladfaith team.");
         } finally {
             setLoading(false);
         }
     };
+
+    const firstName = surveyorName.split(" ")[0];
 
     const recentAssignments = assignments.slice(0, 5);
 
@@ -223,7 +301,7 @@ const UnifiedSurveyorDashboard = () => {
         );
     }
 
-    if (error) {
+    if (error && !friendlyError) {
         return (
             <div className="flex flex-col items-center justify-center h-64 bg-red-50 border border-red-200 rounded-lg">
                 <AlertCircle className="h-12 w-12 text-red-500" />
@@ -241,17 +319,20 @@ const UnifiedSurveyorDashboard = () => {
 
     return (
         <div className="space-y-8">
+            {friendlyError && (
+                <DashboardErrorBanner message={friendlyError} />
+            )}
             {/* Header */}
             <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-6 text-white">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold">Welcome back, {surveyor.firstName} {surveyor.lastName}!</h1>
+                        <h1 className="text-2xl sm:text-3xl font-bold">Welcome back, {firstName}!</h1>
                         <p className="mt-1 opacity-90">
                             Unified Surveyor Dashboard - LGA-Based Assignment System
                         </p>
                     </div>
-                    <div className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
+                    <div className="sm:text-right">
+                        <div className="flex items-center sm:justify-end space-x-2">
                             <Award className="w-5 h-5" />
                             <span className="text-xl font-bold">{stats.rating}</span>
                             <span className="text-sm opacity-75">/5.0</span>
@@ -276,7 +357,7 @@ const UnifiedSurveyorDashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
                 <StatCard
                     icon={FileText}
                     label="Total Assignments"
@@ -312,7 +393,7 @@ const UnifiedSurveyorDashboard = () => {
 
             {/* Recent Assignments */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold text-gray-900">Recent Assignments</h2>
                     <Link href="/surveyor/dashboard/assignments" className="text-green-600 hover:text-green-700 text-sm font-medium">
                         View All
@@ -322,21 +403,21 @@ const UnifiedSurveyorDashboard = () => {
                 <div className="divide-y divide-gray-200">
                     {recentAssignments.length > 0 ? (
                         recentAssignments.map((assignment) => (
-                            <div key={assignment._id} className="p-6 hover:bg-gray-50 transition-colors">
-                                <div className="flex items-start justify-between">
+                            <div key={assignment._id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center space-x-3 mb-3">
                                             <div className="p-2 bg-gray-100 rounded-lg">
                                                 <Building className="h-5 w-5 text-gray-600" />
                                             </div>
                                             <div className="flex-1">
-                                                <div className="flex items-center space-x-2">
-                                                    <h3 className="text-md font-semibold text-gray-900">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h3 className="text-md font-semibold text-gray-900 break-words">
                                                         Policy #{assignment.policyId?.policyNumber}
                                                     </h3>
                                                     {getPriorityBadge(assignment.priority)}
                                                 </div>
-                                                <p className="text-sm text-gray-600 font-medium">
+                                                <p className="text-sm text-gray-600 font-medium break-words">
                                                     {assignment.policyId?.builder?.nameOfBuilder}
                                                 </p>
                                             </div>
@@ -347,7 +428,7 @@ const UnifiedSurveyorDashboard = () => {
                                             <div className="flex items-start">
                                                 <MapPin className="w-4 h-4 text-gray-500 mt-0.5 mr-2" />
                                                 <div className="flex-1">
-                                                    <p className="text-sm text-gray-700">
+                                                    <p className="text-sm text-gray-700 break-words">
                                                         {assignment.location?.address || assignment.policyId?.project?.address || assignment.policyId?.builder?.address || 'Address not available'}
                                                     </p>
                                                     {(assignment.location?.lga || assignment.policyId?.project?.lga) && (
@@ -391,7 +472,7 @@ const UnifiedSurveyorDashboard = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col items-end space-y-2">
+                                    <div className="flex flex-row sm:flex-col items-start sm:items-end gap-3 sm:gap-2">
                                         {getStatusBadge(assignment.status)}
                                         <Link
                                             href={`/surveyor/dashboard/assignments/${assignment._id}`}
@@ -417,7 +498,7 @@ const UnifiedSurveyorDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <Link href="/surveyor/dashboard/assignments" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-green-500 transition-colors">
                     <div className="flex items-center space-x-3">
                         <div className="p-3 bg-green-100 rounded-lg">

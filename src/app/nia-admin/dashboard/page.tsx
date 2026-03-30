@@ -12,6 +12,9 @@ import {
     TrendingUp
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
+import { exportNiaAssignmentsCsv, triggerCsvDownload } from '@/services/api';
+import DashboardErrorBanner from '@/components/shared/DashboardErrorBanner';
+import ExportCsvPanel from '@/components/shared/ExportCsvPanel';
 
 interface DashboardStats {
     totalSurveyors: number;
@@ -43,6 +46,7 @@ const NIAAdminDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [friendlyError, setFriendlyError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchDashboardData();
@@ -52,6 +56,7 @@ const NIAAdminDashboard = () => {
         try {
             setLoading(true);
             setError(null);
+            setFriendlyError(null);
 
             // Fetch surveyors
             const surveyorsResponse = await adminApi.getSurveyors({});
@@ -94,6 +99,7 @@ const NIAAdminDashboard = () => {
         } catch (error) {
             console.error('Dashboard data fetch error:', error);
             setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
+            setFriendlyError('We could not load the NIA admin dashboard. Please refresh, and contact the Gladfaith team if it persists.');
         } finally {
             setLoading(false);
         }
@@ -117,7 +123,7 @@ const NIAAdminDashboard = () => {
         );
     }
 
-    if (error) {
+    if (error && !friendlyError) {
         return (
             <div className="flex flex-col items-center justify-center h-64 bg-red-50 border border-red-200 rounded-lg">
                 <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
@@ -137,7 +143,10 @@ const NIAAdminDashboard = () => {
     const adminName = adminInfo.name || 'NIA Admin';
 
     return (
-        <div className="space-y-6">
+            <div className="space-y-6">
+            {friendlyError && (
+                <DashboardErrorBanner message={friendlyError} />
+            )}
             {/* Welcome Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
                 <div className="flex items-center justify-between">
@@ -337,6 +346,15 @@ const NIAAdminDashboard = () => {
                     </a>
                 </div>
             </div>
+
+            {/* CSV Export */}
+            <ExportCsvPanel
+                onExport={async (startDate, endDate) => {
+                    const csv = await exportNiaAssignmentsCsv(startDate, endDate);
+                    triggerCsvDownload(csv, 'nia_assignments.csv');
+                }}
+                buttonLabel="Export Assignments CSV"
+            />
         </div>
     );
 };

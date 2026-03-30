@@ -9,6 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Assignment, Surveyor, PolicyRequest } from "@/types/api.types";
+import { clearAuthTokens, decodeToken, getAuthToken } from "@/utils/auth";
 
 interface Notification {
     _id: string;
@@ -50,11 +51,24 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
     const [showSearchResults, setShowSearchResults] = useState(false);
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
+    const getDashboardToken = (): string | null => {
+        return getAuthToken('nia-admin');
+    };
+
     useEffect(() => {
         // Get admin info from localStorage
         const storedAdminInfo = localStorage.getItem("niaAdminInfo");
         if (storedAdminInfo) {
             setAdminInfo(JSON.parse(storedAdminInfo));
+        } else {
+            const decoded = decodeToken(getDashboardToken() || undefined) as { fullname?: string } | null;
+            if (decoded?.fullname) {
+                setAdminInfo({
+                    fullname: decoded.fullname,
+                    email: '',
+                    organization: 'AMMC'
+                });
+            }
         }
 
         // Fetch notifications
@@ -63,22 +77,37 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('/api/notifications', {
+            const token = getDashboardToken();
+            if (!token) {
+                setNotifications([]);
+                setNotificationCount(0);
+                return;
+            }
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            const response = await fetch(`${baseUrl}/notifications`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
             if (response.ok) {
                 const data = await response.json();
-                setNotifications(data.notifications || []);
-                setNotificationCount(data.unreadCount || 0);
+                setNotifications(data.data?.notifications || data.notifications || []);
+                setNotificationCount(data.data?.unreadCount || data.unreadCount || 0);
+            } else {
+                setNotifications([]);
+                setNotificationCount(0);
             }
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
+            setNotifications([]);
+            setNotificationCount(0);
         }
     };
 
     const handleLogout = () => {
+        clearAuthTokens();
         localStorage.removeItem("niaAdminToken");
         localStorage.removeItem("niaAdminInfo");
         localStorage.removeItem("organization");
@@ -90,16 +119,21 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
         if (!searchQuery.trim()) return;
 
         try {
+            const token = getDashboardToken();
+            if (!token) {
+                return;
+            }
+
             // Search across multiple resources
             const [assignmentsRes, surveyorsRes, policiesRes] = await Promise.all([
                 fetch(`/api/nia-admin/assignments?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 }),
                 fetch(`/api/nia-admin/surveyors?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 }),
                 fetch(`/api/nia-admin/policies?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
 
@@ -129,10 +163,15 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const handleNotificationClick = async (notificationId: string) => {
         try {
-            await fetch(`/api/notifications/${notificationId}/read`, {
+            const token = getDashboardToken();
+            if (!token) return;
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            await fetch(`${baseUrl}/notifications/${notificationId}/read`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
             fetchNotifications();
@@ -143,10 +182,15 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
 
     const markAllAsRead = async () => {
         try {
-            await fetch('/api/notifications/mark-all-read', {
+            const token = getDashboardToken();
+            if (!token) return;
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+            await fetch(`${baseUrl}/notifications/mark-all-read`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('niaAdminToken')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
             fetchNotifications();

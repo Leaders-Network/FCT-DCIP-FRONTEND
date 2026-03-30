@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAuthToken } from "@/utils/auth";
+import { getAuthToken, TokenType } from "@/utils/auth";
 import {
     BuilderIdentity,
     OrganizationInfo,
@@ -34,13 +34,15 @@ const builderLiabilityApi = axios.create({
     },
 });
 
+const getContextToken = (tokenType: TokenType) => getAuthToken(tokenType);
+
 // Request interceptor
 builderLiabilityApi.interceptors.request.use(
     (config) => {
         config.headers['apikey'] = API_KEY;
 
         // Determine token type based on current page context
-        let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'surveyor' | undefined;
+        let tokenType: TokenType | undefined;
 
         const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
@@ -56,7 +58,7 @@ builderLiabilityApi.interceptors.request.use(
             tokenType = 'user';
         }
 
-        const token = getAuthToken(tokenType);
+        const token = tokenType ? getContextToken(tokenType) : getAuthToken();
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
@@ -243,6 +245,87 @@ export const builderLiabilityPolicyAPI = {
             return response.data;
         } catch (error) {
             console.error("Failed to validate Builder Liability Policy section:", error);
+            throw error;
+        }
+    },
+
+    confirmEgolepayPayment: async (
+        reference: string,
+        gatewayResponse: Record<string, unknown>,
+        policyId?: string
+    ): Promise<{
+        success: boolean;
+        message: string;
+        data?: unknown;
+        niipWithdrawal?: {
+            success?: boolean;
+            skipped?: boolean;
+            reason?: string;
+            status?: number;
+            body?: {
+                error?: string;
+                message?: string;
+                raw?: string;
+                niipUrl?: string;
+                statusCode?: number;
+                looksLike404Page?: boolean;
+                [key: string]: unknown;
+            };
+            error?: string;
+        };
+    }> => {
+        try {
+            const response = await builderLiabilityApi.post('/payment/Egolepay/confirm', {
+                reference,
+                gatewayResponse,
+                policyId
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Failed to confirm EgolePay payment:", error);
+            throw error;
+        }
+    },
+
+    // Retry NIIP withdrawal for a policy
+    retryNiipWithdrawal: async (policyId: string): Promise<any> => {
+        try {
+            const response = await builderLiabilityApi.post(`/payment/niip/retry/${policyId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to retry NIIP withdrawal:", error);
+            throw error;
+        }
+    },
+
+    // Calculate NIIP premium for an approved policy
+    calculatePremium: async (policyId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            premiumAmount: number;
+            premiumDetails: {
+                amount: number;
+                currency?: string;
+                invoiceNumber?: string | null;
+                transactionReference?: string | null;
+                company?: Record<string, unknown>;
+                builder?: Record<string, unknown>;
+                estimates?: Record<string, unknown>;
+            };
+            nextAction?: {
+                type: string;
+                label: string;
+                method?: string;
+                url?: string;
+            };
+        };
+    }> => {
+        try {
+            const response = await builderLiabilityApi.post(`/payment/calculate-premium/${policyId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to calculate premium:", error);
             throw error;
         }
     }

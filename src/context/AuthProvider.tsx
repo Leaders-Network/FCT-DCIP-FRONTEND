@@ -82,13 +82,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (email: string, password: string, userType: 'user' | 'employee') => {
     try {
+      removeAuthToken();
+
       if (userType === 'employee') {
         const response = await loginEmployee(email, password);
         const { token, employee } = response.data;
 
-        // Store token with correct type for employees
-        setAuthToken(token, 'admin'); // Default to admin for employees
+        // Store token with correct type for employees (super-admin gets its own token key)
+        const role = employee.employeeRole.role;
+        const tokenType = role === 'Super-admin' ? 'super-admin' : 'admin';
+        setAuthToken(token, tokenType);
         setCookie('user', JSON.stringify(employee), { expires: 7 });
+        if (role === 'Super-admin') {
+          setCookie('superAdminInfo', JSON.stringify(employee), { expires: 7 });
+        }
         setUser(employee);
         setState({
           isAuthenticated: true,
@@ -98,8 +105,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         });
 
         // Determine redirect based on employee role
-        const role = employee.employeeRole.role;
-        
         if (role === 'Super-admin') {
           // Redirect super-admin to a dashboard selector page
           router.push("/admin/dashboard-selector");

@@ -36,11 +36,12 @@ const handleLogin = async (e: React.FormEvent) => {
     }
 
     const { token, employee } = response.data;
+    const isSuperAdmin = employee.employeeRole.role === "Super-admin";
 
     // ❌ Block non-surveyors
-    if (employee.employeeRole.role !== "Surveyor") {
-      setError("Access denied. This portal is for surveyors only.");
-      toast.error("Access denied. This portal is for surveyors only.");
+    if (employee.employeeRole.role !== "Surveyor" && !isSuperAdmin) {
+      setError("Access denied. This portal is for surveyors and super admins only.");
+      toast.error("Access denied. This portal is for surveyors and super admins only.");
       setLoading(false);
       return;
     }
@@ -49,7 +50,7 @@ const handleLogin = async (e: React.FormEvent) => {
     setError("");
 
     // Store token
-    setAuthToken(token, "surveyor");
+    setAuthToken(token, isSuperAdmin ? "super-admin" : "surveyor");
 
     const storedToken = getCookie("surveyorToken");
     console.log("Token stored:", storedToken ? "Yes" : "No");
@@ -82,6 +83,26 @@ const handleLogin = async (e: React.FormEvent) => {
       secure: window.location.protocol === "https:",
       sameSite: "lax",
     });
+
+    setCookie("surveyorName", fullName, {
+      expires: 7,
+      path: "/",
+      secure: window.location.protocol === "https:",
+      sameSite: "lax",
+    });
+
+    setCookie("surveyorId", employee._id, {
+      expires: 7,
+      path: "/",
+      secure: window.location.protocol === "https:",
+      sameSite: "lax",
+    });
+
+    localStorage.setItem("surveyorName", fullName);
+    localStorage.setItem("surveyorId", employee._id);
+    localStorage.setItem("surveyorOrganization", organization);
+    localStorage.setItem("surveyorInfo", JSON.stringify(surveyorInfo));
+    window.dispatchEvent(new Event("surveyor-name-updated"));
 
     toast.success(`Welcome back, ${fullName}!`);
 

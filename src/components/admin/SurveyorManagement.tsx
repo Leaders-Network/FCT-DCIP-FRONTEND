@@ -12,10 +12,12 @@ import {
   Eye,
   Edit
 } from "lucide-react";
-import { Surveyor as BaseSurveyor, Assignment, PolicyRequest } from "@/types/api.types";
+import { Surveyor as BaseSurveyor } from "@/types/api.types";
+import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import Swal from "sweetalert2"
 
 type UserIdType = {
+  _id?: string;
   firstname?: string;
   lastname?: string;
   email?: string;
@@ -24,6 +26,17 @@ type UserIdType = {
 
 type Surveyor = BaseSurveyor & {
   userId?: UserIdType;
+};
+
+type FormAvailability = "available" | "busy" | "on-leave";
+
+type LightweightAssignment = {
+  _id: string;
+  surveyorId: string | null;
+  policyId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 interface SurveyorManagementProps {
@@ -38,7 +51,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   onDeleteSurveyor,
 }) => {
   const [surveyors, setSurveyors] = useState<Surveyor[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignments, setAssignments] = useState<LightweightAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,15 +94,50 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     maxAssignments: 5,
     dateOfBirth: "",
     qualifications: [] as string[],
-    availability: "available" as "available" | "busy" | "unavailable"
+    availability: "available" as FormAvailability
   });
+
+  const mapAvailabilityFromApi = (availability?: string): FormAvailability => {
+    if (availability === "busy" || availability === "on-leave") return availability;
+    return "available";
+  };
+
+  const getSurveyorEmployeeId = (surveyor: Surveyor | null) => {
+    const rawUserId = surveyor?.userId as UserIdType | undefined;
+    if (!rawUserId) return null;
+    if (typeof rawUserId === "string") return rawUserId;
+    return rawUserId._id || null;
+  };
+
+  const getSurveyorAssignmentStats = (surveyorEmployeeId: string | null) => {
+    if (!surveyorEmployeeId) {
+      return { total: 0, completed: 0, current: 0, rejected: 0 };
+    }
+
+    const surveyorAssignments = (assignments || []).filter(
+      assignment => assignment?.surveyorId === surveyorEmployeeId
+    );
+
+    const completed = surveyorAssignments.filter(a => a.status === "completed").length;
+    const rejected = surveyorAssignments.filter(a => a.status === "rejected").length;
+    const current = surveyorAssignments.filter(a =>
+      ["assigned", "accepted", "in_progress", "under_review"].includes(a.status)
+    ).length;
+
+    return {
+      total: surveyorAssignments.length,
+      completed,
+      current,
+      rejected
+    };
+  };
 
   // Initial load
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
       try {
-        const { adminApi, builderLiabilityPolicyAPI } = await import("@/services/api");
+        const { adminApi } = await import("@/services/api");
 
         // Fetch surveyors
         const surveyorResponse = await adminApi.getSurveyors({});
@@ -99,17 +147,20 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         }
 
         // Fetch assignments
-        const assignmentResponse = await builderLiabilityPolicyAPI.getAllPolicies({ status: 'all', page: 1, limit: 100 });
-        if (assignmentResponse?.data && Array.isArray(assignmentResponse.data)) {
-          const assignmentData = assignmentResponse.data?.map((policy: PolicyRequest) => ({
-            _id: policy._id,
-            surveyorId: policy.assignedSurveyors?.[0] || null,
-            ammcId: policy._id,
-            status: policy.status,
-            createdAt: policy.createdAt,
-            updatedAt: policy.updatedAt
-          })) || [];
+        const assignmentResponse = await adminApi.getAssignments({ page: 1, limit: 500 });
+        const assignmentPayload = assignmentResponse?.data?.assignments || assignmentResponse?.assignments || [];
+        if (Array.isArray(assignmentPayload)) {
+          const assignmentData = assignmentPayload.map((assignment: any) => ({
+            _id: assignment._id,
+            surveyorId: assignment?.surveyorId?._id || assignment?.surveyorId || null,
+            policyId: assignment?.policyId?._id || assignment?.policyId,
+            status: assignment.status,
+            createdAt: String(assignment.createdAt),
+            updatedAt: String(assignment.updatedAt)
+          }));
           setAssignments(assignmentData);
+        } else {
+          setAssignments([]);
         }
       } catch (error) {
         console.error("Failed to fetch initial data:", error);
@@ -178,13 +229,15 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
       // Backend may return metrics under different shapes; normalize safely
       const backendMetrics = resp?.data || resp?.performance || resp || null;
+      const surveyorEmployeeId = getSurveyorEmployeeId(surveyor);
+      const fallbackStats = getSurveyorAssignmentStats(surveyorEmployeeId);
 
       if (backendMetrics) {
         const performance = {
-          totalSurveys: (backendMetrics.totalSurveys ?? backendMetrics.total_surveys ?? backendMetrics.total) || assignments.filter(a => a.surveyorId === surveyor._id).length,
-          completedSurveys: (backendMetrics.completedSurveys ?? backendMetrics.completed_surveys ?? backendMetrics.completed) || assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'completed').length,
-          currentAssignments: (backendMetrics.currentAssignments ?? backendMetrics.current_assignments ?? backendMetrics.current) || getCurrentAssignments(surveyor._id),
-          rejectedSurveys: (backendMetrics.rejectedSurveys ?? backendMetrics.rejected_surveys ?? backendMetrics.rejected) || assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'rejected').length,
+          totalSurveys: (backendMetrics.totalSurveys ?? backendMetrics.total_surveys ?? backendMetrics.total) || fallbackStats.total,
+          completedSurveys: (backendMetrics.completedSurveys ?? backendMetrics.completed_surveys ?? backendMetrics.completed) || fallbackStats.completed,
+          currentAssignments: (backendMetrics.currentAssignments ?? backendMetrics.current_assignments ?? backendMetrics.current) || fallbackStats.current,
+          rejectedSurveys: (backendMetrics.rejectedSurveys ?? backendMetrics.rejected_surveys ?? backendMetrics.rejected) || fallbackStats.rejected,
           successRate: backendMetrics.successRate ?? backendMetrics.success_rate ?? parseFloat((backendMetrics.success || 0).toString()) ?? 0,
           avgCompletionTime: (backendMetrics.avgCompletionTime ?? backendMetrics.avg_completion_time ?? backendMetrics.avg) || 0,
           recentActivity: (backendMetrics.recentActivity ?? backendMetrics.recent_activity ?? backendMetrics.recent) || 0,
@@ -197,9 +250,11 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         setShowDetailsModal(true);
       } else {
         // If backend doesn't provide metrics, fall back to client-side computation
-        const surveyorAssignments = assignments.filter(a => a.surveyorId === surveyor._id);
+        const surveyorAssignments = (assignments || []).filter(a => a.surveyorId === surveyorEmployeeId);
         const completedAssignments = surveyorAssignments.filter(a => a.status === 'completed');
-        const inProgressAssignments = surveyorAssignments.filter(a => a.status === 'in_progress' || a.status === 'assigned');
+        const inProgressAssignments = surveyorAssignments.filter(a =>
+          ['assigned', 'accepted', 'in_progress', 'under_review'].includes(a.status)
+        );
         const rejectedAssignments = surveyorAssignments.filter(a => a.status === 'rejected');
 
         const totalSurveys = surveyorAssignments.length;
@@ -233,12 +288,14 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       }
     } catch (error) {
       console.error('Failed to fetch surveyor analytics:', error);
+      const surveyorEmployeeId = getSurveyorEmployeeId(surveyor);
+      const fallbackStats = getSurveyorAssignmentStats(surveyorEmployeeId);
       // Fallback to basic metrics
       const performance = {
-        totalSurveys: assignments.filter(a => a.surveyorId === surveyor._id).length,
-        completedSurveys: assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'completed').length,
-        currentAssignments: getCurrentAssignments(surveyor._id),
-        rejectedSurveys: assignments.filter(a => a.surveyorId === surveyor._id && a.status === 'rejected').length,
+        totalSurveys: fallbackStats.total,
+        completedSurveys: fallbackStats.completed,
+        currentAssignments: fallbackStats.current,
+        rejectedSurveys: fallbackStats.rejected,
         successRate: 0,
         avgCompletionTime: 0,
         recentActivity: 0,
@@ -312,9 +369,9 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         if (filterStatus === 'active') {
           return surveyorStatus === 'active' || surveyorStatus === 'available';
         } else if (filterStatus === 'inactive') {
-          return surveyorStatus === 'inactive' || surveyorStatus === 'unavailable';
+          return surveyorStatus === 'inactive' || surveyorStatus === 'unavailable' || surveyorStatus === 'on-leave';
         } else if (filterStatus === 'on leave') {
-          return surveyorStatus === 'on leave' || surveyorStatus === 'busy';
+          return surveyorStatus === 'on leave' || surveyorStatus === 'on-leave' || surveyorStatus === 'busy';
         }
 
         return surveyorStatus === filterStatus;
@@ -351,7 +408,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     return (assignments || []).filter(
       assignment =>
         assignment?.surveyorId === surveyorId &&
-        assignment?.status === "in_progress"
+        ["assigned", "accepted", "in_progress", "under_review"].includes(assignment?.status)
     ).length;
   };
 
@@ -438,8 +495,32 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const handleUpdateSurveyor = async () => {
     if (!selectedSurveyor) return;
     try {
+      const updatedProfile = {
+        ...(selectedSurveyor.profile || {}),
+        specialization: formData.specializations,
+        experience: formData.experience,
+        availability: formData.availability,
+        location: {
+          ...(selectedSurveyor.profile?.location || {}),
+          state: formData.state,
+          city: formData.city,
+          lga: formData.lga,
+          district: formData.district
+        }
+      };
+
       await onUpdateSurveyor(selectedSurveyor._id, {
-        ...formData,
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        phonenumber: formData.phonenumber,
+        profile: updatedProfile,
+        licenseNumber: formData.licenseNumber,
+        address: formData.address,
+        emergencyContact: formData.emergencyContact,
+        role: formData.role,
+        maxAssignments: formData.maxAssignments,
+        rating: formData.rating,
         status: formData.status as "active" | "inactive" | "suspended"
       });
       setShowEditModal(false);
@@ -498,7 +579,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       phonenumber: surveyor.userId?.phonenumber || surveyor.phonenumber || "",
       specializations: surveyor.profile?.specialization || surveyor.specializations || [],
       licenseNumber: surveyor.licenseNumber || "",
-      address: surveyor.profile?.location?.state || surveyor.address || "",
+      address: surveyor.address || "",
       state: surveyor.profile?.location?.state || "",
       city: surveyor.profile?.location?.city || "",
       lga: surveyor.profile?.location?.lga || "",
@@ -508,11 +589,11 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       role: surveyor.role || "Surveyor",
       status: surveyor.status || "active",
       rating: surveyor.rating || 0,
-      experience: surveyor.experience || 0,
+      experience: surveyor.profile?.experience || surveyor.experience || 0,
       maxAssignments: surveyor.maxAssignments || 5,
       dateOfBirth: surveyor.dateOfBirth || "",
       qualifications: surveyor.qualifications || [],
-      availability: surveyor.availability || "available"
+      availability: mapAvailabilityFromApi(surveyor.profile?.availability || surveyor.availability)
     });
     setShowEditModal(true);
   };
@@ -698,18 +779,18 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   License: {surveyor?.licenseNumber || 'N/A'}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-semibold">Experience:</span> {surveyor?.experience || 0} years
+                  <span className="font-semibold">Experience:</span> {surveyor?.profile?.experience || surveyor?.experience || 0} years
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <span className="font-semibold">Max Assignments:</span> {surveyor?.maxAssignments || 5}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <span className="font-semibold">Availability:</span>
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${surveyor?.availability === 'available' ? 'bg-green-100 text-green-800' :
-                    surveyor?.availability === 'busy' ? 'bg-yellow-100 text-yellow-800' :
+                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${(surveyor?.profile?.availability || surveyor?.availability) === 'available' ? 'bg-green-100 text-green-800' :
+                    (surveyor?.profile?.availability || surveyor?.availability) === 'busy' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                    {surveyor?.availability || 'Available'}
+                    {surveyor?.profile?.availability || surveyor?.availability || 'available'}
                   </span>
                 </div>
               </div>
@@ -727,11 +808,21 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Completed Surveys:</span>
-                  <span className="font-medium">{surveyor?.completedSurveys || 0}/{surveyor?.totalSurveys || 0}</span>
+                  {(() => {
+                    const surveyorEmployeeId = getSurveyorEmployeeId(surveyor);
+                    const stats = getSurveyorAssignmentStats(surveyorEmployeeId);
+                    return (
+                      <span className="font-medium">
+                        {stats.completed}/{stats.total}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Current Assignments:</span>
-                  <span className="font-medium">{getCurrentAssignments(surveyor?._id)}</span>
+                  <span className="font-medium">
+                    {getCurrentAssignments(getSurveyorEmployeeId(surveyor) || "")}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Joined:</span>
@@ -743,7 +834,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 <div>
                   <p className="text-xs text-gray-600 mb-1">Specializations:</p>
                   <div className="flex flex-wrap gap-1">
-                    {surveyor.specializations?.map((spec, index) => (
+                    {(surveyor.profile?.specialization || surveyor.specializations || []).map((spec, index) => (
                       <span key={index} className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                         {spec}
                       </span>
@@ -1064,12 +1155,12 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                       </label>
                       <select
                         value={formData.availability}
-                        onChange={(e) => setFormData({ ...formData, availability: e.target.value as "available" | "busy" | "unavailable" })}
+                        onChange={(e) => setFormData({ ...formData, availability: e.target.value as FormAvailability })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       >
                         <option value="available">Available</option>
                         <option value="busy">Busy</option>
-                        <option value="unavailable">Unavailable</option>
+                        <option value="on-leave">On Leave</option>
                       </select>
                     </div>
 
@@ -1240,14 +1331,14 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                   <h4 className="font-medium text-gray-900 mb-2">Professional Information</h4>
                   <div className="space-y-2 text-sm">
                     <p><span className="text-gray-600">License:</span> {selectedSurveyor?.licenseNumber || 'N/A'}</p>
-                    <p><span className="text-gray-600">Experience:</span> {selectedSurveyor?.experience || 0} years</p>
+                    <p><span className="text-gray-600">Experience:</span> {selectedSurveyor?.profile?.experience || selectedSurveyor?.experience || 0} years</p>
                     <p><span className="text-gray-600">Max Assignments:</span> {selectedSurveyor?.maxAssignments || 5}</p>
                     <p><span className="text-gray-600">Availability:</span>
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${selectedSurveyor?.availability === 'available' ? 'bg-green-100 text-green-800' :
-                        selectedSurveyor?.availability === 'busy' ? 'bg-yellow-100 text-yellow-800' :
+                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${(selectedSurveyor?.profile?.availability || selectedSurveyor?.availability) === 'available' ? 'bg-green-100 text-green-800' :
+                        (selectedSurveyor?.profile?.availability || selectedSurveyor?.availability) === 'busy' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
-                        {selectedSurveyor?.availability || 'Available'}
+                        {selectedSurveyor?.profile?.availability || selectedSurveyor?.availability || 'available'}
                       </span>
                     </p>
                     <p><span className="text-gray-600">Status:</span> {selectedSurveyor?.status || 'N/A'}</p>
@@ -1313,7 +1404,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Specializations</h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedSurveyor.specializations?.map((spec, index) => (
+                  {(selectedSurveyor.profile?.specialization || selectedSurveyor.specializations || []).map((spec, index) => (
                     <span key={index} className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
                       {spec}
                     </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useBuilderLiabilityPolicies } from '@/hooks/useBuilderLiabilityPolicy';
 import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
 import { BuilderLiabilityPolicy, BuilderLiabilityPolicyStatus } from '@/types/builderLiabilityPolicy.types';
@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
+import { PremiumDetailsModal } from './PremiumDetailsModal';
+import PaymentResultModal, { PaymentConfirmationResult } from './PaymentResultModal';
 import {
     Eye,
     Search,
@@ -22,9 +24,27 @@ import {
     CheckCircle,
     XCircle,
     AlertCircle,
-    CreditCard
+    CreditCard,
+    RefreshCw
 } from 'lucide-react';
 import { toast } from "sonner"
+
+type EgolePayConfig = {
+    apiKey: string;
+    amount: number;
+    email: string;
+    reference: string;
+    customerName?: string;
+    phone?: string;
+    metadata?: Record<string, string>;
+    onSuccess?: (response: unknown) => void;
+    onCancel?: (info: unknown) => void;
+    onError?: (error: { message?: string }) => void;
+    onClose?: (info: unknown) => void;
+    onStepChange?: (step: unknown) => void;
+};
+
+type EgolePayCtor = new (config: EgolePayConfig) => unknown;
 
 interface PolicyListProps {
     isAdmin?: boolean;
@@ -42,42 +62,346 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
     const [selectedPolicy, setSelectedPolicy] = useState<BuilderLiabilityPolicy | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [showPremiumModal, setShowPremiumModal] = useState(false);
+    const [premiumState, setPremiumState] = useState<Record<string, {
+        premiumDetails: any;
+    }>>({});
     const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+    const [processingPremium, setProcessingPremium] = useState<string | null>(null);
+    const [premiumModalPolicyId, setPremiumModalPolicyId] = useState<string | null>(null);
+    const [retryLoading, setRetryLoading] = useState<string | null>(null);
+    const [paymentResultModal, setPaymentResultModal] = useState<{
+        isOpen: boolean;
+        result: PaymentConfirmationResult;
+        policyId?: string;
+    } | null>(null);
+    const egolePayApiKey = process.env.NEXT_PUBLIC_EGOLEPAY_API_KEY || '';
+    const egolePayMerchantId =
+        process.env.NEXT_PUBLIC_EGOLEPAY_MERCHANT_ID ||
+        '22C811B4-EF62-48DA-8F35-E714F3992BC4';
 
-    const handleProceedToPayment = async (policy: BuilderLiabilityPolicy) => {
+    // Seed premium state from already-calculated policies so buttons don't regress on reload
+    useEffect(() => {
+        setPremiumState((prev) => {
+            const next = { ...prev };
+            policies.forEach((policy) => {
+                const calculatedAmount = (policy as any)?.paymentInfo?.amount;
+                if (calculatedAmount && !next[policy._id]) {
+                    next[policy._id] = {
+                        premiumDetails: {
+                            amount: calculatedAmount,
+                            currency: 'NGN',
+                            invoiceNumber: (policy as any)?.paymentInfo?.niipInvoice || (policy as any)?.niipPayload?.invoiceNumber || null,
+                            transactionReference: (policy as any)?.paymentInfo?.niipReference || (policy as any)?.niipPayload?.transactionReference || null,
+                            builder: {
+                                name: policy.builder.nameOfBuilder,
+                                email: policy.builder.customerEmail,
+                                phone: policy.builder.telNo
+                            },
+                            estimates: {
+                                declaredProjectSum: policy.project.totalEstimateSum,
+                                surveyorEstimate: (policy as any)?.surveyorEstimatedValue || null
+                            }
+                        }
+                    };
+                }
+            });
+            return next;
+        });
+    }, [policies]);
+
+    const ensureEgolePaySdkLoaded = () =>
+        new Promise<void>((resolve, reject) => {
+            const existing = (window as Window & { EgolePay?: EgolePayCtor }).EgolePay;
+            if (existing) {
+                resolve();
+                return;
+            }
+
+            const sdkUrl =
+                process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL ||
+                'https://pulsebridge.egolepay.com/pulsebridge-v0.0.js';
+
+            const currentScript = document.querySelector(`script[src="${sdkUrl}"]`) as HTMLScriptElement | null;
+            if (currentScript) {
+                currentScript.addEventListener('load', () => resolve(), { once: true });
+                currentScript.addEventListener('error', () => reject(new Error('Failed to load EgolePay SDK')), { once: true });
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = sdkUrl;
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load EgolePay SDK'));
+            document.body.appendChild(script);
+        });
+
+    const openPaymentModal = (policy: BuilderLiabilityPolicy) => {
+        if (!premiumState[policy._id]) {
+            setPremiumState((prev) => ({
+                ...prev,
+                [policy._id]: {
+                    premiumDetails: {
+                        amount: Number((policy as any)?.paymentInfo?.amount || 100),
+                        currency: 'NGN',
+                        invoiceNumber: (policy as any)?.paymentInfo?.niipInvoice || (policy as any)?.niipPayload?.invoiceNumber || null,
+                        transactionReference: (policy as any)?.paymentInfo?.niipReference || (policy as any)?.niipPayload?.transactionReference || null,
+                        builder: {
+                            name: policy.builder.nameOfBuilder,
+                            email: policy.builder.customerEmail,
+                            phone: policy.builder.telNo
+                        },
+                        estimates: {
+                            declaredProjectSum: policy.project.totalEstimateSum,
+                            surveyorEstimate: (policy as any)?.surveyorEstimatedValue || null
+                        }
+                    }
+                }
+            }));
+        }
+
+        setPremiumModalPolicyId(policy._id);
+        setShowPremiumModal(true);
+    };
+
+    const handleCalculatePremium = async (policy: BuilderLiabilityPolicy) => {
         try {
+            setProcessingPremium(policy._id);
+            const response = await builderLiabilityPolicyAPI.calculatePremium(policy._id);
+            const premiumDetails = response.data?.premiumDetails;
+
+            setPremiumState((prev) => ({
+                ...prev,
+                [policy._id]: {
+                    premiumDetails: {
+                        amount: premiumDetails?.amount ?? response.data?.premiumAmount ?? 0,
+                        currency: premiumDetails?.currency || 'NGN',
+                        invoiceNumber: premiumDetails?.invoiceNumber || null,
+                        transactionReference: premiumDetails?.transactionReference || null,
+                        builder: {
+                            name: policy.builder.nameOfBuilder,
+                            email: policy.builder.customerEmail,
+                            phone: policy.builder.telNo
+                        },
+                        estimates: {
+                            declaredProjectSum: policy.project.totalEstimateSum,
+                            surveyorEstimate: (policy as any)?.surveyorEstimatedValue || null
+                        }
+                    }
+                }
+            }));
+
+            toast.success(response.message || 'Premium calculated successfully');
+            setPremiumModalPolicyId(policy._id);
+            setShowPremiumModal(true);
+            await fetchPolicies();
+        } catch (error: any) {
+            toast.error(
+                error?.response?.data?.message ||
+                error?.message ||
+                'Failed to calculate premium'
+            );
+        } finally {
+            setProcessingPremium(null);
+        }
+    };
+
+    const getPaymentPayload = (
+        policy: BuilderLiabilityPolicy,
+        payload?: {
+            reference: string;
+            amount: number;
+            email: string;
+        }
+    ) => {
+        const premiumDetails = premiumState[policy._id]?.premiumDetails;
+        const amount = Number(payload?.amount ?? premiumDetails?.amount ?? (policy as any)?.paymentInfo?.amount ?? 100);
+        const generatedReference = `TXN_${policy.policyNumber}_${Date.now()}`;
+        const reference = String(payload?.reference || generatedReference)
+            .replace(/[^a-zA-Z0-9_-]/g, '_')
+            .slice(0, 50);
+        const email =
+            payload?.email ||
+            premiumDetails?.builder?.email ||
+            policy.builder.customerEmail ||
+            'customer@example.com';
+        const customerName =
+            premiumDetails?.builder?.name ||
+            policy.builder.nameOfBuilder ||
+            email.split('@')[0] ||
+            'testuser';
+        const phone =
+            premiumDetails?.builder?.phone ||
+            policy.builder.telNo ||
+            '';
+
+        return {
+            amount,
+            reference,
+            email,
+            customerName,
+            phone,
+            metadata: {
+                source: 'builders_liability_modal',
+                user_id: policy._id,
+                merchant_id: egolePayMerchantId
+            }
+        };
+    };
+
+    const startPayment = (
+        policy: BuilderLiabilityPolicy,
+        payload?: {
+            reference: string;
+            amount: number;
+            email: string;
+        }
+    ) => {
+        const { amount, reference, email, customerName, phone, metadata } = getPaymentPayload(policy, payload);
+        const launchPayment = async () => {
             setProcessingPayment(policy._id);
 
-            console.log('💳 Initiating payment through backend...');
-
-            // Make request to backend payment endpoint (which will proxy to NIIP)
-            const api = (await import('@/services/api')).default;
-            const response = await api.post(`/payment/initiate/${policy._id}`);
-
-            const data = response.data;
-            console.log('Payment Response:', data);
-
-            if (data.success && data.data) {
-                const paymentData = data.data;
-
-                toast.success(`✅ Payment Initiated Successfully!\n\nInvoice Number: ${paymentData.invoiceNumber}\nTransaction Reference: ${paymentData.transactionReference}\nAmount: ₦${paymentData.amount}\nInsurance Company: ${paymentData.companyName}\n\nYou will be redirected to complete the payment.`);
-
-                // Redirect to NIIP payment page if encrypted reference is provided
-                if (paymentData.encryptTransRef) {
-                    window.location.href = `http://uat.niip.ng/payment/${paymentData.encryptTransRef}`;
-                } else {
-                    // Refresh the page to show updated payment status
-                    window.location.reload();
+            try {
+                if (!egolePayApiKey) {
+                    throw new Error('EgolePay API key is missing. Add NEXT_PUBLIC_EGOLEPAY_API_KEY to the frontend env file.');
                 }
+
+                if (!amount || Number(amount) <= 0) {
+                    throw new Error('Enter a valid amount before continuing.');
+                }
+
+                await ensureEgolePaySdkLoaded();
+                const EgolePay = (window as Window & { EgolePay?: EgolePayCtor }).EgolePay;
+                if (!EgolePay) {
+                    throw new Error('EgolePay SDK failed to load.');
+                }
+
+                setShowPremiumModal(false);
+
+                new EgolePay({
+                    apiKey: egolePayApiKey,
+                    amount: Number(amount),
+                    email,
+                    reference,
+                    customerName,
+                    phone,
+                    metadata,
+                    onSuccess: async (response) => {
+                        try {
+                            const responseObj = (response as Record<string, unknown>) || {};
+                            const transactionItemsRaw = (responseObj as any)?.transactionItems;
+                            const firstItem = Array.isArray(transactionItemsRaw) ? transactionItemsRaw[0] : null;
+                            const pickRef = (...candidates: any[]) => {
+                                for (const candidate of candidates) {
+                                    if (Array.isArray(candidate)) {
+                                        const found = candidate.find((val) => val != null && String(val).trim() !== '');
+                                        if (found != null && String(found).trim() !== '') {
+                                            return found;
+                                        }
+                                        continue;
+                                    }
+                                    if (candidate != null && String(candidate).trim() !== '') {
+                                        return candidate;
+                                    }
+                                }
+                                return undefined;
+                            };
+                            const normalizedGatewayResponse = {
+                                ...responseObj,
+                                transactionReference: pickRef(
+                                    (responseObj as any)?.transactionReference,
+                                    (responseObj as any)?.data?.transactionReference,
+                                    (responseObj as any)?.TxnRef,
+                                    firstItem?.TxnRef,
+                                    firstItem?.txnRef
+                                ),
+                                paymentReference: pickRef(
+                                    (responseObj as any)?.paymentReference,
+                                    (responseObj as any)?.data?.paymentReference,
+                                    (responseObj as any)?.PaymentRef,
+                                    firstItem?.PaymentRef,
+                                    firstItem?.paymentRef
+                                ),
+                                transactionItems: Array.isArray(transactionItemsRaw) ? transactionItemsRaw : undefined
+                            };
+                            const result = await builderLiabilityPolicyAPI.confirmEgolepayPayment(
+                                reference,
+                                normalizedGatewayResponse,
+                                policy._id
+                            );
+
+                            if (result.niipWithdrawal?.success) {
+                                // Both payment + NIIP succeeded — just show a brief toast
+                                toast.success('Payment confirmed and NIIP wallet withdrawal completed');
+                            } else {
+                                // Any non-full-success case — open the rich modal
+                                setPaymentResultModal({
+                                    isOpen: true,
+                                    result: result as PaymentConfirmationResult,
+                                    policyId: policy._id,
+                                });
+                            }
+
+                            await fetchPolicies();
+                        } catch (confirmError: any) {
+                            console.error('EgolePay confirmation error:', confirmError);
+                            const errorMessage =
+                                confirmError.response?.data?.message ||
+                                confirmError.message ||
+                                'Payment succeeded, but backend confirmation failed';
+                            toast.error(errorMessage);
+                        }
+                    },
+                    onCancel: () => {
+                        toast.message('EgolePay payment was cancelled');
+                    },
+                    onError: (error) => {
+                        toast.error(error?.message || 'EgolePay payment failed');
+                    },
+                    onClose: () => {
+                        setProcessingPayment(null);
+                    }
+                });
+
+                toast.success('EgolePay checkout opened');
+            } catch (error: any) {
+                console.error('Payment error:', error);
+                const errorMessage = error.response?.data?.message || error.message || 'Failed to process payment';
+                toast.error(`Payment Error\n\n${errorMessage}\n\nPlease try again.`);
+            } finally {
+                setProcessingPayment(null);
+            }
+        };
+
+        void launchPayment();
+    };
+
+    const handleRetryNiipWithdrawal = async (policy: BuilderLiabilityPolicy) => {
+        try {
+            setRetryLoading(policy._id);
+            const response = await builderLiabilityPolicyAPI.retryNiipWithdrawal(policy._id);
+
+            if (response.niipWithdrawal?.success) {
+                toast.success(response.message || "NIIP wallet withdrawal successful");
+                // Refresh policies to update status to 'completed'
+                await fetchPolicies();
             } else {
-                throw new Error(data.message || 'Payment initiation failed');
+                // Show the result modal even on partial failure so they can see the HTML error
+                setPaymentResultModal({
+                    isOpen: true,
+                    result: {
+                        ...response,
+                        // Ensure success is true if NIIP failed but payment is known-good (which it is for retries)
+                        success: true 
+                    },
+                    policyId: policy._id,
+                });
             }
         } catch (error: any) {
-            console.error('Payment error:', error);
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to initiate payment';
-            toast.error(`❌ Payment Error\n\n${errorMessage}\n\nPlease try again or contact support.`);
+            toast.error(error.response?.data?.message || "Failed to retry NIIP withdrawal");
         } finally {
-            setProcessingPayment(null);
+            setRetryLoading(null);
         }
     };
 
@@ -110,13 +434,57 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
     // Helper function to get the actual current status from statusHistory if available
     const getActualStatus = (policy: BuilderLiabilityPolicy): string => {
-        // If statusHistory exists and has entries, use the most recent status
-        if (policy.statusHistory && policy.statusHistory.length > 0) {
-            const latestStatus = policy.statusHistory[policy.statusHistory.length - 1];
-            return latestStatus.status;
+        const latestStatus =
+            policy.statusHistory && policy.statusHistory.length > 0
+                ? policy.statusHistory[policy.statusHistory.length - 1]?.status
+                : policy.status;
+
+        const paymentAlreadyCompleted =
+            policy.paymentInfo?.status === 'paid' || Boolean(policy.paymentInfo?.paidAt);
+
+        // Backward-compatibility for older records that were marked completed
+        // immediately after survey submission, before the payment flow ran.
+        if (latestStatus === 'completed' && !paymentAlreadyCompleted) {
+            if ((policy as any).surveyorRecommendation === 'approve') {
+                return 'payment_pending';
+            }
+            if ((policy as any).surveyorRecommendation === 'reject') {
+                return 'rejected';
+            }
+            if ((policy as any).surveyorRecommendation === 'request_more_info') {
+                return 'requires_more_info';
+            }
         }
-        // Otherwise, use the policy status field
-        return policy.status || 'draft';
+
+        return latestStatus || 'draft';
+    };
+
+    const getResolvedAction = (policy: BuilderLiabilityPolicy) =>
+        policy.primaryAction ||
+        policy.nextAction ||
+        policy.workflow?.nextAction ||
+        policy.availableActions?.[0] ||
+        null;
+
+    const shouldShowCalculatePremium = (policy: BuilderLiabilityPolicy) => {
+        const action = getResolvedAction(policy);
+        return Boolean(
+            policy.showCalculatePremiumButton ||
+            (policy.canCalculatePremium && !policy.premiumCalculated) ||
+            action?.type === 'calculate_premium' ||
+            (getActualStatus(policy) === 'approved' &&
+                (policy as any).surveyorRecommendation === 'approve' &&
+                !policy.premiumCalculated)
+        );
+    };
+
+    const shouldShowProceedToPayment = (policy: BuilderLiabilityPolicy) => {
+        const action = getResolvedAction(policy);
+        return Boolean(
+            policy.canProceedToPayment ||
+            action?.type === 'initialize_payment' ||
+            getActualStatus(policy) === 'payment_pending'
+        );
     };
 
     // Filter policies based on search and filters
@@ -140,12 +508,13 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             assigned: { color: 'bg-blue-100 text-blue-800', icon: AlertCircle, label: 'Assigned' },
             surveyed: { color: 'bg-purple-100 text-purple-800', icon: Eye, label: 'Surveyed' },
             approved: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Approved' },
-            payment_pending: { color: 'bg-orange-100 text-orange-800', icon: CreditCard, label: 'Payment Pending' },
+            payment_pending: { color: 'bg-orange-100 text-orange-800', icon: CreditCard, label: 'Awaiting Payment' },
             rejected: { color: 'bg-red-100 text-red-800', icon: XCircle, label: 'Rejected' },
             requires_more_info: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             revision_required: { color: 'bg-amber-100 text-amber-800', icon: AlertCircle, label: 'Needs Info' },
             completed: { color: 'bg-emerald-100 text-emerald-800', icon: CheckCircle, label: 'Completed' },
-            sent_to_user: { color: 'bg-cyan-100 text-cyan-800', icon: CheckCircle, label: 'Sent to User' }
+            sent_to_user: { color: 'bg-cyan-100 text-cyan-800', icon: CheckCircle, label: 'Sent to User' },
+            paid_niip_failed: { color: 'bg-rose-100 text-rose-800', icon: AlertCircle, label: 'Payment OK, NIIP Failed' }
         };
 
         const config = statusConfig[status] || statusConfig.submitted;
@@ -256,9 +625,10 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                 <SelectItem value="assigned">Assigned</SelectItem>
                                 <SelectItem value="surveyed">Surveyed</SelectItem>
                                 <SelectItem value="approved">Approved</SelectItem>
-                                <SelectItem value="payment_pending">Payment Pending</SelectItem>
+                                <SelectItem value="payment_pending">Awaiting Payment</SelectItem>
                                 <SelectItem value="rejected">Rejected</SelectItem>
                                 <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="paid_niip_failed">NIIP Failed</SelectItem>
                             </SelectContent>
                         </Select>
                         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
@@ -298,53 +668,59 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 <div className="space-y-4">
                     {filteredPolicies.map((policy) => (
                         <Card key={policy._id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1 space-y-3">
+                            <CardContent className="p-4 sm:p-6">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                    <div className="flex-1 min-w-0 space-y-3">
                                         {/* Header */}
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-gray-900">
+                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="min-w-0">
+                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
                                                     {policy.builder.nameOfBuilder}
                                                 </h3>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="text-xs sm:text-sm text-gray-600 break-words">
                                                     Policy #{policy.policyNumber}
                                                 </p>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2 justify-end sm:flex-none">
                                                 {getStatusBadge(getActualStatus(policy) as BuilderLiabilityPolicyStatus)}
                                                 {getPriorityBadge(policy.priority || 'medium')}
                                             </div>
                                         </div>
 
                                         {/* Details Grid */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                                            <div className="flex items-center gap-2">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <User className="w-4 h-4 text-gray-400" />
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-gray-600">Builder</p>
-                                                    <p className="font-medium">{policy.builder.nameOfBuilder}</p>
+                                                    <p className="font-medium break-words">
+                                                        {policy.builder.nameOfBuilder}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <Building className="w-4 h-4 text-gray-400" />
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-gray-600">Project Value</p>
-                                                    <p className="font-medium">{formatCurrency(policy.project.totalEstimateSum)}</p>
+                                                    <p className="font-medium break-words">
+                                                        {formatCurrency(policy.project.totalEstimateSum)}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <MapPin className="w-4 h-4 text-gray-400" />
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-gray-600">Location</p>
-                                                    <p className="font-medium truncate text-wrap">{policy.builder.address}</p>
+                                                    <p className="font-medium break-words">
+                                                        {policy.builder.address}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <Calendar className="w-4 h-4 text-gray-400" />
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-gray-600">Submitted</p>
-                                                    <p className="font-medium">
+                                                    <p className="font-medium break-words">
                                                         {new Date(policy.createdAt).toLocaleDateString()}
                                                     </p>
                                                 </div>
@@ -352,38 +728,70 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                         </div>
 
                                         {/* Additional Info */}
-                                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                <span>RC: {policy.builder.rcNumber}</span>
-                                                <span>Coverage: {policy.project.coverTypeIdxDetails}</span>
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-gray-100">
+                                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                                                <span className="break-all">RC: {policy.builder.rcNumber}</span>
+                                                <span className="break-words">
+                                                    Coverage: {policy.project.coverTypeIdxDetails}
+                                                </span>
                                                 {policy.project.extraHazardous && (
-                                                    <Badge variant="outline" className="text-xs">
+                                                    <Badge variant="outline" className="text-[10px] sm:text-xs">
                                                         Extra Hazardous
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                {/* Show payment button only if survey is completed and approved */}
-                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'approve' && (
+                                            <div className="flex flex-wrap items-center gap-2 justify-end">
+                                                {/* Show payment button only once the survey is approved and awaiting payment */}
+                                                {shouldShowCalculatePremium(policy) && (
                                                     <Button
                                                         size="sm"
-                                                        className="bg-green-600 hover:bg-green-700"
-                                                        onClick={() => handleProceedToPayment(policy)}
-                                                        disabled={processingPayment === policy._id}
+                                                        className="bg-amber-600 hover:bg-amber-700"
+                                                        onClick={() => handleCalculatePremium(policy)}
+                                                        disabled={processingPremium === policy._id}
                                                     >
                                                         <CreditCard className="w-4 h-4 mr-2" />
-                                                        {processingPayment === policy._id ? 'Processing...' : 'Proceed to Payment'}
+                                                        {processingPremium === policy._id
+                                                            ? 'Calculating...'
+                                                            : 'Calculate Premium'}
+                                                    </Button>
+                                                )}
+                                                {shouldShowProceedToPayment(policy) && (
+                                                    <>
+                                                        <Button
+                                                            size="sm"
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                            onClick={() => openPaymentModal(policy)}
+                                                            disabled={processingPayment === policy._id || processingPremium === policy._id}
+                                                        >
+                                                            <CreditCard className="w-4 h-4 mr-2" />
+                                                            {processingPayment === policy._id
+                                                                ? 'Processing...'
+                                                                : 'Proceed to Payment'}
+                                                        </Button>
+                                                    </>
+                                                )}
+                                                {getActualStatus(policy) === 'paid_niip_failed' && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-orange-600 hover:bg-orange-700"
+                                                        onClick={() => handleRetryNiipWithdrawal(policy)}
+                                                        disabled={retryLoading === policy._id}
+                                                    >
+                                                        <RefreshCw className={`w-4 h-4 mr-2 ${retryLoading === policy._id ? 'animate-spin' : ''}`} />
+                                                        {retryLoading === policy._id
+                                                            ? 'Retrying...'
+                                                            : 'Retry NIIP Withdrawal'}
                                                     </Button>
                                                 )}
                                                 {/* Show rejection message if rejected */}
-                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'reject' && (
+                                                {getActualStatus(policy) === 'rejected' && (policy as any).surveyorRecommendation === 'reject' && (
                                                     <Badge className="bg-red-100 text-red-800">
                                                         <XCircle className="w-3 h-3 mr-1" />
                                                         Policy Rejected
                                                     </Badge>
                                                 )}
                                                 {/* Show info needed message */}
-                                                {getActualStatus(policy) === 'completed' && (policy as any).surveyorRecommendation === 'request_more_info' && (
+                                                {getActualStatus(policy) === 'requires_more_info' && (policy as any).surveyorRecommendation === 'request_more_info' && (
                                                     <Badge className="bg-amber-100 text-amber-800">
                                                         <AlertCircle className="w-3 h-3 mr-1" />
                                                         More Info Required
@@ -413,6 +821,32 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 isOpen={showDetailsModal}
                 onClose={handleCloseModal}
             />
+            <PremiumDetailsModal
+                isOpen={showPremiumModal}
+                onClose={() => setShowPremiumModal(false)}
+                premiumDetails={premiumModalPolicyId ? premiumState[premiumModalPolicyId]?.premiumDetails : null}
+                policy={premiumModalPolicyId ? policies.find(p => p._id === premiumModalPolicyId) || null : null}
+                onProceed={(payload) => {
+                    if (!premiumModalPolicyId) return;
+                    const policy = policies.find(p => p._id === premiumModalPolicyId);
+                    if (policy) {
+                        startPayment(policy, payload);
+                    }
+                }}
+                loading={processingPayment === premiumModalPolicyId}
+            />
+            {paymentResultModal && (
+                <PaymentResultModal
+                    isOpen={paymentResultModal.isOpen}
+                    result={paymentResultModal.result}
+                    onClose={() => setPaymentResultModal(null)}
+                    onRetry={() => {
+                        const policy = policies.find(p => p._id === paymentResultModal.policyId);
+                        if (policy) handleRetryNiipWithdrawal(policy);
+                    }}
+                    retryLoading={paymentResultModal.policyId ? retryLoading === paymentResultModal.policyId : false}
+                />
+            )}
         </div>
     );
 };

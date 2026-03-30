@@ -17,7 +17,8 @@ import {
     XCircle,
     AlertCircle
 } from "lucide-react";
-import { BrokerAdmin } from "@/types/api.types";
+import { useAuth } from "@/context/useAuth";
+import { BrokerAdmin, Employee } from "@/types/api.types";
 
 // Extended BrokerAdmin interface for management UI with populated userId
 interface BrokerAdminWithUser extends Omit<BrokerAdmin, 'userId'> {
@@ -65,11 +66,24 @@ interface BrokerAdminManagementProps {
     onDeleteBrokerAdmin?: (id: string) => Promise<void>;
 }
 
-const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
+const isEmployee = (user: unknown): user is Employee => {
+    return (
+        typeof user === "object" &&
+        user !== null &&
+        "employeeRole" in user &&
+        typeof (user as Employee).employeeRole === "object" &&
+        (user as Employee).employeeRole !== null &&
+        "role" in (user as Employee).employeeRole
+    );
+};
+
+const BrokerAdminManagement = ({
     onCreateBrokerAdmin,
     onUpdateBrokerAdmin,
     onDeleteBrokerAdmin,
-}) => {
+}: BrokerAdminManagementProps) => {
+    const { user } = useAuth();
+    const isSuperAdmin = isEmployee(user) && user.employeeRole.role === "Super-admin";
     const [brokerAdmins, setBrokerAdmins] = useState<BrokerAdminWithUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -102,9 +116,32 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
             canUpdateClaimStatus: true,
             canViewReports: true,
             canAccessAnalytics: true,
-            canManageAdmins: true
-        }
+            canManageAdmins: true,
+        },
     });
+
+    const resetForm = () => {
+        setFormData({
+            firstname: "",
+            lastname: "",
+            email: "",
+            phonenumber: "",
+            password: "",
+            brokerFirmName: "",
+            brokerFirmLicense: "",
+            licenseNumber: "",
+            department: "Claims Management",
+            position: "Broker Administrator",
+            permissions: {
+                canViewClaims: true,
+                canUpdateClaimStatus: true,
+                canViewReports: true,
+                canAccessAnalytics: true,
+                canManageAdmins: true,
+            },
+        });
+        setShowPassword(false);
+    };
 
     useEffect(() => {
         fetchBrokerAdmins();
@@ -203,68 +240,67 @@ const BrokerAdminManagement: React.FC<BrokerAdminManagementProps> = ({
         }
     };
 
-const handleDeleteBrokerAdmin = async (id: string, permanent = false) => {
-    const action = permanent ? 'permanently delete' : 'deactivate';
-    const warning = permanent
-        ? 'This will permanently delete the broker admin and all associated data. This action cannot be undone!'
-        : 'This will disable their access but preserve their data for audit purposes.';
-
-    if (!confirm(`Are you sure you want to ${action} this broker admin? ${warning}`)) {
-        return;
-    }
-
-    try {
-        const { adminApi } = await import("@/services/api");
-
-        const endpoint = permanent
-            ? `/broker-admin/management/${id}?permanent=true`
-            : `/broker-admin/management/${id}`;
-
-        const response = await adminApi.delete<{ success: boolean }>(endpoint);
-
-        const data = (response as unknown as { data?: { success?: boolean } }).data;
-
-        if (data?.success) {
-            const message = permanent
-                ? 'Broker admin permanently deleted!'
-                : 'Broker admin deactivated successfully!';
-            alert(message);
-            fetchBrokerAdmins();
-            fetchStats();
-        } 
-
-    } catch (error) {
-        console.error(`Failed to ${action} broker admin:`, error);
-        const errorMessage = error instanceof Error ? error.message : `Failed to ${action} broker admin`;
-        alert(errorMessage);
-    }
-};
-
-const handleReactivateBrokerAdmin = async (id: string) => {
-    if (!confirm('Are you sure you want to reactivate this broker admin? This will restore their access.')) {
-        return;
-    }
-
-    try {
-        const { adminApi } = await import("@/services/api");
-
-        const response = await adminApi.patch<{ success: boolean }>(`/broker-admin/management/${id}/reactivate`);
-
-        const data = (response as unknown as { data?: { success?: boolean } }).data;
-
-        if (data?.success) {
-            alert('Broker admin reactivated successfully!');
-            fetchBrokerAdmins();
-            fetchStats();
+    const handleReactivateBrokerAdmin = async (id: string) => {
+        if (!confirm('Are you sure you want to reactivate this broker admin? This will restore their access.')) {
+            return;
         }
-    } catch (error) {
-        console.error("Failed to reactivate broker admin:", error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to reactivate broker admin';
-        alert(errorMessage);
-    }
-};
 
-const openEditModal = (brokerAdmin: BrokerAdminWithUser) => {
+        try {
+            const { adminApi } = await import("@/services/api");
+
+            const response = await adminApi.patch<{ success: boolean }>(`/broker-admin/management/${id}/reactivate`);
+
+            const data = (response as unknown as { data?: { success?: boolean } }).data;
+
+            if (data?.success) {
+                alert('Broker admin reactivated successfully!');
+                fetchBrokerAdmins();
+                fetchStats();
+            }
+        } catch (error) {
+            console.error("Failed to reactivate broker admin:", error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to reactivate broker admin';
+            alert(errorMessage);
+        }
+    };
+
+    const handleDeleteBrokerAdmin = async (id: string, permanent = false) => {
+        const action = permanent ? 'permanently delete' : 'deactivate';
+        const warning = permanent
+            ? 'This will permanently delete the broker admin and all associated data. This action cannot be undone!'
+            : 'This will disable their access but preserve their data for audit purposes.';
+
+        if (!confirm(`Are you sure you want to ${action} this broker admin? ${warning}`)) {
+            return;
+        }
+
+        try {
+            const { adminApi } = await import("@/services/api");
+
+            const endpoint = permanent
+                ? `/broker-admin/management/${id}?permanent=true`
+                : `/broker-admin/management/${id}`;
+
+            const response = await adminApi.delete<{ success: boolean }>(endpoint);
+
+            const data = (response as unknown as { data?: { success?: boolean } }).data;
+
+            if (data?.success) {
+                const message = permanent
+                    ? 'Broker admin permanently deleted!'
+                    : 'Broker admin deactivated successfully!';
+                alert(message);
+                fetchBrokerAdmins();
+                fetchStats();
+            }
+        } catch (error) {
+            console.error(`Failed to ${action} broker admin:`, error);
+            const errorMessage = error instanceof Error ? error.message : `Failed to ${action} broker admin`;
+            alert(errorMessage);
+        }
+    };
+
+    const openEditModal = (brokerAdmin: BrokerAdminWithUser) => {
     setSelectedBrokerAdmin(brokerAdmin);
     setFormData({
         firstname: brokerAdmin.userId.firstname,
@@ -280,74 +316,52 @@ const openEditModal = (brokerAdmin: BrokerAdminWithUser) => {
         permissions: brokerAdmin.permissions
     });
     setShowEditModal(true);
-};
-
-const openDetailsModal = (brokerAdmin: BrokerAdminWithUser) => {
-    setSelectedBrokerAdmin(brokerAdmin);
-    setShowDetailsModal(true);
-};
-
-const resetForm = () => {
-    setFormData({
-        firstname: "",
-        lastname: "",
-        email: "",
-        phonenumber: "",
-        password: "",
-        brokerFirmName: "",
-        brokerFirmLicense: "",
-        licenseNumber: "",
-        department: "Claims Management",
-        position: "Broker Administrator",
-        permissions: {
-            canViewClaims: true,
-            canUpdateClaimStatus: true,
-            canViewReports: true,
-            canAccessAnalytics: true,
-            canManageAdmins: true // Enable management permissions by default
-        }
-    });
-};
-
-const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-
-    if (type === 'checkbox') {
-        const checked = (e.target as HTMLInputElement).checked;
-        if (name.startsWith('permissions.')) {
-            const permissionKey = name.split('.')[1] as keyof BrokerAdminFormData['permissions'];
-            setFormData(prev => ({
-                ...prev,
-                permissions: {
-                    ...prev.permissions,
-                    [permissionKey]: checked
-                }
-            }));
-        }
-    } else {
-        setFormData(prev => ({ ...prev, [name]: value }));
-    }
-};
-
-const getStatusBadge = (status: string) => {
-    const statusConfig = {
-        active: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-        inactive: { color: 'bg-gray-100 text-gray-800', icon: XCircle },
-        suspended: { color: 'bg-red-100 text-red-800', icon: AlertCircle }
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.inactive;
-    const Icon = config.icon;
+    const openDetailsModal = (brokerAdmin: BrokerAdminWithUser) => {
+        setSelectedBrokerAdmin(brokerAdmin);
+        setShowDetailsModal(true);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+
+        if (type === 'checkbox') {
+            const checked = (e.target as HTMLInputElement).checked;
+            if (name.startsWith('permissions.')) {
+                const permissionKey = name.split('.')[1] as keyof BrokerAdminFormData['permissions'];
+                setFormData(prev => ({
+                    ...prev,
+                    permissions: {
+                        ...prev.permissions,
+                        [permissionKey]: checked
+                    }
+                }));
+            }
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const getStatusBadge = (status: string) => {
+        const statusConfig = {
+            active: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
+            inactive: { color: 'bg-gray-100 text-gray-800', icon: XCircle },
+            suspended: { color: 'bg-red-100 text-red-800', icon: AlertCircle }
+        };
+
+        const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.inactive;
+        const Icon = config.icon;
+
+        return (
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+                <Icon className="w-3 h-3 mr-1" />
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
+        );
+    };
 
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
-            <Icon className="w-3 h-3 mr-1" />
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-        </span>
-    );
-};
-
-return (
     <div className="p-6 bg-gray-50 min-h-screen">
         {/* Header */}
         <div className="mb-6">
@@ -432,13 +446,15 @@ return (
                         </select>
                     </div>
                 </div>
-                <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                    <Plus className="w-5 h-5" />
-                    Add Broker Admin
-                </button>
+                {isSuperAdmin && (
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Add Broker Admin
+                    </button>
+                )}
             </div>
         </div>
 

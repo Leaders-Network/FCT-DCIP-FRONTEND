@@ -12,7 +12,8 @@ import {
   Star,
   Activity,
   RefreshCw,
-  Bell
+  Bell,
+  FileDown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -21,13 +22,16 @@ import {
   getAdminAlerts,
   getAdminSurveyors
 } from '@/services/api';
+import { builderLiabilityPolicyAPI } from "@/services/builderLiabilityPolicyApi";
 import {
   DashboardData,
   QuickStats,
   AdminAlert,
   Surveyor
 } from '@/types/api.types';
+import { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { toast } from "sonner";
+import DashboardErrorBanner from "@/components/shared/DashboardErrorBanner";
 
 interface SurveyorPerformance {
   id: string;
@@ -43,12 +47,14 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [friendlyError, setFriendlyError] = useState<string | null>(null);
 
   // API Data States
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [quickStats, setQuickStats] = useState<QuickStats | null>(null);
   const [alerts, setAlerts] = useState<AdminAlert[]>([]);
   const [topPerformers, setTopPerformers] = useState<SurveyorPerformance[]>([]);
+  const [exporting, setExporting] = useState(false);
 
   // UI State
   const [activeTab, setActiveTab] = useState<'overview' | 'alerts'>('overview');
@@ -60,6 +66,7 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
+    setFriendlyError(null);
 
     try {
       // Fetch all dashboard data from the new API endpoints
@@ -78,16 +85,22 @@ const AdminDashboard: React.FC = () => {
       // Handle dashboard data
       if (dashboardResponse.status === 'fulfilled' && dashboardResponse.value.success) {
         setDashboardData(dashboardResponse.value.data);
+      } else if (dashboardResponse.status === 'fulfilled') {
+        setFriendlyError(dashboardResponse.value.message || 'Dashboard data unavailable.');
       }
 
       // Handle quick stats
       if (quickStatsResponse.status === 'fulfilled' && quickStatsResponse.value.success) {
         setQuickStats(quickStatsResponse.value.data);
+      } else if (quickStatsResponse.status === 'fulfilled' && !quickStatsResponse.value.success) {
+        setFriendlyError(prev => prev || quickStatsResponse.value.message || 'Quick stats unavailable.');
       }
 
       // Handle alerts
       if (alertsResponse.status === 'fulfilled' && alertsResponse.value.success) {
         setAlerts(alertsResponse.value.data || []);
+      } else if (alertsResponse.status === 'fulfilled' && !alertsResponse.value.success) {
+        setFriendlyError(prev => prev || alertsResponse.value.message || 'Alerts unavailable.');
       }
 
       // Handle top performers
@@ -108,6 +121,7 @@ const AdminDashboard: React.FC = () => {
     } catch (error: unknown) {
       console.error('Failed to fetch dashboard data:', error);
       setError('Failed to load dashboard data. Please try refreshing.');
+      setFriendlyError('We couldn’t load the admin dashboard right now. Please refresh, and contact the Gladfaith team if it keeps failing.');
     } finally {
       setLoading(false);
     }
@@ -117,6 +131,100 @@ const AdminDashboard: React.FC = () => {
     setRefreshing(true);
     await fetchDashboardData();
     setRefreshing(false);
+  };
+
+  const csvEscape = (value: unknown): string => {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (/[",\n]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const buildCsv = (policies: BuilderLiabilityPolicy[]) => {
+    const headers = [
+      'Policy Number',
+      'Status',
+      'Priority',
+      'Builder Name',
+      'RC Number',
+      'Builder Email',
+      'Builder Phone',
+      'Project Address',
+      'District',
+      'LGA',
+      'Cover Type',
+      'Sum Insured',
+      'Payment Status',
+      'Premium Amount (NGN)',
+      'Created At',
+      'Updated At'
+    ];
+
+    const rows = policies.map((p) => {
+      const builder = p.builder || {} as any;
+      const project = p.project || {} as any;
+      const payment = (p as any).paymentInfo || {};
+      return [
+        csvEscape(p.policyNumber || ''),
+        csvEscape(p.status || ''),
+        csvEscape(p.priority || ''),
+        csvEscape(builder.nameOfBuilder || ''),
+        csvEscape(builder.rcNumber || ''),
+        csvEscape(builder.customerEmail || ''),
+        csvEscape(builder.telNo || ''),
+        csvEscape(project.address || ''),
+        csvEscape(project.district || ''),
+        csvEscape(project.lga || ''),
+        csvEscape(project.coverTypeIdxDetails || ''),
+        csvEscape(project.totalEstimateSum ?? ''),
+        csvEscape(payment.status || ''),
+        csvEscape(payment.amount ?? ''),
+        csvEscape(p.createdAt || ''),
+        csvEscape(p.updatedAt || '')
+      ].join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+  };
+
+  const downloadCsv = (csv: string) => {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `policies-${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPolicies = async () => {
+    try {
+      setExporting(true);
+      let page = 1;
+      const limit = 200;
+      let all: BuilderLiabilityPolicy[] = [];
+      // paginate until no more
+      while (true) {
+        const res = await builderLiabilityPolicyAPI.getAllPolicies({ page, limit, sortBy: 'createdAt', sortOrder: 'desc' });
+        if (res.success && res.data?.policies) {
+          all = all.concat(res.data.policies);
+          if (!res.data.pagination?.hasMore) break;
+          page += 1;
+        } else {
+          throw new Error('Failed to fetch policies');
+        }
+      }
+      const csv = buildCsv(all);
+      downloadCsv(csv);
+      toast.success(`Exported ${all.length} policies to CSV`);
+    } catch (err: any) {
+      console.error('Export failed', err);
+      toast.error(err?.message || 'Failed to export policies');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const getActivityIcon = (type: string) => {
@@ -226,6 +334,17 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Export CSV */}
+            <button
+              onClick={exportPolicies}
+              disabled={exporting}
+              className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              title="Export all policies as CSV"
+            >
+              <FileDown className={`w-4 h-4 ${exporting ? 'animate-pulse' : ''}`} />
+              <span className="text-sm font-medium">{exporting ? 'Exporting…' : 'Export CSV'}</span>
+            </button>
+
             {/* Alerts Badge */}
             {alerts.length > 0 && (
               <button
@@ -253,7 +372,10 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Error Message */}
-        {error && (
+        {friendlyError && (
+          <DashboardErrorBanner message={friendlyError} className="mb-6" />
+        )}
+        {error && !friendlyError && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center">
               <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
@@ -455,33 +577,53 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="p-6">
               <div className="space-y-6">
-                {/* Recent Policies */}
+                {/* Recent Policies (Builder Liability) */}
                 {dashboardData?.recentActivity.policies && dashboardData.recentActivity.policies.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
                       <FileText className="w-4 h-4 mr-2 text-blue-500" />
-                      Recent Policy Requests
+                      Recent Policies
                     </h4>
                     <div className="space-y-2">
-                      {dashboardData.recentActivity.policies.slice(0, 3).map((policy) => (
-                        <div key={policy._id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900">
-                              New policy request from <span className="font-medium">{policy.contactDetails.fullName}</span>
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {policy.propertyDetails?.propertyType} • {formatTimeAgo(policy.createdAt)}
-                            </p>
+                      {dashboardData.recentActivity.policies.slice(0, 3).map((policy: any) => {
+                        const label =
+                          policy.builder?.nameOfBuilder ||
+                          policy.builder?.customerEmail ||
+                          policy.policyNumber ||
+                          'Builder Liability Policy';
+
+                        const meta =
+                          policy.project?.coverTypeIdxDetails ||
+                          'Builder Liability';
+
+                        const createdAt = policy.createdAt || policy.created_at || new Date().toISOString();
+
+                        return (
+                          <div key={policy._id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-900">
+                                New policy from <span className="font-medium truncate inline-block max-w-xs align-bottom">{label}</span>
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {meta} • {formatTimeAgo(createdAt)}
+                              </p>
+                            </div>
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                policy.status === 'submitted'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : policy.status === 'assigned'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : policy.status === 'approved' || policy.status === 'completed'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {policy.status}
+                            </span>
                           </div>
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${policy.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            policy.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                              policy.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                'bg-gray-100 text-gray-800'
-                            }`}>
-                            {policy.status}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

@@ -68,7 +68,7 @@ const InsuranceOptions = () => {
           </div>
 
           <div data-aos="fade-left" data-aos-anchor-placement="top-center" data-aos-delay="500" className="grid grid-cols-1  gap-8">
-            <div className="bg-gray-100 p-6 rounded-md">
+            {/* <div className="bg-gray-100 p-6 rounded-md">
               <Image
                 width={100}
                 height={100}
@@ -87,7 +87,7 @@ const InsuranceOptions = () => {
                 Safety for Occupiers is our priority. Our comprehensive coverage
                 ensures your home and personal property are protected.
               </p>
-            </div>
+            </div> */}
             <div  className="bg-gray-100 p-6 rounded-md">
               <Image
                 width={100}

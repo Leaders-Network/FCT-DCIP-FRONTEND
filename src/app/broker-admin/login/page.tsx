@@ -43,8 +43,10 @@ export default function BrokerAdminLogin() {
             console.log('Login response:', response);
 
             if (response.success && response.token) {
+                const responseTokenType = response.user?.tokenType === 'super-admin' ? 'super-admin' : 'broker-admin';
+
                 // Store token and user info
-                setAuthToken(response.token, 'broker-admin');
+                setAuthToken(response.token, responseTokenType);
                 localStorage.setItem('brokerAdminInfo', JSON.stringify({
                     ...response.user,
                     brokerAdmin: response.brokerAdmin
@@ -149,6 +151,16 @@ export default function BrokerAdminLogin() {
                                 )}
                             </button>
                         </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500"> </span>
+                        <a
+                            href="/broker-admin/reset-password"
+                            className="text-indigo-600 hover:text-indigo-700"
+                        >
+                            Forgot password?
+                        </a>
                     </div>
 
                     {error && (

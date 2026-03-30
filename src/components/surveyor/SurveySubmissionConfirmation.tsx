@@ -1,6 +1,7 @@
-import React from 'react';
-import { CheckCircle, FileText, Users, Clock, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle, FileText, Users, Clock, ArrowRight, Download } from 'lucide-react';
 import { SurveySubmissionResult, PolicyRequest } from '@/types/api.types';
+import { downloadSubmissionZip } from '@/services/api';
 
 interface SurveySubmissionConfirmationProps {
     submissionResult: SurveySubmissionResult;
@@ -13,7 +14,17 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
     policy,
     onClose
 }) => {
+    const [isDownloading, setIsDownloading] = useState(false);
     const isDualSurveyor = submissionResult.dualAssignmentInfo?.isDualSurveyor || false;
+
+    const handleDownloadDocs = async () => {
+        setIsDownloading(true);
+        try {
+            await downloadSubmissionZip(submissionResult.submission._id);
+        } finally {
+            setIsDownloading(false);
+        }
+    };
     const completionStatus = submissionResult.dualAssignmentInfo?.completionStatus || 0;
     const otherSurveyorNotified = submissionResult.otherSurveyorNotified || false;
 
@@ -217,8 +228,16 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
                         </ul>
                     </div>
 
-                    {/* Action Button */}
-                    <div className="flex justify-center">
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button
+                            onClick={handleDownloadDocs}
+                            disabled={isDownloading}
+                            className="flex items-center justify-center gap-2 px-6 py-3 border border-[#028835] text-[#028835] rounded-lg hover:bg-green-50 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            <Download className="w-4 h-4" />
+                            {isDownloading ? 'Downloading...' : 'Download Survey Documents'}
+                        </button>
                         <button
                             onClick={onClose}
                             className="px-6 py-3 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors font-medium"

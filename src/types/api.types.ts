@@ -1,4 +1,4 @@
-
+import type { BuilderLiabilityPolicy } from './builderLiabilityPolicy.types';
 import { ApiResponse, ApiSuccessResponse, ApiErrorResponse, RecommendationAction, PaginationData } from './utility.types';
 export type { ApiResponse, RecommendationAction, PaginationData };
 
@@ -106,6 +106,7 @@ export interface PolicyRequest {
   _id: string;
   userId: string;
   policyNumber?: string;
+  assignmentId?: string;
   ammcId?: string | {
     _id: string;
     propertyDetails?: {
@@ -148,6 +149,14 @@ export interface PolicyRequest {
   status: 'pending' | 'submitted' | 'assigned' | 'surveyed' | 'approved' | 'rejected' | 'completed' | 'under_review' | 'revision_required';
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   assignedSurveyors?: string[];
+  builder?: {
+    nameOfBuilder?: string;
+    address?: string;
+  };
+  project?: {
+    address?: string;
+    lga?: string;
+  };
   surveyDocument?: string | {
     name: string;
     url: string;
@@ -222,19 +231,26 @@ export interface Surveyor extends Employee {
   maxAssignments?: number;
   dateOfBirth?: string;
   qualifications?: string[];
-  availability?: 'available' | 'busy' | 'unavailable';
+  availability?: 'available' | 'busy' | 'unavailable' | 'on-leave';
+  state?: string;
+  city?: string;
+  lga?: string;
+  district?: string;
   profile?: {
-    availability: 'available' | 'busy' | 'unavailable';
+    availability: 'available' | 'busy' | 'unavailable' | 'on-leave';
     specialization: string[];
+    experience?: number;
     location: {
       state: string;
       city: string;
+      lga?: string;
+      district?: string;
       coordinates?: {
         latitude: number;
         longitude: number;
       };
     };
-    workSchedule: {
+    workSchedule?: {
       monday: { start: string; end: string; available: boolean };
       tuesday: { start: string; end: string; available: boolean };
       wednesday: { start: string; end: string; available: boolean };
@@ -296,6 +312,8 @@ export interface PolicyReview {
 export interface Assignment {
   _id: string;
   policyId: string | PolicyRequest;
+  // Legacy/alias: some endpoints return ammcId; keep for backward compatibility
+  ammcId?: string | PolicyRequest;
   surveyorId: string;
   assignedBy: string;
   assignedAt: string;
@@ -1107,16 +1125,16 @@ export interface BrokerAdminLoginResponse {
     id: string;
     email: string;
     fullname: string;
-    organization: 'Broker';
+    organization: 'Broker' | 'AMMC' | 'NIA';
     role: string;
-    tokenType: 'broker-admin';
+    tokenType: 'broker-admin' | 'super-admin';
   };
   brokerAdmin: {
     id: string;
     brokerFirmName: string;
     permissions: BrokerAdmin['permissions'];
     settings: BrokerAdmin['settings'];
-  };
+  } | null;
 }
 
 export interface BrokerAdminVerifyResponse {
@@ -1124,9 +1142,9 @@ export interface BrokerAdminVerifyResponse {
   user: {
     id: string;
     fullname: string;
-    organization: 'Broker';
+    organization: 'Broker' | 'AMMC' | 'NIA';
     role: string;
-    tokenType: 'broker-admin';
+    tokenType: 'broker-admin' | 'super-admin';
   };
   brokerAdmin: {
     id: string;
@@ -1134,7 +1152,7 @@ export interface BrokerAdminVerifyResponse {
     permissions: BrokerAdmin['permissions'];
     settings: BrokerAdmin['settings'];
     status: 'active' | 'inactive' | 'suspended';
-  };
+  } | null;
 }
 
 export interface BrokerClaimStatusHistory {
@@ -1153,6 +1171,10 @@ export interface BrokerPolicyRequest extends PolicyRequest {
   claimRequested?: boolean;
   claimRequestedAt?: string;
   claimReason?: string;
+  address?: string;
+  coverageType?: string;
+  buildingValue?: number;
+  submissionDate?: string;
 }
 
 export interface BrokerDashboardData {
@@ -1161,6 +1183,7 @@ export interface BrokerDashboardData {
     under_review: number;
     rejected: number;
     completed: number;
+    completedPolicies: number;
     total: number;
   };
   averageProcessingTime: number;
@@ -1214,6 +1237,63 @@ export interface BrokerStatusUpdateResponse {
   success: boolean;
   message: string;
   claim: BrokerPolicyRequest;
+}
+
+export interface BrokerCompletedPolicySurveyor {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phonenumber?: string;
+}
+
+export interface BrokerCompletedPolicyHistoryEntry {
+  status: string;
+  changedAt: string;
+  reason?: string;
+  changedBy?: string | {
+    _id: string;
+    firstname: string;
+    lastname: string;
+    email?: string;
+  };
+}
+
+export interface BrokerCompletedPolicy extends Omit<BuilderLiabilityPolicy, 'assignedSurveyors' | 'statusHistory' | 'surveyDocument'> {
+  brokerCompanyName?: string;
+  completedAt?: string;
+  surveyDocument?: string | {
+    name?: string;
+    url?: string;
+    publicId?: string;
+  } | null;
+  assignedSurveyors?: BrokerCompletedPolicySurveyor[];
+  statusHistory?: BrokerCompletedPolicyHistoryEntry[];
+  brokerAssignedTo?: {
+    _id: string;
+    brokerFirmName?: string;
+    profile?: {
+      department?: string;
+      position?: string;
+    };
+  } | null;
+  brokerNotes?: string;
+  surveyorEstimatedValue?: number | null;
+  surveyorRecommendation?: 'approve' | 'reject' | 'request_more_info' | null;
+}
+
+export interface BrokerCompletedPoliciesResponse {
+  success: boolean;
+  policies: BrokerCompletedPolicy[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+}
+
+export interface BrokerCompletedPolicyDetailResponse {
+  success: boolean;
+  policy: BrokerCompletedPolicy;
 }
 
 export type UserReportsResponse = ApiSuccessResponse<{

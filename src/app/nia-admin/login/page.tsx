@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, EyeOff, Building2 } from 'lucide-react';
+import { setAuthToken } from '@/utils/auth';
 
 const NIAAdminLogin = () => {
     const [formData, setFormData] = useState({
@@ -47,19 +48,34 @@ const NIAAdminLogin = () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Check if user is NIA admin
-                if (data.employee?.employeeRole?.role === 'NIA-Admin' || data.employee?.organization === 'NIA') {
+                const employeeRole = data.employee?.employeeRole?.role;
+                const isNIAAdmin = employeeRole === 'NIA-Admin' || data.employee?.organization === 'NIA';
+                const isSuperAdmin = employeeRole === 'Super-admin';
+
+                // Check if user is NIA admin or Super-admin
+                if (isNIAAdmin || isSuperAdmin) {
+                    const tokenType = isSuperAdmin ? 'super-admin' : 'nia-admin';
+
                     // Store NIA admin token and info
+                    setAuthToken(data.token, tokenType);
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('adminToken', data.token);
-                    localStorage.setItem('niaAdminToken', data.token); // Add this for NIA admin pages
+                    if (isNIAAdmin) {
+                        localStorage.setItem('adminToken', data.token);
+                        localStorage.setItem('niaAdminToken', data.token);
+                    }
                     localStorage.setItem('employeeInfo', JSON.stringify(data.employee));
-                    localStorage.setItem('organization', 'NIA');
+                    localStorage.setItem('niaAdminInfo', JSON.stringify({
+                        fullname: `${data.employee?.firstname || ''} ${data.employee?.lastname || ''}`.trim(),
+                        email: data.employee?.email || '',
+                        organization: isNIAAdmin ? 'NIA' : 'AMMC',
+                        role: employeeRole
+                    }));
+                    localStorage.setItem('organization', isNIAAdmin ? 'NIA' : 'AMMC');
 
                     // Redirect to NIA admin dashboard
                     router.push('/nia-admin/dashboard');
                 } else {
-                    setError('Access denied. This portal is for NIA administrators only.');
+                    setError('Access denied. This portal is for NIA administrators and super admins only.');
                 }
             } else {
                 setError(data.message || 'Login failed. Please check your credentials.');

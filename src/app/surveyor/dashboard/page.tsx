@@ -3,7 +3,7 @@ import UnifiedSurveyorDashboard from "@/components/surveyor/UnifiedSurveyorDashb
 
 export default function SurveyorDashboardPage() {
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="mx-auto w-full max-w-7xl">
       <UnifiedSurveyorDashboard />
     </div>
   );

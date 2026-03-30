@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Clock, MapPin, Calendar, Eye, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { getSurveyorAssignments } from "@/services/api";
+import { getSurveyorAssignments, exportSurveyorCsv, triggerCsvDownload } from "@/services/api";
+import ExportCsvPanel from "@/components/shared/ExportCsvPanel";
 
 interface Assignment {
     _id: string;
@@ -60,12 +61,13 @@ const AssignmentsList = () => {
                 console.error('❌ API response not successful:', response);
                 setAssignments([]);
             }
-        } catch (error) {
+        } catch (error: unknown) {
+            const err = error as { message?: string; response?: { status?: number; data?: unknown } };
             console.error("❌ Failed to fetch assignments:", error);
             console.error("Error details:", {
-                message: error.message,
-                status: error.response?.status,
-                data: error.response?.data
+                message: err.message,
+                status: err.response?.status,
+                data: err.response?.data
             });
             setAssignments([]);
         } finally {
@@ -121,13 +123,13 @@ const AssignmentsList = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">My Assignments</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Assignments</h1>
                 <div className="flex items-center space-x-2">
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                        className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
                     >
                         <option value="all">All Assignments</option>
                         <option value="assigned">Assigned</option>
@@ -136,6 +138,15 @@ const AssignmentsList = () => {
                     </select>
                 </div>
             </div>
+
+            {/* CSV Export Panel */}
+            <ExportCsvPanel
+                onExport={async (startDate, endDate) => {
+                    const csv = await exportSurveyorCsv(startDate, endDate);
+                    triggerCsvDownload(csv, 'my_assignments.csv');
+                }}
+                buttonLabel="Export Assignments CSV"
+            />
 
             {/* Assignments List */}
             {assignments.length === 0 ? (
@@ -156,11 +167,11 @@ const AssignmentsList = () => {
                             key={assignment._id}
                             className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
                         >
-                            <div className="p-6">
-                                <div className="flex items-start justify-between">
+                            <div className="p-4 sm:p-6">
+                                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                                     <div className="flex-1">
-                                        <div className="flex items-center space-x-3 mb-2">
-                                            <h3 className="text-lg font-semibold text-gray-900">
+                                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                                            <h3 className="text-lg font-semibold text-gray-900 break-words">
                                                 {assignment.policyId?.project?.projectType || "Builder Liability Survey"}
                                             </h3>
                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
@@ -191,23 +202,23 @@ const AssignmentsList = () => {
                                             </div>
                                         </div>
 
-                                        <div className="mt-3 flex items-center space-x-4 text-sm">
-                                            <span className="text-gray-500">
+                                        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm">
+                                            <span className="text-gray-500 break-words">
                                                 Policy #{assignment.policyId?.policyNumber || "N/A"}
                                             </span>
-                                            <span className="text-gray-500">
+                                            <span className="text-gray-500 break-words">
                                                 LGA: {assignment.policyId?.project?.lga || "N/A"}
                                             </span>
-                                            <span className="text-gray-500">
+                                            <span className="text-gray-500 break-words">
                                                 Builder: {assignment.policyId?.builder?.nameOfBuilder || "N/A"}
                                             </span>
                                         </div>
                                     </div>
 
-                                    <div className="ml-6">
+                                    <div className="lg:ml-6">
                                         <Link
                                             href={`/surveyor/dashboard/assignments/${assignment._id}`}
-                                            className="inline-flex items-center px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors"
+                                            className="inline-flex w-full lg:w-auto justify-center items-center px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors"
                                         >
                                             <Eye className="h-4 w-4 mr-2" />
                                             View Details

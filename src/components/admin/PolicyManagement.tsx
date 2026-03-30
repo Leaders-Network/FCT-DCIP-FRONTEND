@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -13,7 +13,9 @@ import { useRouter } from 'next/navigation';
 import AssignSurveyorModal from './AssignSurveyorModal';
 import { PolicyDetailsModal } from '@/components/builderLiability/PolicyDetailsModal';
 import { toast } from "sonner";
-import Swal from "sweetalert2"
+import Swal from "sweetalert2";
+import ExportCsvPanel from '@/components/shared/ExportCsvPanel';
+import { exportAmmcPoliciesCsv, triggerCsvDownload } from '@/services/api';
 
 // Legacy imports for backward compatibility during transition
 import { PolicyRequest } from '@/types/api.types';
@@ -86,6 +88,17 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+  const normalizeSurveyor = (surveyor: Surveyor | Record<string, unknown>): Surveyor => {
+    const safeSurveyor = surveyor as Surveyor & { userId?: { firstname?: string; lastname?: string; email?: string; phonenumber?: string } };
+    return {
+      ...safeSurveyor,
+      firstname: safeSurveyor.firstname || safeSurveyor.userId?.firstname || '',
+      lastname: safeSurveyor.lastname || safeSurveyor.userId?.lastname || '',
+      email: safeSurveyor.email || safeSurveyor.userId?.email || '',
+      phonenumber: safeSurveyor.phonenumber || safeSurveyor.userId?.phonenumber || ''
+    };
+  };
+
   // New state for Builder Liability Policies
   const [selectedBLPolicy, setSelectedBLPolicy] = useState<BuilderLiabilityPolicy | null>(null);
   const [showBLPolicyModal, setShowBLPolicyModal] = useState(false);
@@ -135,7 +148,10 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     try {
       // Fetch surveyors and Builder Liability Policies
       const surveyorsResponse = await adminApi.getSurveyors();
-      setSurveyors(surveyorsResponse.data);
+      const normalizedSurveyors = Array.isArray(surveyorsResponse?.data)
+        ? surveyorsResponse.data.map(normalizeSurveyor)
+        : [];
+      setSurveyors(normalizedSurveyors);
 
       // Fetch Builder Liability Policies using both hooks and direct API call
       fetchBLPolicies();
@@ -434,6 +450,15 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
         <h2 className="text-2xl font-bold">Insurance Policy Management</h2>
       </div>
 
+      {/* CSV Export Panel */}
+      <ExportCsvPanel
+        onExport={async (startDate, endDate) => {
+          const csv = await exportAmmcPoliciesCsv(startDate, endDate);
+          triggerCsvDownload(csv, 'ammc_policies.csv');
+        }}
+        buttonLabel="Export Policies CSV"
+      />
+
       {/* Search and Filter Bar */}
       <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
         <div className="flex flex-col sm:flex-row gap-3">
@@ -542,7 +567,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
             {/* Min Insurance Value Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Min Insurance Value (â‚¦)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Min Insurance Value (₦)</label>
               <input
                 type="number"
                 placeholder="0"
@@ -554,7 +579,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
             {/* Max Insurance Value Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Insurance Value (â‚¦)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Insurance Value (₦)</label>
               <input
                 type="number"
                 placeholder="âˆž"
@@ -724,7 +749,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                     <td className="px-6 py-4">
                       <div>
                         <p className="text-sm font-medium text-gray-900">{policy.requestDetails.coverageType}</p>
-                        <p className="text-xs text-gray-500">â‚¦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
                         <p className="text-xs text-gray-500">{policy.requestDetails.policyDuration}</p>
                       </div>
                     </td>
@@ -739,8 +764,15 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => {
-                            setSelectedPolicy(policy);
-                            setShowDetailsModal(true);
+                            // If this is a Builder Liability Policy, show the rich BL details modal
+                            if ((policy as any).isBuilderLiabilityPolicy && (policy as any).originalBLPolicy) {
+                              setSelectedBLPolicy((policy as ExtendedPolicyRequest).originalBLPolicy as BuilderLiabilityPolicy);
+                              setShowBLPolicyModal(true);
+                            } else {
+                              // Fallback to legacy modal for old policy types
+                              setSelectedPolicy(policy);
+                              setShowDetailsModal(true);
+                            }
                           }}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                         >
@@ -957,7 +989,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
         </div>
       )}
 
-      {/* Policy Details Modal */}
+      {/* Legacy Policy Details Modal */}
       {showDetailsModal && selectedPolicy && (
         <LegacyPolicyDetailsModal
           policy={toPolicyRequest(selectedPolicy)}
@@ -965,6 +997,18 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
           onClose={() => {
             setShowDetailsModal(false);
             setSelectedPolicy(null);
+          }}
+        />
+      )}
+
+      {/* Builder Liability Policy Details Modal */}
+      {showBLPolicyModal && selectedBLPolicy && (
+        <PolicyDetailsModal
+          policy={selectedBLPolicy}
+          isOpen={showBLPolicyModal}
+          onClose={() => {
+            setShowBLPolicyModal(false);
+            setSelectedBLPolicy(null);
           }}
         />
       )}

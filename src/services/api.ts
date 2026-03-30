@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import {
   EmployeeRegistrationData,
   EmployeeLoginResponse,
@@ -380,13 +380,21 @@ export const getSurveyorDualAssignments = async (filters?: {
   }
 };
 
-export const getSurveyorAssignments = async (filters?: {
-  status?: string;
-  priority?: string;
-  page?: number;
-  limit?: number;
-}) => {
+export const getSurveyorAssignments = async (
+  filtersOrStatus?: {
+    status?: string;
+    priority?: string;
+    page?: number;
+    limit?: number;
+  } | string,
+  page = 1,
+  limit = 10
+) => {
   try {
+    const filters = typeof filtersOrStatus === 'string'
+      ? { status: filtersOrStatus, page, limit }
+      : filtersOrStatus;
+
     console.log('🔍 getSurveyorAssignments called with filters:', filters);
 
     const params = new URLSearchParams();
@@ -408,10 +416,11 @@ export const getSurveyorAssignments = async (filters?: {
     console.log('✅ API response received:', response.data);
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown; status?: number } };
     console.error("❌ Failed to fetch surveyor assignments", error);
-    console.error("Error response:", error.response?.data);
-    console.error("Error status:", error.response?.status);
+    console.error("Error response:", err.response?.data);
+    console.error("Error status:", err.response?.status);
     throw error;
   }
 };
@@ -459,6 +468,46 @@ export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 
     return response.data;
   } catch (error) {
     console.error("Failed to fetch surveyor submissions", error);
+    throw error;
+  }
+};
+
+/** Download all survey documents for a submission as a ZIP archive (by submission ID). */
+export const downloadSubmissionZip = async (submissionId: string): Promise<void> => {
+  try {
+    const endpoint = '/submission/' + submissionId + '/download-zip';
+    const response = await api.get(endpoint, { responseType: 'blob' });
+    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }));
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'survey-documents-' + submissionId + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Failed to download submission zip', error);
+    alert('Could not download the survey documents. Please try again.');
+    throw error;
+  }
+};
+
+/** Download all survey documents for a submission as a ZIP archive (by assignment ID). */
+export const downloadSubmissionZipByAssignment = async (assignmentId: string): Promise<void> => {
+  try {
+    const endpoint = '/submission/assignment/' + assignmentId + '/download-zip';
+    const response = await api.get(endpoint, { responseType: 'blob' });
+    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }));
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'survey-documents-assignment-' + assignmentId + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Failed to download assignment submission zip', error);
+    alert('Could not download the survey documents. Please try again.');
     throw error;
   }
 };
@@ -1118,6 +1167,11 @@ export const adminApi = {
     return response.data;
   },
 
+  getAllEmployees: async () => {
+    const response = await api.get('/admin/employees');
+    return response.data;
+  },
+
 
 
   updateEmployeeStatus: async (employeeId: string, status: string) => {
@@ -1181,6 +1235,12 @@ export const adminApi = {
     return response.data;
   },
 
+  // Admin-only: soft-delete a platform user by ID
+  deletePlatformUser: async (userId: string) => {
+    const response = await api.delete(`/auth/users/${userId}`);
+    return response.data;
+  },
+
   updateSurveyor: async (surveyorId: string, surveyorData: Partial<Surveyor>) => {
     const response = await api.patch(`/admin/surveyor/${surveyorId}`, surveyorData);
     return response.data;
@@ -1206,6 +1266,7 @@ export const adminApi = {
     priority?: string;
     surveyorId?: string;
     overdue?: boolean;
+    search?: string;
     page?: number;
     limit?: number;
   }) => {
@@ -1390,28 +1451,7 @@ export const adminApi = {
     return response.data;
   },
 
-  // Generic HTTP methods for dynamic API calls
-  get: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
-    const response = await api.get<T>(url, config);
-    return response.data;
-  },
-
-  post: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
-    const response = await api.post<T>(url, data, config);
-    return response.data;
-  },
-
-  patch: async <T = unknown>(url: string, data?: unknown, config?: import('axios').AxiosRequestConfig) => {
-    const response = await api.patch<T>(url, data, config);
-    return response.data;
-  },
-
-  delete: async <T = unknown>(url: string, config?: import('axios').AxiosRequestConfig) => {
-    const response = await api.delete<T>(url, config);
-    return response.data;
-  },
-
-  // Generic HTTP methods for adminApi
+  // Generic HTTP methods for adminApi (preferred helpers)
   get: async <T = unknown>(endpoint: string, config?: { params?: Record<string, unknown> }) => {
     const queryParams = new URLSearchParams();
     if (config?.params) {
@@ -1617,20 +1657,12 @@ export const dualAssignmentAPI = {
 export const tokenManager = {
   // Get the appropriate token based on user type
   getToken: (userType?: 'ammc' | 'nia' | 'user'): string | null => {
-    if (typeof window === 'undefined') return null;
-
     if (userType === 'nia') {
-      return getCookie('niaAdminToken');
+      return getAuthToken('nia-admin');
     } else if (userType === 'ammc') {
-      return getCookie('adminToken') ||
-        getCookie('token') ||
-        getCookie('authToken');
+      return getAuthToken('admin');
     } else {
-      // Try all possible token sources
-      return getCookie('niaAdminToken') ||
-        getCookie('adminToken') ||
-        getCookie('token') ||
-        getCookie('authToken');
+      return getAuthToken();
     }
   },
 
@@ -1777,5 +1809,138 @@ export const brokerAdminAPI = {
     const endpoint = `/broker-admin/analytics${period ? `?period=${period}` : ''}`;
     const response = await api.get(endpoint);
     return response.data;
+  },
+
+  // Export claims as CSV
+  exportClaimsCsv: async (startDate?: string, endDate?: string): Promise<string> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const url = `/broker-admin/claims/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await api.get(url, { responseType: 'text' });
+    return response.data as string;
+  },
+
+  // Get completed policies
+  getCompletedPolicies: async (filters?: {
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    companyName?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+  }): Promise<import("../types/api.types").BrokerCompletedPoliciesResponse> => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+
+    const url = `/broker-admin/policies/completed${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  // Get completed policy by ID
+  getCompletedPolicyById: async (policyId: string): Promise<import("../types/api.types").BrokerCompletedPolicyDetailResponse> => {
+    const response = await api.get(`/broker-admin/policies/completed/${policyId}`);
+    return response.data;
+  },
+
+  // Export completed policies as CSV
+  exportCompletedPoliciesCsv: async (startDate?: string, endDate?: string, companyName?: string): Promise<string> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('dateFrom', startDate);
+    if (endDate) params.append('dateTo', endDate);
+    if (companyName) params.append('companyName', companyName);
+
+    const url = `/broker-admin/policies/completed/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await api.get(url, { responseType: 'text' });
+    return response.data as string;
   }
+};
+
+export const adminEnforcementAPI = {
+  getCompletedPolicies: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<import("@/types/builderLiabilityPolicy.types").GetPoliciesResponse> => {
+    const query = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          query.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await api.get(`/admin/enforcement/policies/completed${query.toString() ? `?${query.toString()}` : ''}`);
+    return response.data;
+  }
+};
+
+// ─── CSV Export helpers (one per dashboard) ────────────────────────────────
+
+/**
+ * Download AMMC Admin policies as a CSV string.
+ */
+export const exportAmmcPoliciesCsv = async (
+  startDate?: string,
+  endDate?: string
+): Promise<string> => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  const url = `/admin/dashboard/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await api.get(url, { responseType: 'text' });
+  return response.data as string;
+};
+
+/**
+ * Download NIA Admin assignments as a CSV string.
+ */
+export const exportNiaAssignmentsCsv = async (
+  startDate?: string,
+  endDate?: string
+): Promise<string> => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  const url = `/nia-admin/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await api.get(url, { responseType: 'text' });
+  return response.data as string;
+};
+
+/**
+ * Download Surveyor assignments as a CSV string.
+ */
+export const exportSurveyorCsv = async (
+  startDate?: string,
+  endDate?: string
+): Promise<string> => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  const url = `/surveyor/assignments/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await api.get(url, { responseType: 'text' });
+  return response.data as string;
+};
+
+/** Shared helper: trigger a browser file download from a CSV string. */
+export const triggerCsvDownload = (csvData: string, filename: string) => {
+  const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+  const href = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(href);
 };

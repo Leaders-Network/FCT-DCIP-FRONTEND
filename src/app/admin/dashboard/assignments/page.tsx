@@ -14,9 +14,11 @@ import {
   Eye,
   UserCheck,
   Calendar,
-  Building
+  Building,
+  Download
 } from 'lucide-react';
 import { adminApi } from '@/services/api';
+import { downloadSubmissionZipByAssignment } from '@/services/api';
 
 interface Assignment {
   _id: string;
@@ -65,10 +67,41 @@ const AutomatedAssignmentsPage = () => {
   });
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [isDownloadingDocs, setIsDownloadingDocs] = useState(false);
+
+  const handleDownloadDocs = async (assignmentId: string) => {
+    setIsDownloadingDocs(true);
+    try {
+      await downloadSubmissionZipByAssignment(assignmentId);
+    } finally {
+      setIsDownloadingDocs(false);
+    }
+  };
 
   useEffect(() => {
     fetchAssignments();
   }, [filters]);
+
+  const buildStatsFromAssignments = (items: Assignment[]): AssignmentStats => {
+    const byStatus: Record<string, number> = {};
+    const byPriority: Record<string, number> = {};
+
+    let overdueCount = 0;
+    for (const item of items) {
+      byStatus[item.status] = (byStatus[item.status] || 0) + 1;
+      byPriority[item.priority] = (byPriority[item.priority] || 0) + 1;
+      if (new Date(item.deadline) < new Date() && item.status !== 'completed' && item.status !== 'cancelled') {
+        overdueCount += 1;
+      }
+    }
+
+    return {
+      total: items.length,
+      byStatus,
+      byPriority,
+      overdueCount
+    };
+  };
 
   const fetchAssignments = async () => {
     try {
@@ -87,14 +120,11 @@ const AutomatedAssignmentsPage = () => {
 
       const params: AssignmentParams = {
         page: 1,
-        limit: 100,
+        limit: 200,
         sortBy: 'assignedAt',
         sortOrder: 'desc'
       };
 
-      if (filters.status !== 'all') {
-        params.status = filters.status;
-      }
       if (filters.priority !== 'all') {
         params.priority = filters.priority;
       }
@@ -102,37 +132,67 @@ const AutomatedAssignmentsPage = () => {
         params.search = filters.search;
       }
 
-      console.log('Fetching assignments with params:', params);
+      // Some backend deployments default to returning only `completed` when `status` is omitted.
+      // To ensure the "All Statuses" view actually shows everything, explicitly fetch each status and merge.
+      if (filters.status === 'all') {
+        const statuses: Array<Assignment['status']> = ['assigned', 'accepted', 'in_progress', 'completed', 'rejected', 'cancelled'];
 
-      const response = await adminApi.getAssignments(params);
+        const responses = await Promise.all(
+          statuses.map((status) => adminApi.getAssignments({ ...params, status }))
+        );
 
-      console.log('Assignments API response:', response);
+        const firstError = responses.find((r) => !r?.success);
+        if (firstError && !firstError.success) {
+          throw new Error(firstError.message || 'Failed to load assignments');
+        }
 
-      if (response.success) {
-        setAssignments(response.data.assignments || []);
+        const merged = new Map<string, Assignment>();
+        for (const r of responses) {
+          for (const item of (r?.data?.assignments || []) as Assignment[]) {
+            merged.set(item._id, item);
+          }
+        }
 
-        // Transform statistics to match frontend expectations
-        const statusBreakdown = response.data.statistics?.statusBreakdown || [];
-        const byStatus: Record<string, number> = {};
-        statusBreakdown.forEach((item: { _id: string; count: number }) => {
-          byStatus[item._id] = item.count;
-        });
+        const mergedAssignments = Array.from(merged.values()).sort(
+          (a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime()
+        );
 
-        const priorityBreakdown = response.data.statistics?.priorityBreakdown || [];
-        const byPriority: Record<string, number> = {};
-        priorityBreakdown.forEach((item: { _id: string; count: number }) => {
-          byPriority[item._id] = item.count;
-        });
-
-        setStats({
-          total: response.data.pagination?.totalRecords || 0,
-          byStatus,
-          byPriority,
-          overdueCount: response.data.statistics?.overdueAssignments || 0
-        });
+        setAssignments(mergedAssignments);
+        setStats(buildStatsFromAssignments(mergedAssignments));
       } else {
-        console.error('API returned error:', response.message);
-        throw new Error(response.message || 'Failed to load assignments');
+        const response = await adminApi.getAssignments({ ...params, status: filters.status });
+
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to load assignments');
+        }
+
+        const list = (response.data.assignments || []) as Assignment[];
+        setAssignments(list);
+
+        // Prefer server-side stats when available; fall back to local stats otherwise.
+        const statusBreakdown = response.data.statistics?.statusBreakdown || [];
+        const priorityBreakdown = response.data.statistics?.priorityBreakdown || [];
+
+        if (statusBreakdown.length || priorityBreakdown.length) {
+          const byStatus: Record<string, number> = {};
+          statusBreakdown.forEach((item: { _id: string; count: number }) => {
+            byStatus[item._id] = item.count;
+          });
+
+          const byPriority: Record<string, number> = {};
+          priorityBreakdown.forEach((item: { _id: string; count: number }) => {
+            byPriority[item._id] = item.count;
+          });
+
+          setStats({
+            total: response.data.pagination?.totalRecords || list.length,
+            byStatus,
+            byPriority,
+            overdueCount: response.data.statistics?.overdueAssignments || 0
+          });
+        } else {
+          setStats(buildStatsFromAssignments(list));
+        }
       }
     } catch (error) {
       console.error('Assignments fetch error:', error);
@@ -148,6 +208,7 @@ const AutomatedAssignmentsPage = () => {
       accepted: { color: 'bg-green-100 text-green-800', label: 'Accepted', icon: CheckCircle },
       in_progress: { color: 'bg-yellow-100 text-yellow-800', label: 'In Progress', icon: Clock },
       completed: { color: 'bg-emerald-100 text-emerald-800', label: 'Completed', icon: CheckCircle },
+      rejected: { color: 'bg-orange-100 text-orange-800', label: 'Rejected', icon: AlertTriangle },
       cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled', icon: AlertTriangle }
     };
 
@@ -292,6 +353,7 @@ const AutomatedAssignmentsPage = () => {
             <option value="accepted">Accepted</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
+            <option value="rejected">Rejected</option>
             <option value="cancelled">Cancelled</option>
           </select>
 
@@ -521,13 +583,25 @@ const AutomatedAssignmentsPage = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Close
-              </button>
+            <div className="p-6 border-t border-gray-200 flex justify-between items-center">
+              {selectedAssignment.status === 'completed' && (
+                <button
+                  onClick={() => handleDownloadDocs(selectedAssignment._id)}
+                  disabled={isDownloadingDocs}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  <Download className="w-4 h-4" />
+                  {isDownloadingDocs ? 'Downloading...' : 'Download Survey Docs'}
+                </button>
+              )}
+              <div className="ml-auto">
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

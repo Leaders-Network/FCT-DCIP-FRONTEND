@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Lock, Save, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '@/services/api';
+import { setCookie } from '@/utils/cookies';
 
 export default function SurveyorSettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
@@ -34,15 +35,62 @@ export default function SurveyorSettingsPage() {
     fetchProfile();
   }, []);
 
+  const extractProfileFields = (data: {
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    phonenumber?: string;
+    userId?: {
+      firstname?: string;
+      lastname?: string;
+      email?: string;
+      phonenumber?: string;
+    };
+  }) => {
+    return {
+      firstname: data?.firstname || data?.userId?.firstname || '',
+      lastname: data?.lastname || data?.userId?.lastname || '',
+      email: data?.email || data?.userId?.email || '',
+      phonenumber: data?.phonenumber || data?.userId?.phonenumber || ''
+    };
+  };
+
+  const syncSurveyorName = (firstname: string, lastname: string) => {
+    const fullName = `${firstname} ${lastname}`.trim().replace(/\s+/g, ' ');
+    if (!fullName) return;
+
+    localStorage.setItem('surveyorName', fullName);
+    setCookie('surveyorName', fullName, {
+      expires: 7,
+      path: '/',
+      secure: window.location.protocol === 'https:',
+      sameSite: 'lax',
+    });
+    window.dispatchEvent(new Event('surveyor-name-updated'));
+  };
+
   const fetchProfile = async () => {
     try {
       const response = await api.get('/settings/profile');
       if (response.data.success) {
-        const { firstname, lastname, email, phonenumber } = response.data.data;
-        setProfileData({ firstname, lastname, email, phonenumber });
+        const extractedProfile = extractProfileFields(response.data.data || {});
+        setProfileData(extractedProfile);
+        syncSurveyorName(extractedProfile.firstname, extractedProfile.lastname);
+        return;
       }
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      console.error('Failed to fetch /settings/profile:', error);
+    }
+
+    try {
+      const response = await api.get('/surveyor/profile');
+      if (response.data.success) {
+        const extractedProfile = extractProfileFields(response.data.data || {});
+        setProfileData(extractedProfile);
+        syncSurveyorName(extractedProfile.firstname, extractedProfile.lastname);
+      }
+    } catch (error) {
+      console.error('Failed to fetch /surveyor/profile:', error);
     }
   };
 
@@ -55,8 +103,7 @@ export default function SurveyorSettingsPage() {
       const response = await api.patch('/settings/profile', profileData);
       if (response.data.success) {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        // Update localStorage
-        localStorage.setItem('surveyorName', `${profileData.firstname} ${profileData.lastname}`);
+        syncSurveyorName(profileData.firstname, profileData.lastname);
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error
