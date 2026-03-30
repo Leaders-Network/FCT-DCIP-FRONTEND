@@ -30,6 +30,7 @@ interface NIASurveyorForAssignment {
 // Use types from api.types.ts
 import { DualAssignment } from '@/types/api.types';
 import { AssignmentManagementProps } from '@/types/component.types';
+import { getAuthToken } from '@/utils/auth';
 
 interface NIAAssignmentManagementProps extends AssignmentManagementProps {
   assignment: DualAssignment;
@@ -68,7 +69,7 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
   const fetchAvailableSurveyors = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('niaAdminToken');
+      const token = getAuthToken('nia-admin');
 
       if (!token) {
         throw new Error('No authentication token found');
@@ -146,7 +147,7 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
 
     try {
       setAssigning(true);
-      const token = localStorage.getItem('niaAdminToken');
+      const token = getAuthToken('nia-admin');
 
       if (!token) {
         throw new Error('No authentication token found');

@@ -2,21 +2,127 @@
  * Authentication utility functions
  */
 
-import { getCookie, setCookie, deleteCookie, hasCookie } from './cookies';
+import { getCookie, setCookie, deleteCookie } from './cookies';
 
 export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor';
 
+const isBrowser = (): boolean => typeof window !== 'undefined';
+
+const getStoredValue = (key: string): string | null => {
+    if (!isBrowser()) return null;
+
+    const cookieValue = getCookie(key);
+    if (cookieValue) {
+        if (window.localStorage.getItem(key) !== cookieValue) {
+            window.localStorage.setItem(key, cookieValue);
+        }
+        return cookieValue;
+    }
+
+    return window.localStorage.getItem(key);
+};
+
+const setStoredValue = (key: string, value: string): void => {
+    if (!isBrowser()) return;
+
+    setCookie(key, value, {
+        expires: 7,
+        path: '/',
+        secure: window.location.protocol === 'https:',
+        sameSite: 'lax'
+    });
+    window.localStorage.setItem(key, value);
+};
+
+const removeStoredValue = (key: string): void => {
+    if (!isBrowser()) return;
+
+    deleteCookie(key);
+    window.localStorage.removeItem(key);
+};
+
+const syncLegacySuperAdminTokens = (token: string): void => {
+    if (!isBrowser()) return;
+
+    if (window.localStorage.getItem('token') !== token || getCookie('token') !== token) {
+        setStoredValue('token', token);
+    }
+
+    if (window.localStorage.getItem('authToken') !== token || getCookie('authToken') !== token) {
+        setStoredValue('authToken', token);
+    }
+};
+
+const getStoredUserRole = (): string | null => {
+    if (!isBrowser()) return null;
+
+    const userSources = ['superAdminInfo', 'user', 'adminInfo', 'niaAdminInfo', 'brokerAdminInfo', 'userInfo'];
+
+    for (const key of userSources) {
+        const rawValue = getStoredValue(key);
+        if (!rawValue) continue;
+
+        try {
+            const parsed = JSON.parse(rawValue);
+            const directRole = typeof parsed?.role === 'string' ? parsed.role : null;
+            const employeeRole = typeof parsed?.employeeRole?.role === 'string' ? parsed.employeeRole.role : null;
+            const role = directRole || employeeRole;
+
+            if (role) {
+                return role;
+            }
+        } catch (_error) {
+            continue;
+        }
+    }
+
+    return null;
+};
+
+const hasActiveSuperAdminSession = (): boolean => {
+    if (!isBrowser()) return false;
+
+    const superAdminToken = getStoredValue('superAdminToken');
+    if (!superAdminToken) return false;
+
+    const role = getStoredUserRole();
+    return role === 'Super-admin' || role === 'super-admin' || role === 'Super admin' || role === 'super admin';
+};
+
 export const getAuthToken = (tokenType?: TokenType): string | null => {
-    if (typeof window === 'undefined') return null;
+    if (!isBrowser()) return null;
+
+    const activeSuperAdminSession = hasActiveSuperAdminSession();
+    const activeSuperAdminToken = activeSuperAdminSession ? getStoredValue('superAdminToken') : null;
 
     // If specific token type is requested, try to get that specific token first
     if (tokenType) {
+        if (tokenType !== 'super-admin' && activeSuperAdminToken) {
+            console.log(`Using active super admin token for ${tokenType} access`);
+            syncLegacySuperAdminTokens(activeSuperAdminToken);
+            return activeSuperAdminToken;
+        }
+
         const tokenKey = getTokenKeyForType(tokenType);
-        const token = getCookie(tokenKey);
+        const token = getStoredValue(tokenKey);
         if (token) {
             console.log(`Using specific auth token from cookie: ${tokenKey}`);
+            if (tokenType === 'super-admin') {
+                syncLegacySuperAdminTokens(token);
+            }
             return token;
         }
+
+        // Super admin can satisfy any lower-level dashboard request.
+        if (tokenType !== 'super-admin') {
+            const superAdminToken = getStoredValue('superAdminToken');
+            if (superAdminToken) {
+                console.log(`Using super admin token for ${tokenType} access`);
+                syncLegacySuperAdminTokens(superAdminToken);
+                return superAdminToken;
+            }
+        }
+
         // If specific token not found, fall back to auto-detection
         console.warn(`Requested token type '${tokenType}' not found, trying auto-detection`);
     }
@@ -41,11 +147,29 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
 
     // If we detected a type from the URL, try to get that specific token
     if (detectedType) {
+        if (detectedType !== 'super-admin' && activeSuperAdminToken) {
+            console.log(`Using active super admin token for path-based ${detectedType} access`);
+            syncLegacySuperAdminTokens(activeSuperAdminToken);
+            return activeSuperAdminToken;
+        }
+
         const tokenKey = getTokenKeyForType(detectedType);
-        const token = getCookie(tokenKey);
+        const token = getStoredValue(tokenKey);
         if (token) {
             console.log(`Auto-detected and using auth token from cookie: ${tokenKey} (based on path: ${currentPath})`);
+            if (detectedType === 'super-admin') {
+                syncLegacySuperAdminTokens(token);
+            }
             return token;
+        }
+
+        if (detectedType !== 'super-admin') {
+            const superAdminToken = getStoredValue('superAdminToken');
+            if (superAdminToken) {
+                console.log(`Using super admin token for path-based ${detectedType} access`);
+                syncLegacySuperAdminTokens(superAdminToken);
+                return superAdminToken;
+            }
         }
     }
 
@@ -62,9 +186,12 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     ];
 
     for (const key of tokenKeys) {
-        const token = getCookie(key);
+        const token = getStoredValue(key);
         if (token) {
             console.log(`Using fallback auth token from cookie: ${key}`);
+            if (key === 'superAdminToken') {
+                syncLegacySuperAdminTokens(token);
+            }
             return token;
         }
     }
@@ -117,26 +244,33 @@ export const isAuthenticated = (): boolean => {
 };
 
 export const setAuthToken = (token: string, tokenType: TokenType = 'admin'): void => {
-    if (typeof window === 'undefined') return;
+    if (!isBrowser()) return;
 
     const tokenKey = getTokenKeyForType(tokenType);
-    // Set cookie with secure options
-    setCookie(tokenKey, token, {
-        expires: 7, // 7 days
-        path: '/',
-        secure: window.location.protocol === 'https:',
-        sameSite: 'lax'
-    });
+    setStoredValue(tokenKey, token);
+
+    // Legacy tokens are still used in a few older screens.
+    if (tokenType === 'super-admin') {
+        setStoredValue('token', token);
+        setStoredValue('authToken', token);
+    }
+
     console.log(`Auth token set in cookie: ${tokenKey}`);
 };
 
 export const removeAuthToken = (tokenType?: TokenType): void => {
-    if (typeof window === 'undefined') return;
+    if (!isBrowser()) return;
 
     if (tokenType) {
         // Remove specific token type
         const tokenKey = getTokenKeyForType(tokenType);
-        deleteCookie(tokenKey);
+        removeStoredValue(tokenKey);
+
+        if (tokenType === 'super-admin') {
+            removeStoredValue('token');
+            removeStoredValue('authToken');
+        }
+
         console.log(`Auth token removed from cookie: ${tokenKey}`);
     } else {
         // Remove all tokens
@@ -152,7 +286,7 @@ export const removeAuthToken = (tokenType?: TokenType): void => {
         ];
 
         tokenKeys.forEach(key => {
-            deleteCookie(key);
+            removeStoredValue(key);
         });
 
         console.log('All auth tokens removed from cookies');
@@ -160,7 +294,7 @@ export const removeAuthToken = (tokenType?: TokenType): void => {
 };
 
 export const clearAuthTokens = (): void => {
-    if (typeof window === 'undefined') return;
+    if (!isBrowser()) return;
 
     const tokenKeys = [
         'superAdminToken',
@@ -183,7 +317,7 @@ export const clearAuthTokens = (): void => {
     ];
 
     tokenKeys.forEach(key => {
-        deleteCookie(key);
+        removeStoredValue(key);
     });
 
     console.log('All auth tokens and user info cleared from cookies');
@@ -204,23 +338,26 @@ export const getApiHeaders = (tokenType?: TokenType): Record<string, string> => 
 
 // Get current user's token type based on URL path and available tokens
 export const getCurrentTokenType = (): string | null => {
-    if (typeof window === 'undefined') return null;
+    if (!isBrowser()) return null;
+
+    const activeSuperAdminSession = hasActiveSuperAdminSession();
 
     // First, try to detect from current URL path
     const currentPath = window.location.pathname;
 
     if (currentPath.includes('/broker-admin')) {
-        if (hasCookie('brokerAdminToken')) return 'broker-admin';
+        if (getStoredValue('brokerAdminToken')) return 'broker-admin';
     } else if (currentPath.includes('/nia-admin')) {
-        if (hasCookie('niaAdminToken')) return 'nia-admin';
+        if (getStoredValue('niaAdminToken')) return 'nia-admin';
     } else if (currentPath.includes('/surveyor')) {
-        if (hasCookie('surveyorToken')) return 'surveyor';
+        if (getStoredValue('surveyorToken')) return 'surveyor';
     } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
-        if (hasCookie('adminToken')) return 'admin';
+        if (activeSuperAdminSession) return 'super-admin';
+        if (getStoredValue('adminToken')) return 'admin';
     } else if (currentPath.includes('/super-admin')) {
-        if (hasCookie('superAdminToken')) return 'super-admin';
+        if (getStoredValue('superAdminToken')) return 'super-admin';
     } else if (currentPath.includes('/dashboard') || currentPath.includes('/user')) {
-        if (hasCookie('userToken')) return 'user';
+        if (getStoredValue('userToken')) return 'user';
     }
 
     // Fallback: check all token types in priority order
@@ -234,13 +371,13 @@ export const getCurrentTokenType = (): string | null => {
     ];
 
     for (const { type, key } of tokenTypes) {
-        if (hasCookie(key)) {
+        if (getStoredValue(key)) {
             return type;
         }
     }
 
     // Check legacy tokens
-    if (hasCookie('token') || hasCookie('authToken')) {
+    if (getStoredValue('token') || getStoredValue('authToken')) {
         return 'legacy';
     }
 
