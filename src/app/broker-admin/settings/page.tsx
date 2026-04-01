@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Lock, Save, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '@/services/api';
+import { extractErrorMessage } from '@/types/error.types';
 
 export default function BrokerAdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
@@ -35,12 +36,19 @@ export default function BrokerAdminSettingsPage() {
   const fetchProfile = async () => {
     try {
       const response = await api.get('/settings/profile');
-      if (response.data.success) {
-        const { firstname, lastname, email, phonenumber } = response.data.data;
-        setProfileData({ firstname, lastname, email, phonenumber });
+
+      if (response.data?.success) {
+        const data = response.data.data || {};
+        setProfileData({
+          firstname: data.firstname || '',
+          lastname: data.lastname || '',
+          email: data.email || '',
+          phonenumber: data.phonenumber || ''
+        });
       }
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      console.error('Failed to fetch broker admin profile:', error);
+      setMessage({ type: 'error', text: extractErrorMessage(error) || 'Failed to fetch profile' });
     }
   };
 
@@ -51,18 +59,44 @@ export default function BrokerAdminSettingsPage() {
 
     try {
       const response = await api.patch('/settings/profile', profileData);
-      if (response.data.success) {
-        setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        localStorage.setItem('brokerAdminInfo', JSON.stringify({
-          fullname: `${profileData.firstname} ${profileData.lastname}`,
-          email: profileData.email
-        }));
+
+      if (response.data?.success) {
+        const updated = response.data.data || profileData;
+
+        setProfileData({
+          firstname: updated.firstname || '',
+          lastname: updated.lastname || '',
+          email: updated.email || '',
+          phonenumber: updated.phonenumber || ''
+        });
+
+        const storedAdminInfo = localStorage.getItem('brokerAdminInfo');
+        if (storedAdminInfo) {
+          try {
+            const parsed = JSON.parse(storedAdminInfo);
+            localStorage.setItem('brokerAdminInfo', JSON.stringify({
+              ...parsed,
+              firstname: updated.firstname || profileData.firstname,
+              lastname: updated.lastname || profileData.lastname,
+              fullname: `${updated.firstname || profileData.firstname} ${updated.lastname || profileData.lastname}`.trim(),
+              email: updated.email || profileData.email
+            }));
+          } catch (_error) {
+            localStorage.setItem('brokerAdminInfo', JSON.stringify({
+              firstname: updated.firstname || profileData.firstname,
+              lastname: updated.lastname || profileData.lastname,
+              fullname: `${updated.firstname || profileData.firstname} ${updated.lastname || profileData.lastname}`.trim(),
+              email: updated.email || profileData.email
+            }));
+          }
+        }
+
+        setMessage({ type: 'success', text: response.data.message || 'Profile updated successfully!' });
+      } else {
+        setMessage({ type: 'error', text: response.data?.message || 'Failed to update profile' });
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error
-        ? error.message
-        : (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update profile';
-      setMessage({ type: 'error', text: errorMessage });
+    } catch (error) {
+      setMessage({ type: 'error', text: extractErrorMessage(error) || 'Failed to update profile' });
     } finally {
       setLoading(false);
     }
@@ -87,15 +121,15 @@ export default function BrokerAdminSettingsPage() {
 
     try {
       const response = await api.post('/settings/change-password', passwordData);
-      if (response.data.success) {
-        setMessage({ type: 'success', text: 'Password changed successfully!' });
+
+      if (response.data?.success) {
+        setMessage({ type: 'success', text: response.data.message || 'Password changed successfully!' });
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        setMessage({ type: 'error', text: response.data?.message || 'Failed to change password' });
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error
-        ? error.message
-        : (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to change password';
-      setMessage({ type: 'error', text: errorMessage });
+    } catch (error) {
+      setMessage({ type: 'error', text: extractErrorMessage(error) || 'Failed to change password' });
     } finally {
       setLoading(false);
     }
@@ -147,7 +181,7 @@ export default function BrokerAdminSettingsPage() {
 
       {activeTab === 'profile' && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Profile Information</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Personal Information</h2>
           <form onSubmit={handleProfileUpdate} className="space-y-4 sm:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div>

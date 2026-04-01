@@ -383,11 +383,11 @@ const NIAAdministratorsPage = () => {
                                                 Manage Assignments
                                             </span>
                                         )}
-                                        {admin.permissions.canViewReports && (
+                                        {/* {admin.permissions.canViewReports && (
                                             <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
                                                 View Reports
                                             </span>
-                                        )}
+                                        )} */}
                                         {admin.permissions.canManageAdmins && (
                                             <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
                                                 Manage Admins

@@ -105,8 +105,6 @@ api.interceptors.request.use(
       'Authorization': config.headers['Authorization'] || 'Missing'
     });
 
-    // Debug: Log full API key for troubleshooting
-    console.log("Full API Key:", config.headers['apikey']);
 
     return config;
   },
