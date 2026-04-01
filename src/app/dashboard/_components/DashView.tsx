@@ -487,7 +487,7 @@ const Dashview = () => {
                     </div>
                   </button>
 
-                  <button
+                  {/* <button
                     onClick={() => setActiveSection('reports')}
                     className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
@@ -498,7 +498,7 @@ const Dashview = () => {
                       </div>
                       <BarChart3 className="w-6 h-6" />
                     </div>
-                  </button>
+                  </button> */}
 
                   <button
                     onClick={() => window.open('https://niip.ng/', '_blank')}
