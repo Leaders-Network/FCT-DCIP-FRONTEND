@@ -501,7 +501,7 @@ const Dashview = () => {
                   </button> */}
 
                   <button
-                    onClick={() => window.open('https://niip.ng/', '_blank')}
+                    onClick={() => window.open('http://buildersuat.niip.ng/', '_blank')}
                     className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <div className="flex items-center justify-between">
@@ -594,7 +594,7 @@ const Dashview = () => {
                           Apply for Builder Liability Policy
                         </button>
                         <button
-                          onClick={() => window.open('https://niip.ng/', '_blank')}
+                          onClick={() => window.open('http://buildersuat.niip.ng/', '_blank')}
                           className="bg-white text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium flex items-center"
                         >
                           <Shield className="w-4 h-4 mr-2" />
@@ -725,7 +725,7 @@ const Dashview = () => {
                 </button>
 
                 <button
-                  onClick={() => window.open('https://niip.ng/', '_blank')}
+                  onClick={() => window.open('http://buildersuat.niip.ng/', '_blank')}
                   className="w-full flex items-center justify-between p-3 text-left bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group"
                 >
                   <div className="flex items-center">
