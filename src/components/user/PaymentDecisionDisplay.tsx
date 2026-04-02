@@ -131,13 +131,13 @@ const PaymentDecisionDisplay: React.FC<PaymentDecisionDisplayProps> = ({
             });
 
             // Redirect to insurance platform
-            const insuranceUrl = paymentDecision.insuranceUrl || 'https://niip.ng/';
+            const insuranceUrl = paymentDecision.insuranceUrl || 'http://buildersuat.niip.ng/';
             window.open(insuranceUrl, '_blank');
 
         } catch (err) {
             console.error('Failed to log insurance initiation:', err);
             // Still proceed to insurance even if logging fails
-            const insuranceUrl = paymentDecision?.insuranceUrl || 'https://niip.ng/';
+            const insuranceUrl = paymentDecision?.insuranceUrl || 'http://buildersuat.niip.ng/';
             window.open(insuranceUrl, '_blank');
         } finally {
             setProcessingInsurance(false);
