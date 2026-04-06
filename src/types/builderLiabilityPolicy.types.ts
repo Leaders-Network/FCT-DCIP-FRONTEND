@@ -152,10 +152,12 @@ export interface DocumentInfo {
     verifiedBy?: string;
     verifiedAt?: Date | string;
     downloadPath?: string;
+    downloadUrl?: string;
     storageType?: string;
     name?: string;
     submissionId?: string;
     fileId?: string;
+    publicId?: string;
 }
 
 export type BuilderLiabilityPolicyStatus =

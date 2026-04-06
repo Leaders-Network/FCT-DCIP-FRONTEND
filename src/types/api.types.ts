@@ -432,6 +432,12 @@ export interface DocumentFile {
     timestamp?: string;
     deviceInfo?: string;
   };
+  downloadPath?: string;
+  downloadUrl?: string;
+  name?: string;
+  fileId?: string;
+  publicId?: string;
+  storageType?: string;
 }
 
 // Survey Submission Types

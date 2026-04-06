@@ -22,6 +22,7 @@ import {
   AddPropertyPayload
 } from "@/types/api.types";
 import { ApiError } from "@/utils/errorHandling";
+import type { AxiosRequestConfig, AxiosResponseHeaders, RawAxiosResponseHeaders } from "axios";
 
 // Import Builder Liability Policy API
 import { builderLiabilityPolicyAPI } from "./builderLiabilityPolicyApi";
@@ -136,6 +137,125 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+const triggerBlobDownload = (blob: Blob, fileName: string) => {
+  const href = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(href);
+};
+
+const getHeaderValue = (
+  headers: AxiosResponseHeaders | RawAxiosResponseHeaders | undefined,
+  headerName: string
+) => {
+  if (!headers) return undefined;
+
+  const normalizedHeaderName = headerName.toLowerCase();
+  const matchingEntry = Object.entries(headers).find(([key]) => key.toLowerCase() === normalizedHeaderName);
+  return matchingEntry?.[1];
+};
+
+const extractFileNameFromContentDisposition = (
+  headers: AxiosResponseHeaders | RawAxiosResponseHeaders | undefined
+) => {
+  const disposition = getHeaderValue(headers, 'content-disposition');
+
+  if (!disposition || typeof disposition !== 'string') {
+    return null;
+  }
+
+  const utf8Match = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1]);
+    } catch {
+      return utf8Match[1];
+    }
+  }
+
+  const asciiMatch = disposition.match(/filename\s*=\s*"([^"]+)"|filename\s*=\s*([^;]+)/i);
+  return asciiMatch?.[1] || asciiMatch?.[2]?.trim() || null;
+};
+
+const getFileExtensionFromContentType = (contentType: string | undefined) => {
+  if (!contentType) {
+    return '';
+  }
+
+  const normalizedContentType = contentType.split(';')[0]?.trim().toLowerCase();
+  const extensionMap: Record<string, string> = {
+    'application/pdf': '.pdf',
+    'application/zip': '.zip',
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'application/msword': '.doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+    'application/vnd.ms-excel': '.xls',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx'
+  };
+
+  return extensionMap[normalizedContentType] || '';
+};
+
+const ensureFileNameHasExtension = (fileName: string, contentType: string | undefined) => {
+  if (!fileName) {
+    return fileName;
+  }
+
+  if (/\.[a-z0-9]+$/i.test(fileName)) {
+    return fileName;
+  }
+
+  const extension = getFileExtensionFromContentType(contentType);
+  return extension ? `${fileName}${extension}` : fileName;
+};
+
+const normalizeApiDownloadPath = (path: string) => {
+  if (!path) {
+    return path;
+  }
+
+  if (path.startsWith(API_BASE_URL)) {
+    return path.slice(API_BASE_URL.length) || '/';
+  }
+
+  const apiOrigin = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+  if (path.startsWith(`${apiOrigin}/api/v1`)) {
+    return path.slice(apiOrigin.length + '/api/v1'.length) || '/';
+  }
+
+  if (path.startsWith('/api/v1/')) {
+    return path.replace(/^\/api\/v1/, '') || '/';
+  }
+
+  return path;
+};
+
+const downloadBlobFromApi = async (
+  endpoint: string,
+  fallbackFileName: string,
+  config?: AxiosRequestConfig,
+  fallbackContentType = 'application/octet-stream'
+) => {
+  const response = await api.get(normalizeApiDownloadPath(endpoint), {
+    responseType: 'blob',
+    ...config
+  });
+
+  const contentType = response.data?.type || getHeaderValue(response.headers, 'content-type') || fallbackContentType;
+  const resolvedFileName = extractFileNameFromContentDisposition(response.headers) || fallbackFileName;
+  const fileName = ensureFileNameHasExtension(resolvedFileName, String(contentType));
+  const blob = new Blob([response.data], { type: String(contentType) });
+
+  triggerBlobDownload(blob, fileName);
+};
 
 // Authentication APIs
 export const loginUser = async (email: string, password: string) => {
@@ -473,16 +593,12 @@ export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 
 /** Download all survey documents for a submission as a ZIP archive (by submission ID). */
 export const downloadSubmissionZip = async (submissionId: string): Promise<void> => {
   try {
-    const endpoint = '/submission/' + submissionId + '/download-zip';
-    const response = await api.get(endpoint, { responseType: 'blob' });
-    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }));
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = 'survey-documents-' + submissionId + '.zip';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(blobUrl);
+    await downloadBlobFromApi(
+      '/submission/' + submissionId + '/download-zip',
+      'survey-documents-' + submissionId + '.zip',
+      undefined,
+      'application/zip'
+    );
   } catch (error) {
     console.error('Failed to download submission zip', error);
     alert('Could not download the survey documents. Please try again.');
@@ -493,19 +609,28 @@ export const downloadSubmissionZip = async (submissionId: string): Promise<void>
 /** Download all survey documents for a submission as a ZIP archive (by assignment ID). */
 export const downloadSubmissionZipByAssignment = async (assignmentId: string): Promise<void> => {
   try {
-    const endpoint = '/submission/assignment/' + assignmentId + '/download-zip';
-    const response = await api.get(endpoint, { responseType: 'blob' });
-    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }));
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = 'survey-documents-assignment-' + assignmentId + '.zip';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(blobUrl);
+    await downloadBlobFromApi(
+      '/submission/assignment/' + assignmentId + '/download-zip',
+      'survey-documents-assignment-' + assignmentId + '.zip',
+      undefined,
+      'application/zip'
+    );
   } catch (error) {
     console.error('Failed to download assignment submission zip', error);
     alert('Could not download the survey documents. Please try again.');
+    throw error;
+  }
+};
+
+export const downloadProtectedFileByPath = async (
+  downloadPath: string,
+  fallbackFileName: string
+): Promise<void> => {
+  try {
+    await downloadBlobFromApi(downloadPath, fallbackFileName);
+  } catch (error) {
+    console.error('Failed to download file from protected path', error);
+    alert('Could not download the file. Please try again.');
     throw error;
   }
 };
