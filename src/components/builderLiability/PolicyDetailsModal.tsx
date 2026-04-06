@@ -3,6 +3,7 @@
 import React from 'react';
 import { BuilderLiabilityPolicy } from '@/types/builderLiabilityPolicy.types';
 import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
+import { downloadProtectedFileByPath } from '@/services/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -681,13 +682,25 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                     </Button>
                     
                     {/* Survey Download Action */}
-                    {policy.surveyDocument?.downloadPath && (
+                    {(policy.surveyDocument?.downloadUrl || policy.surveyDocument?.downloadPath) && (
                         <Button 
                             variant="outline"
                             className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 w-full sm:w-auto"
-                            onClick={() => {
-                                const url = `${process.env.NEXT_PUBLIC_API_URL || ''}${policy.surveyDocument?.downloadPath}`;
-                                window.open(url, '_blank');
+                            onClick={async () => {
+                                const downloadTarget = policy.surveyDocument?.downloadUrl || policy.surveyDocument?.downloadPath;
+                                if (!downloadTarget) {
+                                    toast.error('Survey report is not available for download.');
+                                    return;
+                                }
+
+                                try {
+                                    await downloadProtectedFileByPath(
+                                        downloadTarget,
+                                        policy.surveyDocument?.name || policy.surveyDocument?.fileName || 'survey-report'
+                                    );
+                                } catch {
+                                    toast.error('Unable to download the survey report right now.');
+                                }
                             }}
                         >
                             <Download className="w-4 h-4 mr-2" />
