@@ -68,6 +68,51 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 
     if (!policy) return null;
 
+    const firstMeaningfulValue = (...values: unknown[]) => {
+        for (const value of values) {
+            if (value === null || value === undefined) continue;
+            if (typeof value === 'string' && value.trim() === '') continue;
+            return value;
+        }
+        return null;
+    };
+
+    const firstFiniteNumber = (...values: unknown[]) => {
+        for (const value of values) {
+            if (value === null || value === undefined) continue;
+            const numericValue = Number(
+                typeof value === 'string' ? value.replace(/,/g, '').trim() : value
+            );
+            if (Number.isFinite(numericValue)) {
+                return numericValue;
+            }
+        }
+        return null;
+    };
+
+    const normalizeBoolean = (value: unknown): boolean | null => {
+        if (typeof value === 'boolean') return value;
+        if (typeof value === 'number') {
+            if (value === 1) return true;
+            if (value === 0) return false;
+        }
+        if (typeof value === 'string') {
+            const normalized = value.trim().toLowerCase();
+            if (['true', 'yes', '1', 'y'].includes(normalized)) return true;
+            if (['false', 'no', '0', 'n'].includes(normalized)) return false;
+        }
+        return null;
+    };
+
+    const toDisplayText = (value: unknown, fallback = 'N/A') => {
+        if (value === null || value === undefined) return fallback;
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            return trimmed === '' ? fallback : trimmed;
+        }
+        return String(value);
+    };
+
     // Helper function to get the actual current status from statusHistory if available
     const getActualStatus = (policy: BuilderLiabilityPolicy): string => {
         const latestStatus =
@@ -160,6 +205,138 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         });
     };
 
+    const complianceData = ((policy as any)?.compliance || {}) as Record<string, unknown>;
+    const hasInsurance = normalizeBoolean(
+        firstMeaningfulValue(complianceData.HasInsurance, complianceData.hasInsurance)
+    );
+    const underInvestigation = normalizeBoolean(
+        firstMeaningfulValue(complianceData.investigation, complianceData.underInvestigation)
+    );
+    const disciplinaryAction = normalizeBoolean(
+        firstMeaningfulValue(
+            complianceData.disciplinaryCommittee,
+            complianceData.disciplinaryAction
+        )
+    );
+    const preEmploymentCheck = normalizeBoolean(
+        firstMeaningfulValue(complianceData.preEmploymentCheck, complianceData.preEmployment)
+    );
+    const hasInsuranceDetails = toDisplayText(
+        firstMeaningfulValue(
+            complianceData.HasInsuranceDetails,
+            complianceData.hasInsuranceDetails,
+            complianceData.insuranceDetails
+        ),
+        ''
+    );
+    const investigationDetails = toDisplayText(
+        firstMeaningfulValue(complianceData.investigationDetails),
+        ''
+    );
+    const disciplinaryDetails = toDisplayText(
+        firstMeaningfulValue(
+            complianceData.disciplinaryCommitteeDetails,
+            complianceData.disciplinaryDetails
+        ),
+        ''
+    );
+    const preEmploymentDetails = toDisplayText(
+        firstMeaningfulValue(
+            complianceData.preEmploymentCheckDetails,
+            complianceData.preEmploymentDetails
+        ),
+        ''
+    );
+    const legalSuitDetails = toDisplayText(
+        firstMeaningfulValue(complianceData.legalSuitDetails),
+        ''
+    );
+    const practiceOutsideNigeria = toDisplayText(
+        firstMeaningfulValue(
+            complianceData.PracticeOutsideNigeria,
+            complianceData.practiceOutsideNigeria
+        ),
+        'N/A'
+    );
+
+    const niipPayload = ((policy as any)?.niipPayload || {}) as Record<string, any>;
+    const niipPayloadData = (niipPayload.Data || niipPayload.data || {}) as Record<string, any>;
+    const paymentInfo = ((policy as any)?.paymentInfo || {}) as Record<string, any>;
+    const paymentWebhookData = (paymentInfo.webhookData || {}) as Record<string, any>;
+
+    const paymentStatusToken = String(
+        firstMeaningfulValue(
+            paymentInfo.status,
+            actualStatus === 'payment_pending' ? 'pending' : null
+        ) || 'pending'
+    )
+        .trim()
+        .toLowerCase();
+    const isPaymentPaid = paymentStatusToken === 'paid' || Boolean(paymentInfo.paidAt);
+    const isPaymentPending =
+        !isPaymentPaid &&
+        (['pending', 'not_started'].includes(paymentStatusToken) ||
+            actualStatus === 'payment_pending');
+    const paymentStatusLabel = paymentStatusToken
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    const paymentStatusBadgeClass = isPaymentPaid
+        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+        : ['failed', 'rejected'].includes(paymentStatusToken)
+            ? 'bg-rose-100 text-rose-800 border-rose-200'
+            : 'bg-amber-100 text-amber-800 border-amber-200';
+
+    const premiumAmount = firstFiniteNumber(
+        paymentInfo.amount,
+        paymentInfo.niipInvoiceAmount,
+        premiumResult?.premiumDetails?.amount,
+        premiumResult?.premiumAmount,
+        niipPayload.amount,
+        niipPayload.invoiceAmount,
+        niipPayloadData.amount,
+        niipPayloadData.invoiceAmount
+    );
+    const niipInvoiceNumber = toDisplayText(
+        firstMeaningfulValue(
+            paymentInfo.niipInvoice,
+            premiumResult?.premiumDetails?.invoiceNumber,
+            niipPayload.invoiceNumber,
+            niipPayload.InvoiceNumber,
+            niipPayloadData.invoiceNumber,
+            niipPayloadData.InvoiceNumber,
+            paymentWebhookData.niipInvoiceNumber
+        )
+    );
+    const niipTransactionReference = toDisplayText(
+        firstMeaningfulValue(
+            paymentInfo.niipReference,
+            premiumResult?.premiumDetails?.transactionReference,
+            niipPayload.transactionReference,
+            niipPayload.TransactionReference,
+            niipPayloadData.transactionReference,
+            niipPayloadData.TransactionReference,
+            paymentWebhookData.niipTransactionReference
+        )
+    );
+    const paymentTransactionId = toDisplayText(
+        firstMeaningfulValue(
+            paymentInfo.transactionId,
+            paymentWebhookData.EgolepayTransactionReference,
+            paymentWebhookData.EgolepayPaymentReference,
+            paymentWebhookData.EgolepayReference
+        )
+    );
+    const paymentSummaryText = isPaymentPaid
+        ? 'Premium paid'
+        : isPaymentPending
+            ? 'Premium payment pending'
+            : `Payment ${paymentStatusLabel.toLowerCase()}`;
+
+    const getBooleanText = (value: boolean | null) => {
+        if (value === null) return 'Not Provided';
+        return value ? 'Yes' : 'No';
+    };
+
     const getStatusBadge = (status: string) => {
         const statusConfig = {
             draft: { color: 'bg-gray-100 text-gray-800', icon: Clock, label: 'Draft' },
@@ -211,7 +388,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 
                 <Tabs defaultValue="builder" className="w-full">
                     <div className="w-full overflow-x-auto">
-                        <TabsList className="flex md:grid md:grid-cols-6 w-max md:w-full min-w-max md:min-w-0">
+                        <TabsList className="flex md:grid md:grid-cols-7 w-max md:w-full min-w-max md:min-w-0">
                             <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
                                 Builder
                             </TabsTrigger>
@@ -226,6 +403,9 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             </TabsTrigger>
                             <TabsTrigger value="compliance" className="whitespace-nowrap text-xs sm:text-sm">
                                 Compliance
+                            </TabsTrigger>
+                            <TabsTrigger value="payment" className="whitespace-nowrap text-xs sm:text-sm">
+                                Payment
                             </TabsTrigger>
                             <TabsTrigger value="timeline" className="whitespace-nowrap text-xs sm:text-sm">
                                 Timeline
@@ -505,62 +685,172 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                                         <span className="text-sm font-medium">Has Insurance</span>
-                                        {policy.compliance?.HasInsurance ? (
-                                            <CheckCircle className="w-5 h-5 text-green-600" />
-                                        ) : (
-                                            <XCircle className="w-5 h-5 text-red-600" />
-                                        )}
+                                        <span className="flex items-center gap-2">
+                                            {hasInsurance === true ? (
+                                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                            ) : hasInsurance === false ? (
+                                                <XCircle className="w-5 h-5 text-red-600" />
+                                            ) : (
+                                                <Clock className="w-5 h-5 text-gray-500" />
+                                            )}
+                                            <span className="text-sm font-semibold">{getBooleanText(hasInsurance)}</span>
+                                        </span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                                         <span className="text-sm font-medium">Under Investigation</span>
-                                        {policy.compliance?.investigation ? (
-                                            <AlertCircle className="w-5 h-5 text-orange-600" />
-                                        ) : (
-                                            <CheckCircle className="w-5 h-5 text-green-600" />
-                                        )}
+                                        <span className="flex items-center gap-2">
+                                            {underInvestigation === true ? (
+                                                <AlertCircle className="w-5 h-5 text-orange-600" />
+                                            ) : underInvestigation === false ? (
+                                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                            ) : (
+                                                <Clock className="w-5 h-5 text-gray-500" />
+                                            )}
+                                            <span className="text-sm font-semibold">{getBooleanText(underInvestigation)}</span>
+                                        </span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                                         <span className="text-sm font-medium">Disciplinary Action</span>
-                                        {policy.compliance?.disciplinaryCommittee ? (
-                                            <AlertCircle className="w-5 h-5 text-orange-600" />
-                                        ) : (
-                                            <CheckCircle className="w-5 h-5 text-green-600" />
-                                        )}
+                                        <span className="flex items-center gap-2">
+                                            {disciplinaryAction === true ? (
+                                                <AlertCircle className="w-5 h-5 text-orange-600" />
+                                            ) : disciplinaryAction === false ? (
+                                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                            ) : (
+                                                <Clock className="w-5 h-5 text-gray-500" />
+                                            )}
+                                            <span className="text-sm font-semibold">{getBooleanText(disciplinaryAction)}</span>
+                                        </span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                                         <span className="text-sm font-medium">Pre-Employment Check</span>
-                                        {policy.compliance?.preEmploymentCheck ? (
-                                            <CheckCircle className="w-5 h-5 text-green-600" />
-                                        ) : (
-                                            <XCircle className="w-5 h-5 text-red-600" />
-                                        )}
+                                        <span className="flex items-center gap-2">
+                                            {preEmploymentCheck === true ? (
+                                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                            ) : preEmploymentCheck === false ? (
+                                                <XCircle className="w-5 h-5 text-red-600" />
+                                            ) : (
+                                                <Clock className="w-5 h-5 text-gray-500" />
+                                            )}
+                                            <span className="text-sm font-semibold">{getBooleanText(preEmploymentCheck)}</span>
+                                        </span>
                                     </div>
                                 </div>
 
-                                {policy.compliance?.HasInsuranceDetails && (
+                                {hasInsuranceDetails && (
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Insurance Details</label>
-                                        <p className="text-base bg-gray-50 p-3 rounded-md">{policy.compliance?.HasInsuranceDetails}</p>
+                                        <p className="text-base bg-gray-50 p-3 rounded-md">{hasInsuranceDetails}</p>
                                     </div>
                                 )}
 
-                                {policy.compliance?.investigationDetails && (
+                                {investigationDetails && (
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Investigation Details</label>
-                                        <p className="text-base bg-gray-50 p-3 rounded-md">{policy.compliance?.investigationDetails}</p>
+                                        <p className="text-base bg-gray-50 p-3 rounded-md">{investigationDetails}</p>
                                     </div>
                                 )}
 
-                                {policy.compliance?.legalSuitDetails && (
+                                {disciplinaryDetails && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Disciplinary Action Details</label>
+                                        <p className="text-base bg-gray-50 p-3 rounded-md">{disciplinaryDetails}</p>
+                                    </div>
+                                )}
+
+                                {preEmploymentDetails && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Pre-Employment Check Details</label>
+                                        <p className="text-base bg-gray-50 p-3 rounded-md">{preEmploymentDetails}</p>
+                                    </div>
+                                )}
+
+                                {legalSuitDetails && (
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Legal Suit Details</label>
-                                        <p className="text-base bg-gray-50 p-3 rounded-md">{policy.compliance?.legalSuitDetails}</p>
+                                        <p className="text-base bg-gray-50 p-3 rounded-md">{legalSuitDetails}</p>
                                     </div>
                                 )}
 
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Practice Outside Nigeria</label>
-                                    <p className="text-base">{policy.compliance?.PracticeOutsideNigeria || 'N/A'}</p>
+                                    <p className="text-base">{practiceOutsideNigeria}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Payment & Premium Information */}
+                    <TabsContent value="payment" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <CreditCard className="w-5 h-5" />
+                                    Premium & Payment Summary
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-4 rounded-md border bg-gray-50">
+                                    <label className="text-sm font-medium text-gray-600">Payment State</label>
+                                    <div className="mt-1 flex items-center gap-2">
+                                        <Badge className={`border ${paymentStatusBadgeClass}`}>
+                                            {isPaymentPaid ? 'PAID' : isPaymentPending ? 'PENDING' : paymentStatusLabel.toUpperCase()}
+                                        </Badge>
+                                        <span className="text-sm text-gray-700">{paymentSummaryText}</span>
+                                    </div>
+                                </div>
+                                <div className="p-4 rounded-md border bg-gray-50">
+                                    <label className="text-sm font-medium text-gray-600">Premium Amount</label>
+                                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                                        {premiumAmount !== null ? formatCurrency(premiumAmount) : 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="p-4 rounded-md border bg-gray-50">
+                                    <label className="text-sm font-medium text-gray-600">NIIP Invoice Number</label>
+                                    <p className="text-base font-semibold mt-1">{niipInvoiceNumber}</p>
+                                </div>
+                                <div className="p-4 rounded-md border bg-gray-50">
+                                    <label className="text-sm font-medium text-gray-600">NIIP Reference</label>
+                                    <p className="text-base font-semibold break-all mt-1">{niipTransactionReference}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Receipt className="w-5 h-5" />
+                                    Payment Records
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Payment Status</label>
+                                    <p className="text-base">{paymentStatusLabel || 'Pending'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Transaction ID / Reference</label>
+                                    <p className="text-base break-all">{paymentTransactionId}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Payment Method</label>
+                                    <p className="text-base">{toDisplayText(paymentInfo.method, 'external_payment_service')}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Initiated At</label>
+                                    <p className="text-base">
+                                        {paymentInfo.initiatedAt ? formatDate(paymentInfo.initiatedAt as string | Date) : 'N/A'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Paid At</label>
+                                    <p className="text-base">
+                                        {paymentInfo.paidAt ? formatDate(paymentInfo.paidAt as string | Date) : 'Not Paid Yet'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Rejection / Failure Reason</label>
+                                    <p className="text-base">{toDisplayText(paymentInfo.reason)}</p>
                                 </div>
                             </CardContent>
                         </Card>

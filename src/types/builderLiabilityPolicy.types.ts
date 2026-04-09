@@ -66,9 +66,22 @@ export interface ComplianceInfo {
     PracticeOutsideNigeria: 'Yes' | 'No';
 }
 
+export type BuilderLiabilityCoverageType =
+    | 'Public Liability'
+    | "Employer's Liability"
+    | 'Product Liability'
+    | 'Professional Indemnity';
+
+export const BUILDER_LIABILITY_COVERAGE_TYPES: BuilderLiabilityCoverageType[] = [
+    'Public Liability',
+    "Employer's Liability",
+    'Product Liability',
+    'Professional Indemnity'
+];
+
 export interface ProjectInfo {
     coverTypeIdx: boolean;
-    coverTypeIdxDetails: 'Statutory' | 'All-Project';
+    coverTypeIdxDetails: BuilderLiabilityCoverageType;
     categoryOfContractorId: number;
     extraHazardous: boolean;
     totalEstimateSum: number;
@@ -378,7 +391,7 @@ export interface BuilderLiabilityPolicyFormData {
 
     // Project Info
     coverTypeIndex: boolean;
-    coverTypeDetails: 'Statutory' | 'All-Project';
+    coverTypeDetails: BuilderLiabilityCoverageType;
     contractorCategoryId: number;
     extraHazardous: boolean;
     totalEstimateSum: number;

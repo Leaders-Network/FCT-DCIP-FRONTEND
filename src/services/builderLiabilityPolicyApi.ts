@@ -255,6 +255,7 @@ export const builderLiabilityPolicyAPI = {
         policyId?: string
     ): Promise<{
         success: boolean;
+        pending?: boolean;
         message: string;
         data?: unknown;
         niipWithdrawal?: {
@@ -283,6 +284,39 @@ export const builderLiabilityPolicyAPI = {
             return response.data;
         } catch (error) {
             console.error("Failed to confirm EgolePay payment:", error);
+            throw error;
+        }
+    },
+
+    verifyEgolepayPayment: async (reference: string): Promise<{
+        success: boolean;
+        pending?: boolean;
+        message: string;
+        data?: unknown;
+        niipWithdrawal?: {
+            success?: boolean;
+            skipped?: boolean;
+            reason?: string;
+            status?: number;
+            body?: {
+                error?: string;
+                message?: string;
+                raw?: string;
+                niipUrl?: string;
+                statusCode?: number;
+                looksLike404Page?: boolean;
+                [key: string]: unknown;
+            };
+            error?: string;
+        };
+    }> => {
+        try {
+            const response = await builderLiabilityApi.get(
+                `/payment/Egolepay/verify/${encodeURIComponent(reference)}`
+            );
+            return response.data;
+        } catch (error) {
+            console.error("Failed to verify EgolePay payment:", error);
             throw error;
         }
     },

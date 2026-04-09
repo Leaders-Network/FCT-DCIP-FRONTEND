@@ -5,6 +5,8 @@ import { useCreateBuilderLiabilityPolicy } from '@/hooks/useBuilderLiabilityPoli
 import {
     BuilderLiabilityPolicyFormData,
     BuilderLiabilityPolicyData,
+    BuilderLiabilityCoverageType,
+    BUILDER_LIABILITY_COVERAGE_TYPES,
     CategoryOfWorkmen,
     Professional
 } from '@/types/builderLiabilityPolicy.types';
@@ -15,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, CheckCircle, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FCT_LOCATIONS, getDistrictsByLGA } from '@/constants/fctLocations';
 import { toast } from "sonner";
@@ -24,6 +26,9 @@ interface PolicyFormProps {
     onSuccess?: (policyId: string) => void;
     onCancel?: () => void;
 }
+
+const FORM_TABS = ['builder', 'organization', 'membership', 'workforce', 'compliance', 'project'] as const;
+type FormTab = (typeof FORM_TABS)[number];
 
 export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     onSuccess,
@@ -74,7 +79,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         // Project Info
         coverTypeIndex: false,
-        coverTypeDetails: 'Statutory',
+        coverTypeDetails: 'Public Liability',
         contractorCategoryId: 1,
         extraHazardous: false,
         totalEstimateSum: 0,
@@ -90,12 +95,176 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         priority: 'medium'
     });
 
-    const [activeTab, setActiveTab] = useState<string>('builder');
+    const [activeTab, setActiveTab] = useState<FormTab>('builder');
+    const [tabErrors, setTabErrors] = useState<Partial<Record<FormTab, string[]>>>({});
 
     // Project location fields (kept separate to avoid Type issues if types were reverted)
     const [projectAddress, setProjectAddress] = useState<string>('');
     const [projectLga, setProjectLga] = useState<string>('');
     const [projectDistrict, setProjectDistrict] = useState<string>('');
+
+    const isLastTab = activeTab === FORM_TABS[FORM_TABS.length - 1];
+
+    const isBlank = (value: unknown) => String(value ?? '').trim().length === 0;
+    const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    const isValidNumber = (value: unknown) => {
+        if (typeof value === 'string' && value.trim() === '') {
+            return false;
+        }
+        return Number.isFinite(Number(value));
+    };
+
+    const getTabValidationErrors = (tab: FormTab): string[] => {
+        const errors: string[] = [];
+
+        if (tab === 'builder') {
+            if (isBlank(formData.builderName)) errors.push('Builder/Company Name is required.');
+            if (isBlank(formData.builderEmail) || !isValidEmail(formData.builderEmail)) {
+                errors.push('A valid Email Address is required.');
+            }
+            if (isBlank(formData.rcNumber)) errors.push('RC Number is required.');
+            if (isBlank(formData.builderPhone)) errors.push('Phone Number is required.');
+            if (isBlank(formData.identificationNumber)) errors.push('Identification Number is required.');
+            if (isBlank(formData.builderAddress) || String(formData.builderAddress).trim().length < 10) {
+                errors.push('Address is required and should be at least 10 characters.');
+            }
+        }
+
+        if (tab === 'organization') {
+            if (isBlank(formData.yearOfIncorporation)) errors.push('Year of Incorporation is required.');
+            if (!isValidNumber(formData.permanentStaffCount) || Number(formData.permanentStaffCount) < 0) {
+                errors.push('Number of Permanent Staff must be 0 or greater.');
+            }
+            if (!isValidNumber(formData.numberOfFloors) || Number(formData.numberOfFloors) < 0) {
+                errors.push('Number of Floors must be 0 or greater.');
+            }
+        }
+
+        if (tab === 'membership') {
+            if (!isValidNumber(formData.membershipStatusId) || Number(formData.membershipStatusId) <= 0) {
+                errors.push('Membership Status is required.');
+            }
+        }
+
+        if (tab === 'workforce') {
+            if (!isValidNumber(formData.contractStaffCount) || Number(formData.contractStaffCount) < 0) {
+                errors.push('Contract Staff Count must be 0 or greater.');
+            }
+            if (!isValidNumber(formData.bloodRelationsCount) || Number(formData.bloodRelationsCount) < 0) {
+                errors.push('Blood Relations Count must be 0 or greater.');
+            }
+
+            if (!Array.isArray(formData.workmenCategories) || formData.workmenCategories.length === 0) {
+                errors.push('Add at least one Category of Workmen.');
+            } else {
+                formData.workmenCategories.forEach((category, index) => {
+                    if (isBlank(category.categoryOfWorkmen)) {
+                        errors.push(`Category of Workmen is required for item ${index + 1}.`);
+                    }
+                    if (isBlank(category.numberOfEmployment)) {
+                        errors.push(`Number of Employment is required for workmen item ${index + 1}.`);
+                    }
+                    if (isBlank(category.yearsOfEmployment)) {
+                        errors.push(`Years of Employment is required for workmen item ${index + 1}.`);
+                    }
+                });
+            }
+
+            if (!Array.isArray(formData.professionals) || formData.professionals.length === 0) {
+                errors.push('Add at least one Professional.');
+            } else {
+                formData.professionals.forEach((professional, index) => {
+                    if (isBlank(professional.surname)) errors.push(`Professional ${index + 1} Surname is required.`);
+                    if (isBlank(professional.otherName)) errors.push(`Professional ${index + 1} Other Names is required.`);
+                    if (!isValidNumber(professional.age) || professional.age < 18 || professional.age > 100) {
+                        errors.push(`Professional ${index + 1} Age must be between 18 and 100.`);
+                    }
+                    if (isBlank(professional.nationality)) errors.push(`Professional ${index + 1} Nationality is required.`);
+                    if (isBlank(professional.profession)) errors.push(`Professional ${index + 1} Profession is required.`);
+                    if (isBlank(professional.qualification)) errors.push(`Professional ${index + 1} Qualification is required.`);
+                    if (!isValidNumber(professional.yearsInEmployment) || professional.yearsInEmployment < 0) {
+                        errors.push(`Professional ${index + 1} Years in Employment must be 0 or greater.`);
+                    }
+                });
+            }
+        }
+
+        if (tab === 'compliance') {
+            if (formData.hasInsurance && String(formData.insuranceDetails || '').trim().length < 5) {
+                errors.push('Insurance Details are required when insurance coverage is selected.');
+            }
+            if (formData.underInvestigation && String(formData.investigationDetails || '').trim().length < 5) {
+                errors.push('Investigation Details are required when under investigation is selected.');
+            }
+            if (formData.disciplinaryAction && String(formData.disciplinaryDetails || '').trim().length < 5) {
+                errors.push('Disciplinary Action Details are required when disciplinary action is selected.');
+            }
+            if (formData.preEmploymentCheck && String(formData.preEmploymentDetails || '').trim().length < 5) {
+                errors.push('Pre-Employment Check Details are required when pre-employment check is selected.');
+            }
+            if (!['Yes', 'No'].includes(formData.practiceOutsideNigeria)) {
+                errors.push('Practice Outside Nigeria must be Yes or No.');
+            }
+        }
+
+        if (tab === 'project') {
+            if (typeof formData.coverTypeIndex !== 'boolean') {
+                errors.push('Is Statutory must be true or false.');
+            }
+            if (isBlank(formData.coverTypeDetails)) errors.push('Coverage Type is required.');
+            if (!isValidNumber(formData.contractorCategoryId) || Number(formData.contractorCategoryId) <= 0) {
+                errors.push('Contractor Category is required.');
+            }
+            if (!isValidNumber(formData.totalEstimateSum) || Number(formData.totalEstimateSum) < 0) {
+                errors.push('Total Estimate Sum must be 0 or greater.');
+            }
+            if (isBlank(formData.workDetails)) errors.push('Work Details are required.');
+            if (isBlank(projectAddress)) errors.push('Project Address is required.');
+            if (isBlank(projectLga)) errors.push('Project LGA is required.');
+            if (isBlank(projectDistrict)) errors.push('Project District is required.');
+        }
+
+        return errors;
+    };
+
+    const validateSingleTab = (tab: FormTab, showToast = true) => {
+        const errors = getTabValidationErrors(tab);
+        setTabErrors((prev) => ({
+            ...prev,
+            [tab]: errors
+        }));
+
+        if (showToast && errors.length > 0) {
+            toast.error(errors[0]);
+        }
+
+        return errors.length === 0;
+    };
+
+    const validateAllTabs = () => {
+        const nextErrors: Partial<Record<FormTab, string[]>> = {};
+        let firstInvalidTab: FormTab | null = null;
+
+        for (const tab of FORM_TABS) {
+            const errors = getTabValidationErrors(tab);
+            nextErrors[tab] = errors;
+            if (!firstInvalidTab && errors.length > 0) {
+                firstInvalidTab = tab;
+            }
+        }
+
+        setTabErrors(nextErrors);
+
+        return {
+            isValid: firstInvalidTab === null,
+            firstInvalidTab
+        };
+    };
+
+    const formIsComplete = React.useMemo(
+        () => FORM_TABS.every((tab) => getTabValidationErrors(tab).length === 0),
+        [formData, projectAddress, projectLga, projectDistrict]
+    );
 
     const handleInputChange = (field: keyof BuilderLiabilityPolicyFormData, value: string | number | boolean | CategoryOfWorkmen[] | Professional[]) => {
         setFormData(prev => ({
@@ -151,12 +320,31 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         }));
     };
 
+    const handleNext = () => {
+        if (!validateSingleTab(activeTab)) return;
+
+        const currentIndex = FORM_TABS.indexOf(activeTab);
+        const nextTab = FORM_TABS[currentIndex + 1];
+        if (nextTab) {
+            setActiveTab(nextTab);
+        }
+    };
+
+    const handleBack = () => {
+        const currentIndex = FORM_TABS.indexOf(activeTab);
+        const previousTab = FORM_TABS[currentIndex - 1];
+        if (previousTab) {
+            setActiveTab(previousTab);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Client-side validation: if insurance is checked, ensure details provided
-        if (formData.hasInsurance && !formData.insuranceDetails) {
-            toast.error('Insurance details are required when insurance is available');
+        const validation = validateAllTabs();
+        if (!validation.isValid && validation.firstInvalidTab) {
+            setActiveTab(validation.firstInvalidTab);
+            toast.error(`Please complete the required fields in the ${validation.firstInvalidTab} section.`);
             return;
         }
 
@@ -262,8 +450,26 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                         </Alert>
                     )}
 
+                    <p className="mb-4 text-sm text-gray-600">
+                        Fields marked with <span className="font-semibold text-red-600">*</span> are required.
+                    </p>
+
+                    {tabErrors[activeTab]?.length ? (
+                        <Alert className="mb-6" variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                                <p className="font-medium mb-1">Please resolve the following in this section:</p>
+                                <ul className="list-disc list-inside space-y-1">
+                                    {tabErrors[activeTab]?.map((err, index) => (
+                                        <li key={`${activeTab}-err-${index}`}>{err}</li>
+                                    ))}
+                                </ul>
+                            </AlertDescription>
+                        </Alert>
+                    ) : null}
+
                     <form onSubmit={handleSubmit}>
-                        <Tabs value={activeTab} onValueChange={setActiveTab}>
+                        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as FormTab)}>
                             <div className="w-full overflow-x-auto">
                                 <TabsList className="flex md:grid md:grid-cols-6 w-max md:w-full min-w-max md:min-w-0">
                                     <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
@@ -443,6 +649,34 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             </TabsContent>
 
                             <TabsContent value="workforce" className="space-y-6">
+                                <Card className="p-4">
+                                    <h3 className="text-lg font-semibold mb-4">Workforce Summary</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label htmlFor="contractStaffCount">Contract Staff Count *</Label>
+                                            <Input
+                                                id="contractStaffCount"
+                                                type="number"
+                                                min="0"
+                                                value={formData.contractStaffCount}
+                                                onChange={(e) => handleInputChange('contractStaffCount', parseInt(e.target.value, 10) || 0)}
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="bloodRelationsCount">Blood Relations Count *</Label>
+                                            <Input
+                                                id="bloodRelationsCount"
+                                                type="number"
+                                                min="0"
+                                                value={formData.bloodRelationsCount}
+                                                onChange={(e) => handleInputChange('bloodRelationsCount', parseInt(e.target.value, 10) || 0)}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </Card>
+
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-semibold">Categories of Workmen</h3>
@@ -662,7 +896,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 checked={formData.hasInsurance}
                                                 onChange={(e) => handleInputChange('hasInsurance', e.target.checked)}
                                             />
-                                            <Label htmlFor="hasInsurance">Do you currently have insurance coverage?</Label>
+                                            <Label htmlFor="hasInsurance">Do you currently have insurance coverage? *</Label>
                                         </div>
                                         {formData.hasInsurance && (
                                             <div className="mt-4">
@@ -689,7 +923,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 checked={formData.underInvestigation}
                                                 onChange={(e) => handleInputChange('underInvestigation', e.target.checked)}
                                             />
-                                            <Label htmlFor="underInvestigation">Currently under investigation?</Label>
+                                            <Label htmlFor="underInvestigation">Currently under investigation? *</Label>
                                         </div>
                                         {formData.underInvestigation && (
                                             <div className="mt-4">
@@ -716,7 +950,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 checked={formData.disciplinaryAction}
                                                 onChange={(e) => handleInputChange('disciplinaryAction', e.target.checked)}
                                             />
-                                            <Label htmlFor="disciplinaryAction">Subject to disciplinary action?</Label>
+                                            <Label htmlFor="disciplinaryAction">Subject to disciplinary action? *</Label>
                                         </div>
                                         {formData.disciplinaryAction && (
                                             <div className="mt-4">
@@ -743,7 +977,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 checked={formData.preEmploymentCheck}
                                                 onChange={(e) => handleInputChange('preEmploymentCheck', e.target.checked)}
                                             />
-                                            <Label htmlFor="preEmploymentCheck">Pre-employment checks conducted?</Label>
+                                            <Label htmlFor="preEmploymentCheck">Pre-employment checks conducted? *</Label>
                                         </div>
                                         {formData.preEmploymentCheck && (
                                             <div className="mt-4">
@@ -779,7 +1013,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                     <h3 className="text-lg font-semibold mb-4">Practice Outside Nigeria</h3>
                                     <div className="space-y-4">
                                         <div>
-                                            <Label htmlFor="practiceOutsideNigeria">Do you practice outside Nigeria?</Label>
+                                            <Label htmlFor="practiceOutsideNigeria">Do you practice outside Nigeria? *</Label>
                                             <Select
                                                 value={formData.practiceOutsideNigeria}
                                                 onValueChange={(value) => handleInputChange('practiceOutsideNigeria', value)}
@@ -798,19 +1032,37 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             </TabsContent>
 
                             <TabsContent value="project" className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <Label htmlFor="coverTypeDetails">Coverage Type *</Label>
+                                        <Label htmlFor="coverTypeIndex">Is Statutory *</Label>
                                         <Select
-                                            value={formData.coverTypeDetails}
-                                            onValueChange={(value) => handleInputChange('coverTypeDetails', value as 'Statutory' | 'All-Project')}
+                                            value={String(formData.coverTypeIndex)}
+                                            onValueChange={(value) => handleInputChange('coverTypeIndex', value === 'true')}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Statutory">Statutory</SelectItem>
-                                                <SelectItem value="All-Project">All-Project</SelectItem>
+                                                <SelectItem value="true">True</SelectItem>
+                                                <SelectItem value="false">False</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="coverTypeDetails">Coverage Type *</Label>
+                                        <Select
+                                            value={formData.coverTypeDetails}
+                                            onValueChange={(value) => handleInputChange('coverTypeDetails', value as BuilderLiabilityCoverageType)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {BUILDER_LIABILITY_COVERAGE_TYPES.map((coverageType) => (
+                                                    <SelectItem key={coverageType} value={coverageType}>
+                                                        {coverageType}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -837,6 +1089,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         <Label htmlFor="totalEstimateSum">Total Estimate Sum (₦) *</Label>
                                         <Input
                                             id="totalEstimateSum"
+                                            type="number"
                                             min="0"
                                             value={formData.totalEstimateSum}
                                             onChange={(e) => handleInputChange('totalEstimateSum', parseFloat(e.target.value) || "")}
@@ -850,7 +1103,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             checked={formData.extraHazardous}
                                             onChange={(e) => handleInputChange('extraHazardous', e.target.checked)}
                                         />
-                                        <Label htmlFor="extraHazardous">Extra Hazardous Work?</Label>
+                                        <Label htmlFor="extraHazardous">Extra Hazardous Work? *</Label>
                                     </div>
                                 </div>
                                 <div>
@@ -908,33 +1161,68 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             </TabsContent>
                         </Tabs>
 
-                        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-gray-200">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={onCancel}
                                 disabled={loading}
+                                className="w-full sm:w-auto"
                             >
                                 Cancel
                             </Button>
-                            <Button
-                                type="submit"
-                                disabled={loading}
-                                className="bg-green-600 hover:bg-green-700"
-                            >
-                                {loading ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                        Submitting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                        Submit Application
-                                    </>
+
+                            <div className="flex w-full sm:w-auto gap-2 sm:justify-end">
+                                {FORM_TABS.indexOf(activeTab) > 0 && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleBack}
+                                        disabled={loading}
+                                        className="flex-1 sm:flex-none"
+                                    >
+                                        <ChevronLeft className="w-4 h-4 mr-2" />
+                                        Back
+                                    </Button>
                                 )}
-                            </Button>
+
+                                {!isLastTab ? (
+                                    <Button
+                                        type="button"
+                                        onClick={handleNext}
+                                        disabled={loading}
+                                        className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                                    >
+                                        Next
+                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        type="submit"
+                                        disabled={loading || !formIsComplete}
+                                        className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                Submitting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCircle className="w-4 h-4 mr-2" />
+                                                Submit Application
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
+                            </div>
                         </div>
+
+                        {isLastTab && !formIsComplete && (
+                            <p className="mt-3 text-sm text-amber-700">
+                                Complete all required fields in each section before submitting.
+                            </p>
+                        )}
                     </form>
                 </CardContent>
             </Card>
