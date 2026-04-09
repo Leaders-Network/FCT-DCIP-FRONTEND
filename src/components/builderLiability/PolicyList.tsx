@@ -70,6 +70,10 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const [processingPremium, setProcessingPremium] = useState<string | null>(null);
     const [premiumModalPolicyId, setPremiumModalPolicyId] = useState<string | null>(null);
     const [retryLoading, setRetryLoading] = useState<string | null>(null);
+    const [pendingPaymentConfirmation, setPendingPaymentConfirmation] = useState<{
+        reference: string;
+        policyId: string;
+    } | null>(null);
     const [paymentResultModal, setPaymentResultModal] = useState<{
         isOpen: boolean;
         result: PaymentConfirmationResult;
@@ -109,6 +113,68 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             return next;
         });
     }, [policies]);
+
+    useEffect(() => {
+        if (!pendingPaymentConfirmation?.reference) return;
+
+        let intervalId: number | null = null;
+        let active = true;
+
+        const pollPaymentStatus = async () => {
+            try {
+                const result = await builderLiabilityPolicyAPI.verifyEgolepayPayment(
+                    pendingPaymentConfirmation.reference
+                );
+
+                if (!active) return;
+
+                if (result.pending) {
+                    console.debug(
+                        'EgolePay payment still pending verification',
+                        pendingPaymentConfirmation.reference
+                    );
+                    return;
+                }
+
+                setPendingPaymentConfirmation(null);
+                await fetchPolicies();
+
+                if (result.success) {
+                    toast.success('EgolePay payment confirmed');
+                    setPaymentResultModal({
+                        isOpen: true,
+                        result: result as PaymentConfirmationResult,
+                        policyId: pendingPaymentConfirmation.policyId
+                    });
+                    return;
+                }
+
+                toast.error(result.message || 'EgolePay payment verification failed');
+                setPaymentResultModal({
+                    isOpen: true,
+                    result: result as PaymentConfirmationResult,
+                    policyId: pendingPaymentConfirmation.policyId
+                });
+            } catch (error: any) {
+                if (error?.response?.status === 404) {
+                    toast.error('EgolePay payment reference was not found during retry verification.');
+                    setPendingPaymentConfirmation(null);
+                    return;
+                }
+                console.warn('EgolePay retry verification request failed, retrying...', error);
+            }
+        };
+
+        pollPaymentStatus();
+        intervalId = window.setInterval(pollPaymentStatus, 300000);
+
+        return () => {
+            active = false;
+            if (intervalId !== null) {
+                window.clearInterval(intervalId);
+            }
+        };
+    }, [pendingPaymentConfirmation, fetchPolicies]);
 
     const ensureEgolePaySdkLoaded = () =>
         new Promise<void>((resolve, reject) => {
@@ -312,13 +378,14 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                 transactionReference: pickRef(
                                     (responseObj as any)?.transactionReference,
                                     (responseObj as any)?.data?.transactionReference,
+                                    (responseObj as any)?.Data?.TransactionReference,
                                     (responseObj as any)?.TxnRef,
                                     firstItem?.TxnRef,
                                     firstItem?.txnRef
                                 ),
                                 paymentReference: pickRef(
-                                    (responseObj as any)?.paymentReference,
-                                    (responseObj as any)?.data?.paymentReference,
+                                    (responseObj as any)?.Data?.PaymentRef,
+                                    (responseObj as any)?.data?.PaymentRef,
                                     (responseObj as any)?.PaymentRef,
                                     firstItem?.PaymentRef,
                                     firstItem?.paymentRef
@@ -330,6 +397,14 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                 normalizedGatewayResponse,
                                 policy._id
                             );
+
+                            if (result.pending) {
+                                setPendingPaymentConfirmation({ reference, policyId: policy._id });
+                                toast.message(
+                                    'Payment is pending confirmation. Verification will retry automatically.'
+                                );
+                                return;
+                            }
 
                             if (result.niipWithdrawal?.success) {
                                 // Both payment + NIIP succeeded — just show a brief toast

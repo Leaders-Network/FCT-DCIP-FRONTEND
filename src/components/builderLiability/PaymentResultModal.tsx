@@ -254,6 +254,7 @@ const PaymentResultModal: React.FC<PaymentResultModalProps> = ({
                     </div>
                     <button
                         onClick={onClose}
+                        aria-label="Close"
                         className="ml-4 flex-shrink-0 text-white/80 hover:text-white"
                     >
                         <X className="w-5 h-5" />
@@ -291,18 +292,12 @@ const PaymentResultModal: React.FC<PaymentResultModalProps> = ({
                                     : result.message || "Could not confirm the payment."
                             }
                         />
-                        {result.transferVerification && (
+                        {result.transferVerification && !result.transferVerification.skipped && (
                             <StatusRow
                                 label="Transfer Verification"
-                                ok={
-                                    result.transferVerification.skipped
-                                        ? null
-                                        : result.transferVerification.success
-                                }
+                                ok={result.transferVerification.success}
                                 detail={
-                                    result.transferVerification.skipped
-                                        ? `Skipped — ${result.transferVerification.reason?.replace(/_/g, " ") || "no reference provided"}`
-                                        : result.transferVerification.success
+                                    result.transferVerification.success
                                         ? "Transfer reference verified."
                                         : "Verification failed."
                                 }
