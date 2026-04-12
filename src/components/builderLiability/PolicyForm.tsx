@@ -56,6 +56,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         // Membership Info
         membershipStatusId: 1,
         membershipName: '',
+        memberId: '',
         membershipNumber: '',
         professionalBodyName: '',
 
@@ -83,6 +84,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         contractorCategoryId: 1,
         extraHazardous: false,
         totalEstimateSum: 0,
+        agisNo: '',
         workDetails: '',
 
         // Meta Info
@@ -142,7 +144,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         if (tab === 'membership') {
             if (!isValidNumber(formData.membershipStatusId) || Number(formData.membershipStatusId) <= 0) {
-                errors.push('Membership Status is required.');
+                errors.push('Please indicate whether the applicant is a Nigerian Insurers Association (NIA) member.');
             }
         }
 
@@ -209,7 +211,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         if (tab === 'project') {
             if (typeof formData.coverTypeIndex !== 'boolean') {
-                errors.push('Is Statutory must be true or false.');
+                errors.push('Please indicate whether this project is applying for statutory cover.');
             }
             if (isBlank(formData.coverTypeDetails)) errors.push('Coverage Type is required.');
             if (!isValidNumber(formData.contractorCategoryId) || Number(formData.contractorCategoryId) <= 0) {
@@ -372,6 +374,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             membership: {
                 MembershipStatusId: formData.membershipStatusId,
                 MembershipName: formData.membershipName,
+                MemberId: formData.memberId,
                 MembershipNo: formData.membershipNumber,
                 ProfessionalBodyName: formData.professionalBodyName
             },
@@ -395,10 +398,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             },
             project: {
                 coverTypeIdx: formData.coverTypeIndex,
+                isStatutory: formData.coverTypeIndex,
                 coverTypeIdxDetails: formData.coverTypeDetails,
                 categoryOfContractorId: formData.contractorCategoryId,
                 extraHazardous: formData.extraHazardous,
                 totalEstimateSum: formData.totalEstimateSum,
+                agisNo: formData.agisNo,
                 workDetails: formData.workDetails,
                 address: projectAddress,
                 lga: projectLga,
@@ -522,6 +527,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             onChange={(e) => handleInputChange('rcNumber', e.target.value)}
                                             required
                                         />
+                                                                                   <p className="mt-1 text-sm text-gray-500">
+                                            Input the Organizations RC number (Registered Company Number)                                        
+                                            </p>
                                     </div>
                                     <div>
                                         <Label htmlFor="builderPhone">Phone Number *</Label>
@@ -582,6 +590,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             value={formData.niobRegNumber}
                                             onChange={(e) => handleInputChange('niobRegNumber', e.target.value)}
                                         />
+                                                                                <p className="mt-1 text-sm text-gray-500">
+                                            Input the Organizations Nigerian Institute of Building (NIOB) registration number.
+                                        </p>
                                     </div>
                                     <div>
                                         <Label htmlFor="yearOfIncorporation">Year of Incorporation *</Label>
@@ -629,7 +640,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             <TabsContent value="membership" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <Label htmlFor="membershipStatusId">Membership Status *</Label>
+                                        <Label htmlFor="membershipStatusId">Is the Applicant a Nigerian Insurers Association (NIA) Member? *</Label>
                                         <Select
                                             value={formData.membershipStatusId.toString()}
                                             onValueChange={(value) => handleInputChange('membershipStatusId', parseInt(value))}
@@ -638,12 +649,46 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="1">Active Member</SelectItem>
-                                                <SelectItem value="2">Inactive Member</SelectItem>
-                                                <SelectItem value="3">Suspended Member</SelectItem>
-                                                <SelectItem value="4">Non-Member</SelectItem>
+                                                <SelectItem value="1">Yes, applicant is a Nigerian Insurers Association member</SelectItem>
+                                                <SelectItem value="2">No, applicant is not a Nigerian Insurers Association member</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Select whether the builder or firm currently holds active membership with the Nigerian Insurers Association (NIA).
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="memberId">Nigerian Insurers Association (NIA) Member ID</Label>
+                                        <Input
+                                            id="memberId"
+                                            value={formData.memberId}
+                                            onChange={(e) => {
+                                                handleInputChange('memberId', e.target.value);
+                                                handleInputChange('membershipNumber', e.target.value);
+                                            }}
+                                            placeholder="Enter the applicant's NIA member ID"
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Provide the member ID issued by the Nigerian Insurers Association (NIA). Leave blank if the applicant is not a Nigerian Insurers Association (NIA) member.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="professionalBodyName">Professional Body Name</Label>
+                                        <Input
+                                            id="professionalBodyName"
+                                            value={formData.professionalBodyName}
+                                            onChange={(e) => handleInputChange('professionalBodyName', e.target.value)}
+                                            placeholder="e.g. NIA"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="membershipName">Membership Description</Label>
+                                        <Input
+                                            id="membershipName"
+                                            value={formData.membershipName}
+                                            onChange={(e) => handleInputChange('membershipName', e.target.value)}
+                                            placeholder="e.g. Corporate Member"
+                                        />
                                     </div>
                                 </div>
                             </TabsContent>
@@ -1034,7 +1079,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             <TabsContent value="project" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <Label htmlFor="coverTypeIndex">Is Statutory *</Label>
+                                        <Label htmlFor="coverTypeIndex">Is this Project Seeking Statutory Cover? *</Label>
                                         <Select
                                             value={String(formData.coverTypeIndex)}
                                             onValueChange={(value) => handleInputChange('coverTypeIndex', value === 'true')}
@@ -1043,10 +1088,13 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="true">True</SelectItem>
-                                                <SelectItem value="false">False</SelectItem>
+                                                <SelectItem value="true">Yes, statutory cover is required</SelectItem>
+                                                <SelectItem value="false">No, this is not statutory</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Choose yes when the policy is being obtained to satisfy a statutory or regulatory requirement for the project.
+                                        </p>
                                     </div>
                                     <div>
                                         <Label htmlFor="coverTypeDetails">Coverage Type *</Label>
@@ -1104,6 +1152,17 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             onChange={(e) => handleInputChange('extraHazardous', e.target.checked)}
                                         />
                                         <Label htmlFor="extraHazardous">Extra Hazardous Work? *</Label>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="agisNo">AGIS No</Label>
+                                        <Input
+                                            id="agisNo"
+                                            value={formData.agisNo}
+                                            onChange={(e) => handleInputChange('agisNo', e.target.value)}
+                                            placeholder="Enter AGIS reference number"
+                                        />
                                     </div>
                                 </div>
                                 <div>

@@ -25,6 +25,7 @@ export interface OrganizationInfo {
 export interface MembershipInfo {
     MembershipStatusId: number;
     MembershipName?: string;
+    MemberId?: string;
     MembershipNo?: string;
     ProfessionalBodyName?: string;
 }
@@ -81,10 +82,12 @@ export const BUILDER_LIABILITY_COVERAGE_TYPES: BuilderLiabilityCoverageType[] = 
 
 export interface ProjectInfo {
     coverTypeIdx: boolean;
+    isStatutory?: boolean;
     coverTypeIdxDetails: BuilderLiabilityCoverageType;
     categoryOfContractorId: number;
     extraHazardous: boolean;
     totalEstimateSum: number;
+    agisNo?: string;
     workDetails?: string;
     address?: string;
     lga?: string;
@@ -368,6 +371,7 @@ export interface BuilderLiabilityPolicyFormData {
     // Membership Info
     membershipStatusId: number;
     membershipName?: string;
+    memberId?: string;
     membershipNumber?: string;
     professionalBodyName?: string;
 
@@ -395,6 +399,7 @@ export interface BuilderLiabilityPolicyFormData {
     contractorCategoryId: number;
     extraHazardous: boolean;
     totalEstimateSum: number;
+    agisNo?: string;
     workDetails?: string;
 
     // Meta Info
