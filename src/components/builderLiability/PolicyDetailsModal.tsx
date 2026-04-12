@@ -514,10 +514,10 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Membership Status</label>
+                                    <label className="text-sm font-medium text-gray-600">NIA Membership Status</label>
                                     <p className="text-base">
-                                        {policy.membership?.MembershipStatusId === 1 ? 'Active Member' :
-                                            policy.membership?.MembershipStatusId === 2 ? 'Non-Member' : 'Unknown'}
+                                        {policy.membership?.MembershipStatusId === 1 ? 'Yes, applicant is a Nigerian Insurers Association (NIA) member' :
+                                            policy.membership?.MembershipStatusId === 2 ? 'No, applicant is not a Nigerian Insurers Association (NIA) member' : 'Unknown'}
                                     </p>
                                 </div>
                                 {policy.membership?.MembershipName && (
@@ -526,10 +526,10 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                         <p className="text-base">{policy.membership.MembershipName}</p>
                                     </div>
                                 )}
-                                {policy.membership?.MembershipNo && (
+                                {(policy.membership?.MemberId || policy.membership?.MembershipNo) && (
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600">Membership Number</label>
-                                        <p className="text-base">{policy.membership.MembershipNo}</p>
+                                        <label className="text-sm font-medium text-gray-600">NIA Member ID</label>
+                                        <p className="text-base">{policy.membership.MemberId || policy.membership.MembershipNo}</p>
                                     </div>
                                 )}
                                 {policy.membership?.ProfessionalBodyName && (
@@ -553,6 +553,14 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Statutory Cover</label>
+                                        <p className="text-base">
+                                            {(typeof policy.project?.isStatutory === 'boolean'
+                                                ? policy.project.isStatutory
+                                                : policy.project?.coverTypeIdx) ? 'Yes' : 'No'}
+                                        </p>
+                                    </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Coverage Type</label>
                                         <p className="text-base font-semibold">{policy.project?.coverTypeIdxDetails || 'N/A'}</p>
@@ -580,6 +588,22 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                                 <Badge variant="outline">No</Badge>
                                             )}
                                         </p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">AGIS No</label>
+                                        <p className="text-base">{policy.project?.agisNo || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Project Address</label>
+                                        <p className="text-base">{policy.project?.address || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Project LGA</label>
+                                        <p className="text-base">{policy.project?.lga || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Project District</label>
+                                        <p className="text-base">{policy.project?.district || 'N/A'}</p>
                                     </div>
                                 </div>
                                 <div>

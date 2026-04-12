@@ -906,10 +906,17 @@ export default function BrokerAdminDashboard() {
 
                                         <SectionCard icon={Shield} title="Membership & Compliance">
                                             <KeyValue
-                                                label="Membership"
-                                                value={selectedCompletedPolicy.membership.MembershipName || selectedCompletedPolicy.membership.ProfessionalBodyName || 'N/A'}
+                                                label="NIA Membership Status"
+                                                value={selectedCompletedPolicy.membership.MembershipStatusId === 1
+                                                    ? 'Yes, applicant is a Nigerian Insurers Association (NIA) member'
+                                                    : selectedCompletedPolicy.membership.MembershipStatusId === 2
+                                                        ? 'No, applicant is not a Nigerian Insurers Association (NIA) member'
+                                                        : 'N/A'}
                                             />
-                                            <KeyValue label="Membership Number" value={selectedCompletedPolicy.membership.MembershipNo || 'N/A'} />
+                                            <KeyValue
+                                                label="NIA Member ID"
+                                                value={selectedCompletedPolicy.membership.MemberId || selectedCompletedPolicy.membership.MembershipNo || 'N/A'}
+                                            />
                                             <KeyValue
                                                 label="Existing Insurance"
                                                 value={selectedCompletedPolicy.compliance.HasInsurance
