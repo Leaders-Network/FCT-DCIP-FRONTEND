@@ -283,15 +283,15 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
                             </div>
                         )}
 
-                        {/* Builder Name Filter */}
+                        {/* Contractor Name Filter */}
                         {availableFilters.includes('builderName') && (
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Builder Name
+                                    Contractor Name
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="Enter builder name"
+                                    placeholder="Enter contractor name"
                                     value={filters.builderName || ''}
                                     onChange={(e) => handleFilterChange('builderName', e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"

@@ -30,6 +30,8 @@ interface PolicyFormProps {
 const FORM_TABS = ['builder', 'organization', 'membership', 'workforce', 'compliance', 'project'] as const;
 type FormTab = (typeof FORM_TABS)[number];
 
+// Display labels use contractor/consultant terminology even when internal names remain backward-compatible.
+
 export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     onSuccess,
     onCancel
@@ -46,7 +48,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         builderAddress: '',
         builderPhone: '',
 
-        // Organization Info
+        // Consultant Info
         niobRegNumber: '',
         yearOfIncorporation: '',
         areaOfSpecialization: '',
@@ -120,7 +122,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         const errors: string[] = [];
 
         if (tab === 'builder') {
-            if (isBlank(formData.builderName)) errors.push('Builder/Company Name is required.');
+            if (isBlank(formData.builderName)) errors.push('Contractor/Company Name is required.');
             if (isBlank(formData.builderEmail) || !isValidEmail(formData.builderEmail)) {
                 errors.push('A valid Email Address is required.');
             }
@@ -478,10 +480,10 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             <div className="w-full overflow-x-auto">
                                 <TabsList className="flex md:grid md:grid-cols-6 w-max md:w-full min-w-max md:min-w-0">
                                     <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
-                                        Builder
+                                        Contractor
                                     </TabsTrigger>
                                     <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
-                                        Organization
+                                        Consultant
                                     </TabsTrigger>
                                     <TabsTrigger value="membership" className="whitespace-nowrap text-xs sm:text-sm">
                                         Membership
@@ -591,7 +593,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             onChange={(e) => handleInputChange('niobRegNumber', e.target.value)}
                                         />
                                                                                 <p className="mt-1 text-sm text-gray-500">
-                                            Input the Organizations Nigerian Institute of Building (NIOB) registration number.
+                                            Input the Consultant's Nigerian Institute of Building (NIOB) registration number.
                                         </p>
                                     </div>
                                     <div>
@@ -654,7 +656,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </SelectContent>
                                         </Select>
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Select whether the builder or firm currently holds active membership with the Nigerian Insurers Association (NIA).
+                                            Select whether the contractor or firm currently holds active membership with the Nigerian Insurers Association (NIA).
                                         </p>
                                     </div>
                                     <div>
@@ -1156,12 +1158,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <Label htmlFor="agisNo">AGIS No</Label>
+                                        <Label htmlFor="agisNo">Plot Number</Label>
                                         <Input
                                             id="agisNo"
                                             value={formData.agisNo}
                                             onChange={(e) => handleInputChange('agisNo', e.target.value)}
-                                            placeholder="Enter AGIS reference number"
+                                            placeholder="Enter plot number"
                                         />
                                     </div>
                                 </div>

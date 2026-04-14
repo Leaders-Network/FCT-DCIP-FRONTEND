@@ -390,10 +390,10 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                     <div className="w-full overflow-x-auto">
                         <TabsList className="flex md:grid md:grid-cols-7 w-max md:w-full min-w-max md:min-w-0">
                             <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
-                                Builder
+                                Contractor
                             </TabsTrigger>
                             <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
-                                Organization
+                                Consultant
                             </TabsTrigger>
                             <TabsTrigger value="project" className="whitespace-nowrap text-xs sm:text-sm">
                                 Project
@@ -424,7 +424,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Builder Name</label>
+                                    <label className="text-sm font-medium text-gray-600">Contractor Name</label>
                                     <p className="text-base font-semibold">{policy.builder.nameOfBuilder}</p>
                                 </div>
                                 <div>
@@ -478,7 +478,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Building className="w-5 h-5" />
-                                    Organization Details
+                                    Consultant Details
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">

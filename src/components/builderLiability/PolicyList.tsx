@@ -664,9 +664,9 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             {/* Header */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Builder Liability Policies</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Contractor Liability Policies</h2>
                     <p className="text-gray-600">
-                        {isAdmin ? 'Manage all Builder Liability Policy applications' : 'Your Builder Liability Policy applications'}
+                        {isAdmin ? 'Manage all Contractor Liability Policy applications' : 'Your Contractor Liability Policy applications'}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -683,7 +683,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
-                                placeholder="Search by builder name, email, policy number, or RC number..."
+                                placeholder="Search by contractor name, email, policy number, or RC number..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10"
