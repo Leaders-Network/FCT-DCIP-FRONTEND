@@ -498,10 +498,6 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <label className="text-sm font-medium text-gray-600">Permanent Staff Count</label>
                                     <p className="text-base">{policy.organization?.noOfPermanentStaff ?? 0}</p>
                                 </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Number of Floors</label>
-                                    <p className="text-base">{policy.organization?.noOfFloors ?? 0}</p>
-                                </div>
                             </CardContent>
                         </Card>
 

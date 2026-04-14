@@ -53,7 +53,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         yearOfIncorporation: '',
         areaOfSpecialization: '',
         permanentStaffCount: 0,
-        numberOfFloors: 0,
 
         // Membership Info
         membershipStatusId: 1,
@@ -138,9 +137,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             if (isBlank(formData.yearOfIncorporation)) errors.push('Year of Incorporation is required.');
             if (!isValidNumber(formData.permanentStaffCount) || Number(formData.permanentStaffCount) < 0) {
                 errors.push('Number of Permanent Staff must be 0 or greater.');
-            }
-            if (!isValidNumber(formData.numberOfFloors) || Number(formData.numberOfFloors) < 0) {
-                errors.push('Number of Floors must be 0 or greater.');
             }
         }
 
@@ -371,7 +367,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 yearOfIncorporation: new Date(formData.yearOfIncorporation),
                 areaOfSpecialization: formData.areaOfSpecialization,
                 noOfPermanentStaff: formData.permanentStaffCount,
-                noOfFloors: formData.numberOfFloors
             },
             membership: {
                 MembershipStatusId: formData.membershipStatusId,
@@ -625,17 +620,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             required
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="numberOfFloors">Number of Floors *</Label>
-                                        <Input
-                                            id="numberOfFloors"
-                                            type="number"
-                                            min="0"
-                                            value={formData.numberOfFloors}
-                                            onChange={(e) => handleInputChange('numberOfFloors', parseInt(e.target.value) || "")}
-                                            required
-                                        />
-                                    </div>
+
                                 </div>
                             </TabsContent>
 

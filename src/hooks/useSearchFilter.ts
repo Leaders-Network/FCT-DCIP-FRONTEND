@@ -1,5 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { debounce } from 'lodash';
+import { useState, useCallback } from 'react';
+
+// Lightweight debounce — avoids a lodash dependency with no bundled type declarations.
+function debounce<T extends (...args: Parameters<T>) => void>(
+    fn: T,
+    wait: number
+): (...args: Parameters<T>) => void {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    return (...args: Parameters<T>) => {
+        if (timer !== null) clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), wait);
+    };
+}
 
 export interface FilterOptions {
     statuses: string[];
