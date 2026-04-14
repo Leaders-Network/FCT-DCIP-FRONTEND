@@ -19,7 +19,6 @@ export interface OrganizationInfo {
     yearOfIncorporation: Date | string;
     areaOfSpecialization?: string;
     noOfPermanentStaff: number;
-    noOfFloors: number;
 }
 
 export interface MembershipInfo {
@@ -366,7 +365,6 @@ export interface BuilderLiabilityPolicyFormData {
     yearOfIncorporation: string;
     areaOfSpecialization?: string;
     permanentStaffCount: number;
-    numberOfFloors: number;
 
     // Membership Info
     membershipStatusId: number;

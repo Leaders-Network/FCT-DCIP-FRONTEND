@@ -887,7 +887,6 @@ export default function BrokerAdminDashboard() {
                                                     : 'N/A'}
                                             />
                                             <KeyValue label="Permanent Staff" value={selectedCompletedPolicy.organization.noOfPermanentStaff} />
-                                            <KeyValue label="Floors" value={selectedCompletedPolicy.organization.noOfFloors} />
                                             <KeyValue label="NIOB Registration" value={selectedCompletedPolicy.organization.niobRegNo || 'N/A'} />
                                         </SectionCard>
 
