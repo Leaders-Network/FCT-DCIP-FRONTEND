@@ -265,12 +265,27 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         () => FORM_TABS.every((tab) => getTabValidationErrors(tab).length === 0),
         [formData, projectAddress, projectLga, projectDistrict]
     );
+    const isNiaMember = Number(formData.membershipStatusId) === 1;
 
     const handleInputChange = (field: keyof BuilderLiabilityPolicyFormData, value: string | number | boolean | CategoryOfWorkmen[] | Professional[]) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        setFormData(prev => {
+            // When applicant is not an NIA member, clear all membership-only fields.
+            if (field === 'membershipStatusId' && Number(value) === 2) {
+                return {
+                    ...prev,
+                    membershipStatusId: Number(value),
+                    membershipName: '',
+                    memberId: '',
+                    membershipNumber: '',
+                    professionalBodyName: ''
+                };
+            }
+
+            return {
+                ...prev,
+                [field]: value
+            };
+        });
     };
 
     const addWorkmenCategory = () => {
@@ -654,6 +669,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 handleInputChange('membershipNumber', e.target.value);
                                             }}
                                             placeholder="Enter the applicant's NIA member ID"
+                                            required={isNiaMember}
+                                            disabled={!isNiaMember}
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
                                             Provide the member ID issued by the Nigerian Insurers Association (NIA). Leave blank if the applicant is not a Nigerian Insurers Association (NIA) member.
@@ -666,6 +683,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             value={formData.professionalBodyName}
                                             onChange={(e) => handleInputChange('professionalBodyName', e.target.value)}
                                             placeholder="e.g. NIA"
+                                            disabled={!isNiaMember}
                                         />
                                     </div>
                                     <div>
@@ -675,6 +693,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             value={formData.membershipName}
                                             onChange={(e) => handleInputChange('membershipName', e.target.value)}
                                             placeholder="e.g. Corporate Member"
+                                            disabled={!isNiaMember}
                                         />
                                     </div>
                                 </div>
