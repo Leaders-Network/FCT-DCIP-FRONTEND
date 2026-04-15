@@ -37,8 +37,13 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     onCancel
 }) => {
     const { createPolicy, loading, error, validationErrors } = useCreateBuilderLiabilityPolicy();
+    const allowedProductIds = [537, 556] as const;
+    const getRandomAllowedProductId = () => {
+        const randomIndex = Math.floor(Math.random() * allowedProductIds.length);
+        return allowedProductIds[randomIndex];
+    };
 
-    const [formData, setFormData] = useState<BuilderLiabilityPolicyFormData>({
+    const [formData, setFormData] = useState<BuilderLiabilityPolicyFormData>(() => ({
         // Builder Identity
         builderEmail: '',
         builderName: '',
@@ -89,14 +94,16 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         workDetails: '',
 
         // Meta Info
-        // NIIP Builder's Liability product
-        productId: 48,
+        // Randomly select between approved insurer product IDs:
+        // 537 -> Consolidated Hallmark Insurance Plc
+        // 556 -> NSIA Insurance Company Ltd
+        productId: getRandomAllowedProductId(),
         salesOutlet: '',
         brokerAgentName: '',
 
         // Optional fields
         priority: 'medium'
-    });
+    }));
 
     const [activeTab, setActiveTab] = useState<FormTab>('builder');
     const [tabErrors, setTabErrors] = useState<Partial<Record<FormTab, string[]>>>({});
