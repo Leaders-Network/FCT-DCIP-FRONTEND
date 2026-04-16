@@ -29,6 +29,14 @@ interface ExtendedPolicyRequest extends Omit<PolicyRequest, 'isBuilderLiabilityP
 
 type MixedPolicy = ExtendedPolicyRequest | PolicyRequest;
 
+type ApiErrorWithMessage = {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+};
+
 // Type guard functions
 const isBuilderLiabilityPolicy = (policy: MixedPolicy): policy is ExtendedPolicyRequest & {
   isBuilderLiabilityPolicy: true;
@@ -408,7 +416,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       setPolicyToDelete(null);
       toast.success('Policy deleted successfully!');
     } catch (error) {
-      const errorMessage = error?.response?.data?.message || 'Failed to delete policy';
+      const errorMessage = (error as ApiErrorWithMessage).response?.data?.message || 'Failed to delete policy';
       toast.error(errorMessage);
     }
   };
