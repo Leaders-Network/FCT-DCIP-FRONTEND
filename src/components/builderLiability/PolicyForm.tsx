@@ -37,13 +37,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     onCancel
 }) => {
     const { createPolicy, loading, error, validationErrors } = useCreateBuilderLiabilityPolicy();
-    const allowedProductIds = [537, 556] as const;
-    const getRandomAllowedProductId = () => {
-        const randomIndex = Math.floor(Math.random() * allowedProductIds.length);
-        return allowedProductIds[randomIndex];
-    };
 
-    const [formData, setFormData] = useState<BuilderLiabilityPolicyFormData>(() => ({
+    const [formData, setFormData] = useState<BuilderLiabilityPolicyFormData>({
         // Builder Identity
         builderEmail: '',
         builderName: '',
@@ -58,6 +53,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         yearOfIncorporation: '',
         areaOfSpecialization: '',
         permanentStaffCount: 0,
+
 
         // Membership Info
         membershipStatusId: 1,
@@ -94,16 +90,14 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         workDetails: '',
 
         // Meta Info
-        // Randomly select between approved insurer product IDs:
-        // 537 -> Consolidated Hallmark Insurance Plc
-        // 556 -> NSIA Insurance Company Ltd
-        productId: getRandomAllowedProductId(),
+        // NIIP Builder's Liability product
+        productId: 48,
         salesOutlet: '',
         brokerAgentName: '',
 
         // Optional fields
         priority: 'medium'
-    }));
+    });
 
     const [activeTab, setActiveTab] = useState<FormTab>('builder');
     const [tabErrors, setTabErrors] = useState<Partial<Record<FormTab, string[]>>>({});
@@ -272,27 +266,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         () => FORM_TABS.every((tab) => getTabValidationErrors(tab).length === 0),
         [formData, projectAddress, projectLga, projectDistrict]
     );
-    const isNiaMember = Number(formData.membershipStatusId) === 1;
 
     const handleInputChange = (field: keyof BuilderLiabilityPolicyFormData, value: string | number | boolean | CategoryOfWorkmen[] | Professional[]) => {
-        setFormData(prev => {
-            // When applicant is not an NIA member, clear all membership-only fields.
-            if (field === 'membershipStatusId' && Number(value) === 2) {
-                return {
-                    ...prev,
-                    membershipStatusId: Number(value),
-                    membershipName: '',
-                    memberId: '',
-                    membershipNumber: '',
-                    professionalBodyName: ''
-                };
-            }
-
-            return {
-                ...prev,
-                [field]: value
-            };
-        });
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
 
     const addWorkmenCategory = () => {
@@ -388,7 +367,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 niobRegNo: formData.niobRegNumber,
                 yearOfIncorporation: new Date(formData.yearOfIncorporation),
                 areaOfSpecialization: formData.areaOfSpecialization,
-                noOfPermanentStaff: formData.permanentStaffCount,
+                noOfPermanentStaff: formData.permanentStaffCount
             },
             membership: {
                 MembershipStatusId: formData.membershipStatusId,
@@ -676,8 +655,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 handleInputChange('membershipNumber', e.target.value);
                                             }}
                                             placeholder="Enter the applicant's NIA member ID"
-                                            required={isNiaMember}
-                                            disabled={!isNiaMember}
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
                                             Provide the member ID issued by the Nigerian Insurers Association (NIA). Leave blank if the applicant is not a Nigerian Insurers Association (NIA) member.
@@ -690,7 +667,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             value={formData.professionalBodyName}
                                             onChange={(e) => handleInputChange('professionalBodyName', e.target.value)}
                                             placeholder="e.g. NIA"
-                                            disabled={!isNiaMember}
                                         />
                                     </div>
                                     <div>
@@ -700,7 +676,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             value={formData.membershipName}
                                             onChange={(e) => handleInputChange('membershipName', e.target.value)}
                                             placeholder="e.g. Corporate Member"
-                                            disabled={!isNiaMember}
                                         />
                                     </div>
                                 </div>
