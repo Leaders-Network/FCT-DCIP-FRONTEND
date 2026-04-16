@@ -28,6 +28,14 @@ interface CompletedPolicy {
   surveyDocument?: string | { url: string };
 }
 
+type ApiErrorWithMessage = {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+};
+
 const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
   const [completedPolicies, setCompletedPolicies] = useState<CompletedPolicy[]>([]);
   const [rejectedPolicies, setRejectedPolicies] = useState<CompletedPolicy[]>([]);
@@ -127,7 +135,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       setPolicyToDelete(null);
       toast.success('Policy deleted successfully!');
     } catch (error) {
-      const errorMessage = error?.response?.data?.message || 'Failed to delete policy';
+      const errorMessage = (error as ApiErrorWithMessage).response?.data?.message || 'Failed to delete policy';
       toast.error(errorMessage);
     }
   };
