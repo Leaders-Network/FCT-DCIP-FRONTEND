@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Bell, Search, User, Settings, LogOut, Building2, RefreshCw, Menu } from "lucide-react";
+import { Search, User, Settings, LogOut, Building2, RefreshCw, Menu } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -10,15 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Assignment, Surveyor, PolicyRequest } from "@/types/api.types";
 import { clearAuthTokens, decodeToken, getAuthToken } from "@/utils/auth";
-
-interface Notification {
-    _id: string;
-    title: string;
-    message: string;
-    read: boolean;
-    createdAt: string;
-    actionUrl?: string;
-}
+import NotificationBell from "@/components/shared/NotificationBell";
 
 interface SearchResult {
     _id: string;
@@ -44,9 +36,6 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
         email: string;
         organization: string;
     } | null>(null);
-    const [notificationCount, setNotificationCount] = useState(0);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [showNotifications, setShowNotifications] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [showSearchResults, setShowSearchResults] = useState(false);
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -70,41 +59,7 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
                 });
             }
         }
-
-        // Fetch notifications
-        fetchNotifications();
     }, []);
-
-    const fetchNotifications = async () => {
-        try {
-            const token = getDashboardToken();
-            if (!token) {
-                setNotifications([]);
-                setNotificationCount(0);
-                return;
-            }
-
-            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-            const response = await fetch(`${baseUrl}/notifications`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setNotifications(data.data?.notifications || data.notifications || []);
-                setNotificationCount(data.data?.unreadCount || data.unreadCount || 0);
-            } else {
-                setNotifications([]);
-                setNotificationCount(0);
-            }
-        } catch (error) {
-            console.error('Failed to fetch notifications:', error);
-            setNotifications([]);
-            setNotificationCount(0);
-        }
-    };
 
     const handleLogout = () => {
         clearAuthTokens();
@@ -158,44 +113,6 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
             setShowSearchResults(true);
         } catch (error) {
             console.error('Search failed:', error);
-        }
-    };
-
-    const handleNotificationClick = async (notificationId: string) => {
-        try {
-            const token = getDashboardToken();
-            if (!token) return;
-
-            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-            await fetch(`${baseUrl}/notifications/${notificationId}/read`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            fetchNotifications();
-        } catch (error) {
-            console.error('Failed to mark notification as read:', error);
-        }
-    };
-
-    const markAllAsRead = async () => {
-        try {
-            const token = getDashboardToken();
-            if (!token) return;
-
-            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-            await fetch(`${baseUrl}/notifications/mark-all-read`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            fetchNotifications();
-        } catch (error) {
-            console.error('Failed to mark all as read:', error);
         }
     };
 
@@ -256,82 +173,7 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
                         <RefreshCw className="h-5 w-5" />
                     </button>
 
-                    {/* Notifications */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setShowNotifications(!showNotifications)}
-                            className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative"
-                        >
-                            <Bell className="h-5 w-5" />
-                            {notificationCount > 0 && (
-                                <span className="absolute -top-1 -right-1 block h-4 w-4 rounded-full bg-red-500 text-xs text-white flex items-center justify-center">
-                                    {notificationCount > 9 ? '9+' : notificationCount}
-                                </span>
-                            )}
-                        </button>
-
-                        {/* Notifications Dropdown */}
-                        {showNotifications && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setShowNotifications(false)}
-                                />
-                                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-[500px] overflow-hidden flex flex-col">
-                                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                                        <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
-                                        {notificationCount > 0 && (
-                                            <button
-                                                onClick={markAllAsRead}
-                                                className="text-xs text-blue-600 hover:text-blue-800"
-                                            >
-                                                Mark all as read
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="overflow-y-auto flex-1">
-                                        {notifications.length === 0 ? (
-                                            <div className="p-8 text-center text-gray-500">
-                                                <Bell className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                                                <p>No notifications</p>
-                                            </div>
-                                        ) : (
-                                            notifications.map((notification) => (
-                                                <div
-                                                    key={notification._id}
-                                                    onClick={() => {
-                                                        handleNotificationClick(notification._id);
-                                                        if (notification.actionUrl) {
-                                                            window.location.href = notification.actionUrl;
-                                                        }
-                                                    }}
-                                                    className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''
-                                                        }`}
-                                                >
-                                                    <div className="flex items-start">
-                                                        <div className="flex-1">
-                                                            <p className="text-sm font-medium text-gray-900">
-                                                                {notification.title}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600 mt-1">
-                                                                {notification.message}
-                                                            </p>
-                                                            <p className="text-xs text-gray-400 mt-1">
-                                                                {new Date(notification.createdAt).toLocaleString()}
-                                                            </p>
-                                                        </div>
-                                                        {!notification.read && (
-                                                            <div className="w-2 h-2 bg-blue-600 rounded-full ml-2 mt-1"></div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                    <NotificationBell />
 
                     {/* User Menu */}
                     <div className="flex items-center space-x-2 sm:space-x-3">

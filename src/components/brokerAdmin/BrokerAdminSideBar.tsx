@@ -17,6 +17,7 @@ import {
     Building,
     UserCheck,
     AlertTriangle,
+    Bell,
     ChevronLeft,
     ChevronRight,
     X
@@ -69,6 +70,12 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
             label: "Administrators",
             icon: Users,
             description: "Manage broker admins"
+        },
+        {
+            href: "/broker-admin/notifications",
+            label: "Notifications",
+            icon: Bell,
+            description: "Alerts and updates"
         },
         {
             href: "/broker-admin/settings",

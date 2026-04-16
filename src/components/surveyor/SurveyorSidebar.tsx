@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, FileText, Upload, Settings, LogOut, X } from "lucide-react";
+import { Home, FileText, Settings, LogOut, X, Bell } from "lucide-react";
 import { clearAuthTokens } from "@/utils/auth"
 import Swal from "sweetalert2";
 
@@ -59,7 +59,7 @@ const SurveyorSidebar: React.FC<SurveyorSidebarProps> = ({
   const menuItems = [
     { href: "/surveyor/dashboard", label: "Dashboard", icon: Home },
     { href: "/surveyor/dashboard/assignments", label: "My Assignments", icon: FileText },
-
+    { href: "/surveyor/dashboard/notifications", label: "Notifications", icon: Bell },
     { href: "/surveyor/dashboard/settings", label: "Settings", icon: Settings },
   ];
 

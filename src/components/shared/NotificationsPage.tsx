@@ -1,16 +1,27 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Bell, Check, CheckCheck, Trash2, Filter, ExternalLink } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, Filter } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Notification } from '@/types/notification.types';
 
 const NotificationsPage: React.FC = () => {
     const router = useRouter();
+    const pathname = usePathname();
     const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
     const [filter, setFilter] = useState<'all' | 'unread'>('all');
     const [typeFilter, setTypeFilter] = useState<string>('all');
+
+    const notificationsPath = pathname?.startsWith('/admin/dashboard')
+        ? '/admin/dashboard/notifications'
+        : pathname?.startsWith('/broker-admin')
+            ? '/broker-admin/notifications'
+            : pathname?.startsWith('/nia-admin')
+                ? '/nia-admin/notifications'
+                : pathname?.startsWith('/surveyor/dashboard')
+                    ? '/surveyor/dashboard/notifications'
+                    : '/dashboard/notifications';
 
     const filteredNotifications = notifications.filter(n => {
         if (filter === 'unread' && n.read) return false;
@@ -22,9 +33,7 @@ const NotificationsPage: React.FC = () => {
         if (!notification.read) {
             await markAsRead(notification._id);
         }
-        if (notification.actionUrl) {
-            router.push(notification.actionUrl);
-        }
+        router.push(`${notificationsPath}/${notification._id}`);
     };
 
     const getNotificationIcon = (type: string) => {
@@ -194,12 +203,6 @@ const NotificationsPage: React.FC = () => {
                                                 </span>
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                {notification.actionUrl && (
-                                                    <span className="text-xs text-blue-600 flex items-center">
-                                                        <ExternalLink className="h-3 w-3 mr-1" />
-                                                        {notification.actionLabel || 'View'}
-                                                    </span>
-                                                )}
                                                 {!notification.read && (
                                                     <button
                                                         onClick={(e) => {

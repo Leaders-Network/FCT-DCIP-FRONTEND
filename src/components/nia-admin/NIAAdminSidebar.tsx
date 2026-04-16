@@ -13,6 +13,7 @@ import {
     Building2,
     UserCheck,
     AlertTriangle,
+    Bell,
     ChevronLeft,
     ChevronRight,
     X
@@ -76,6 +77,12 @@ const NIAAdminSidebar: React.FC<NIAAdminSidebarProps> = ({
             label: "Administrators",
             icon: UserCheck,
             description: "Manage NIA administrators"
+        },
+        {
+            href: "/nia-admin/notifications",
+            label: "Notifications",
+            icon: Bell,
+            description: "Alerts and updates"
         },
         {
             href: "/nia-admin/settings",

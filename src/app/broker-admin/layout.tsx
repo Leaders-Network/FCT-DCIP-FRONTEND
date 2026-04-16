@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { getAuthToken } from '@/utils/auth';
 import BrokerAdminSidebar from '@/components/brokerAdmin/BrokerAdminSideBar';
 import BrokerHeader from '@/components/brokerAdmin/BrokerHeader';
+import { NotificationProvider } from '@/context/NotificationContext';
 
 export default function BrokerAdminLayout({
     children,
@@ -60,28 +61,30 @@ export default function BrokerAdminLayout({
 
     // Render with sidebar and header for authenticated pages
     return (
-        <div className="flex h-screen bg-gray-50">
-            {/* Mobile Overlay */}
-            {isMobile && sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-20 md:hidden"
-                    onClick={() => setSidebarOpen(false)}
+        <NotificationProvider>
+            <div className="flex h-screen bg-gray-50">
+                {/* Mobile Overlay */}
+                {isMobile && sidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+
+                <BrokerAdminSidebar
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    isMobile={isMobile}
                 />
-            )}
 
-            <BrokerAdminSidebar
-                isOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
-                isMobile={isMobile}
-            />
+                <div className="flex-1 flex flex-col overflow-visible">
+                    <BrokerHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-            <div className="flex-1 flex flex-col overflow-visible">
-                <BrokerHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-
-                <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
-                    {children}
-                </main>
+                    <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+                        {children}
+                    </main>
+                </div>
             </div>
-        </div>
+        </NotificationProvider>
     );
 }
