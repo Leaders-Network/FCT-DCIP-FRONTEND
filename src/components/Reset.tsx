@@ -55,7 +55,6 @@ export default function Reset() {
       }
 
       const data = await response.json();
-      console.log('✅ OTP sent successfully:', data);
 
       // Store email for the reset process
       localStorage.setItem("resetEmail", email);
@@ -64,7 +63,6 @@ export default function Reset() {
       // Redirect to reset verification page
       router.push("/reset-verify");
     } catch (error) {
-      console.error("Reset password error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);

@@ -41,8 +41,6 @@ const AssignmentsList = () => {
     const fetchAssignments = async () => {
         setLoading(true);
         try {
-            console.log('🔍 Fetching assignments with filter:', filter);
-            console.log('🔍 Current path:', window.location.pathname);
 
             const response = await getSurveyorAssignments({
                 status: filter === "all" ? undefined : filter,
@@ -50,25 +48,14 @@ const AssignmentsList = () => {
                 limit: 50
             });
 
-            console.log('📋 Assignments API response:', response);
-
             if (response.success) {
                 const assignments = response.data.assignments || [];
-                console.log('✅ Assignments received:', assignments.length);
-                console.log('📄 First assignment:', assignments[0]);
                 setAssignments(assignments);
             } else {
-                console.error('❌ API response not successful:', response);
                 setAssignments([]);
             }
         } catch (error: unknown) {
             const err = error as { message?: string; response?: { status?: number; data?: unknown } };
-            console.error("❌ Failed to fetch assignments:", error);
-            console.error("Error details:", {
-                message: err.message,
-                status: err.response?.status,
-                data: err.response?.data
-            });
             setAssignments([]);
         } finally {
             setLoading(false);

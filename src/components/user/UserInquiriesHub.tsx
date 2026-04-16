@@ -104,7 +104,6 @@ const UserInquiriesHub: React.FC = () => {
                 setTotalPages(1);
             }
         } catch (error: unknown) {
-            console.error('Error fetching inquiries:', error);
             // Handle 404 gracefully - means no inquiries exist yet
             const axiosError = error as { response?: { status?: number } };
             if (axiosError?.response?.status === 404) {

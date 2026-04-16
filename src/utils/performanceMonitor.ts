@@ -27,7 +27,6 @@ class PerformanceMonitor {
         const startTime = this.timers.get(name);
 
         if (!startTime) {
-            console.warn(`⚠️ Timer "${name}" was not started`);
             return 0;
         }
 
@@ -42,9 +41,7 @@ class PerformanceMonitor {
 
         // Log slow operations
         if (duration > 1000) {
-            console.warn(`🐌 Slow operation: ${name} took ${duration.toFixed(2)}ms`);
         } else if (duration > 100) {
-            console.log(`⏱️ ${name} took ${duration.toFixed(2)}ms`);
         }
 
         return duration;
@@ -138,7 +135,6 @@ if (typeof window !== 'undefined') {
     window.addEventListener('load', () => {
         const timing = performance.timing;
         const loadTime = timing.loadEventEnd - timing.navigationStart;
-        console.log(`📊 Page load time: ${loadTime}ms`);
     });
 
     // Monitor largest contentful paint
@@ -147,7 +143,6 @@ if (typeof window !== 'undefined') {
             const observer = new PerformanceObserver((list) => {
                 const entries = list.getEntries();
                 const lastEntry = entries[entries.length - 1];
-                console.log(`🎨 Largest Contentful Paint: ${lastEntry.startTime.toFixed(2)}ms`);
             });
             observer.observe({ entryTypes: ['largest-contentful-paint'] });
         } catch (e) {

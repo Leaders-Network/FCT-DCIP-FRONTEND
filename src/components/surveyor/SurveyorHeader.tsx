@@ -55,7 +55,6 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
           const parsed = JSON.parse(infoCookie) as { name?: string };
           if (applyName(parsed?.name)) return;
         } catch (error) {
-          console.error("Failed to parse surveyorInfo cookie:", error);
         }
       }
 
@@ -69,7 +68,6 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
         const lastName = surveyor?.userId?.lastname || "";
         applyName(`${firstName} ${lastName}`);
       } catch (error) {
-        console.error("Failed to hydrate surveyor name:", error);
       }
     };
 

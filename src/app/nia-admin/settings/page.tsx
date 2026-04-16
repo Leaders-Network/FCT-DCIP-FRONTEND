@@ -42,7 +42,6 @@ export default function NIAAdminSettingsPage() {
                 setProfileData({ firstname, lastname, email, phonenumber });
             }
         } catch (error) {
-            console.error('Failed to fetch profile:', error);
         }
     };
 

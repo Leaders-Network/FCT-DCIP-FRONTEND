@@ -168,7 +168,6 @@ const BrokerAdminManagement = ({
                 setBrokerAdmins([]);
             }
         } catch (error) {
-            console.error("Failed to fetch broker admins:", error);
             setBrokerAdmins([]);
         } finally {
             setLoading(false);
@@ -185,7 +184,6 @@ const BrokerAdminManagement = ({
                 setStats(response.data);
             }
         } catch (error) {
-            console.error("Failed to fetch stats:", error);
         }
     };
 
@@ -205,7 +203,6 @@ const BrokerAdminManagement = ({
                 fetchStats();
             }
         } catch (error) {
-            console.error("Failed to create broker admin:", error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to create broker admin';
             alert(errorMessage);
         }
@@ -234,7 +231,6 @@ const BrokerAdminManagement = ({
                 fetchBrokerAdmins();
             }
         } catch (error) {
-            console.error("Failed to update broker admin:", error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to update broker admin';
             alert(errorMessage);
         }
@@ -258,7 +254,6 @@ const BrokerAdminManagement = ({
                 fetchStats();
             }
         } catch (error) {
-            console.error("Failed to reactivate broker admin:", error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to reactivate broker admin';
             alert(errorMessage);
         }
@@ -294,7 +289,6 @@ const BrokerAdminManagement = ({
                 fetchStats();
             }
         } catch (error) {
-            console.error(`Failed to ${action} broker admin:`, error);
             const errorMessage = error instanceof Error ? error.message : `Failed to ${action} broker admin`;
             alert(errorMessage);
         }

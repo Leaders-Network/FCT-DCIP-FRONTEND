@@ -25,16 +25,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const fetchNotifications = useCallback(async () => {
         try {
             setLoading(true);
-            console.log('🔔 Fetching notifications...');
             const response = await notificationApi.getNotifications({ limit: 50 });
-            console.log('🔔 Notification API response:', response);
             if (response.success) {
                 setNotifications(response.notifications);
                 setUnreadCount(response.unreadCount);
-                console.log(`🔔 Loaded ${response.notifications.length} notifications, ${response.unreadCount} unread`);
             }
         } catch (error) {
-            console.error('❌ Failed to fetch notifications:', error);
         } finally {
             setLoading(false);
         }
@@ -42,15 +38,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const refreshUnreadCount = useCallback(async () => {
         try {
-            console.log('🔔 Refreshing unread count...');
             const response = await notificationApi.getUnreadCount();
-            console.log('🔔 Unread count response:', response);
             if (response.success) {
                 setUnreadCount(response.count);
-                console.log(`🔔 Updated unread count: ${response.count}`);
             }
         } catch (error) {
-            console.error('❌ Failed to refresh unread count:', error);
         }
     }, []);
 
@@ -62,7 +54,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (error) {
-            console.error('Failed to mark notification as read:', error);
         }
     }, []);
 
@@ -74,7 +65,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             );
             setUnreadCount(0);
         } catch (error) {
-            console.error('Failed to mark all as read:', error);
         }
     }, []);
 
@@ -85,7 +75,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             // Refresh unread count in case deleted notification was unread
             await refreshUnreadCount();
         } catch (error) {
-            console.error('Failed to delete notification:', error);
         }
     }, [refreshUnreadCount]);
 

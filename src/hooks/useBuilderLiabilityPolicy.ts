@@ -30,7 +30,6 @@ const useBuilderLiabilityPolicy = (policyId?: string) => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch policy';
             setError(errorMessage);
-            console.error('Error fetching Builder Liability Policy:', err);
         } finally {
             setLoading(false);
         }
@@ -58,7 +57,6 @@ const useBuilderLiabilityPolicy = (policyId?: string) => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to update policy';
             setError(errorMessage);
-            console.error('Error updating Builder Liability Policy:', err);
             return null;
         } finally {
             setLoading(false);
@@ -78,7 +76,6 @@ const useBuilderLiabilityPolicy = (policyId?: string) => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to update policy status';
             setError(errorMessage);
-            console.error('Error updating policy status:', err);
             return null;
         } finally {
             setLoading(false);
@@ -98,7 +95,6 @@ const useBuilderLiabilityPolicy = (policyId?: string) => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to delete policy';
             setError(errorMessage);
-            console.error('Error deleting Builder Liability Policy:', err);
             return null;
         } finally {
             setLoading(false);
@@ -153,7 +149,6 @@ const useBuilderLiabilityPolicies = (isAdmin = false) => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch policies';
             setError(errorMessage);
-            console.error('Error fetching Builder Liability Policies:', err);
         } finally {
             setLoading(false);
         }
@@ -176,7 +171,6 @@ const useBuilderLiabilityPolicies = (isAdmin = false) => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to search policies';
             setError(errorMessage);
-            console.error('Error searching Builder Liability Policies:', err);
         } finally {
             setLoading(false);
         }
@@ -241,8 +235,6 @@ const useCreateBuilderLiabilityPolicy = () => {
                     });
                 }
             }
-
-            console.error('Error creating Builder Liability Policy:', err);
             return null;
         } finally {
             setLoading(false);
@@ -269,7 +261,6 @@ const useCreateBuilderLiabilityPolicy = () => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to validate policy data';
             setError(errorMessage);
-            console.error('Error validating policy data:', err);
             return null;
         } finally {
             setLoading(false);
@@ -286,7 +277,6 @@ const useCreateBuilderLiabilityPolicy = () => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to validate section';
             setError(errorMessage);
-            console.error('Error validating section:', err);
             return null;
         } finally {
             setLoading(false);
@@ -365,7 +355,6 @@ const useBuilderLiabilityPolicyStats = () => {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch statistics';
             setError(errorMessage);
-            console.error('Error fetching policy statistics:', err);
         } finally {
             setLoading(false);
         }

@@ -98,7 +98,6 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     // If specific token type is requested, try to get that specific token first
     if (tokenType) {
         if (tokenType !== 'super-admin' && activeSuperAdminToken) {
-            console.log(`Using active super admin token for ${tokenType} access`);
             syncLegacySuperAdminTokens(activeSuperAdminToken);
             return activeSuperAdminToken;
         }
@@ -106,7 +105,6 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
         const tokenKey = getTokenKeyForType(tokenType);
         const token = getStoredValue(tokenKey);
         if (token) {
-            console.log(`Using specific auth token from cookie: ${tokenKey}`);
             if (tokenType === 'super-admin') {
                 syncLegacySuperAdminTokens(token);
             }
@@ -117,14 +115,10 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
         if (tokenType !== 'super-admin') {
             const superAdminToken = getStoredValue('superAdminToken');
             if (superAdminToken) {
-                console.log(`Using super admin token for ${tokenType} access`);
                 syncLegacySuperAdminTokens(superAdminToken);
                 return superAdminToken;
             }
         }
-
-        // If specific token not found, fall back to auto-detection
-        console.warn(`Requested token type '${tokenType}' not found, trying auto-detection`);
     }
 
     // Auto-detect token type based on current URL path
@@ -148,7 +142,6 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     // If we detected a type from the URL, try to get that specific token
     if (detectedType) {
         if (detectedType !== 'super-admin' && activeSuperAdminToken) {
-            console.log(`Using active super admin token for path-based ${detectedType} access`);
             syncLegacySuperAdminTokens(activeSuperAdminToken);
             return activeSuperAdminToken;
         }
@@ -156,7 +149,6 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
         const tokenKey = getTokenKeyForType(detectedType);
         const token = getStoredValue(tokenKey);
         if (token) {
-            console.log(`Auto-detected and using auth token from cookie: ${tokenKey} (based on path: ${currentPath})`);
             if (detectedType === 'super-admin') {
                 syncLegacySuperAdminTokens(token);
             }
@@ -166,7 +158,6 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
         if (detectedType !== 'super-admin') {
             const superAdminToken = getStoredValue('superAdminToken');
             if (superAdminToken) {
-                console.log(`Using super admin token for path-based ${detectedType} access`);
                 syncLegacySuperAdminTokens(superAdminToken);
                 return superAdminToken;
             }
@@ -188,15 +179,12 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     for (const key of tokenKeys) {
         const token = getStoredValue(key);
         if (token) {
-            console.log(`Using fallback auth token from cookie: ${key}`);
             if (key === 'superAdminToken') {
                 syncLegacySuperAdminTokens(token);
             }
             return token;
         }
     }
-
-    console.warn('No authentication token found in cookies');
     return null;
 };
 
@@ -222,7 +210,6 @@ export const getUserRole = (): string | null => {
             const parsed = JSON.parse(adminInfo);
             return parsed.role || 'nia-admin';
         } catch (e) {
-            console.warn('Failed to parse NIA admin info');
         }
     }
 
@@ -232,7 +219,6 @@ export const getUserRole = (): string | null => {
             const parsed = JSON.parse(userInfo);
             return parsed.role || 'user';
         } catch (e) {
-            console.warn('Failed to parse user info');
         }
     }
 
@@ -254,8 +240,6 @@ export const setAuthToken = (token: string, tokenType: TokenType = 'admin'): voi
         setStoredValue('token', token);
         setStoredValue('authToken', token);
     }
-
-    console.log(`Auth token set in cookie: ${tokenKey}`);
 };
 
 export const removeAuthToken = (tokenType?: TokenType): void => {
@@ -270,8 +254,6 @@ export const removeAuthToken = (tokenType?: TokenType): void => {
             removeStoredValue('token');
             removeStoredValue('authToken');
         }
-
-        console.log(`Auth token removed from cookie: ${tokenKey}`);
     } else {
         // Remove all tokens
         const tokenKeys = [
@@ -288,8 +270,6 @@ export const removeAuthToken = (tokenType?: TokenType): void => {
         tokenKeys.forEach(key => {
             removeStoredValue(key);
         });
-
-        console.log('All auth tokens removed from cookies');
     }
 };
 
@@ -319,8 +299,6 @@ export const clearAuthTokens = (): void => {
     tokenKeys.forEach(key => {
         removeStoredValue(key);
     });
-
-    console.log('All auth tokens and user info cleared from cookies');
 };
 
 export const getApiHeaders = (tokenType?: TokenType): Record<string, string> => {
@@ -427,7 +405,6 @@ export const decodeToken = (token?: string): Record<string, unknown> | null => {
 
         return JSON.parse(jsonPayload);
     } catch (error) {
-        console.error('Failed to decode token:', error);
         return null;
     }
 };

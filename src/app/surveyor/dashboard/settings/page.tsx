@@ -79,7 +79,6 @@ export default function SurveyorSettingsPage() {
         return;
       }
     } catch (error) {
-      console.error('Failed to fetch /settings/profile:', error);
     }
 
     try {
@@ -90,7 +89,6 @@ export default function SurveyorSettingsPage() {
         syncSurveyorName(extractedProfile.firstname, extractedProfile.lastname);
       }
     } catch (error) {
-      console.error('Failed to fetch /surveyor/profile:', error);
     }
   };
 

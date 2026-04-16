@@ -48,7 +48,6 @@ const AdminContactDisplay: React.FC<AdminContactDisplayProps> = ({
             setCopiedField(field);
             setTimeout(() => setCopiedField(null), 2000);
         } catch (err) {
-            console.error('Failed to copy text: ', err);
         }
     };
 

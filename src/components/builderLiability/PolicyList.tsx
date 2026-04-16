@@ -129,10 +129,6 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 if (!active) return;
 
                 if (result.pending) {
-                    console.debug(
-                        'EgolePay payment still pending verification',
-                        pendingPaymentConfirmation.reference
-                    );
                     return;
                 }
 
@@ -161,7 +157,6 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                     setPendingPaymentConfirmation(null);
                     return;
                 }
-                console.warn('EgolePay retry verification request failed, retrying...', error);
             }
         };
 
@@ -420,7 +415,6 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
                             await fetchPolicies();
                         } catch (confirmError: any) {
-                            console.error('EgolePay confirmation error:', confirmError);
                             const errorMessage =
                                 confirmError.response?.data?.message ||
                                 confirmError.message ||
@@ -441,7 +435,6 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
                 toast.success('EgolePay checkout opened');
             } catch (error: any) {
-                console.error('Payment error:', error);
                 const errorMessage = error.response?.data?.message || error.message || 'Failed to process payment';
                 toast.error(`Payment Error\n\n${errorMessage}\n\nPlease try again.`);
             } finally {
@@ -492,7 +485,6 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                 onPolicySelect(fullPolicy);
             }
         } catch (error) {
-            console.error('Failed to fetch full policy details:', error);
             // Fallback to showing partial data if fetch fails
             setSelectedPolicy(policy);
             setShowDetailsModal(true);

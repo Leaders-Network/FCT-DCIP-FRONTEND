@@ -36,7 +36,6 @@ export default function UserReportsPage() {
                 setSummary(response.data);
             }
         } catch (error) {
-            console.error('Error fetching summary:', error);
         }
     };
 
@@ -52,7 +51,6 @@ export default function UserReportsPage() {
                 alert('Failed to fetch reports');
             }
         } catch (error) {
-            console.error('Error fetching reports:', error);
             alert('Failed to fetch reports');
         } finally {
             setLoading(false);

@@ -62,8 +62,6 @@ const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose, onAdminAdd
        statusId: formData.employeeStatus.trim(),
      };
 
-     console.log("Modified payload being sent:", payload);
-
      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://Builders-Liability-AMMC-backend.vercel.app/api/v1";
      const response = await axios.post(
        `${apiBaseUrl}/auth/registerEmployee`,
@@ -78,8 +76,6 @@ const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose, onAdminAdd
        }
      );
 
-     console.log("API Response:", response.data);
-
      if (response.data && response.data.success) {
        onAdminAdded();
        onClose();
@@ -88,14 +84,12 @@ const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose, onAdminAdd
      }
    } catch (error) {
      if (axios.isAxiosError(error) && error.response) {
-       console.error("API Error:", error.response.data);
        const errorMessage =
          error.response.data.error?.message ||
          error.response.data.message ||
          "Registration failed";
        setError(errorMessage);
      } else {
-       console.error("Unexpected error:", error);
        setError("An unexpected error occurred. Please try again.");
      }
    }

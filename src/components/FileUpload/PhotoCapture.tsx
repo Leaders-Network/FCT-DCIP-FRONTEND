@@ -61,7 +61,6 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
         setIsCapturing(true);
       }
     } catch (error: unknown) {
-      console.error('Error accessing camera:', error);
       onError('Unable to access camera. Please check permissions or use file upload instead.');
     }
   };
@@ -122,7 +121,6 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
             longitude: position.coords.longitude
           };
         } catch (error) {
-          console.warn('Could not get location:', error);
         }
       }
 
@@ -168,7 +166,6 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({
         throw new Error(response.message || 'Upload failed');
       }
     } catch (error: unknown) {
-      console.error('Upload error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       onError(`Failed to upload photo: ${errorMessage}`);
     } finally {

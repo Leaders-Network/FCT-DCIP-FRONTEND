@@ -141,13 +141,10 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                         fullname = userData.fullname || '';
                     }
                 } catch (e) {
-                    console.error('Error parsing user data from localStorage:', e);
                 }
             }
 
             const name = fullname || `${firstname} ${lastname}`.trim() || '';
-
-            console.log('Loading user data:', { email, name, firstname, lastname, fullname });
 
             setFormData(prev => ({
                 ...prev,
@@ -189,7 +186,6 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
 
             setPolicies(uniquePolicies);
         } catch (error) {
-            console.error('Error fetching policies:', error);
             setPolicies([]);
         } finally {
             setLoadingPolicies(false);
@@ -266,7 +262,6 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                 throw new Error(response.data?.message || 'Failed to submit conflict inquiry');
             }
         } catch (error: unknown) {
-            console.error('Failed to submit inquiry:', error);
             const axiosError = error as {
                 response?: {
                     data?: {

@@ -133,7 +133,6 @@ export default function Verify() {
       }
 
       const result = await registerResponse.json();
-      console.log("Registration result:", result);
       
       // Store auth data in localStorage
       localStorage.setItem("token", result.token);
@@ -156,7 +155,6 @@ export default function Verify() {
       // router.push("/dashboard");
       setTimeout(() => router.push("/login"), 1200);
     } catch (error) {
-      console.error("Verification/Registration error:", error);
 
       // Dismiss any loading toasts
       toast.dismiss("verify-otp");

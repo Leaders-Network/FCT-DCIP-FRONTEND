@@ -46,7 +46,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
         statusId: "",
       });
     } catch (error) {
-      console.error("Failed to create administrator:", error);
     } finally {
       setLoading(false);
     }

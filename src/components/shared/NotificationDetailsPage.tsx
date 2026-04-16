@@ -93,7 +93,6 @@ const NotificationDetailsPage: React.FC<NotificationDetailsPageProps> = ({ notif
                     setNotification(response.notification);
                 }
             } catch (error) {
-                console.error('Failed to load notification details:', error);
                 if (!cancelled) setNotFound(true);
             } finally {
                 if (!cancelled) setLoading(false);

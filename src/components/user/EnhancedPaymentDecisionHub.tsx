@@ -30,13 +30,11 @@ const EnhancedPaymentDecisionHub: React.FC<EnhancedPaymentDecisionHubProps> = ({
     };
 
     const handleConflictSubmitted = (data: ConflictInquirySubmitData) => {
-        console.log('Conflict inquiry submitted:', data);
         setShowConflictInterface(false);
         // Optionally refresh the payment decision display
     };
 
     const handlePolicyUpdated = () => {
-        console.log('Policy updated successfully');
         setShowEditInterface(false);
         // Optionally refresh the payment decision display or redirect
         window.location.reload(); // Simple refresh for now

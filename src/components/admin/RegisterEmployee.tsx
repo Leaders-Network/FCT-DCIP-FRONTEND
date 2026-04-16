@@ -19,8 +19,6 @@ const RegisterEmployee = () => {
     return <div>Unauthorized access</div>;
   }
 
-  console.log(availableRoles, 'available')
-
   if (isLoading) {
     return <div>Loading...</div>;
   }

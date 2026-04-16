@@ -82,7 +82,6 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
             setLoading(true);
             await onSave(formData as NIASurveyor);
         } catch (error) {
-            console.error('Error saving surveyor:', error);
             toast.error('Failed to save surveyor. Please try again.');
         } finally {
             setLoading(false);

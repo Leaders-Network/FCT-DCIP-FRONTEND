@@ -298,7 +298,6 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         toast.error('Failed to download merged report');
       }
     } catch (error) {
-      console.error('Error downloading merged report:', error);
       toast.error('Failed to download merged report');
     }
   };
@@ -345,7 +344,6 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         toast.error('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error downloading AMMC report:', error);
       toast.error('Failed to download AMMC report');
     }
   };
@@ -392,7 +390,6 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
         toast.error('Failed to download NIA report: ' + (response.message || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error downloading NIA report:', error);
       toast.error('Failed to download NIA report');
     }
   };

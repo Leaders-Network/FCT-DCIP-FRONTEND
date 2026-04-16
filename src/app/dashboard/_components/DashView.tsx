@@ -268,7 +268,6 @@ const Dashview = () => {
         setSurveyedPolicies(completedPolicies);
 
       } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
         const message =
           (error as any)?.response?.data?.message ||
           (error as any)?.message ||

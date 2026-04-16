@@ -71,7 +71,6 @@ const EnforcementPage = () => {
       const completedPolicies = response.data?.policies || [];
       setPolicies(completedPolicies.map(mapPolicyForDisplay));
     } catch (error) {
-      console.error("Failed to fetch completed enforcement policies:", error);
       setPolicies([]);
     } finally {
       setLoading(false);

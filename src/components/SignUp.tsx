@@ -361,7 +361,6 @@ function SignUpButton({
             errorMessage = textError || errorMessage;
           }
         } catch (parseError) {
-          console.error("Error parsing response:", parseError);
         }
         
         toast.error(errorMessage || "Failed to request OTP", { 
@@ -384,7 +383,6 @@ function SignUpButton({
       localStorage.setItem("pendingEmail", email);
       router.push("/verify");
     } catch (error) {
-      console.error("Sign-up error:", error);
 
       const message =
         error instanceof Error ? error.message : "An unexpected error occurred";

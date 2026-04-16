@@ -25,7 +25,6 @@
 
         async function testSurveyorLogin() {
             try {
-                console.log('Testing surveyor login...');
                 
                 // Test login with a known surveyor
                 const loginResponse = await api.post('/auth/loginEmployee', {
@@ -33,20 +32,16 @@
                     password: '696f7ed78822b80620c13983' // ObjectId as password
                 });
 
-                console.log('Login response:', loginResponse.data);
 
                 if (loginResponse.data.success && loginResponse.data.token) {
                     const token = loginResponse.data.token;
-                    console.log('Login successful, token:', token.substring(0, 50) + '...');
 
                     // Set authorization header
                     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
                     // Test assignments endpoint
-                    console.log('Testing assignments endpoint...');
                     const assignmentsResponse = await api.get('/surveyor/assignments?status=all&page=1&limit=10');
                     
-                    console.log('Assignments response:', assignmentsResponse.data);
                     
                     document.getElementById('output').innerHTML = `
                         <h2>Login Success!</h2>
@@ -61,7 +56,6 @@
                     `;
                 }
             } catch (error) {
-                console.error('Error:', error);
                 document.getElementById('output').innerHTML = `
                     <h2>Error</h2>
                     <p>Status: ${error.response?.status}</p>

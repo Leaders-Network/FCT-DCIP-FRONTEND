@@ -83,7 +83,6 @@ export default function ChangePassword() {
       }
 
       const data = await response.json();
-      console.log('✅ Password reset successfully:', data);
 
       // Clear all reset-related data after successful password change
       localStorage.removeItem("resetEmail");
@@ -93,7 +92,6 @@ export default function ChangePassword() {
       // Redirect to login
       router.push("/login");
     } catch (error) {
-      console.error("Password change error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);

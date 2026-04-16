@@ -229,7 +229,6 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
                         try {
                             await brokerAdminAPI.logout();
                         } catch (error) {
-                            console.error("Broker admin logout failed:", error);
                         } finally {
                             removeAuthToken('broker-admin');
                             localStorage.removeItem('brokerAdminInfo');

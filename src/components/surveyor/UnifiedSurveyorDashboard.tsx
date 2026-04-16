@@ -149,7 +149,6 @@ const UnifiedSurveyorDashboard = () => {
                     const parsed = JSON.parse(infoCookie) as { name?: string };
                     if (applyName(parsed?.name)) return;
                 } catch (error) {
-                    console.error("Failed to parse surveyorInfo cookie:", error);
                 }
             }
 
@@ -163,7 +162,6 @@ const UnifiedSurveyorDashboard = () => {
                 const lastName = surveyor?.userId?.lastname || "";
                 applyName(`${firstName} ${lastName}`);
             } catch (error) {
-                console.error("Failed to hydrate surveyor name:", error);
             }
         };
 
@@ -211,7 +209,6 @@ const UnifiedSurveyorDashboard = () => {
             }
 
         } catch (err) {
-            console.error("Failed to fetch surveyor data:", err);
             setError("Failed to load dashboard data. Please try again later.");
             setFriendlyError("We couldn't load your survey dashboard right now. Please refresh or contact the Gladfaith team.");
         } finally {

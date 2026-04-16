@@ -167,7 +167,6 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
         // Clear the input to allow re-selecting the same files
         event.target.value = '';
       } catch (error) {
-        console.error("Error handling image upload:", error);
         setError("Failed to process images. Please try again.");
       }
     }
@@ -206,7 +205,6 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add property");
-      console.error(err);
     } finally {
       setLoading(false);
     }

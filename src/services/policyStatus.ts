@@ -63,7 +63,6 @@ class PolicyStatusService {
             const response = await api.get(`${this.baseUrl}/${policyId}/enhanced`);
             return { success: true, data: response.data };
         } catch (error: unknown) {
-            console.error('Failed to fetch enhanced policy status:', error);
 
             // Return mock data for development
             return {
@@ -78,7 +77,6 @@ class PolicyStatusService {
             await api.put(`${this.baseUrl}/notifications/${notificationId}/read`);
             return { success: true };
         } catch (error: unknown) {
-            console.error('Failed to mark notification as read:', error);
             // Return success for development (mock behavior)
             return { success: true };
         }

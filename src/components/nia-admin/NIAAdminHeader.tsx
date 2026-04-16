@@ -112,7 +112,6 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
             setSearchResults(results);
             setShowSearchResults(true);
         } catch (error) {
-            console.error('Search failed:', error);
         }
     };
 

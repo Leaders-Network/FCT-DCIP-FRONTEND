@@ -195,7 +195,6 @@ const AutomatedAssignmentsPage = () => {
         }
       }
     } catch (error) {
-      console.error('Assignments fetch error:', error);
       setError(error instanceof Error ? error.message : 'Failed to load assignments');
     } finally {
       setLoading(false);

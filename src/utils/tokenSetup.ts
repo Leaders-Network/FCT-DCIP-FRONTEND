@@ -26,10 +26,6 @@ const DEVELOPMENT_TOKENS = {
 export const setupDevelopmentTokens = (): void => {
     if (typeof window === 'undefined') return;
 
-    // Development token auto-setup is DISABLED
-    // Users must log in to get valid JWT tokens
-    console.log('ℹ️ Development token auto-setup is disabled. Please log in to get valid tokens.');
-
     // Only set tokens if they are provided and valid (not empty)
     if (process.env.NODE_ENV === 'development') {
         Object.entries(DEVELOPMENT_TOKENS).forEach(([key, token]) => {
@@ -42,7 +38,6 @@ export const setupDevelopmentTokens = (): void => {
 
                 if (tokenKey && !localStorage.getItem(tokenKey)) {
                     localStorage.setItem(tokenKey, token);
-                    console.log(`🔧 Development ${key} token set`);
                 }
             }
         });
@@ -68,8 +63,6 @@ export const clearDevelopmentTokens = (): void => {
     tokenKeys.forEach(key => {
         localStorage.removeItem(key);
     });
-
-    console.log('🧹 All development tokens cleared');
 };
 
 /**

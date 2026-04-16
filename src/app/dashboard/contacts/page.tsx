@@ -102,7 +102,6 @@ const ContactsPage: React.FC = () => {
                     setContactData(createDefaultContactData());
                 }
             } catch (error) {
-                console.error('Failed to fetch contact data:', error);
                 // Set default admin contacts on error
                 setContactData(createDefaultContactData());
             } finally {
@@ -115,7 +114,6 @@ const ContactsPage: React.FC = () => {
 
     const handleConflictSubmit = async (conflictData: ConflictInquiryData): Promise<void> => {
         try {
-            console.log('Conflict inquiry submitted:', conflictData);
 
             // Here you would typically send the conflict data to your API
             // For now, we'll just log it and show a success message
@@ -130,7 +128,6 @@ const ContactsPage: React.FC = () => {
 
             toast.success('Conflict inquiry submitted successfully! You will receive a response within 24-48 hours.');
         } catch (error) {
-            console.error('Failed to submit conflict inquiry:', error);
             toast.error('Failed to submit conflict inquiry. Please try again or contact administrators directly.');
         }
     };

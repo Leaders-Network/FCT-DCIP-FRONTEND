@@ -78,7 +78,6 @@ const NIAAdminDashboard = () => {
                 localStorage.getItem('authToken');
 
             if (!token) {
-                console.warn('No authentication token found, using fallback data');
                 // Set fallback stats instead of throwing error
                 setStats({
                     totalNIASurveyors: 0,
@@ -104,8 +103,6 @@ const NIAAdminDashboard = () => {
             }
 
             const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/nia-admin/dashboard`;
-            console.log('🔍 Fetching NIA dashboard data from:', apiUrl);
-            console.log('🔍 Using token:', token ? `${token.substring(0, 20)}...` : 'No token');
 
             const response = await fetch(apiUrl, {
                 headers: {
@@ -115,16 +112,12 @@ const NIAAdminDashboard = () => {
                 }
             });
 
-            console.log('🔍 Response status:', response.status);
-
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('🔍 Response error:', errorText);
                 throw new Error(`Failed to fetch dashboard data: ${response.status} ${errorText}`);
             }
 
             const data = await response.json();
-            console.log('🔍 Dashboard data received:', data);
 
             if (data.success) {
                 // Transform the backend response to match frontend expectations
@@ -147,7 +140,6 @@ const NIAAdminDashboard = () => {
                 throw new Error(data.message || 'Failed to load dashboard data');
             }
         } catch (error) {
-            console.error('Dashboard data fetch error:', error);
             setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
         } finally {
             setLoading(false);

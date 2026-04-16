@@ -49,7 +49,6 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                     });
                 }
             } catch (error) {
-                console.error('Error searching policies:', error);
             }
 
             // Search Surveyors
@@ -81,7 +80,6 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                     });
                 }
             } catch (error) {
-                console.error('Error searching surveyors:', error);
             }
 
             // Search Assignments
@@ -115,7 +113,6 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                     });
                 }
             } catch (error) {
-                console.error('Error searching assignments:', error);
             }
 
             // Search Administrators (if applicable)
@@ -149,7 +146,6 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                         });
                     }
                 } catch (error) {
-                    console.error('Error searching administrators:', error);
                 }
             }
         }
@@ -176,11 +172,9 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                     });
                 }
             } catch (error) {
-                console.error('Error searching user policies:', error);
             }
         }
     } catch (error) {
-        console.error('Search API error:', error);
     }
 
     return results;
@@ -277,7 +271,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
             const limitedResults = combinedResults.slice(0, 10);
             setResults(limitedResults);
         } catch (error) {
-            console.error('Search error:', error);
             // Fallback to just quick results if API fails
             const quickResults = getQuickNavigationResults(searchQuery, userType);
             setResults(quickResults);

@@ -41,7 +41,6 @@ export const setCookie = (name: string, value: string, options: CookieOptions = 
     cookieString += `; SameSite=${sameSite}`;
 
     document.cookie = cookieString;
-    console.log(`Cookie set: ${name}`);
 };
 
 /**
@@ -73,7 +72,6 @@ export const deleteCookie = (name: string, path: string = '/'): void => {
     if (typeof window === 'undefined') return;
 
     document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}`;
-    console.log(`Cookie deleted: ${name}`);
 };
 
 /**
@@ -112,5 +110,4 @@ export const clearAllCookies = (): void => {
     for (const name in cookies) {
         deleteCookie(name);
     }
-    console.log('All cookies cleared');
 };

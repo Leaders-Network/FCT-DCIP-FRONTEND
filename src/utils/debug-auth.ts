@@ -4,11 +4,8 @@
 
 export const debugAuthState = () => {
     if (typeof window === 'undefined') {
-        console.log('Running on server side, no localStorage available');
         return;
     }
-
-    console.log('=== Authentication Debug Info ===');
 
     const tokenKeys = [
         'superAdminToken',
@@ -30,24 +27,16 @@ export const debugAuthState = () => {
         'adminInfo',
         'userInfo'
     ];
-
-    console.log('Tokens in localStorage:');
     tokenKeys.forEach(key => {
         const value = localStorage.getItem(key);
         if (value) {
-            console.log(`  ${key}: ${value.substring(0, 20)}...`);
         }
     });
-
-    console.log('\nUser info in localStorage:');
     userInfoKeys.forEach(key => {
         const value = localStorage.getItem(key);
         if (value) {
-            console.log(`  ${key}: ${value}`);
         }
     });
-
-    console.log('=== End Debug Info ===');
 };
 
 export const clearAllAuthData = () => {
@@ -75,8 +64,6 @@ export const clearAllAuthData = () => {
     allKeys.forEach(key => {
         localStorage.removeItem(key);
     });
-
-    console.log('All authentication data cleared');
 };
 
 export const setSurveyorTestToken = () => {
@@ -92,8 +79,6 @@ export const setSurveyorTestToken = () => {
     localStorage.setItem('surveyorName', 'Test Surveyor');
     localStorage.setItem('surveyorOrganization', 'AMMC');
     localStorage.setItem('userRole', 'Surveyor');
-
-    console.log('Test surveyor token set');
 };
 
 export type AuthType = 'super-admin' | 'nia-admin' | 'admin' | 'surveyor' | 'user' | 'legacy' | 'none' | 'server-side';

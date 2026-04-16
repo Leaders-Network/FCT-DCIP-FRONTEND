@@ -62,7 +62,6 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                 setClaims(response.data.claims || []);
             }
         } catch (err) {
-            console.error('Failed to fetch claims:', err);
             setError('Failed to load claims');
         } finally {
             setLoading(false);
@@ -89,7 +88,6 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                 setClaimDetails(claim);
             }
         } catch (error) {
-            console.error('Failed to fetch claim details:', error);
             // Fallback to using the claim from list
             setClaimDetails(claim);
         } finally {

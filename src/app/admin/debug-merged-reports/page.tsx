@@ -37,7 +37,6 @@ export default function DebugMergedReportsPage() {
                 setStatus(data.data);
             }
         } catch (error) {
-            console.error('Error fetching status:', error);
             toast.error('Failed to fetch status');
         } finally {
             setLoading(false);
@@ -60,7 +59,6 @@ export default function DebugMergedReportsPage() {
                 setMissingReports(data.data);
             }
         } catch (error) {
-            console.error('Error fetching missing reports:', error);
             toast.error('Failed to fetch missing reports');
         }
     };
@@ -88,7 +86,6 @@ export default function DebugMergedReportsPage() {
                 toast.error(`Failed: ${data.message}`);
             }
         } catch (error) {
-            console.error('Error triggering merge:', error);
             toast.error('Failed to trigger merge');
         } finally {
             setLoading(false);
@@ -115,7 +112,6 @@ export default function DebugMergedReportsPage() {
                 toast.error(`Failed to trigger merge: ${data.message}`);
             }
         } catch (error) {
-            console.error('Error triggering single merge:', error);
             toast.error('Failed to trigger merge');
         }
     };

@@ -157,7 +157,6 @@ export default function AdministratorsPage() {
       // Refresh data
       await fetchAllData();
     } catch (error) {
-      console.error("Failed to create user:", error);
     } finally {
       setLoading(false);
     }
@@ -184,7 +183,6 @@ export default function AdministratorsPage() {
           setEmployees([])
         }
       } catch (error) {
-        console.error("Failed to fetch employees:", error)
         setEmployees([])
       }
 
@@ -197,12 +195,10 @@ export default function AdministratorsPage() {
           setUsers([])
         }
       } catch (error) {
-        console.error("Failed to fetch users:", error)
         setUsers([])
       }
 
     } catch (error) {
-      console.error("Failed to fetch data:", error)
       setAdministrators([])
       setEmployees([])
       setUsers([])
@@ -229,7 +225,6 @@ export default function AdministratorsPage() {
         setUsers(users.filter(user => user._id !== adminId))
       }
     } catch (error) {
-      console.error("Failed to delete user:", error)
       toast.error('Failed to delete user. Please try again.')
     }
   }
@@ -286,8 +281,6 @@ export default function AdministratorsPage() {
       } else if (formData.userType === 'employee') {
         await adminApi.patch(`/admin/employees/${selectedAdmin._id}`, updateData)
       } else if (formData.userType === 'user') {
-        // For users, we don't have an update endpoint yet
-        console.warn('User update by admin not yet implemented - requires new backend endpoint')
         toast.warning('User editing by admin is not yet implemented.')
         return
       }
@@ -298,7 +291,6 @@ export default function AdministratorsPage() {
       // Refresh data
       await fetchAllData()
     } catch (error) {
-      console.error("Failed to update user:", error)
     } finally {
       setLoading(false)
     }
@@ -314,13 +306,10 @@ export default function AdministratorsPage() {
         const updatedEmployee = await adminApi.updateEmployeeStatus(adminId, newStatus)
         setEmployees(employees.map(emp => emp._id === adminId ? updatedEmployee.data : emp))
       } else if (activeTab === 'users') {
-        // For users, we don't have a status toggle endpoint yet
-        console.warn('User status toggle not yet implemented - requires new backend endpoint')
         toast.warning('User status management is not yet implemented.')
         return
       }
     } catch (error) {
-      console.error("Failed to update user status:", error)
     }
   }
 

@@ -81,7 +81,6 @@ const NIAAdminLogin = () => {
                 setError(data.message || 'Login failed. Please check your credentials.');
             }
         } catch (error) {
-            console.error('NIA Admin login error:', error);
             setError('Network error. Please try again.');
         } finally {
             setLoading(false);

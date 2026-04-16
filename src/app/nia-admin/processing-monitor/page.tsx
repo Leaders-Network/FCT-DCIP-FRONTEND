@@ -80,10 +80,8 @@ const ProcessingMonitorPage = () => {
             ]);
 
             if (overviewResponse.success && overviewResponse.data) {
-                console.log('Overview Response:', overviewResponse.data);
                 setOverview(overviewResponse.data);
             } else {
-                console.error('Overview Error:', overviewResponse);
             }
 
             if (activeResponse.success && activeResponse.data) {
@@ -91,10 +89,8 @@ const ProcessingMonitorPage = () => {
             }
 
             if (performanceResponse.success && performanceResponse.data) {
-                console.log('Performance Metrics Response:', performanceResponse.data);
                 setPerformanceMetrics(performanceResponse.data);
             } else {
-                console.error('Performance Metrics Error:', performanceResponse);
             }
 
             if (healthResponse.success && healthResponse.data) {
@@ -115,11 +111,9 @@ const ProcessingMonitorPage = () => {
             ].filter(response => !response.success);
 
             if (failedRequests.length > 0) {
-                console.warn('Some monitoring data failed to load:', failedRequests);
             }
 
         } catch (error) {
-            console.error('Failed to fetch monitoring data:', error);
             setError(error instanceof Error ? error.message : 'Failed to load monitoring data');
 
             // Fallback to empty state
