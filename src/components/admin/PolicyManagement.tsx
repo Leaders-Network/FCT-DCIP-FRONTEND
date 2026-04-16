@@ -417,7 +417,8 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       toast.success('Policy deleted successfully!');
     } catch (error) {
       console.error('Delete policy error:', error);
-      toast.error('Failed to delete policy');
+      const errorMessage = error?.response?.data?.message || 'Failed to delete policy';
+      toast.error(errorMessage);
     }
   };
 
