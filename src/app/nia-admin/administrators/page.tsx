@@ -92,7 +92,6 @@ const NIAAdministratorsPage = () => {
                 throw new Error(data.message || 'Failed to load administrators');
             }
         } catch (error) {
-            console.error('NIA admins fetch error:', error);
             setError(error instanceof Error ? error.message : 'Failed to load administrators');
             setAdmins([]);
         } finally {
@@ -144,7 +143,6 @@ const NIAAdministratorsPage = () => {
                 throw new Error(data.message || 'Failed to create administrator');
             }
         } catch (error) {
-            console.error('Create admin error:', error);
             setError(error instanceof Error ? error.message : 'Failed to create administrator');
         }
     };
@@ -213,7 +211,6 @@ const NIAAdministratorsPage = () => {
                 throw new Error(data.message || 'Failed to update administrator');
             }
         } catch (error) {
-            console.error('Update admin error:', error);
             setError(error instanceof Error ? error.message : 'Failed to update administrator');
         }
     };
@@ -259,7 +256,6 @@ const NIAAdministratorsPage = () => {
                 throw new Error(data.message || 'Failed to delete administrator');
             }
         } catch (error) {
-            console.error('Delete admin error:', error);
             setError(error instanceof Error ? error.message : 'Failed to delete administrator');
         }
     };

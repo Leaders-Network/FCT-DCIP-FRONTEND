@@ -53,7 +53,6 @@ const handleLogin = async (e: React.FormEvent) => {
     setAuthToken(token, isSuperAdmin ? "super-admin" : "surveyor");
 
     const storedToken = getCookie("surveyorToken");
-    console.log("Token stored:", storedToken ? "Yes" : "No");
 
     const fullName = `${employee.firstname} ${employee.lastname}`;
 
@@ -112,7 +111,6 @@ const handleLogin = async (e: React.FormEvent) => {
     router.push("/surveyor/dashboard");
     return; // ⛔ Stop execution
   } catch (error: unknown) {
-    console.error("Login failed:", error);
 
     const err = error as {
       response?: { status?: number; data?: { message?: string } };

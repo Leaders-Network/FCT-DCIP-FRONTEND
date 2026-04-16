@@ -66,7 +66,6 @@ builderLiabilityApi.interceptors.request.use(
         return config;
     },
     (error) => {
-        console.error("Builder Liability API Request interceptor error:", error);
         return Promise.reject(error);
     }
 );
@@ -75,13 +74,6 @@ builderLiabilityApi.interceptors.request.use(
 builderLiabilityApi.interceptors.response.use(
     (response) => response,
     (error) => {
-        console.error("Builder Liability API Response Error:", {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            url: error.config?.url,
-            method: error.config?.method
-        });
         return Promise.reject(error);
     }
 );
@@ -94,7 +86,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.post('/builder-liability-policy', policyData);
             return response.data;
         } catch (error) {
-            console.error("Failed to create Builder Liability Policy:", error);
             throw error;
         }
     },
@@ -121,7 +112,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.get(url);
             return response.data;
         } catch (error) {
-            console.error("Failed to fetch user Builder Liability Policies:", error);
             throw error;
         }
     },
@@ -149,7 +139,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.get(url);
             return response.data;
         } catch (error) {
-            console.error("Failed to fetch all Builder Liability Policies:", error);
             throw error;
         }
     },
@@ -160,7 +149,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.get(`/builder-liability-policy/${policyId}`);
             return response.data;
         } catch (error) {
-            console.error("Failed to fetch Builder Liability Policy:", error);
             throw error;
         }
     },
@@ -176,7 +164,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.put(`/builder-liability-policy/${policyId}`, updateData);
             return response.data;
         } catch (error) {
-            console.error("Failed to update Builder Liability Policy:", error);
             throw error;
         }
     },
@@ -194,7 +181,6 @@ export const builderLiabilityPolicyAPI = {
             });
             return response.data;
         } catch (error) {
-            console.error("Failed to update Builder Liability Policy status:", error);
             throw error;
         }
     },
@@ -205,7 +191,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.get(`/builder-liability-policy/search?q=${encodeURIComponent(searchTerm)}&limit=${limit}`);
             return response.data;
         } catch (error) {
-            console.error("Failed to search Builder Liability Policies:", error);
             throw error;
         }
     },
@@ -216,7 +201,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.delete(`/builder-liability-policy/${policyId}`);
             return response.data;
         } catch (error) {
-            console.error("Failed to delete Builder Liability Policy:", error);
             throw error;
         }
     },
@@ -230,7 +214,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.post('/builder-liability-policy/validate', policyData);
             return response.data;
         } catch (error) {
-            console.error("Failed to validate Builder Liability Policy data:", error);
             throw error;
         }
     },
@@ -244,7 +227,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.post(`/builder-liability-policy/validate/${section}`, sectionData);
             return response.data;
         } catch (error) {
-            console.error("Failed to validate Builder Liability Policy section:", error);
             throw error;
         }
     },
@@ -283,7 +265,6 @@ export const builderLiabilityPolicyAPI = {
             });
             return response.data;
         } catch (error) {
-            console.error("Failed to confirm EgolePay payment:", error);
             throw error;
         }
     },
@@ -316,7 +297,6 @@ export const builderLiabilityPolicyAPI = {
             );
             return response.data;
         } catch (error) {
-            console.error("Failed to verify EgolePay payment:", error);
             throw error;
         }
     },
@@ -327,7 +307,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.post(`/payment/niip/retry/${policyId}`);
             return response.data;
         } catch (error) {
-            console.error("Failed to retry NIIP withdrawal:", error);
             throw error;
         }
     },
@@ -359,7 +338,6 @@ export const builderLiabilityPolicyAPI = {
             const response = await builderLiabilityApi.post(`/payment/calculate-premium/${policyId}`);
             return response.data;
         } catch (error) {
-            console.error("Failed to calculate premium:", error);
             throw error;
         }
     }
@@ -378,7 +356,6 @@ export const legacyPolicyAPI = {
             const response = await builderLiabilityApi.post('/policy');
             return response.data;
         } catch (error) {
-            console.error("Legacy policy endpoint error:", error);
             throw error;
         }
     }

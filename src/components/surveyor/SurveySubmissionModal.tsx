@@ -58,7 +58,6 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
             setLoading(true);
             await onSubmit(submissionData);
         } catch (error) {
-            console.error('Error submitting survey:', error);
             toast.error('Failed to submit survey. Please try again.');
         } finally {
             setLoading(false);
@@ -391,7 +390,6 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                             if (e.target.files && e.target.files.length > 0) {
                                                 const filesArray = Array.from(e.target.files);
                                                 setUploadedFiles(prev => [...prev, ...filesArray]);
-                                                console.log('Files selected:', filesArray);
                                             }
                                         }}
                                     />

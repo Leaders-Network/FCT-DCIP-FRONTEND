@@ -35,12 +35,8 @@ export default function BrokerAdminLogin() {
                 return;
             }
 
-            console.log('Attempting broker admin login...');
-
             // Call login API
             const response = await brokerAdminAPI.login(formData.email, formData.password);
-
-            console.log('Login response:', response);
 
             if (response.success && response.token) {
                 const responseTokenType = response.user?.tokenType === 'super-admin' ? 'super-admin' : 'broker-admin';
@@ -52,8 +48,6 @@ export default function BrokerAdminLogin() {
                     brokerAdmin: response.brokerAdmin
                 }));
 
-                console.log('Token stored, redirecting to dashboard...');
-
                 // Force a small delay to ensure localStorage is written
                 await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -63,7 +57,6 @@ export default function BrokerAdminLogin() {
                 setError('Invalid credentials. Please try again.');
             }
         } catch (err: unknown) {
-            console.error('Login error:', err);
             const error = err as { response?: { data?: { error?: string; message?: string } } };
             setError(
                 error.response?.data?.error ||

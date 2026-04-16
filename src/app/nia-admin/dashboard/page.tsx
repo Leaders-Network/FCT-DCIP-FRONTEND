@@ -97,7 +97,6 @@ const NIAAdminDashboard = () => {
             });
 
         } catch (error) {
-            console.error('Dashboard data fetch error:', error);
             setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
             setFriendlyError('We could not load the NIA admin dashboard. Please refresh, and contact the Gladfaith team if it persists.');
         } finally {

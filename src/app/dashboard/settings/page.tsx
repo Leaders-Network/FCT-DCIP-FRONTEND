@@ -45,20 +45,16 @@ export default function UserSettingsPage() {
                 setProfileData({ firstname, lastname, email, phonenumber });
             }
         } catch (error) {
-            console.error('Failed to fetch profile:', error);
         }
     };
 
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('👤 Profile update initiated');
         setLoading(true);
         setMessage(null);
 
         try {
-            console.log('📡 Making API call to /settings/profile');
             const response = await api.patch('/settings/profile', profileData);
-            console.log('✅ API response:', response.data);
 
             if (response.data.success) {
                 setMessage({ type: 'success', text: 'Profile updated successfully!' });
@@ -72,14 +68,12 @@ export default function UserSettingsPage() {
                         userData.lastname = profileData.lastname;
                         setCookie('user', JSON.stringify(userData), { expires: 7 });
                     } catch (e) {
-                        console.error('Failed to update user cookie:', e);
                     }
                 }
             } else {
                 setMessage({ type: 'error', text: response.data.message || 'Failed to update profile' });
             }
         } catch (error) {
-            console.error('❌ Profile update error:', error);
             setMessage({ type: 'error', text: extractErrorMessage(error) || 'Failed to update profile' });
         } finally {
             setLoading(false);
@@ -88,29 +82,24 @@ export default function UserSettingsPage() {
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('🔐 Password change initiated');
         setLoading(true);
         setMessage(null);
 
         // Validation
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            console.log('❌ Passwords do not match');
             setMessage({ type: 'error', text: 'New passwords do not match' });
             setLoading(false);
             return;
         }
 
         if (passwordData.newPassword.length < 6) {
-            console.log('❌ Password too short');
             setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
             setLoading(false);
             return;
         }
 
         try {
-            console.log('📡 Making API call to /settings/change-password');
             const response = await api.post('/settings/change-password', passwordData);
-            console.log('✅ API response:', response.data);
 
             if (response.data.success) {
                 setMessage({ type: 'success', text: 'Password changed successfully!' });
@@ -119,7 +108,6 @@ export default function UserSettingsPage() {
                 setMessage({ type: 'error', text: response.data.message || 'Failed to change password' });
             }
         } catch (error) {
-            console.error('❌ Password change error:', error);
             setMessage({ type: 'error', text: extractErrorMessage(error) || 'Failed to change password' });
         } finally {
             setLoading(false);
@@ -362,7 +350,6 @@ export default function UserSettingsPage() {
                                 type="submit"
                                 disabled={loading}
                                 onClick={(e) => {
-                                    console.log('🖱️ Change Password button clicked');
                                 }}
                                 className="flex items-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >

@@ -48,7 +48,6 @@ export default function PropertiesPage() {
         setProperties(response.allProperties.properties);
         setFilteredProperties(response.allProperties.properties);
       } catch (error) {
-        console.error("Failed to fetch properties:", error);
       } finally {
         setLoading(false);
       }
@@ -135,7 +134,6 @@ export default function PropertiesPage() {
         toast.error(errorData.message || 'Failed to delete property');
       }
     } catch (error) {
-      console.error('Delete property error:', error);
       toast.error('Failed to delete property');
     }
   };
@@ -161,7 +159,6 @@ export default function PropertiesPage() {
       setFilteredProperties(prev => prev.filter(p => !selectedProperties.includes(p._id)));
       setSelectedProperties([]);
     } catch (error) {
-      console.error('Bulk delete error:', error);
       toast.error('Failed to delete selected properties');
     }
   };

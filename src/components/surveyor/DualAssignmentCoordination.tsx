@@ -124,7 +124,6 @@ const DualAssignmentCoordination: React.FC<DualAssignmentCoordinationProps> = ({
                 setMessages(data.data || []);
             }
         } catch (err) {
-            console.error('Failed to fetch coordination messages:', err);
         }
     };
 
@@ -152,7 +151,6 @@ const DualAssignmentCoordination: React.FC<DualAssignmentCoordinationProps> = ({
                 throw new Error('Failed to send message');
             }
         } catch (err) {
-            console.error('Failed to send message:', err);
             toast.error('Failed to send message. Please try again.');
         } finally {
             setSendingMessage(false);

@@ -18,8 +18,6 @@ const PrivacyPolicy = () => {
   };
 
   const handleSave = () => {
-    // Placeholder: here you’d connect to backend or localStorage
-    console.log("Preferences saved:", preferences);
     toast.success("Your cookie preferences have been updated.");
   };
 

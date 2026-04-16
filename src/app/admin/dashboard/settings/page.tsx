@@ -43,7 +43,6 @@ export default function UserSettingsPage() {
                 setProfileData({ firstname, lastname, email, phonenumber });
             }
         } catch (error) {
-            console.error('Failed to fetch profile:', error);
         }
     };
 

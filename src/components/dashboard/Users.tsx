@@ -15,7 +15,6 @@ const Users = () => {
       const employees = await getAllEmployees();
       setUsers(employees);
     } catch (error) {
-      console.error("Failed to fetch users", error);
     }
   };
 

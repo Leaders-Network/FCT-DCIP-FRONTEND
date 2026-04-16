@@ -13,7 +13,6 @@ const NIA_ADMIN_CREDENTIALS = {
 
 export const setupNIAAdminToken = async () => {
     try {
-        console.log('Setting up NIA admin token...');
 
         // Login as NIA admin to get the correct token
         const response = await fetch('http://localhost:5000/api/v1/auth/loginEmployee', {
@@ -39,14 +38,11 @@ export const setupNIAAdminToken = async () => {
             if (data.employee) {
                 localStorage.setItem('niaAdminInfo', JSON.stringify(data.employee));
             }
-
-            console.log('✅ NIA admin token set successfully');
             return data.token;
         } else {
             throw new Error('Login response invalid');
         }
     } catch (error) {
-        console.error('❌ Failed to setup NIA admin token:', error);
         throw error;
     }
 };
@@ -56,7 +52,6 @@ export const autoSetupNIAToken = async () => {
     // Check if we already have a valid NIA admin token
     const existingToken = localStorage.getItem('niaAdminToken');
     if (existingToken) {
-        console.log('NIA admin token already exists');
         return existingToken;
     }
 

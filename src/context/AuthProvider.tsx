@@ -71,7 +71,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           });
         }
       } catch (error) {
-        console.error("Auth initialization error:", error);
       } finally {
         setState(prevState => ({ ...prevState, isLoading: false }));
       }
@@ -136,7 +135,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         router.push("/dashboard");
       }
     } catch (error) {
-      console.error("Login failed", error);
       throw error;
     }
   };

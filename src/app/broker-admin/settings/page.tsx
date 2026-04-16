@@ -47,7 +47,6 @@ export default function BrokerAdminSettingsPage() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch broker admin profile:', error);
       setMessage({ type: 'error', text: extractErrorMessage(error) || 'Failed to fetch profile' });
     }
   };

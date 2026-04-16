@@ -10,7 +10,6 @@ const SurveyorsPage = () => {
     try {
       // Create surveyor without organization field (single surveyor system)
       const result = await adminApi.createSurveyor(surveyorData);
-      console.log('Surveyor created:', result);
       toast.success('Surveyor created successfully!');
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
@@ -21,7 +20,6 @@ const SurveyorsPage = () => {
   const handleUpdateSurveyor = async (id: string, surveyorData: Partial<Surveyor>) => {
     try {
       const result = await adminApi.updateSurveyor(id, surveyorData);
-      console.log('Surveyor updated:', result);
       toast.success('Surveyor updated successfully!');
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
@@ -32,7 +30,6 @@ const SurveyorsPage = () => {
   const handleDeleteSurveyor = async (id: string) => {
     try {
       await adminApi.deleteSurveyor(id);
-      console.log('Surveyor deleted successfully');
       toast.success('Surveyor deleted successfully!');
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');

@@ -38,7 +38,6 @@ const InsurancePage: React.FC = () => {
         const userData: UserData = JSON.parse(storedUser);
         return userData.fullname || userData.firstname || "User";
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
         return "User";
       }
     }

@@ -60,14 +60,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         const response = await getSurveyorAssignmentById(assignmentId);
         if (response.success) {
           setAssignment(response.data);
-          console.log('=== Assignment Data Loaded ===');
-          console.log('Full response:', response.data);
-          console.log('Policy ID type:', typeof response.data.policyId);
-          console.log('Policy ID value:', response.data.policyId);
-          console.log('Is policyId an object?', typeof response.data.policyId === 'object');
-          console.log('==============================');
         } else {
-          console.error('Failed to load assignment:', response);
         }
       } catch (error) {
         // Handle error
@@ -109,11 +102,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             setAssignment(response.data);
           }
         } catch (refreshError) {
-          console.error("Failed to refresh assignment data:", refreshError);
         }
       }, 1000); // Small delay to allow backend processing
     } catch (error) {
-      console.error("Failed to submit survey:", error);
       throw error;
     }
   };
@@ -219,9 +210,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               {assignment.status === 'assigned' && (
                 <button
                   onClick={() => {
-                    console.log('Start Survey button clicked - Header');
-                    console.log('Assignment:', assignment);
-                    console.log('Policy ID:', assignment.policyId);
                     setShowSurveyForm(true);
                   }}
                   className="w-full sm:w-auto bg-[#028835] text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] font-medium"
@@ -631,7 +619,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => {
-                  console.log('Start Survey Process clicked');
                   setShowSurveyForm(true);
                 }}
                 className="flex-1 bg-[#028835] text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] font-medium flex items-center justify-center"
@@ -680,12 +667,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
       {/* Survey Submission Modal */}
       {(() => {
-        console.log('Modal render check:', {
-          hasAssignment: !!assignment,
-          policyIdType: typeof assignment?.policyId,
-          policyId: assignment?.policyId,
-          showSurveyForm
-        });
         return assignment && typeof assignment.policyId === 'object' && (
           <SurveySubmissionModal
             policy={assignment.policyId as any}
@@ -693,7 +674,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             isOpen={showSurveyForm}
             onSubmit={handleSurveySubmission}
             onClose={() => {
-              console.log('Closing survey form');
               setShowSurveyForm(false);
             }}
           />

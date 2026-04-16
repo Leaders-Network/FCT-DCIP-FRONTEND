@@ -9,10 +9,8 @@ const NIASurveyorsPage = () => {
         try {
             const response = await adminApi.createSurveyor(surveyorData);
             if (response.success) {
-                console.log('Surveyor created successfully');
             }
         } catch (error) {
-            console.error('Failed to create surveyor:', error);
             throw error;
         }
     };
@@ -21,10 +19,8 @@ const NIASurveyorsPage = () => {
         try {
             const response = await adminApi.updateSurveyor(id, surveyorData);
             if (response.success) {
-                console.log('Surveyor updated successfully');
             }
         } catch (error) {
-            console.error('Failed to update surveyor:', error);
             throw error;
         }
     };
@@ -33,10 +29,8 @@ const NIASurveyorsPage = () => {
         try {
             const response = await adminApi.deleteSurveyor(id);
             if (response.success) {
-                console.log('Surveyor deleted successfully');
             }
         } catch (error) {
-            console.error('Failed to delete surveyor:', error);
             throw error;
         }
     };

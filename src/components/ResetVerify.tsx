@@ -60,7 +60,6 @@ export default function ResetVerify() {
       }
 
       const data = await response.json();
-      console.log('✅ OTP verified successfully:', data);
 
       // Store reset token for password change
       localStorage.setItem("resetToken", data.resetToken);
@@ -68,7 +67,6 @@ export default function ResetVerify() {
 
       router.push("/change-password");
     } catch (error) {
-      console.error("OTP verification error:", error);
       setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);

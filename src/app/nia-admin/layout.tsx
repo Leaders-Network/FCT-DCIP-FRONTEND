@@ -36,10 +36,16 @@ const NIAAdminLayout: React.FC<NIAAdminLayoutProps> = ({ children }) => {
         }
     }, [pathname, isMobile]);
 
-    // Don't show sidebar/header on login page
-    const isLoginPage = pathname?.includes('/login');
+    // Don't show sidebar/header on public auth pages
+    const isPublicAuthPage = [
+        '/nia-admin/login',
+        '/nia-admin/reset-password',
+        '/nia-admin/otp',
+        '/nia-admin/new-password',
+        '/nia-admin/registration-success'
+    ].includes(pathname || '');
 
-    if (isLoginPage) {
+    if (isPublicAuthPage) {
         return <>{children}</>;
     }
 

@@ -78,7 +78,6 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     try {
       await Promise.all(uploadPromises);
     } catch (error) {
-      console.error('Upload error:', error);
       onError('Some files failed to upload. Please try again.');
     } finally {
       setIsUploading(false);

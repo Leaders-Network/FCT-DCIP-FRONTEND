@@ -20,10 +20,6 @@ const OTPAuthentication = () => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    sendResetPasswordOTP();
-  }, []);
-
   const sendResetPasswordOTP = async () => {
     const email = localStorage.getItem("resetEmail");
     if (!email) {
@@ -33,9 +29,7 @@ const OTPAuthentication = () => {
 
     try {
       const response = await resendResetPasswordOTP(email);
-      console.log("✅ OTP resent:", response.data);
     } catch (err: unknown) {
-      console.log(err, "err");
       const errorMessage = err instanceof Error
         ? err.message
         : (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to send OTP. Please try again.";
@@ -75,7 +69,6 @@ const OTPAuthentication = () => {
 
       try {
         const response = await verifyResetPasswordOTP(email, enteredOTP);
-        console.log("✅ OTP verified:", response.data);
 
         // Store the reset token from the response
         const resetToken = response.data.resetToken;
@@ -98,7 +91,6 @@ const OTPAuthentication = () => {
           ? err.message
           : (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to verify OTP. Please try again.";
         setError(errorMessage);
-        console.log(err, "err");
       } finally {
         setLoading(false);
       }
@@ -152,7 +144,7 @@ const OTPAuthentication = () => {
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <Button
           title="Continue"
-          onClick={() => handleSubmit(new Event('submit') as unknown as React.FormEvent)}
+          onClick={() => { }}
           isDisabled={loading}
         />
       </form>

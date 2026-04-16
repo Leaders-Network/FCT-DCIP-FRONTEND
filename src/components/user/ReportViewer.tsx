@@ -241,7 +241,6 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
             }
 
         } catch (err) {
-            console.error('Download failed:', err);
             toast.error('Download failed. Please try again.');
         } finally {
             setDownloading(false);
@@ -454,7 +453,6 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                     toast.error('Failed to download AMMC report: ' + (response.message || 'Unknown error'));
                                                 }
                                             } catch (error) {
-                                                console.error('Error downloading AMMC report:', error);
                                                 toast.error('Failed to download AMMC report');
                                             }
                                         }
@@ -620,7 +618,6 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId }) => {
                                                     toast.error('Failed to download NIA report: ' + (response.message || 'Unknown error'));
                                                 }
                                             } catch (error) {
-                                                console.error('Error downloading NIA report:', error);
                                                 toast.error('Failed to download NIA report');
                                             }
                                         }

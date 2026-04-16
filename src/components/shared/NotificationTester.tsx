@@ -53,7 +53,6 @@ const NotificationTester: React.FC = () => {
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error('Basic notification error:', error);
             addResult(`❌ Error creating basic notification: ${errorMessage}`);
         }
         setLoading(false);
@@ -88,7 +87,6 @@ const NotificationTester: React.FC = () => {
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error('Policy notification error:', error);
             addResult(`❌ Error creating policy notification: ${errorMessage}`);
         }
         setLoading(false);
@@ -123,7 +121,6 @@ const NotificationTester: React.FC = () => {
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error('Assignment notification error:', error);
             addResult(`❌ Error creating assignment notification: ${errorMessage}`);
         }
         setLoading(false);
@@ -158,7 +155,6 @@ const NotificationTester: React.FC = () => {
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error('Test all notifications error:', error);
             addResult(`❌ Error creating test notifications: ${errorMessage}`);
         }
         setLoading(false);
@@ -193,7 +189,6 @@ const NotificationTester: React.FC = () => {
                 addResult(`❌ Failed to get debug info: ${data.message || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Debug info error:', error);
             const errorMessage = error instanceof Error ? error.message : String(error);
             addResult(`❌ Error getting debug info: ${errorMessage}`);
         }

@@ -57,7 +57,6 @@ const ReportSection: React.FC<ReportSectionProps> = ({ userPolicies }) => {
                 setReportStats(stats);
             }
         } catch (error) {
-            console.error('Failed to fetch report stats:', error);
         }
     };
 

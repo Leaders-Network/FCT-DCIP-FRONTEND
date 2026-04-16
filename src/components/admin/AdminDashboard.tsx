@@ -119,7 +119,6 @@ const AdminDashboard: React.FC = () => {
       }
 
     } catch (error: unknown) {
-      console.error('Failed to fetch dashboard data:', error);
       setError('Failed to load dashboard data. Please try refreshing.');
       setFriendlyError('We couldn’t load the admin dashboard right now. Please refresh, and contact the Gladfaith team if it keeps failing.');
     } finally {
@@ -220,7 +219,6 @@ const AdminDashboard: React.FC = () => {
       downloadCsv(csv);
       toast.success(`Exported ${all.length} policies to CSV`);
     } catch (err: any) {
-      console.error('Export failed', err);
       toast.error(err?.message || 'Failed to export policies');
     } finally {
       setExporting(false);

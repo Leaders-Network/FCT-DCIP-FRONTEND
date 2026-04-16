@@ -209,34 +209,28 @@
           phone: formData.phone,
           metadata: formData.metadata,
           onSuccess: (response) => {
-            console.log("EgolePay success:", response);
             sdkStatus.textContent = "Payment completed successfully.";
             sdkStatus.style.color = "#065f46";
           },
           onCancel: (info) => {
-            console.log("EgolePay cancelled:", info);
             resetPaymentState();
             sdkStatus.textContent = "Payment was cancelled.";
             sdkStatus.style.color = "#b45309";
           },
           onError: (error) => {
-            console.error("EgolePay error:", error);
             resetPaymentState();
             sdkStatus.textContent = error?.message || "Payment failed.";
             sdkStatus.style.color = "#b91c1c";
           },
           onClose: (info) => {
-            console.log("EgolePay closed:", info);
             resetPaymentState();
             sdkStatus.textContent = "Payment modal closed.";
             sdkStatus.style.color = "#4b5563";
           },
           onStepChange: (step) => {
-            console.log("EgolePay step changed:", step);
           }
         });
       } catch (error) {
-        console.error("EgolePay init error:", error);
         resetPaymentState();
         updateSdkStatus();
         alert("EgolePay failed to initialize.");

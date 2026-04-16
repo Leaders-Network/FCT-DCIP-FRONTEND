@@ -111,7 +111,6 @@ const PaymentDecisionDisplay: React.FC<PaymentDecisionDisplayProps> = ({
                 }
             }
         } catch (err) {
-            console.error('Failed to fetch conflict details:', err);
         }
     };
 
@@ -135,7 +134,6 @@ const PaymentDecisionDisplay: React.FC<PaymentDecisionDisplayProps> = ({
             window.open(insuranceUrl, '_blank');
 
         } catch (err) {
-            console.error('Failed to log insurance initiation:', err);
             // Still proceed to insurance even if logging fails
             const insuranceUrl = paymentDecision?.insuranceUrl || 'http://buildersuat.niip.ng/';
             window.open(insuranceUrl, '_blank');

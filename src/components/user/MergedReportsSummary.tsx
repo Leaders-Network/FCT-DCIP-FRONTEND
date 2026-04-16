@@ -74,7 +74,6 @@ const MergedReportsSummary: React.FC = () => {
             }
 
         } catch (error) {
-            console.error('Error fetching report data:', error);
             toast.error('Failed to load report summary');
         } finally {
             setLoading(false);

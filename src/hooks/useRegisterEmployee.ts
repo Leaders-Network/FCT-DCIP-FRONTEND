@@ -83,7 +83,6 @@ export const useRegisterEmployee = (): UseRegisterEmployeeReturn => {
           isLoading: false,
         }));
       } catch (error) {
-        console.error("Failed to fetch roles:", error);
         setState((prev) => ({
           ...prev,
           error: "Failed to load roles",
@@ -116,7 +115,6 @@ export const useRegisterEmployee = (): UseRegisterEmployeeReturn => {
         isLoading: false,
       }));
     } catch (error) {
-      console.error("Failed to fetch user role", error);
       router.push("/admin/login");
     }
   }, [router]);

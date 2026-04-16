@@ -66,7 +66,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
           userEmail = localStorage.getItem("email") || "";
         }
       } catch (error) {
-        console.error("Error reading stored user email:", error);
       }
     }
 
@@ -118,7 +117,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
             userEmail = localStorage.getItem("email") || "";
           }
         } catch (error) {
-          console.error("Error reading stored user email:", error);
         }
       }
 
@@ -153,7 +151,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
               }
               return typeof window !== "undefined" ? localStorage.getItem("email") || "" : "";
             } catch (error) {
-              console.error("Error reading stored user email:", error);
               return "";
             }
           })(),
@@ -215,7 +212,6 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
       setFormData(initializeFormData());
       setCurrentStep(1);
     } catch (error) {
-      console.error("Failed to submit policy request:", error);
     } finally {
       setLoading(false);
     }

@@ -163,7 +163,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           setAssignments([]);
         }
       } catch (error) {
-        console.error("Failed to fetch initial data:", error);
       } finally {
         setLoading(false);
       }
@@ -185,22 +184,14 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           search: searchTerm || undefined
         };
 
-        console.log("🔍 Fetching surveyors with filters:", filters);
-
         const response = await adminApi.getSurveyors(filters);
 
-        console.log("📊 Surveyor API response:", response);
-        console.log("👥 Surveyors count:", response?.data?.length || 0);
-
         if (response?.success && response?.data) {
-          console.log("✅ Setting surveyors data:", response.data);
           setSurveyors(response.data);
         } else {
-          console.warn("⚠️ No surveyors data in response");
           setSurveyors([]);
         }
       } catch (error) {
-        console.error("❌ Failed to fetch surveyors:", error);
         setSurveyors([]);
       } finally {
         setFetching(false);
@@ -287,7 +278,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         setShowDetailsModal(true);
       }
     } catch (error) {
-      console.error('Failed to fetch surveyor analytics:', error);
       const surveyorEmployeeId = getSurveyorEmployeeId(surveyor);
       const fallbackStats = getSurveyorAssignmentStats(surveyorEmployeeId);
       // Fallback to basic metrics
@@ -338,9 +328,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
   const filteredSurveyors = React.useMemo(() => {
     let filtered = surveyors || [];
 
-    console.log("🔄 Client-side filtering - Initial count:", filtered.length);
-    console.log("🔄 Filters applied:", { searchTerm, statusFilter, specializationFilter });
-
     // Apply search filter if backend didn't handle it properly
     if (searchTerm && searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
@@ -390,8 +377,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         return false;
       });
     }
-
-    console.log("✅ Client-side filtering - Final count:", filtered.length);
     return filtered;
   }, [surveyors, searchTerm, statusFilter, specializationFilter]);
 
@@ -449,7 +434,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
         setSurveyors([]);
       }
     } catch (error) {
-      console.error("Failed to fetch surveyors:", error);
       setSurveyors([]);
     } finally {
       setFetching(false);
@@ -488,7 +472,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       });
       refetchSurveyors();
     } catch (error) {
-      console.error('Failed to create surveyor:', error);
     }
   };
 
@@ -526,7 +509,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       setShowEditModal(false);
       refetchSurveyors();
     } catch (error) {
-      console.error('Failed to update surveyor:', error);
     }
   };
 
@@ -556,7 +538,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             showConfirmButton: false,
           });
         } catch (error) {
-          console.error('Failed to delete surveyor:', error);
 
           Swal.fire({
             title: 'Error!',
@@ -570,7 +551,6 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
   const openEditModal = (surveyor: Surveyor) => {
     setSelectedSurveyor(surveyor);
-    console.log('Opening edit modal for surveyor:', surveyor);
 
     setFormData({
       firstname: surveyor.userId?.firstname || surveyor.firstname || "",

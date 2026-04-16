@@ -125,7 +125,6 @@ export default function BrokerAdminDashboard() {
                 setDashboardError(response.message || 'Failed to fetch dashboard data.');
             }
         } catch (err) {
-            console.error('Failed to fetch dashboard data:', err);
             setDashboardError('Unable to load broker dashboard data. Please contact the Gladfaith team if this persists.');
         }
     };
@@ -148,7 +147,6 @@ export default function BrokerAdminDashboard() {
                 setClaims(response.claims);
             }
         } catch (err) {
-            console.error('Failed to fetch claims:', err);
             setError('Failed to load claims');
         } finally {
             setLoading(false);
@@ -243,7 +241,6 @@ export default function BrokerAdminDashboard() {
                 setCompletedPolicyModalError('Completed policy not found.');
             }
         } catch (err) {
-            console.error('Failed to fetch completed policy detail:', err);
             setCompletedPolicyModalError(err instanceof Error ? err.message : 'Failed to load policy details.');
         } finally {
             setCompletedPolicyModalLoading(false);

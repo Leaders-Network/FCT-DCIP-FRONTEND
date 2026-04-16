@@ -243,7 +243,7 @@ function LoginForm() {
 
       <div className="mb-6">
         <Link
-          href="/reset"
+          href="/reset-password"
           className="text-black text-sm md:text-base underline font-medium"
         >
           Reset your password?
@@ -293,7 +293,6 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
           setIsLoading(false);
           return;
         } catch (employeeError) {
-          console.error("Login error:", employeeError);
 
           const message =
             employeeError instanceof Error

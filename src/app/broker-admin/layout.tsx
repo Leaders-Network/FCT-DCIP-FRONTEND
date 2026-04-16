@@ -39,9 +39,17 @@ export default function BrokerAdminLayout({
         }
     }, [pathname, isMobile]);
 
+    const isPublicAuthPage = [
+        '/broker-admin/login',
+        '/broker-admin/reset-password',
+        '/broker-admin/otp',
+        '/broker-admin/new-password',
+        '/broker-admin/registration-success'
+    ].includes(pathname || '');
+
     useEffect(() => {
-        // Skip auth check for login page
-        if (pathname === '/broker-admin/login') {
+        // Skip auth check for public auth pages
+        if (isPublicAuthPage) {
             return;
         }
 
@@ -49,13 +57,12 @@ export default function BrokerAdminLayout({
         const token = getAuthToken('broker-admin');
 
         if (!token) {
-            console.log('No broker-admin token found, redirecting to login...');
             router.push('/broker-admin/login');
         }
-    }, [pathname, router]);
+    }, [isPublicAuthPage, router]);
 
-    // If on login page, render without layout
-    if (pathname === '/broker-admin/login') {
+    // Public auth pages render without dashboard chrome
+    if (isPublicAuthPage) {
         return <>{children}</>;
     }
 

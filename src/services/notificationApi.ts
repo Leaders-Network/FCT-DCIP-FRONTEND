@@ -16,7 +16,6 @@ const api = axios.create({
 // Add auth token to requests
 api.interceptors.request.use((config) => {
     const token = getAuthToken();
-    console.log('🔔 Notification API request:', config.url, 'Token:', token ? 'Present' : 'Missing');
     if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -26,11 +25,9 @@ api.interceptors.request.use((config) => {
 // Add response interceptor for debugging
 api.interceptors.response.use(
     (response) => {
-        console.log('🔔 Notification API response:', response.config.url, response.status, response.data);
         return response;
     },
     (error) => {
-        console.error('❌ Notification API error:', error.config?.url, error.response?.status, error.response?.data);
         return Promise.reject(error);
     }
 );

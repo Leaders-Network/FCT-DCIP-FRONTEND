@@ -152,7 +152,6 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                 throw new Error(data.message || 'Failed to load surveyors');
             }
         } catch (error) {
-            console.error('Surveyors fetch error:', error);
             setError(error instanceof Error ? error.message : 'Failed to load surveyors');
         } finally {
             setLoading(false);
@@ -212,11 +211,6 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
             }
 
             const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-            console.log('Assigning AMMC surveyor:', {
-                assignmentId: assignment._id,
-                surveyorId: selectedSurveyor._id,
-                token: token ? 'Present' : 'Missing'
-            });
 
             const response = await fetch(`${baseUrl}/dual-assignment/${assignment._id}/assign-ammc`, {
                 method: 'POST',
@@ -231,24 +225,19 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                 })
             });
 
-            console.log('Assignment response status:', response.status);
-
             const data = await response.json();
-            console.log('Assignment response data:', data);
 
             if (!response.ok) {
                 throw new Error(data.message || `HTTP ${response.status}: Failed to assign surveyor`);
             }
 
             if (data.success) {
-                console.log('Assignment successful');
                 onAssignmentComplete?.();
                 onClose?.();
             } else {
                 throw new Error(data.message || 'Failed to assign surveyor');
             }
         } catch (error) {
-            console.error('Assignment error:', error);
             setError(error instanceof Error ? error.message : 'Failed to assign surveyor');
         } finally {
             setAssigning(false);

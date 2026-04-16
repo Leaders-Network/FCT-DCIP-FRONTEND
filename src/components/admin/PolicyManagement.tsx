@@ -159,12 +159,9 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       // Also try to fetch from admin policy endpoint as backup
       try {
         const adminPoliciesResponse = await adminApi.getPolicies();
-        console.log('Admin policies response:', adminPoliciesResponse);
       } catch (adminError) {
-        console.error('Failed to fetch admin policies:', adminError);
       }
     } catch (error) {
-      console.error('Failed to fetch policies and surveyors:', error);
       // Ensure policies is always an array even on error
       setPolicies([]);
     }
@@ -176,12 +173,8 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
   // Use only Builder Liability Policies for display
   const allPoliciesForDisplay = React.useMemo(() => {
-    console.log('Builder Liability Policies from hook:', builderLiabilityPolicies);
-    console.log('BLP Loading:', blpLoading);
-    console.log('BLP Error:', blpError);
 
     const safeBuilderLiabilityPolicies = Array.isArray(builderLiabilityPolicies) ? builderLiabilityPolicies : [];
-    console.log('Safe Builder Liability Policies:', safeBuilderLiabilityPolicies);
 
     // Convert Builder Liability Policies to display format
     return safeBuilderLiabilityPolicies.map(blp => ({
@@ -392,7 +385,6 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
         toast.success("Payment confirmed! Policy marked as completed.");
       } catch (error) {
-        console.error("Failed to confirm payment:", error);
         const err = error instanceof Error ? error : new Error("Unknown error");
         toast.error(`Failed to confirm payment: ${err.message}`);
       }
@@ -416,7 +408,6 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       setPolicyToDelete(null);
       toast.success('Policy deleted successfully!');
     } catch (error) {
-      console.error('Delete policy error:', error);
       const errorMessage = error?.response?.data?.message || 'Failed to delete policy';
       toast.error(errorMessage);
     }
@@ -1046,7 +1037,6 @@ const LegacyPolicyDetailsModal: React.FC<LegacyPolicyDetailsModalProps> = ({ pol
           }
         }
       } catch (error) {
-        console.error('Failed to fetch policy details:', error);
       } finally {
         setLoading(false);
       }

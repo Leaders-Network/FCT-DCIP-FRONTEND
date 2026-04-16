@@ -163,13 +163,11 @@ const EnhancedSurveyorDashboard = () => {
                 // Process dual assignments response (prioritize these)
                 if (dualAssignmentsResponse.status === 'fulfilled' && dualAssignmentsResponse.value?.data?.dualAssignments) {
                     dualAssignments = dualAssignmentsResponse.value.data.dualAssignments;
-                    console.log('Dual assignments fetched:', dualAssignments.length);
                 }
 
                 // Fallback to regular assignments if no dual assignments
                 if (dualAssignments.length === 0 && fetchedAssignments.length === 0 && assignmentsResponse.status === 'fulfilled' && assignmentsResponse.value?.data?.assignments) {
                     fetchedAssignments = assignmentsResponse.value.data.assignments;
-                    console.log('Regular assignments fetched:', fetchedAssignments.length);
                 }
 
                 // Process dual assignments first (these are the new system)
@@ -229,7 +227,6 @@ const EnhancedSurveyorDashboard = () => {
                                         enhanced.dualAssignmentInfo = dualData.data;
                                     }
                                 } catch (err) {
-                                    console.error('Failed to fetch dual assignment info:', err);
                                 }
                             }
 
@@ -261,7 +258,6 @@ const EnhancedSurveyorDashboard = () => {
                 }
 
             } catch (err) {
-                console.error("Failed to fetch surveyor data:", err);
                 setError("Failed to load dashboard data. Please try again later.");
             } finally {
                 setLoading(false);

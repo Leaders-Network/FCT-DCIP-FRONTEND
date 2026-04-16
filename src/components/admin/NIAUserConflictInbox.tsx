@@ -143,7 +143,6 @@ const NIAUserConflictInbox: React.FC = () => {
                 setTotalPages(data.data.pagination.pages);
             }
         } catch (error) {
-            console.error('Error fetching inquiries:', error);
         } finally {
             setLoading(false);
         }
@@ -165,7 +164,6 @@ const NIAUserConflictInbox: React.FC = () => {
                 fetchInquiries();
             }
         } catch (error) {
-            console.error('Error assigning inquiry:', error);
         }
     };
 
@@ -196,7 +194,6 @@ const NIAUserConflictInbox: React.FC = () => {
                 fetchInquiries();
             }
         } catch (error) {
-            console.error('Error sending response:', error);
         }
     };
 

@@ -68,7 +68,6 @@ export default function BrokerClaimsListPage() {
                 setTotalClaims(response.total || 0);
             }
         } catch (err) {
-            console.error('Failed to fetch claims:', err);
             setError('Failed to load claims');
         } finally {
             setLoading(false);
@@ -117,22 +116,17 @@ export default function BrokerClaimsListPage() {
     };
 
     const handleViewClaim = async (claimId: string) => {
-        console.log('🔍 handleViewClaim called with claimId:', claimId);
         setModalLoading(true);
         setModalError(null);
         try {
-            console.log('📡 Fetching claim details...');
             const res = await brokerAdminAPI.getClaimById(claimId);
-            console.log('✅ Claim fetched:', res);
             if (res && res.claim) {
                 setSelectedClaim(res.claim);
                 setNotes(res.claim.brokerNotes || '');
-                console.log('✅ Modal should open now');
             } else {
                 setModalError('Claim not found');
             }
         } catch (err) {
-            console.error('❌ Error fetching claim:', err);
             setModalError(err instanceof Error ? err.message : 'Failed to load claim');
         } finally {
             setModalLoading(false);

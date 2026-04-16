@@ -78,7 +78,6 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
             };
             onConflictSubmit(inquiryData);
         } else {
-            console.log('Conflict submitted:', conflictData);
         }
         setShowConflictModal(false);
     };

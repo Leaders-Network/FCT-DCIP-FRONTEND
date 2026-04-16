@@ -40,7 +40,6 @@ const NewPassword = () => {
 
     try {
       const response = await resetPasswordWithToken(email, resetToken, newpassword, confirmPassword);
-      console.log("✅ Password reset successful:", response.data);
 
       // Clean up localStorage
       localStorage.removeItem("resetEmail");
@@ -63,7 +62,6 @@ const NewPassword = () => {
         ? err.message
         : (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to reset password. Please try again.";
       setError(errorMessage);
-      console.log(err, "err");
     } finally {
       setLoading(false);
     }

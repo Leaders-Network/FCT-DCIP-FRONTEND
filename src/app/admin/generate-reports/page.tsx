@@ -39,7 +39,6 @@ export default function GenerateReportsPage() {
                 toast.error(`Failed: ${data.message || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Error generating reports:', error);
             toast.error('Failed to generate reports');
         } finally {
             setLoading(false);
@@ -62,7 +61,6 @@ export default function GenerateReportsPage() {
                 setResult(data);
             }
         } catch (error) {
-            console.error('Error checking status:', error);
             toast.error('Failed to check status');
         }
     };

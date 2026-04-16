@@ -18,7 +18,6 @@ const ResetPassword = () => {
 
     try {
       const response = await sendResetPasswordOTP(email);
-      console.log("✅ Reset password OTP sent:", response.data);
       localStorage.setItem("resetEmail", email);
 
       // Determine the correct route based on current path
@@ -37,7 +36,6 @@ const ResetPassword = () => {
         ? error.message
         : (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to initiate password reset. Please try again.";
       setError(errorMessage);
-      console.error("Password reset error:", error);
     } finally {
       setLoading(false);
     }

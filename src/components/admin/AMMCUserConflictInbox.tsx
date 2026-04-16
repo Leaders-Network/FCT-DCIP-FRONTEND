@@ -93,7 +93,6 @@ interface InquiryStats {
 }
 
 const AMMCUserConflictInbox: React.FC = () => {
-  console.log('AMMCUserConflictInbox component rendering...');
   const [inquiries, setInquiries] = useState<ConflictInquiry[]>([]);
   const [stats, setStats] = useState<InquiryStats>({
     open: 0,
@@ -163,13 +162,11 @@ const AMMCUserConflictInbox: React.FC = () => {
         setStats(data.data?.stats || { open: 0, in_progress: 0, resolved: 0, closed: 0 });
         setTotalPages(data.data?.pagination?.pages || 1);
       } else {
-        console.error('Failed to fetch inquiries:', data.message);
         setInquiries([]);
         setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
         setTotalPages(1);
       }
     } catch (error: unknown) {
-      console.error('Error fetching inquiries:', error);
       setInquiries([]);
       setStats({ open: 0, in_progress: 0, resolved: 0, closed: 0 });
       setTotalPages(1);
@@ -193,7 +190,6 @@ const AMMCUserConflictInbox: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error assigning inquiry:', error);
       toast.error('Failed to assign inquiry. Please try again.');
     }
   };
@@ -235,7 +231,6 @@ const AMMCUserConflictInbox: React.FC = () => {
         toast.success('Response sent successfully!');
       }
     } catch (error) {
-      console.error('Error sending response:', error);
       toast.error('Failed to send response. Please try again.');
     }
   };

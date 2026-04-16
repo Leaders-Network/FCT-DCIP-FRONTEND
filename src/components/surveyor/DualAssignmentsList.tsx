@@ -96,7 +96,6 @@ const DualAssignmentsList: React.FC = () => {
                 throw new Error(response.message || 'Failed to fetch dual assignments');
             }
         } catch (err) {
-            console.error('Error fetching dual assignments:', err);
             setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);

@@ -114,7 +114,6 @@ export const submitConflictInquiry = async (inquiryData: ConflictInquirySubmissi
 
         return response.data;
     } catch (error) {
-        console.error('Error submitting conflict inquiry:', error);
         throw error;
     }
 };
@@ -138,7 +137,6 @@ export const getConflictInquiries = async (filters: InquiryFilters = {}): Promis
 
         return response.data as InquiryResponse;
     } catch (error) {
-        console.error('Error fetching conflict inquiries:', error);
         throw error;
     }
 };
@@ -154,7 +152,6 @@ export const getConflictInquiryDetails = async (inquiryId: string): Promise<Conf
 
         return response.data as ConflictInquiry;
     } catch (error) {
-        console.error('Error fetching inquiry details:', error);
         throw error;
     }
 };
@@ -173,7 +170,6 @@ export const assignInquiry = async (inquiryId: string, organization: 'AMMC' | 'N
 
         return response.data;
     } catch (error) {
-        console.error('Error assigning inquiry:', error);
         throw error;
     }
 };
@@ -199,7 +195,6 @@ export const sendInquiryResponse = async (
 
         return response.data;
     } catch (error) {
-        console.error('Error sending response:', error);
         throw error;
     }
 };
@@ -225,7 +220,6 @@ export const addInternalNote = async (
 
         return response.data;
     } catch (error) {
-        console.error('Error adding note:', error);
         throw error;
     }
 };
@@ -251,7 +245,6 @@ export const escalateInquiry = async (
 
         return response.data;
     } catch (error) {
-        console.error('Error escalating inquiry:', error);
         throw error;
     }
 };
@@ -272,7 +265,6 @@ export const closeInquiry = async (inquiryId: string, closureReason?: string) =>
 
         return response.data;
     } catch (error) {
-        console.error('Error closing inquiry:', error);
         throw error;
     }
 };
@@ -298,7 +290,6 @@ export const getInquiryStats = async (
 
         return response.data;
     } catch (error) {
-        console.error('Error fetching inquiry statistics:', error);
         throw error;
     }
 };

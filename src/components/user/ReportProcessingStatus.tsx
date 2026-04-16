@@ -39,7 +39,6 @@ const ReportProcessingStatus: React.FC<ReportProcessingStatusProps> = ({
                 throw new Error(response.message || 'Failed to fetch processing status');
             }
         } catch (err) {
-            console.error('Error fetching report status:', err);
             setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);

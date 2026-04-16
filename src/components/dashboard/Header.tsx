@@ -13,11 +13,6 @@ const Header = () => {
     : "U";
 
   useEffect(() => {
-    console.log("Auth Context User:", user);
-    console.log("Local Storage User:", localStorage.getItem('user'));
-    console.log("Auth Token:", localStorage.getItem('authToken'));
-    console.log("First Name:", firstName);
-    console.log("Initials:", initials);
   }, [user, firstName, initials]);
 
   return (

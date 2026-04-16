@@ -38,8 +38,6 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement search functionality
-        console.log("Searching for:", searchQuery);
     };
 
     const adminName =
@@ -145,7 +143,6 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
                                         try {
                                             await brokerAdminAPI.logout();
                                         } catch (error) {
-                                            console.error("Broker admin logout failed:", error);
                                         } finally {
                                             removeAuthToken('broker-admin');
                                             localStorage.removeItem('brokerAdminInfo');

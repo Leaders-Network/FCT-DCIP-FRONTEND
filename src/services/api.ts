@@ -93,24 +93,15 @@ api.interceptors.request.use(
     // If no specific type detected, getAuthToken will use fallback priority
 
     const token = getAuthToken(tokenType);
-    console.log("Auth Token:", token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
-    console.log("Token Type:", tokenType || 'auto-detect');
 
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
 
-    console.log("Request Headers:", {
-      'Content-Type': config.headers['Content-Type'],
-      'apikey': config.headers['apikey'] ? `${config.headers['apikey'].substring(0, 20)}...` : 'Missing',
-      'Authorization': config.headers['Authorization'] || 'Missing'
-    });
-
 
     return config;
   },
   (error) => {
-    console.error("Request interceptor error:", error);
     return Promise.reject(error);
   }
 );
@@ -121,17 +112,9 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error("API Response Error:", {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method
-    });
 
     // Handle specific error cases
     if (error.response?.status === 401) {
-      console.error("Unauthorized access - check API key and authentication token");
     }
 
     return Promise.reject(error);
@@ -263,7 +246,6 @@ export const loginUser = async (email: string, password: string) => {
     const response = await api.post<UserLoginResponse>("/auth/login", { email, password });
     return response;
   } catch (error: unknown) {
-    console.error("User Login API Error:", error);
     throw error as ApiError;
   }
 };
@@ -273,7 +255,6 @@ export const loginEmployee = async (email: string, password: string) => {
     const response = await api.post<EmployeeLoginResponse>(`/auth/loginEmployee`, { email, password });
     return response;
   } catch (error: unknown) {
-    console.error("Login API Error:", error);
     throw error as ApiError;
   }
 };
@@ -285,10 +266,8 @@ export const getUserRole = () =>
 export const getCategories = async (): Promise<Category[]> => {
   try {
     const response = await api.get("/auth/available-categories");
-    console.log(response)
     return response.data.categories;
   } catch (error) {
-    console.error("Failed to fetch categories:", error);
     throw error;
   }
 };
@@ -300,7 +279,6 @@ export const addProperty = async (
     const response = await api.post("/auth/user/add-property", payload);
     return response.data;
   } catch (error) {
-    console.error("Failed to add property:", error);
     throw error;
   }
 };
@@ -343,7 +321,6 @@ export const registerEmployee = async (employeeData: EmployeeRegistrationData) =
     const response = await api.post("/auth/registerEmployee", employeeData);
     return response.data;
   } catch (error) {
-    console.error("Failed to register employee", error);
     throw error;
   }
 };
@@ -353,7 +330,6 @@ export const getAllEmployees = async () => {
     const response = await api.get<GetAllEmployeesResponse>("/auth/get-all-employees");
     return response.data.allStaff.sanitizedEmployees;
   } catch (error) {
-    console.error("Failed to fetch users", error);
     throw error;
   }
 };
@@ -363,25 +339,21 @@ export const getAvailableRoles = async () => {
     const response = await api.get<AvailableRolesResponse>("/auth/available-roles");
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch available roles", error);
     throw error;
   }
 };
 
 // Policy Request APIs (DEPRECATED - Use Builder Liability Policy APIs instead)
 export const submitPolicyRequest = async (policyData: import("../types/api.types").CreatePolicyRequestData) => {
-  console.warn("⚠️ DEPRECATED: submitPolicyRequest is deprecated. Use builderLiabilityPolicyAPI.createPolicy instead.");
   try {
     const response = await api.post("/policy", policyData);
     return response.data;
   } catch (error) {
-    console.error("Failed to submit policy request", error);
     throw error;
   }
 };
 
 export const getPolicyRequests = async (status?: string, page = 1, limit = 10) => {
-  console.warn("⚠️ DEPRECATED: getPolicyRequests is deprecated. Use builderLiabilityPolicyAPI.getAllPolicies instead.");
   try {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
@@ -392,13 +364,11 @@ export const getPolicyRequests = async (status?: string, page = 1, limit = 10) =
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch policy requests", error);
     throw error;
   }
 };
 
 export const getUserPolicyRequests = async (status?: string, page = 1, limit = 10) => {
-  console.warn("⚠️ DEPRECATED: getUserPolicyRequests is deprecated. Use builderLiabilityPolicyAPI.getUserPolicies instead.");
   try {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
@@ -409,7 +379,6 @@ export const getUserPolicyRequests = async (status?: string, page = 1, limit = 1
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch user policy requests", error);
     throw error;
   }
 };
@@ -419,7 +388,6 @@ export const getUserProperties = async () => {
     const response = await api.get("/property/user");
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch user properties", error);
     throw error;
   }
 };
@@ -434,7 +402,6 @@ export const getAvailableSurveyors = async (specialization?: string, location?: 
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to get available surveyors", error);
     throw error;
   }
 };
@@ -448,7 +415,6 @@ export const reviewSubmission = async (submissionId: string, decision: 'approved
     });
     return response.data;
   } catch (error) {
-    console.error("Failed to review submission", error);
     throw error;
   }
 };
@@ -459,7 +425,6 @@ export const loginSurveyor = async (email: string, password: string) => {
     const response = await api.post("/auth/loginSurveyor", { email, password });
     return response.data;
   } catch (error) {
-    console.error("Surveyor login failed", error);
     throw error;
   }
 };
@@ -469,7 +434,6 @@ export const getSurveyorDashboard = async () => {
     const response = await api.get("/surveyor/dashboard");
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyor dashboard", error);
     throw error;
   }
 };
@@ -493,7 +457,6 @@ export const getSurveyorDualAssignments = async (filters?: {
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyor dual assignments", error);
     throw error;
   }
 };
@@ -513,8 +476,6 @@ export const getSurveyorAssignments = async (
       ? { status: filtersOrStatus, page, limit }
       : filtersOrStatus;
 
-    console.log('🔍 getSurveyorAssignments called with filters:', filters);
-
     const params = new URLSearchParams();
     if (filters) {
       if (filters.status && filters.status !== 'all') params.append('status', filters.status);
@@ -527,18 +488,12 @@ export const getSurveyorAssignments = async (
     }
 
     const url = `/surveyor/assignments?${params.toString()}`;
-    console.log('📡 Making API request to:', url);
-    console.log('🔑 Current path for token detection:', window.location.pathname);
 
     const response = await api.get(url);
-    console.log('✅ API response received:', response.data);
 
     return response.data;
   } catch (error: unknown) {
     const err = error as { response?: { data?: unknown; status?: number } };
-    console.error("❌ Failed to fetch surveyor assignments", error);
-    console.error("Error response:", err.response?.data);
-    console.error("Error status:", err.response?.status);
     throw error;
   }
 };
@@ -551,7 +506,6 @@ export const updateAssignmentStatus = async (assignmentId: string, status: strin
     });
     return response.data;
   } catch (error) {
-    console.error("Failed to update assignment status", error);
     throw error;
   }
 };
@@ -565,7 +519,6 @@ export const submitSurvey = async (submission: FormData) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Failed to submit survey", error);
     throw error;
   }
 };
@@ -585,7 +538,6 @@ export const getSurveyorSubmissions = async (status?: string, page = 1, limit = 
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyor submissions", error);
     throw error;
   }
 };
@@ -600,7 +552,6 @@ export const downloadSubmissionZip = async (submissionId: string): Promise<void>
       'application/zip'
     );
   } catch (error) {
-    console.error('Failed to download submission zip', error);
     alert('Could not download the survey documents. Please try again.');
     throw error;
   }
@@ -616,7 +567,6 @@ export const downloadSubmissionZipByAssignment = async (assignmentId: string): P
       'application/zip'
     );
   } catch (error) {
-    console.error('Failed to download assignment submission zip', error);
     alert('Could not download the survey documents. Please try again.');
     throw error;
   }
@@ -629,7 +579,6 @@ export const downloadProtectedFileByPath = async (
   try {
     await downloadBlobFromApi(downloadPath, fallbackFileName);
   } catch (error) {
-    console.error('Failed to download file from protected path', error);
     alert('Could not download the file. Please try again.');
     throw error;
   }
@@ -640,7 +589,6 @@ export const getSurveyorProfile = async () => {
     const response = await api.get("/surveyor/profile");
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyor profile", error);
     throw error;
   }
 };
@@ -650,7 +598,6 @@ export const updateSurveyorProfile = async (profileData: Partial<Surveyor>) => {
     const response = await api.patch("/surveyor/profile", profileData);
     return response.data;
   } catch (error) {
-    console.error("Failed to update surveyor profile", error);
     throw error;
   }
 };
@@ -660,7 +607,6 @@ export const getSurveyorAssignmentById = async (assignmentId: string) => {
     const response = await api.get(`/surveyor/assignments/${assignmentId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch assignment:", error);
     throw error;
   }
 };
@@ -670,7 +616,6 @@ export const getDualAssignmentDetails = async (dualAssignmentId: string) => {
     const response = await api.get(`/dual-assignment/${dualAssignmentId}/details`);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch dual assignment details:", error);
     throw error;
   }
 };
@@ -681,7 +626,6 @@ export const getAdminDashboardData = async (period = '30d') => {
     const response = await api.get(`/admin/dashboard?period=${period}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch admin dashboard data:", error);
     throw error;
   }
 };
@@ -691,7 +635,6 @@ export const getQuickStats = async () => {
     const response = await api.get("/admin/dashboard/stats");
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch quick stats:", error);
     throw error;
   }
 };
@@ -701,7 +644,6 @@ export const getAdminAlerts = async () => {
     const response = await api.get("/admin/dashboard/alerts");
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch admin alerts:", error);
     throw error;
   }
 };
@@ -729,7 +671,6 @@ export const getAdminSurveyors = async (filters?: {
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyors:", error);
     throw error;
   }
 };
@@ -749,7 +690,6 @@ export const createSurveyorByAdmin = async (surveyorData: {
     const response = await api.post("/admin/surveyor", surveyorData);
     return response.data;
   } catch (error) {
-    console.error("Failed to create surveyor:", error);
     throw error;
   }
 };
@@ -759,7 +699,6 @@ export const updateSurveyorByAdmin = async (surveyorId: string, surveyorData: Pa
     const response = await api.patch(`/admin/surveyor/${surveyorId}`, surveyorData);
     return response.data;
   } catch (error) {
-    console.error("Failed to update surveyor:", error);
     throw error;
   }
 };
@@ -769,7 +708,6 @@ export const deleteSurveyorByAdmin = async (surveyorId: string) => {
     const response = await api.delete(`/admin/surveyor/${surveyorId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to delete surveyor:", error);
     throw error;
   }
 };
@@ -799,7 +737,6 @@ export const getAdminAssignments = async (filters?: {
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch admin assignments:", error);
     throw error;
   }
 };
@@ -809,7 +746,6 @@ export const getAssignmentAnalytics = async (period = '30d') => {
     const response = await api.get(`/admin/assignment/analytics?period=${period}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch assignment analytics:", error);
     throw error;
   }
 };
@@ -819,7 +755,6 @@ export const updateAssignmentByAdmin = async (assignmentId: string, updates: Par
     const response = await api.patch(`/admin/assignment/${assignmentId}`, updates);
     return response.data;
   } catch (error) {
-    console.error("Failed to update assignment:", error);
     throw error;
   }
 };
@@ -834,7 +769,6 @@ export const reassignAssignment = async (assignmentId: string, data: {
     const response = await api.patch(`/admin/assignment/${assignmentId}/reassign`, data);
     return response.data;
   } catch (error) {
-    console.error("Failed to reassign assignment:", error);
     throw error;
   }
 };
@@ -844,7 +778,6 @@ export const cancelAssignment = async (assignmentId: string, reason: string) => 
     const response = await api.patch(`/admin/assignment/${assignmentId}/cancel`, { reason });
     return response.data;
   } catch (error) {
-    console.error("Failed to cancel assignment:", error);
     throw error;
   }
 };
@@ -872,7 +805,6 @@ export const getSurveyorAssignmentsNew = async (filters?: {
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch surveyor assignments:", error);
     throw error;
   }
 };
@@ -882,7 +814,6 @@ export const acceptAssignment = async (assignmentId: string, notes?: string) => 
     const response = await api.patch(`/assignment/${assignmentId}/accept`, { notes });
     return response.data;
   } catch (error) {
-    console.error("Failed to accept assignment:", error);
     throw error;
   }
 };
@@ -895,7 +826,6 @@ export const startAssignment = async (assignmentId: string, data?: {
     const response = await api.patch(`/assignment/${assignmentId}/start`, data);
     return response.data;
   } catch (error) {
-    console.error("Failed to start assignment:", error);
     throw error;
   }
 };
@@ -910,7 +840,6 @@ export const updateAssignmentProgress = async (assignmentId: string, data: {
     const response = await api.patch(`/assignment/${assignmentId}/progress`, data);
     return response.data;
   } catch (error) {
-    console.error("Failed to update assignment progress:", error);
     throw error;
   }
 };
@@ -923,7 +852,6 @@ export const completeAssignment = async (assignmentId: string, data?: {
     const response = await api.patch(`/assignment/${assignmentId}/complete`, data);
     return response.data;
   } catch (error) {
-    console.error("Failed to complete assignment:", error);
     throw error;
   }
 };
@@ -936,7 +864,6 @@ export const addAssignmentMessage = async (assignmentId: string, data: {
     const response = await api.post(`/assignment/${assignmentId}/messages`, data);
     return response.data;
   } catch (error) {
-    console.error("Failed to add assignment message:", error);
     throw error;
   }
 };
@@ -946,7 +873,6 @@ export const getAssignmentMessages = async (assignmentId: string) => {
     const response = await api.get(`/assignment/${assignmentId}/messages`);
     return response.data;
   } catch (error) {
-    console.error("Failed to get assignment messages:", error);
     throw error;
   }
 };
@@ -969,7 +895,6 @@ export const createSurveySubmission = async (submissionData: {
     const response = await api.post("/submission", submissionData);
     return response.data;
   } catch (error) {
-    console.error("Failed to create survey submission:", error);
     throw error;
   }
 };
@@ -994,7 +919,6 @@ export const getSurveySubmissions = async (filters?: {
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch survey submissions:", error);
     throw error;
   }
 };
@@ -1004,7 +928,6 @@ export const updateSurveySubmission = async (submissionId: string, updates: Part
     const response = await api.patch(`/submission/${submissionId}`, updates);
     return response.data;
   } catch (error) {
-    console.error("Failed to update survey submission:", error);
     throw error;
   }
 };
@@ -1014,7 +937,6 @@ export const submitSurveyFinal = async (submissionId: string, finalNotes?: strin
     const response = await api.patch(`/submission/${submissionId}/submit`, { finalNotes });
     return response.data;
   } catch (error) {
-    console.error("Failed to submit survey:", error);
     throw error;
   }
 };
@@ -1030,7 +952,6 @@ export const addContactLogEntry = async (submissionId: string, contactData: {
     const response = await api.post(`/submission/${submissionId}/contact`, contactData);
     return response.data;
   } catch (error) {
-    console.error("Failed to add contact log entry:", error);
     throw error;
   }
 };
@@ -1040,7 +961,6 @@ export const getSubmissionByAssignment = async (assignmentId: string) => {
     const response = await api.get(`/submission/assignment/${assignmentId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to get submission by assignment:", error);
     throw error;
   }
 };
@@ -1068,7 +988,6 @@ export const uploadSurveyDocument = async (file: File, data: {
     });
     return response.data;
   } catch (error) {
-    console.error("Failed to upload survey document:", error);
     throw error;
   }
 };
@@ -1096,7 +1015,6 @@ export const uploadMultipleSurveyDocuments = async (files: File[], data: {
     });
     return response.data;
   } catch (error) {
-    console.error("Failed to upload multiple documents:", error);
     throw error;
   }
 };
@@ -1117,7 +1035,6 @@ export const getSurveyDocuments = async (filters: {
     const response = await api.get(url);
     return response.data;
   } catch (error) {
-    console.error("Failed to get survey documents:", error);
     throw error;
   }
 };
@@ -1131,7 +1048,6 @@ export const deleteSurveyDocument = async (documentId: string, assignmentId?: st
     const response = await api.delete(endpoint);
     return response.data;
   } catch (error) {
-    console.error("Failed to delete survey document:", error);
     throw error;
   }
 };
@@ -1141,7 +1057,6 @@ export const getDocumentDownloadUrl = async (publicId: string) => {
     const response = await api.get(`/survey-documents/download/${publicId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to get document download URL:", error);
     throw error;
   }
 };
@@ -1151,7 +1066,6 @@ export const getAdminProperties = async () => {
     const response = await api.get("/admin/property");
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch admin properties:", error);
     throw error;
   }
 };
@@ -1162,18 +1076,15 @@ export const deleteProperty = async (propertyId: string) => {
     const response = await api.delete(`/property/${propertyId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to delete property:", error);
     throw error;
   }
 };
 
 export const updatePolicyRequest = async (policyId: string, policyData: Partial<PolicyRequest>) => {
-  console.warn("⚠️ DEPRECATED: updatePolicyRequest is deprecated. Use builderLiabilityPolicyAPI.updatePolicy instead.");
   try {
     const response = await api.patch(`/policy/${policyId}`, policyData);
     return response.data;
   } catch (error) {
-    console.error("Failed to update policy request:", error);
     throw error;
   }
 };
@@ -1183,18 +1094,15 @@ export const getUserAssignmentByPolicyId = async (policyId: string) => {
     const response = await api.get(`/admin/assignment/policy/${policyId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to get assignment by Policy ID:", error);
     throw error;
   }
 };
 
 export const deletePolicyRequest = async (policyId: string) => {
-  console.warn("⚠️ DEPRECATED: deletePolicyRequest is deprecated. Use builderLiabilityPolicyAPI.deletePolicy instead.");
   try {
     const response = await api.delete(`/policy/${policyId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to delete policy request:", error);
     throw error;
   }
 };
@@ -1204,7 +1112,6 @@ export const deleteEmployee = async (employeeId: string) => {
     const response = await api.delete(`/admin/employees/${employeeId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to delete employee:", error);
     throw error;
   }
 };
@@ -1214,7 +1121,6 @@ export const deleteAdministrator = async (adminId: string) => {
     const response = await api.delete(`/admin/administrators/${adminId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to delete administrator:", error);
     throw error;
   }
 };
@@ -1224,7 +1130,6 @@ export const deleteSurveyor = async (surveyorId: string) => {
     const response = await api.delete(`/admin/surveyor/${surveyorId}`);
     return response.data;
   } catch (error) {
-    console.error("Failed to delete surveyor:", error);
     throw error;
   }
 };
@@ -1620,7 +1525,6 @@ export const withErrorHandling = <T extends (...args: unknown[]) => Promise<unkn
       return await fn(...args);
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error occurred');
-      console.error('API Error:', err);
 
       if (onError) {
         onError(err);
@@ -1674,7 +1578,6 @@ export const apiRequest = async <T = unknown>(
     };
 
   } catch (error: unknown) {
-    console.error('API Request Error:', error);
 
     interface ErrorResponse {
       response?: {

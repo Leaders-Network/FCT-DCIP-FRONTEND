@@ -38,7 +38,6 @@ const EmployeeManagement: React.FC = () => {
       const response = await adminApi.getEmployees();
       setEmployees(response.data || []);
     } catch (error) {
-      console.error('Error fetching employees:', error);
     } finally {
       setLoading(false);
     }
@@ -51,7 +50,6 @@ const EmployeeManagement: React.FC = () => {
       setShowDeleteModal(false);
       setSelectedEmployee(null);
     } catch (error) {
-      console.error('Error deleting employee:', error);
     }
   };
 

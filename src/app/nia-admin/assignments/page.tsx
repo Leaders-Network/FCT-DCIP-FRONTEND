@@ -180,7 +180,6 @@ const NIAAutomatedAssignmentsPage = () => {
         }
       }
     } catch (error) {
-      console.error('NIA Assignments fetch error:', error);
       setError(error instanceof Error ? error.message : 'Failed to load assignments');
     } finally {
       setLoading(false);

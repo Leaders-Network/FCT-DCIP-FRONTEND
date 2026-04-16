@@ -106,7 +106,6 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
           setMergedReports(reportsResponse.data?.reports || []);
         }
       } catch (error) {
-        console.error("Failed to fetch completed data:", error);
       } finally {
         setLoading(false);
       }
@@ -128,7 +127,6 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       setPolicyToDelete(null);
       toast.success('Policy deleted successfully!');
     } catch (error) {
-      console.error('Delete policy error:', error);
       const errorMessage = error?.response?.data?.message || 'Failed to delete policy';
       toast.error(errorMessage);
     }
@@ -178,7 +176,6 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
           policyNumber = policyResponse.data.policy.referenceNumber;
         }
       } catch (error) {
-        console.warn('Could not fetch policy details, using address as fallback');
       }
 
       // Create a claim request using the policy data
@@ -202,7 +199,6 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
         toast.error(response.data?.message || 'Failed to submit claim request');
       }
     } catch (error: unknown) {
-      console.error('Claim submission error:', error);
       const err = error as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage = err.response?.data?.message || err.message || 'Failed to submit claim request';
       toast.error(errorMessage);

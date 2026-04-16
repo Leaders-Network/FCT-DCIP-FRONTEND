@@ -69,7 +69,6 @@ export default function TestMergedReportsPage() {
             }
 
         } catch (error) {
-            console.error('Test error:', error);
             toast.error(error instanceof Error ? error.message : 'Test failed');
         } finally {
             setLoading(false);
@@ -93,7 +92,6 @@ export default function TestMergedReportsPage() {
                 setMergedReports(data.data.reports);
             }
         } catch (error) {
-            console.error('Error fetching merged reports:', error);
         }
     };
 
@@ -121,7 +119,6 @@ export default function TestMergedReportsPage() {
             }
 
         } catch (error) {
-            console.error('Merge trigger error:', error);
             toast.error(error instanceof Error ? error.message : 'Merge trigger failed');
         } finally {
             setLoading(false);
