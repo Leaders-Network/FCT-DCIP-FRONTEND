@@ -1,16 +1,27 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, X, Check, CheckCheck, Trash2, ExternalLink } from 'lucide-react';
+import { Bell, X, CheckCheck, Trash2, ExternalLink } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Notification } from '@/types/notification.types';
 
 const NotificationBell: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+    const pathname = usePathname();
     const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, fetchNotifications } = useNotifications();
+
+    const notificationsPath = pathname?.startsWith('/admin/dashboard')
+        ? '/admin/dashboard/notifications'
+        : pathname?.startsWith('/broker-admin')
+            ? '/broker-admin/notifications'
+            : pathname?.startsWith('/nia-admin')
+                ? '/nia-admin/notifications'
+                : pathname?.startsWith('/surveyor/dashboard')
+                    ? '/surveyor/dashboard/notifications'
+                    : '/dashboard/notifications';
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -30,10 +41,8 @@ const NotificationBell: React.FC = () => {
         if (!notification.read) {
             await markAsRead(notification._id);
         }
-        if (notification.actionUrl) {
-            router.push(notification.actionUrl);
-            setIsOpen(false);
-        }
+        router.push(`${notificationsPath}/${notification._id}`);
+        setIsOpen(false);
     };
 
     const handleMarkAllRead = async () => {
@@ -196,19 +205,17 @@ const NotificationBell: React.FC = () => {
                     </div>
 
                     {/* Footer */}
-                    {notifications.length > 0 && (
-                        <div className="p-3 border-t border-gray-200 bg-gray-50">
-                            <button
-                                onClick={() => {
-                                    router.push('/dashboard/notifications');
-                                    setIsOpen(false);
-                                }}
-                                className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
-                            >
-                                View All Notifications
-                            </button>
-                        </div>
-                    )}
+                    <div className="p-3 border-t border-gray-200 bg-gray-50">
+                        <button
+                            onClick={() => {
+                                router.push(notificationsPath);
+                                setIsOpen(false);
+                            }}
+                            className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                            View All Notifications
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

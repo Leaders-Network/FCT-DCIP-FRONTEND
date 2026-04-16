@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { NotificationResponse, UnreadCountResponse } from '@/types/notification.types';
+import { Notification, NotificationResponse, UnreadCountResponse } from '@/types/notification.types';
 import { getAuthToken } from '@/utils/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
@@ -49,6 +49,12 @@ export const notificationApi = {
     // Get unread count
     getUnreadCount: async (): Promise<UnreadCountResponse> => {
         const response = await api.get('/notifications/unread-count');
+        return response.data;
+    },
+
+    // Get a single notification
+    getNotification: async (id: string): Promise<{ success: boolean; notification: Notification }> => {
+        const response = await api.get(`/notifications/${id}`);
         return response.data;
     },
 

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Bell, Search, Menu } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import { getCookie } from "@/utils/cookies";
 import { getSurveyorProfile } from "@/services/api";
 import Swal from "sweetalert2";
 import { useRouter } from 'next/navigation';
+import NotificationBell from "@/components/shared/NotificationBell";
 
 interface SurveyorHeaderProps {
   onMenuClick?: () => void;
@@ -140,11 +141,7 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
             />
           </div>
 
-          {/* Notifications */}
-          <button className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-          </button>
+          <NotificationBell />
 
           {/* Profile */}
           <div className="flex items-center">

@@ -23,7 +23,7 @@ const Sidebar = () => {
   const menuItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: "/dashboard/dashboard.png" },
     { href: "/admin/dashboard/policies", label: "Policies", icon: "/dashboard/insurance.png" },
-    { href: "/admin/dashboard/insurance", label: "Insurance", icon: "/dashboard/insurance.png" },
+    { href: "/admin/dashboard/insurance", label: "My Policies", icon: "/dashboard/insurance.png" },
     { href: "/admin/dashboard/users", label: "Users", icon: "/dashboard/user.png" },
     { href: "/admin/dashboard/members", label: "Members", icon: "/dashboard/people.png" },
     { href: "/admin/dashboard/settings", label: "Settings", icon: "/dashboard/setting.png" },
