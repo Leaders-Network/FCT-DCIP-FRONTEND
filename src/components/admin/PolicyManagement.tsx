@@ -524,7 +524,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
               >
                 <option value="">All Insurance Types</option>
                 <option value="Builder Liability">Builder Liability</option>
-                <option value="Occupiers Liability">Occupiers Liability</option>
+                {/* <option value="Occupiers Liability">Occupiers Liability</option> */}
                 <option value="Professional Indemnity">Professional Indemnity</option>
                 <option value="Public Liability">Public Liability</option>
                 <option value="Product Liability">Product Liability</option>

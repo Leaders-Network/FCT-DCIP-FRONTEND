@@ -29,19 +29,19 @@ type Insurance = {
 };
 
 const insuranceOptions: Insurance[] = [
-  {
-    title: "Occupiers' Liability Insurance",
-    icon: ShieldCheck,
-    image: "/bg-hero-1.jpg",
-    subtitle: "For public buildings under Section 65 of the Insurance Act 2003.",
-    description:
-      "Covers liability for injury, death or property damage for visitors in public buildings such as churches, malls, offices, hotels, etc.",
-    details: [
-      "Covers injury or death of visitors.",
-      "Covers collapse, fire, flood, earthquake, storm damage.",
-      "Mandatory for all publicly accessible buildings.",
-    ],
-  },
+  // {
+  //   title: "Occupiers' Liability Insurance",
+  //   icon: ShieldCheck,
+  //   image: "/bg-hero-1.jpg",
+  //   subtitle: "For public buildings under Section 65 of the Insurance Act 2003.",
+  //   description:
+  //     "Covers liability for injury, death or property damage for visitors in public buildings such as churches, malls, offices, hotels, etc.",
+  //   details: [
+  //     "Covers injury or death of visitors.",
+  //     "Covers collapse, fire, flood, earthquake, storm damage.",
+  //     "Mandatory for all publicly accessible buildings.",
+  //   ],
+  // },
   {
     title: "Builders' Liability Insurance",
     icon: HardHat,
