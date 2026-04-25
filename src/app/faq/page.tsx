@@ -21,7 +21,7 @@ const faqs = [
   {
     question: "What types of insurance are covered under the Builders-Liability-AMMC?",
     answer:
-      "The program includes key coverage types such as Builders’ Liability Insurance (for ongoing construction projects) and Occupiers’ Liability Insurance (for existing buildings). These policies protect against accidents, structural failure, and loss of life or property.",
+      "The program includes key coverage types such as Builders’ Liability Insurance (for ongoing construction projects).",
   },
   {
     question: "How can I register or verify compliance under Builders-Liability-AMMC?",
