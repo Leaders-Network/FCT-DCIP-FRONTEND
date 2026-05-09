@@ -656,9 +656,9 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             {/* Header */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Contractor Liability Policies</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Builders Liability Policies</h2>
                     <p className="text-gray-600">
-                        {isAdmin ? 'Manage all Contractor Liability Policy applications' : 'Your Contractor Liability Policy applications'}
+                        {isAdmin ? 'Manage all Builders Liability Policy applications' : 'Your Builders Liability Policy applications'}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
