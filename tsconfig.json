@@ -1,4 +1,4 @@
-{
+﻿{
   "compilerOptions": {
     "lib": [
       "dom",
@@ -16,7 +16,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "downlevelIteration": true,
+    "ignoreDeprecations": "5.0",
     "plugins": [
       {
         "name": "next"
@@ -38,3 +38,4 @@
     "node_modules"
   ]
 }
+
