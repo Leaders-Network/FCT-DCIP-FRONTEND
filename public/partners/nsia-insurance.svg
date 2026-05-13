@@ -1,0 +1,9 @@
+<svg width="240" height="88" viewBox="0 0 240 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="88" rx="22" fill="white"/>
+  <rect x="10" y="10" width="220" height="68" rx="16" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <path d="M32 54L45 34L58 54H50.8L45 43.6L39.2 54H32Z" fill="#0F172A"/>
+  <path d="M57 34H66V54H57V34Z" fill="#0EA5E9"/>
+  <circle cx="69" cy="44" r="10" fill="#EF4444"/>
+  <text x="88" y="42" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">NSIA</text>
+  <text x="88" y="61" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600">Insurance</text>
+</svg>

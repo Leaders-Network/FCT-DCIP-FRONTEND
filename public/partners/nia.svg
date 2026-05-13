@@ -1,0 +1,8 @@
+<svg width="240" height="88" viewBox="0 0 240 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="88" rx="22" fill="white"/>
+  <rect x="10" y="10" width="220" height="68" rx="16" fill="#ECFDF5" stroke="#A7F3D0"/>
+  <circle cx="48" cy="44" r="18" fill="#047857"/>
+  <path d="M40 51V37H44.2L51.8 46.5V37H56V51H51.8L44.2 41.5V51H40Z" fill="white"/>
+  <text x="82" y="42" fill="#064E3B" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">NIA</text>
+  <text x="82" y="61" fill="#047857" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700">Insurers Association</text>
+</svg>

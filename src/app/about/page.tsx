@@ -18,7 +18,7 @@ const AboutPage = () => {
         <div className="absolute inset-0 bg-black/70"></div>
         <div data-aos="zoom-in" className="relative z-10 text-center text-white px-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-3">
-            About FCT-DCIP
+            About Builders Liability Insurance in Abuja
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-[1.21rem]">
             Building safer communities through partnership, protection, and
@@ -36,7 +36,7 @@ const AboutPage = () => {
             </h2>
             <p className="text-gray-600 leading-relaxed mb-6 text-[1.2rem]">
               The <strong>Federal Capital Territory Development Control
-              Insurance Program (FCT-DCIP)</strong> is a strategic partnership
+              Insurance Program (Builders-Liability)</strong> is a strategic partnership
               initiative designed to foster collaboration between homeowners,
               builders, surveyors, insurers, and the{" "}
               <strong>Department of Development Control (DDC)</strong>. 
@@ -45,7 +45,7 @@ const AboutPage = () => {
               FCT.
             </p>
             <p className="text-gray-600 leading-relaxed text-[1.2rem]">
-              Through this partnership, the FCT-DCIP safeguards homeowners
+              Through this partnership, the Builders-Liability safeguards homeowners
               against potential losses arising from building collapse and other
               related incidents — strengthening public confidence in building
               integrity, promoting safety, and improving the overall security
@@ -63,7 +63,7 @@ const AboutPage = () => {
                 <div className="absolute inset-0 [backface-visibility:hidden]">
                   <Image
                     src="/bg-hero-1.jpg"
-                    alt="FCT-DCIP partnership initiative"
+                    alt="Builders-Liability partnership initiative"
                     fill
                     className="object-cover rounded-2xl"
                   />

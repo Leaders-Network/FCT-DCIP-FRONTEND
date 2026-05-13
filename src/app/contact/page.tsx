@@ -134,15 +134,15 @@ const ContactPage = () => {
             <div className="space-y-5 text-gray-700">
               <div>
                 <h4 className="font-semibold text-green-700">Address</h4>
-                <p>Zone 6, Julia Street, Wuse, Abuja Nigeria</p>
+                <p>Zone 6, Juba Street, Wuse, Development control Abuja</p>
               </div>
               <div>
                 <h4 className="font-semibold text-green-700">Phone</h4>
-                <p>+234 801 234 5678</p>
+                <p>+234 806 006 0826</p>
               </div>
               <div>
                 <h4 className="font-semibold text-green-700">Email</h4>
-                <p>info@Builders-Liability-AMMC.ng</p>
+                <p>dsasore01@gmail.com</p>
               </div>
               <div>
                 <h4 className="font-semibold text-green-700">Office Hours</h4>

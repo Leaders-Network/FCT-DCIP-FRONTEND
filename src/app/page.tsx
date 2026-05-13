@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import InsuranceOptions from "@/components/InsuranceOptions";
+import PartnersCarousel from "@/components/PartnersCarousel";
 import Stats from "@/components/Stats";
 
 import AOS from 'aos';
@@ -35,6 +36,7 @@ export default function Home() {
       <InsuranceOptions />
       <HowItWorks />
       <Stats />
+      <PartnersCarousel />
       <FAQ />
       <ContactForm />
       <Footer/>

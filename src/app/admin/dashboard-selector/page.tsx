@@ -69,7 +69,7 @@ export default function DashboardSelectorPage() {
             Welcome, Super Admin
           </h1>
           <p className="text-lg text-gray-600">
-            Select a dashboard to manage different aspects of the FCT-DCIP system
+            Select a dashboard to manage different aspects of the Builders-Liability system
           </p>
         </div>
 

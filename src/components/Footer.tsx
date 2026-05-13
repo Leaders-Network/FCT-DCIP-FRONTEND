@@ -14,10 +14,10 @@ const Footer = () => {
             src="/logo.svg" 
             height={32}
             width={32}
-            alt="FCT-DCIP Logo"
+            alt="Builders Liability Logo"
             priority
             />
-              FCT-DCIP
+              Builders Liability
             </Link>
             <p className="text-[1rem]">
               Protecting properties, and investments with comprehensive insurance solutions for a safer future.
@@ -63,15 +63,14 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Services</h4>
             <ul className="space-y-2">
-              <li>Occupier Liability Insurance</li>
               <li>Builders Liability Insurance</li>
             </ul>
           </div>
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
-            <p className="mb-2">1-800-123-4567</p>
-            <p className="mb-2">info@fct-dcip.ng</p>
-            <p>Zone 6, Julia Street, Wuse, Abuja</p>
+            <p className="mb-2">+234 806 006 0826</p>
+            <p className="mb-2">dsasore01@gmail.com</p>
+            <p>Zone 6, Juba Street, Wuse, Development control Abuja</p>
             <div className="flex space-x-4 mt-4">
               <a href="#" className="hover:text-green-300 transition-colors">
                 <Facebook />
@@ -90,7 +89,7 @@ const Footer = () => {
         </div>
         <div className="border-t border-green-700 mt-8 pt-8 text-center">
           <p>
-            &copy; {new Date().getFullYear()} FCT-DCIP. All rights reserved.
+            &copy; {new Date().getFullYear()} Builders-Liability. All rights reserved.
           </p>
         </div>
       </div>
