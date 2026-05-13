@@ -19,7 +19,7 @@ const InsuranceOptions = () => {
           </div>
           <div data-aos="fade-left" data-aos-anchor-placement="top-center" data-aos-delay="200" className="w-full md:w-1/2">
             <h2 className="text-3xl font-bold text-center mb-12">
-              About FCT-DCIP
+              About Builders liability
             </h2>
             <div className="border-2 p-4 rounded-lg">
               <div className="flex items-center mb-4 ">
@@ -37,11 +37,7 @@ const InsuranceOptions = () => {
             </div>
 
             <p className="text-gray-600 mt-6 text-[1.1rem]">
-              The FCT-DCIP is a partnership program that enables insurance
-              cooperation among homeowners, builders, surveyors, and the
-              Development Control Department. This program aims to protect home
-              owners from losses that may arise from building collapse, safety,
-              security and financial well-being of Abuja residents.
+             The Builders-Liability is a regulatory and insurance-driven initiative designed to enforce Builders Liability Insurance compliance within the FCT construction sector. It connects developers, homeowners, surveyors, insurers, and the Development Control Department to mitigate risks associated with building collapse, construction defects, property damage, and related liabilities while promoting safer and more accountable building practices.
             </p>
             <Link href="/about">
               <button className="mt-6 bg-green-600 font-semibold  rounded-md p-2 text-white transition-colors">
@@ -51,7 +47,8 @@ const InsuranceOptions = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 items-center justify-between mt-10">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 items-center justify-between mt-10">
+
           <div data-aos="fade-right" data-aos-anchor-placement="top-center" data-aos-delay="300">
             <h2 className="text-3xl font-bold text-green-600 mb-4">
               Our Insurance Option
@@ -67,7 +64,7 @@ const InsuranceOptions = () => {
           </div>
 
           <div data-aos="fade-left" data-aos-anchor-placement="top-center" data-aos-delay="500" className="grid grid-cols-1  gap-8">
-            {/* <div className="bg-gray-100 p-6 rounded-md">
+            <div className="bg-gray-100 p-6 rounded-md">
               <Image
                 width={100}
                 height={100}
@@ -86,7 +83,8 @@ const InsuranceOptions = () => {
                 Safety for Occupiers is our priority. Our comprehensive coverage
                 ensures your home and personal property are protected.
               </p>
-            </div> */}
+            </div>
+
             <div  className="bg-gray-100 p-6 rounded-md">
               <Image
                 width={100}
@@ -106,8 +104,11 @@ const InsuranceOptions = () => {
                 Section 64 of the insurance Act 2003
               </p>
             </div>
+
           </div>
+
         </div>
+         */}
       </div>
     </section>
   );

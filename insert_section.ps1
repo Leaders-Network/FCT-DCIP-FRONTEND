@@ -1,4 +1,4 @@
-$file = 'C:\Users\Bolajeee\Documents\LeadersNetwork\FCT-DCIP-FRONTEND\src\app\broker-admin\dashboard\page.tsx'
+$file = 'C:\Users\Bolajeee\Documents\LeadersNetwork\Builders-Liability-FRONTEND\src\app\broker-admin\dashboard\page.tsx'
 $content = [System.IO.File]::ReadAllText($file, [System.Text.Encoding]::UTF8)
 
 $search = "            {/* Claim Detail Modal - Same as claims page */}"

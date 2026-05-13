@@ -76,10 +76,10 @@ const Header = () => {
             src="/logo.svg" 
             height={32}
             width={32}
-            alt="FCT-DCIP Logo"
+            alt="Builders Liability Logo"
             priority
             />
-              FCT-DCIP
+              Builders Liability
             </Link>
 
             {/* Desktop menu */}
