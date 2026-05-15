@@ -154,6 +154,7 @@ const AdminDashboard: React.FC = () => {
       'District',
       'LGA',
       'Cover Type',
+      'Estimated Sum Range',
       'Sum Insured',
       'Payment Status',
       'Premium Amount (NGN)',
@@ -177,6 +178,7 @@ const AdminDashboard: React.FC = () => {
         csvEscape(project.district || ''),
         csvEscape(project.lga || ''),
         csvEscape(project.coverTypeIdxDetails || ''),
+        csvEscape(project.totalEstimateSumBand || ''),
         csvEscape(project.totalEstimateSum ?? ''),
         csvEscape(payment.status || ''),
         csvEscape(payment.amount ?? ''),
@@ -585,12 +587,14 @@ const AdminDashboard: React.FC = () => {
                     <div className="space-y-2">
                       {dashboardData.recentActivity.policies.slice(0, 3).map((policy: any) => {
                         const label =
+                          policy.client?.name ||
                           policy.builder?.nameOfBuilder ||
                           policy.builder?.customerEmail ||
                           policy.policyNumber ||
                           'Builder Liability Policy';
 
                         const meta =
+                          policy.project?.projectTitle ||
                           policy.project?.coverTypeIdxDetails ||
                           'Builder Liability';
 

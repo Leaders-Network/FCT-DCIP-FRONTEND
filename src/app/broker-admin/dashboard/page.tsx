@@ -28,6 +28,16 @@ import {
     ChevronRight
 } from 'lucide-react';
 import DashboardErrorBanner from '@/components/shared/DashboardErrorBanner';
+import {
+    getDisplayValue,
+    getProfessionalBody,
+    getProfessionalRegistrationNumber,
+    getProjectAddress,
+    getProjectDistrict,
+    getProjectEstimateBand,
+    getProjectLga,
+    getProjectTitle
+} from '@/utils/builderLiability';
 import type {
     BrokerDashboardData,
     BrokerPolicyRequest,
@@ -670,7 +680,7 @@ export default function BrokerAdminDashboard() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Builder Name</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGA</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sum Insured (N)</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estimated Sum Range</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />Insurance Company</span>
                                 </th>
@@ -715,10 +725,16 @@ export default function BrokerAdminDashboard() {
                                             <td className="px-6 py-4 text-sm text-gray-600">
                                                 {policy.project.lga || 'N/A'}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                                                {policy.project.totalEstimateSum != null
-                                                    ? formatCurrency(Number(policy.project.totalEstimateSum))
-                                                    : 'N/A'}
+                                            <td className="px-6 py-4 text-sm text-gray-900">
+                                                <div className="font-medium">
+                                                    {getProjectEstimateBand(policy.project) || 'Not provided'}
+                                                </div>
+                                                <div className="mt-1 text-xs text-gray-500">
+                                                    Stored ceiling:{' '}
+                                                    {policy.project.totalEstimateSum != null
+                                                        ? formatCurrency(Number(policy.project.totalEstimateSum))
+                                                        : 'N/A'}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
                                                 {brokerCompany ? (
@@ -838,9 +854,12 @@ export default function BrokerAdminDashboard() {
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                            <p className="text-xs uppercase tracking-wide text-gray-500">Sum Insured</p>
+                                            <p className="text-xs uppercase tracking-wide text-gray-500">Estimated Sum Range</p>
                                             <p className="mt-2 text-sm font-semibold text-gray-900">
-                                                {formatCurrency(selectedCompletedPolicy.project.totalEstimateSum)}
+                                                {getProjectEstimateBand(selectedCompletedPolicy.project) || 'Range not provided'}
+                                            </p>
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                Stored ceiling: {formatCurrency(selectedCompletedPolicy.project.totalEstimateSum)}
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -852,12 +871,16 @@ export default function BrokerAdminDashboard() {
                                     </div>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                        <SectionCard icon={User} title="Builder">
-                                            <KeyValue label="Builder" value={selectedCompletedPolicy.builder.nameOfBuilder} />
+                                        <SectionCard icon={User} title="Contractor & Client">
+                                            <KeyValue label="Contractor" value={selectedCompletedPolicy.builder.nameOfBuilder} />
                                             <KeyValue label="RC Number" value={selectedCompletedPolicy.builder.rcNumber} />
                                             <KeyValue label="Email" value={selectedCompletedPolicy.builder.customerEmail} />
                                             <KeyValue label="Phone" value={selectedCompletedPolicy.builder.telNo} />
                                             <KeyValue label="Address" value={selectedCompletedPolicy.builder.address} />
+                                            <KeyValue label="Client Name" value={selectedCompletedPolicy.client?.name || 'Not provided'} />
+                                            <KeyValue label="Client Email" value={selectedCompletedPolicy.client?.email || 'Not provided'} />
+                                            <KeyValue label="Client Phone" value={selectedCompletedPolicy.client?.phoneNumber || 'Not provided'} />
+                                            <KeyValue label="Client RC Number" value={selectedCompletedPolicy.client?.rcNumber || 'Not provided'} />
                                             <KeyValue
                                                 label="Identification"
                                                 value={selectedCompletedPolicy.builder.identification
@@ -867,15 +890,24 @@ export default function BrokerAdminDashboard() {
                                         </SectionCard>
 
                                         <SectionCard icon={Layers} title="Project">
+                                            <KeyValue label="Property Title" value={getDisplayValue(getProjectTitle(selectedCompletedPolicy.project))} />
                                             <KeyValue label="Cover Type" value={selectedCompletedPolicy.project.coverTypeIdxDetails} />
+                                            <KeyValue label="Estimated Sum Range" value={getProjectEstimateBand(selectedCompletedPolicy.project) || 'Not provided'} />
                                             <KeyValue label="Category" value={selectedCompletedPolicy.project.categoryOfContractorId} />
-                                            <KeyValue label="Location" value={selectedCompletedPolicy.project.address || 'N/A'} />
-                                            <KeyValue label="District / LGA" value={`${selectedCompletedPolicy.project.district || 'N/A'} / ${selectedCompletedPolicy.project.lga || 'N/A'}`} />
+                                            <KeyValue label="Plot Number" value={selectedCompletedPolicy.project.plotNumber || selectedCompletedPolicy.project.agisNo || 'Not provided'} />
+                                            <KeyValue label="Cadastral Zone" value={selectedCompletedPolicy.project.cadastralZone || 'Not provided'} />
+                                            <KeyValue label="Location" value={getDisplayValue(getProjectAddress(selectedCompletedPolicy.project, selectedCompletedPolicy.builder))} />
+                                            <KeyValue label="District / LGA" value={`${getDisplayValue(getProjectDistrict(selectedCompletedPolicy.project))} / ${getDisplayValue(getProjectLga(selectedCompletedPolicy.project))}`} />
                                             <KeyValue label="Work Details" value={selectedCompletedPolicy.project.workDetails || 'N/A'} />
                                             <KeyValue label="Extra Hazardous" value={selectedCompletedPolicy.project.extraHazardous ? 'Yes' : 'No'} />
                                         </SectionCard>
 
-                                        <SectionCard icon={Building2} title="Organization">
+                                        <SectionCard icon={Building2} title="Consultant">
+                                            <KeyValue label="Professional Body" value={getDisplayValue(getProfessionalBody(selectedCompletedPolicy.organization))} />
+                                            <KeyValue label="Registration Number" value={getDisplayValue(getProfessionalRegistrationNumber(selectedCompletedPolicy.organization))} />
+                                            {getProfessionalBody(selectedCompletedPolicy.organization) === 'Other' && (
+                                                <KeyValue label="Other Body Name" value={selectedCompletedPolicy.organization.otherProfessionalBodyName || 'Not provided'} />
+                                            )}
                                             <KeyValue label="Specialization" value={selectedCompletedPolicy.organization.areaOfSpecialization || 'N/A'} />
                                             <KeyValue
                                                 label="Year of Incorporation"
@@ -883,8 +915,7 @@ export default function BrokerAdminDashboard() {
                                                     ? formatDate(String(selectedCompletedPolicy.organization.yearOfIncorporation))
                                                     : 'N/A'}
                                             />
-                                            <KeyValue label="Permanent Staff" value={selectedCompletedPolicy.organization.noOfPermanentStaff} />
-                                            <KeyValue label="NIOB Registration" value={selectedCompletedPolicy.organization.niobRegNo || 'N/A'} />
+                                            <KeyValue label="Permanent Staff" value={selectedCompletedPolicy.organization.noOfPermanentStaff ?? selectedCompletedPolicy.organization.permanentStaffCount} />
                                         </SectionCard>
 
                                         <SectionCard icon={DollarSign} title="Payment">

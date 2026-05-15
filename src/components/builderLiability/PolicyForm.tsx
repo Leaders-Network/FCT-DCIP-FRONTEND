@@ -7,8 +7,11 @@ import {
     BuilderLiabilityPolicyData,
     BuilderLiabilityCoverageType,
     BUILDER_LIABILITY_COVERAGE_TYPES,
+    CLIENT_IDENTIFICATION_TYPES,
     CategoryOfWorkmen,
-    Professional
+    PROFESSIONAL_BODY_OPTIONS,
+    Professional,
+    TOTAL_ESTIMATE_SUM_BANDS
 } from '@/types/builderLiabilityPolicy.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,13 +24,14 @@ import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Plus, Trash2 } fro
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FCT_LOCATIONS, getDistrictsByLGA } from '@/constants/fctLocations';
 import { toast } from "sonner";
+import { getEstimateAmountFromBand } from '@/utils/builderLiability';
 
 interface PolicyFormProps {
     onSuccess?: (policyId: string) => void;
     onCancel?: () => void;
 }
 
-const FORM_TABS = ['builder', 'organization', 'membership', 'workforce', 'compliance', 'project'] as const;
+const FORM_TABS = ['builder', 'client', 'organization', 'membership', 'workforce', 'compliance', 'project'] as const;
 type FormTab = (typeof FORM_TABS)[number];
 
 // Display labels use contractor/consultant terminology even when internal names remain backward-compatible.
@@ -48,8 +52,19 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         builderAddress: '',
         builderPhone: '',
 
+        // Client Info
+        clientName: '',
+        clientEmail: '',
+        clientPhoneNumber: '',
+        clientIdentificationType: 'National ID',
+        clientIdentificationNumber: '',
+        clientAddress: '',
+        clientRcNumber: '',
+
         // Consultant Info
-        niobRegNumber: '',
+        professionalBody: 'Nigerian Institute of Building (NIOB)',
+        professionalRegistrationNumber: '',
+        otherProfessionalBodyName: '',
         yearOfIncorporation: '',
         areaOfSpecialization: '',
         permanentStaffCount: 0,
@@ -86,8 +101,14 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         contractorCategoryId: 1,
         extraHazardous: false,
         totalEstimateSum: 0,
+        totalEstimateSumBand: '',
         agisNo: '',
+        projectTitle: '',
         workDetails: '',
+        projectAddress: '',
+        projectLga: '',
+        projectDistrict: '',
+        cadastralZone: '',
 
         // Meta Info
         // NIIP Builder's Liability product
@@ -102,15 +123,14 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     const [activeTab, setActiveTab] = useState<FormTab>('builder');
     const [tabErrors, setTabErrors] = useState<Partial<Record<FormTab, string[]>>>({});
 
-    // Project location fields (kept separate to avoid Type issues if types were reverted)
-    const [projectAddress, setProjectAddress] = useState<string>('');
-    const [projectLga, setProjectLga] = useState<string>('');
-    const [projectDistrict, setProjectDistrict] = useState<string>('');
-
     const isLastTab = activeTab === FORM_TABS[FORM_TABS.length - 1];
 
     const isBlank = (value: unknown) => String(value ?? '').trim().length === 0;
     const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    const isValidPhoneNumber = (phone: string) => {
+        const normalizedPhone = phone.replace(/[\s()-]/g, '');
+        return /^(?:\+?\d{10,15}|0\d{10}|234\d{10})$/.test(normalizedPhone);
+    };
     const isValidNumber = (value: unknown) => {
         if (typeof value === 'string' && value.trim() === '') {
             return false;
@@ -127,14 +147,45 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 errors.push('A valid Email Address is required.');
             }
             if (isBlank(formData.rcNumber)) errors.push('RC Number is required.');
-            if (isBlank(formData.builderPhone)) errors.push('Phone Number is required.');
+            if (isBlank(formData.builderPhone) || !isValidPhoneNumber(formData.builderPhone)) {
+                errors.push('A valid phone number is required.');
+            }
             if (isBlank(formData.identificationNumber)) errors.push('Identification Number is required.');
             if (isBlank(formData.builderAddress) || String(formData.builderAddress).trim().length < 10) {
                 errors.push('Address is required and should be at least 10 characters.');
             }
         }
 
+        if (tab === 'client') {
+            if (isBlank(formData.clientName)) errors.push('Client name is required.');
+            if (isBlank(formData.clientEmail) || !isValidEmail(formData.clientEmail)) {
+                errors.push('A valid client email address is required.');
+            }
+            if (isBlank(formData.clientPhoneNumber) || !isValidPhoneNumber(formData.clientPhoneNumber)) {
+                errors.push('A valid client phone number is required.');
+            }
+            if (isBlank(formData.clientIdentificationType)) {
+                errors.push('Client identification type is required.');
+            }
+            if (isBlank(formData.clientIdentificationNumber)) {
+                errors.push('Client identification number is required.');
+            }
+            if (isBlank(formData.clientAddress) || String(formData.clientAddress).trim().length < 10) {
+                errors.push('Client address is required and should be at least 10 characters.');
+            }
+        }
+
         if (tab === 'organization') {
+            if (isBlank(formData.professionalBody)) errors.push('Professional Body is required.');
+            if (isBlank(formData.professionalRegistrationNumber)) {
+                errors.push('Professional Registration Number is required.');
+            }
+            if (
+                formData.professionalBody === 'Other' &&
+                isBlank(formData.otherProfessionalBodyName)
+            ) {
+                errors.push('Other Professional Body Name is required when Professional Body is Other.');
+            }
             if (isBlank(formData.yearOfIncorporation)) errors.push('Year of Incorporation is required.');
             if (!isValidNumber(formData.permanentStaffCount) || Number(formData.permanentStaffCount) < 0) {
                 errors.push('Number of Permanent Staff must be 0 or greater.');
@@ -216,13 +267,15 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             if (!isValidNumber(formData.contractorCategoryId) || Number(formData.contractorCategoryId) <= 0) {
                 errors.push('Contractor Category is required.');
             }
-            if (!isValidNumber(formData.totalEstimateSum) || Number(formData.totalEstimateSum) < 0) {
-                errors.push('Total Estimate Sum must be 0 or greater.');
+            if (isBlank(formData.totalEstimateSumBand)) {
+                errors.push('Estimated Sum Range is required.');
             }
+            if (isBlank(formData.projectTitle)) errors.push('Property Title is required.');
             if (isBlank(formData.workDetails)) errors.push('Work Details are required.');
-            if (isBlank(projectAddress)) errors.push('Project Address is required.');
-            if (isBlank(projectLga)) errors.push('Project LGA is required.');
-            if (isBlank(projectDistrict)) errors.push('Project District is required.');
+            if (isBlank(formData.projectAddress)) errors.push('Project Address is required.');
+            if (isBlank(formData.projectLga)) errors.push('Project LGA is required.');
+            if (isBlank(formData.projectDistrict)) errors.push('Project District is required.');
+            if (isBlank(formData.cadastralZone)) errors.push('Cadastral Zone is required.');
         }
 
         return errors;
@@ -264,13 +317,23 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
     const formIsComplete = React.useMemo(
         () => FORM_TABS.every((tab) => getTabValidationErrors(tab).length === 0),
-        [formData, projectAddress, projectLga, projectDistrict]
+        [formData]
     );
 
     const handleInputChange = (field: keyof BuilderLiabilityPolicyFormData, value: string | number | boolean | CategoryOfWorkmen[] | Professional[]) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
+        }));
+    };
+
+    const handleEstimateBandChange = (value: string) => {
+        const amount = getEstimateAmountFromBand(value);
+
+        setFormData((prev) => ({
+            ...prev,
+            totalEstimateSumBand: value as BuilderLiabilityPolicyFormData['totalEstimateSumBand'],
+            totalEstimateSum: amount ?? prev.totalEstimateSum
         }));
     };
 
@@ -363,11 +426,30 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 address: formData.builderAddress,
                 telNo: formData.builderPhone
             },
+            client: {
+                name: formData.clientName,
+                email: formData.clientEmail,
+                phoneNumber: formData.clientPhoneNumber,
+                identificationType: formData.clientIdentificationType,
+                identificationNumber: formData.clientIdentificationNumber,
+                address: formData.clientAddress,
+                rcNumber: formData.clientRcNumber || undefined
+            },
             organization: {
-                niobRegNo: formData.niobRegNumber,
+                professionalBody: formData.professionalBody || undefined,
+                professionalRegistrationNumber: formData.professionalRegistrationNumber,
+                otherProfessionalBodyName:
+                    formData.professionalBody === 'Other'
+                        ? formData.otherProfessionalBodyName || undefined
+                        : undefined,
+                niobRegNo:
+                    formData.professionalBody === 'Nigerian Institute of Building (NIOB)'
+                        ? formData.professionalRegistrationNumber
+                        : undefined,
                 yearOfIncorporation: new Date(formData.yearOfIncorporation),
                 areaOfSpecialization: formData.areaOfSpecialization,
-                noOfPermanentStaff: formData.permanentStaffCount
+                noOfPermanentStaff: formData.permanentStaffCount,
+                permanentStaffCount: formData.permanentStaffCount
             },
             membership: {
                 MembershipStatusId: formData.membershipStatusId,
@@ -400,12 +482,21 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 coverTypeIdxDetails: formData.coverTypeDetails,
                 categoryOfContractorId: formData.contractorCategoryId,
                 extraHazardous: formData.extraHazardous,
+                totalEstimateSumBand: formData.totalEstimateSumBand || undefined,
                 totalEstimateSum: formData.totalEstimateSum,
+                totalEstimatedSum: formData.totalEstimateSum,
                 agisNo: formData.agisNo,
+                plotNumber: formData.agisNo,
+                projectTitle: formData.projectTitle,
+                projectName: formData.projectTitle,
                 workDetails: formData.workDetails,
-                address: projectAddress,
-                lga: projectLga,
-                district: projectDistrict
+                address: formData.projectAddress,
+                projectAddress: formData.projectAddress,
+                lga: formData.projectLga,
+                projectLga: formData.projectLga,
+                district: formData.projectDistrict,
+                projectDistrict: formData.projectDistrict,
+                cadastralZone: formData.cadastralZone
             },
             meta: {
                 ProductId: formData.productId,
@@ -474,7 +565,10 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     <form onSubmit={handleSubmit}>
                         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as FormTab)}>
                             <div className="w-full overflow-x-auto">
-                                <TabsList className="flex md:grid md:grid-cols-6 w-max md:w-full min-w-max md:min-w-0">
+                                <TabsList className="flex md:grid md:grid-cols-7 w-max md:w-full min-w-max md:min-w-0">
+                                    <TabsTrigger value="client" className="whitespace-nowrap text-xs sm:text-sm">
+                                        Client 
+                                    </TabsTrigger>
                                     <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
                                         Contractor
                                     </TabsTrigger>
@@ -496,6 +590,107 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                 </TabsList>
                             </div>
 
+                             <TabsContent value="client" className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="clientName">Client/Individual Name or Company Name *</Label>
+                                        <Input
+                                            id="clientName"
+                                            value={formData.clientName}
+                                            onChange={(e) => handleInputChange('clientName', e.target.value)}
+                                            placeholder="Enter client name or company name"
+                                            required
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Input the property owner or client requiring the insurance cover.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientEmail">Client Email Address *</Label>
+                                        <Input
+                                            id="clientEmail"
+                                            type="email"
+                                            value={formData.clientEmail}
+                                            onChange={(e) => handleInputChange('clientEmail', e.target.value)}
+                                            placeholder="Enter client email address"
+                                            required
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            This email will be used for client-facing communication and documentation.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientPhoneNumber">Client Phone Number *</Label>
+                                        <Input
+                                            id="clientPhoneNumber"
+                                            value={formData.clientPhoneNumber}
+                                            onChange={(e) => handleInputChange('clientPhoneNumber', e.target.value)}
+                                            placeholder="Enter client phone number"
+                                            required
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Use a valid Nigerian or international phone number for the client.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientIdentificationType">Client Identification Type *</Label>
+                                        <Select
+                                            value={formData.clientIdentificationType}
+                                            onValueChange={(value) => handleInputChange('clientIdentificationType', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select identification type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {CLIENT_IDENTIFICATION_TYPES.map((identificationType) => (
+                                                    <SelectItem key={identificationType} value={identificationType}>
+                                                        {identificationType}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Select the client&apos;s primary identification document.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientIdentificationNumber">Client Identification Number *</Label>
+                                        <Input
+                                            id="clientIdentificationNumber"
+                                            value={formData.clientIdentificationNumber}
+                                            onChange={(e) => handleInputChange('clientIdentificationNumber', e.target.value)}
+                                            placeholder="Enter identification number"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="clientRcNumber">Client RC Number</Label>
+                                        <Input
+                                            id="clientRcNumber"
+                                            value={formData.clientRcNumber}
+                                            onChange={(e) => handleInputChange('clientRcNumber', e.target.value)}
+                                            placeholder="Enter RC number if client is a registered company"
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Optional for incorporated companies only.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="clientAddress">Client Address *</Label>
+                                    <Textarea
+                                        id="clientAddress"
+                                        value={formData.clientAddress}
+                                        onChange={(e) => handleInputChange('clientAddress', e.target.value)}
+                                        placeholder="Enter client address"
+                                        required
+                                    />
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Enter the mailing or registered address of the client/property owner.
+                                    </p>
+                                </div>
+                            </TabsContent>
+
                             <TabsContent value="builder" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -506,6 +701,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             onChange={(e) => handleInputChange('builderName', e.target.value)}
                                             required
                                         />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Enter the contractor or construction company handling the work.
+                                        </p>
                                     </div>
                                     <div>
                                         <Label htmlFor="builderEmail">Email Address *</Label>
@@ -516,6 +714,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             onChange={(e) => handleInputChange('builderEmail', e.target.value)}
                                             required
                                         />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Provide the contractor&apos;s primary email address for project communication.
+                                        </p>
                                     </div>
                                     <div>
                                         <Label htmlFor="rcNumber">RC Number *</Label>
@@ -525,9 +726,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             onChange={(e) => handleInputChange('rcNumber', e.target.value)}
                                             required
                                         />
-                                                                                   <p className="mt-1 text-sm text-gray-500">
-                                            Input the Organizations RC number (Registered Company Number)                                        
-                                            </p>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Input the organization&apos;s registered company number.
+                                        </p>
                                     </div>
                                     <div>
                                         <Label htmlFor="builderPhone">Phone Number *</Label>
@@ -537,6 +738,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             onChange={(e) => handleInputChange('builderPhone', e.target.value)}
                                             required
                                         />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Enter a valid Nigerian or international contact number.
+                                        </p>
                                     </div>
                                     <div>
                                         <Label htmlFor="identificationType">Identification Type *</Label>
@@ -576,22 +780,60 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         onChange={(e) => handleInputChange('builderAddress', e.target.value)}
                                         required
                                     />
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Provide the contractor&apos;s official contact address.
+                                    </p>
                                 </div>
-                            </TabsContent>
+                            </TabsContent>                          
 
                             <TabsContent value="organization" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <Label htmlFor="niobRegNumber">NIOB Registration Number</Label>
-                                        <Input
-                                            id="niobRegNumber"
-                                            value={formData.niobRegNumber}
-                                            onChange={(e) => handleInputChange('niobRegNumber', e.target.value)}
-                                        />
-                                                                                <p className="mt-1 text-sm text-gray-500">
-                                            Input the Consultant's Nigerian Institute of Building (NIOB) registration number.
+                                        <Label htmlFor="professionalBody">Professional Body *</Label>
+                                        <Select
+                                            value={formData.professionalBody}
+                                            onValueChange={(value) => handleInputChange('professionalBody', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select professional body" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {PROFESSIONAL_BODY_OPTIONS.map((professionalBody) => (
+                                                    <SelectItem key={professionalBody} value={professionalBody}>
+                                                        {professionalBody}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Select the consultant&apos;s recognized professional body.
                                         </p>
                                     </div>
+                                    <div>
+                                        <Label htmlFor="professionalRegistrationNumber">Professional Registration Number *</Label>
+                                        <Input
+                                            id="professionalRegistrationNumber"
+                                            value={formData.professionalRegistrationNumber}
+                                            onChange={(e) => handleInputChange('professionalRegistrationNumber', e.target.value)}
+                                            placeholder="Enter consultant's professional registration number"
+                                            required
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Enter the registration number issued by the selected professional body.
+                                        </p>
+                                    </div>
+                                    {formData.professionalBody === 'Other' && (
+                                        <div>
+                                            <Label htmlFor="otherProfessionalBodyName">Other Professional Body Name *</Label>
+                                            <Input
+                                                id="otherProfessionalBodyName"
+                                                value={formData.otherProfessionalBodyName}
+                                                onChange={(e) => handleInputChange('otherProfessionalBodyName', e.target.value)}
+                                                placeholder="Enter professional body name"
+                                                required
+                                            />
+                                        </div>
+                                    )}
                                     <div>
                                         <Label htmlFor="yearOfIncorporation">Year of Incorporation *</Label>
                                         <Input
@@ -608,6 +850,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             id="areaOfSpecialization"
                                             value={formData.areaOfSpecialization}
                                             onChange={(e) => handleInputChange('areaOfSpecialization', e.target.value)}
+                                            placeholder="e.g. Structural engineering"
                                         />
                                     </div>
                                     <div>
@@ -617,7 +860,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             type="number"
                                             min="0"
                                             value={formData.permanentStaffCount}
-                                            onChange={(e) => handleInputChange('permanentStaffCount', parseInt(e.target.value) || "")}
+                                            onChange={(e) => handleInputChange('permanentStaffCount', parseInt(e.target.value, 10) || 0)}
                                             required
                                         />
                                     </div>
@@ -1122,15 +1365,25 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <Label htmlFor="totalEstimateSum">Total Estimate Sum (₦) *</Label>
-                                        <Input
-                                            id="totalEstimateSum"
-                                            type="number"
-                                            min="0"
-                                            value={formData.totalEstimateSum}
-                                            onChange={(e) => handleInputChange('totalEstimateSum', parseFloat(e.target.value) || "")}
-                                            required
-                                        />
+                                        <Label htmlFor="totalEstimateSumBand">Estimated Sum Range *</Label>
+                                        <Select
+                                            value={formData.totalEstimateSumBand || undefined}
+                                            onValueChange={handleEstimateBandChange}
+                                        >
+                                            <SelectTrigger id="totalEstimateSumBand">
+                                                <SelectValue placeholder="Select estimated project sum range" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {TOTAL_ESTIMATE_SUM_BANDS.map((band) => (
+                                                    <SelectItem key={band} value={band}>
+                                                        {band}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Select the project&apos;s estimated sum band. The matching ceiling value is stored automatically for premium calculation.
+                                        </p>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <input
@@ -1152,6 +1405,19 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             placeholder="Enter plot number"
                                         />
                                     </div>
+                                    <div>
+                                        <Label htmlFor="projectTitle">Property Title *</Label>
+                                        <Input
+                                            id="projectTitle"
+                                            value={formData.projectTitle}
+                                            onChange={(e) => handleInputChange('projectTitle', e.target.value)}
+                                            placeholder="Enter property title"
+                                            required
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Enter the title or identifying name for this property.
+                                        </p>
+                                    </div>
                                 </div>
                                 <div>
                                     <Label htmlFor="workDetails">Work Details *</Label>
@@ -1168,15 +1434,21 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         <Label htmlFor="projectAddress">Project Address *</Label>
                                         <Textarea
                                             id="projectAddress"
-                                            value={projectAddress}
-                                            onChange={(e) => setProjectAddress(e.target.value)}
+                                            value={formData.projectAddress}
+                                            onChange={(e) => handleInputChange('projectAddress', e.target.value)}
                                             placeholder="Full project/site address"
                                             required
                                         />
                                     </div>
                                     <div>
                                         <Label htmlFor="projectLga">Project LGA *</Label>
-                                        <Select value={projectLga} onValueChange={setProjectLga}>
+                                        <Select
+                                            value={formData.projectLga}
+                                            onValueChange={(value) => {
+                                                handleInputChange('projectLga', value);
+                                                handleInputChange('projectDistrict', '');
+                                            }}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select LGA" />
                                             </SelectTrigger>
@@ -1191,18 +1463,35 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                     </div>
                                     <div>
                                         <Label htmlFor="projectDistrict">Project District *</Label>
-                                        <Select value={projectDistrict} onValueChange={setProjectDistrict} disabled={!projectLga}>
-                                            <SelectTrigger disabled={!projectLga}>
-                                                <SelectValue placeholder={projectLga ? "Select District" : "Select LGA first"} />
+                                        <Select
+                                            value={formData.projectDistrict}
+                                            onValueChange={(value) => handleInputChange('projectDistrict', value)}
+                                            disabled={!formData.projectLga}
+                                        >
+                                            <SelectTrigger disabled={!formData.projectLga}>
+                                                <SelectValue placeholder={formData.projectLga ? "Select District" : "Select LGA first"} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {projectLga && getDistrictsByLGA(projectLga).map((district) => (
+                                                {formData.projectLga && getDistrictsByLGA(formData.projectLga).map((district) => (
                                                     <SelectItem key={district.value} value={district.value}>
                                                         {district.label}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="cadastralZone">Cadastral Zone *</Label>
+                                        <Input
+                                            id="cadastralZone"
+                                            value={formData.cadastralZone}
+                                            onChange={(e) => handleInputChange('cadastralZone', e.target.value)}
+                                            placeholder="Enter cadastral zone"
+                                            required
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Provide the cadastral zone for the project site.
+                                        </p>
                                     </div>
                                 </div>
                             </TabsContent>
