@@ -14,11 +14,57 @@ export interface BuilderIdentity {
     telNo: string;
 }
 
+export type ClientIdentificationType =
+    | 'National ID'
+    | "Voter's Card"
+    | "Driver's License"
+    | 'International Passport'
+    | 'CAC / RC Number'
+    | 'Other';
+
+export const CLIENT_IDENTIFICATION_TYPES: ClientIdentificationType[] = [
+    'National ID',
+    "Voter's Card",
+    "Driver's License",
+    'International Passport',
+    'CAC / RC Number',
+    'Other'
+];
+
+export interface ClientInfo {
+    name: string;
+    email: string;
+    phoneNumber: string;
+    identificationType: ClientIdentificationType;
+    identificationNumber: string;
+    address: string;
+    rcNumber?: string;
+}
+
+export type ProfessionalBody =
+    | 'Nigerian Institute of Building (NIOB)'
+    | 'Nigerian Society of Engineers (NSE)'
+    | 'Nigerian Insurers Association (NIA)'
+    | 'Nigerian Institute of Town Planners (NITP)'
+    | 'Other';
+
+export const PROFESSIONAL_BODY_OPTIONS: ProfessionalBody[] = [
+    'Nigerian Institute of Building (NIOB)',
+    'Nigerian Society of Engineers (NSE)',
+    'Nigerian Insurers Association (NIA)',
+    'Nigerian Institute of Town Planners (NITP)',
+    'Other'
+];
+
 export interface OrganizationInfo {
+    professionalBody?: ProfessionalBody;
+    professionalRegistrationNumber?: string;
+    otherProfessionalBodyName?: string;
     niobRegNo?: string;
     yearOfIncorporation: Date | string;
     areaOfSpecialization?: string;
     noOfPermanentStaff: number;
+    permanentStaffCount?: number;
 }
 
 export interface MembershipInfo {
@@ -79,18 +125,44 @@ export const BUILDER_LIABILITY_COVERAGE_TYPES: BuilderLiabilityCoverageType[] = 
     'Professional Indemnity'
 ];
 
+export type TotalEstimateSumBand =
+    | '0 - 50 million'
+    | '50 - 100 million'
+    | '100 - 500 million'
+    | '500 million and above';
+
+export const TOTAL_ESTIMATE_SUM_BANDS: TotalEstimateSumBand[] = [
+    '0 - 50 million',
+    '50 - 100 million',
+    '100 - 500 million',
+    '500 million and above'
+];
+
 export interface ProjectInfo {
     coverTypeIdx: boolean;
     isStatutory?: boolean;
+    isStatutoryCover?: boolean;
     coverTypeIdxDetails: BuilderLiabilityCoverageType;
+    coverageType?: BuilderLiabilityCoverageType;
     categoryOfContractorId: number;
+    contractorCategory?: number;
     extraHazardous: boolean;
+    extraHazardousWork?: boolean;
     totalEstimateSum: number;
+    totalEstimatedSum?: number;
+    totalEstimateSumBand?: TotalEstimateSumBand;
     agisNo?: string;
+    plotNumber?: string;
+    projectTitle?: string;
+    projectName?: string;
     workDetails?: string;
     address?: string;
+    projectAddress?: string;
     lga?: string;
+    projectLga?: string;
     district?: string;
+    projectDistrict?: string;
+    cadastralZone?: string;
 }
 
 export interface MetaInfo {
@@ -194,6 +266,7 @@ export type BuilderLiabilityPolicyPriority = 'low' | 'medium' | 'high' | 'urgent
 export interface BuilderLiabilityPolicyData {
     userId?: string;
     builder: BuilderIdentity;
+    client: ClientInfo;
     organization: OrganizationInfo;
     membership: MembershipInfo;
     workforce: WorkforceInfo;
@@ -360,8 +433,19 @@ export interface BuilderLiabilityPolicyFormData {
     builderAddress: string;
     builderPhone: string;
 
+    // Client Info
+    clientName: string;
+    clientEmail: string;
+    clientPhoneNumber: string;
+    clientIdentificationType: ClientIdentificationType;
+    clientIdentificationNumber: string;
+    clientAddress: string;
+    clientRcNumber?: string;
+
     // Organization Info
-    niobRegNumber?: string;
+    professionalBody: ProfessionalBody | '';
+    professionalRegistrationNumber: string;
+    otherProfessionalBodyName?: string;
     yearOfIncorporation: string;
     areaOfSpecialization?: string;
     permanentStaffCount: number;
@@ -397,8 +481,14 @@ export interface BuilderLiabilityPolicyFormData {
     contractorCategoryId: number;
     extraHazardous: boolean;
     totalEstimateSum: number;
+    totalEstimateSumBand: TotalEstimateSumBand | '';
     agisNo?: string;
+    projectTitle: string;
     workDetails?: string;
+    projectAddress: string;
+    projectLga: string;
+    projectDistrict: string;
+    cadastralZone: string;
 
     // Meta Info
     productId: number;
@@ -412,6 +502,7 @@ export interface BuilderLiabilityPolicyFormData {
 // Utility Types
 export type PolicySection =
     | 'builder'
+    | 'client'
     | 'organization'
     | 'membership'
     | 'workforce'

@@ -6,6 +6,7 @@ import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.type
 import { builderLiabilityPolicyAPI, userReportAPI } from "@/services/api";
 import MergedReportDetailsModal from "@/components/user/MergedReportDetailsModal";
 import { toast } from "sonner";
+import { getProjectEstimateBand } from "@/utils/builderLiability";
 
 interface PolicyCompletionProps { }
 
@@ -15,6 +16,7 @@ interface CompletedPolicy {
     propertyType: string;
     address: string;
     buildingValue: number;
+    totalEstimateSumBand?: string;
   };
   requestDetails: {
     coverageType: string;
@@ -57,6 +59,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       propertyType: policy.project?.coverTypeIdxDetails || "Builder Liability",
       address: policy.project?.address || policy.builder?.address || "N/A",
       buildingValue: Number(policy.project?.totalEstimateSum || 0),
+      totalEstimateSumBand: getProjectEstimateBand(policy.project) || undefined,
     },
     requestDetails: {
       coverageType: policy.project?.coverTypeIdxDetails || "N/A",
@@ -438,6 +441,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       <p><span className="font-medium">Coverage:</span> {policy.requestDetails.coverageType}</p>
                       <p><span className="font-medium">Duration:</span> {policy.requestDetails.policyDuration}</p>
                       <p><span className="font-medium">Building Value:</span> ₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                      <p><span className="font-medium">Estimated Sum Range:</span> {policy.propertyDetails.totalEstimateSumBand || 'Not provided'}</p>
                     </div>
                   </div>
 
@@ -620,6 +624,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                       <p><span className="font-medium">Coverage:</span> {policy.requestDetails.coverageType}</p>
                       <p><span className="font-medium">Duration:</span> {policy.requestDetails.policyDuration}</p>
                       <p><span className="font-medium">Building Value:</span> ₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                      <p><span className="font-medium">Estimated Sum Range:</span> {policy.propertyDetails.totalEstimateSumBand || 'Not provided'}</p>
                     </div>
                   </div>
 

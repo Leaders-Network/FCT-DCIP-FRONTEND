@@ -2,41 +2,21 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw, Download } from "lucide-react";
 import { Assignment, SurveySubmissionData, SurveySubmissionResult, DualAssignment } from "@/types/api.types";
+import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { useRouter } from "next/navigation";
 import SurveySubmissionModal from "./SurveySubmissionModal";
 import SurveySubmissionConfirmation from "./SurveySubmissionConfirmation";
 import { downloadSubmissionZipByAssignment } from "@/services/api";
+import {
+  getProjectAddress,
+  getProjectDistrict,
+  getProjectEstimateBand,
+  getProjectLga,
+  getProjectTitle
+} from "@/utils/builderLiability";
 
 interface AssignmentDetailProps {
   assignmentId: string;
-}
-
-// Use BuilderLiabilityPolicy directly from types
-interface BuilderLiabilityPolicy {
-  _id: string;
-  policyNumber: string;
-  builder: {
-    nameOfBuilder: string;
-    customerEmail: string;
-    address: string;
-    telNo?: string;
-  };
-  project: {
-    lga: string;
-    district?: string;
-    address: string;
-    coverTypeIdxDetails?: string; // This is the project type
-    totalEstimateSum?: number;    // This is the project value
-    categoryOfContractorId?: number;
-    extraHazardous?: boolean;
-    workDetails?: string;
-  };
-  status: string;
-  createdAt: string;
-  payment?: {
-    status: string;
-    amount: number;
-  };
 }
 
 interface EnhancedAssignment extends Omit<Assignment, 'policyId'> {
@@ -113,10 +93,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     if (!assignment || typeof assignment.policyId === 'string') return;
 
     const policy = assignment.policyId as BuilderLiabilityPolicy;
+    const contractorPhone = policy.builder.telNo || '';
+    const contractorEmail = policy.builder.customerEmail || '';
     if (method === 'phone') {
-      window.open(`tel:${policy.builder.telNo || ''}`);
+      window.open(`tel:${contractorPhone}`);
     } else if (method === 'email') {
-      window.open(`mailto:${policy.builder.customerEmail || ''}`);
+      window.open(`mailto:${contractorEmail}`);
     }
   };
 
@@ -153,6 +135,29 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
     );
   }
 
+  const assignmentPolicy =
+    typeof assignment.policyId === 'object' ? (assignment.policyId as BuilderLiabilityPolicy) : null;
+  const projectTitle =
+    getProjectTitle(assignmentPolicy?.project) ||
+    assignmentPolicy?.project?.coverTypeIdxDetails ||
+    'Construction Project';
+  const projectAddress =
+    getProjectAddress(assignmentPolicy?.project, assignmentPolicy?.builder) ||
+    assignment.location?.address ||
+    'Address not available';
+  const projectLga = getProjectLga(assignmentPolicy?.project);
+  const projectDistrict = getProjectDistrict(assignmentPolicy?.project);
+  const projectEstimateBand = getProjectEstimateBand(assignmentPolicy?.project);
+  const contractorName =
+    assignmentPolicy?.builder?.nameOfBuilder ||
+    'N/A';
+  const contractorPhone =
+    assignmentPolicy?.builder?.telNo ||
+    'N/A';
+  const contractorEmail =
+    assignmentPolicy?.builder?.customerEmail ||
+    'N/A';
+
 
 
   return (
@@ -171,10 +176,10 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Builder Liability Survey Assignment</h1>
                 <p className="text-gray-600 mt-1">
-                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.coverTypeIdxDetails || 'Builder Liability Policy Survey'}
+                  {projectTitle}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Policy #{typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.policyNumber || 'N/A'} • Assignment ID: {assignment._id}
+                  Policy #{assignmentPolicy?.policyNumber || 'N/A'} • Assignment ID: {assignment._id}
                 </p>
               </div>
             </div>
@@ -238,35 +243,40 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.coverTypeIdxDetails || 'Construction Project'}
+                  {projectTitle}
                 </h3>
                 <p className="text-gray-600 mt-1 flex items-start">
                   <MapPin className="h-4 w-4 mr-2 mt-1 flex-shrink-0" />
                   <span className="break-words">
-                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.address || assignment.location?.address || 'Address not available'}
+                    {projectAddress}
                   </span>
                 </p>
                 <div className="flex items-center text-sm text-gray-500 mt-2">
                   <Calendar className="h-4 w-4 mr-1" />
-                  Policy Created: {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.createdAt
-                    ? new Date((assignment.policyId as BuilderLiabilityPolicy).createdAt).toLocaleDateString()
+                  Policy Created: {assignmentPolicy?.createdAt
+                    ? new Date(assignmentPolicy.createdAt).toLocaleDateString()
                     : 'N/A'}
                 </div>
-                {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.lga && (
+                {projectLga && (
                   <div className="flex items-center text-sm text-gray-500 mt-1">
                     <MapPin className="h-4 w-4 mr-1" />
-                    LGA: {(assignment.policyId as BuilderLiabilityPolicy).project.lga}
-                    {(assignment.policyId as BuilderLiabilityPolicy).project.district &&
-                      ` • District: ${(assignment.policyId as BuilderLiabilityPolicy).project.district}`
-                    }
+                    LGA: {projectLga}
+                    {projectDistrict ? ` • District: ${projectDistrict}` : ''}
+                  </div>
+                )}
+                {assignmentPolicy?.project?.cadastralZone && (
+                  <div className="flex items-center text-sm text-gray-500 mt-1">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    Cadastral Zone: {assignmentPolicy.project.cadastralZone}
                   </div>
                 )}
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-gray-900">
-                  ₦{typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.totalEstimateSum?.toLocaleString() || 'N/A'}
+                  ₦{assignmentPolicy?.project?.totalEstimateSum?.toLocaleString() || 'N/A'}
                 </div>
-                <div className="text-sm text-gray-500">Project Value</div>
+                <div className="text-sm text-gray-500">Stored Ceiling</div>
+                <div className="text-xs text-gray-500 mt-1">Range: {projectEstimateBand || 'Not provided'}</div>
               </div>
             </div>
           </div>
@@ -279,23 +289,31 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Project Type:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.coverTypeIdxDetails || 'N/A'}
+                    {assignmentPolicy?.project?.coverTypeIdxDetails || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">LGA:</span>
                   <span className="font-medium text-gray-900">
-                    {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.lga || 'N/A'}
+                    {projectLga || 'N/A'}
                   </span>
                 </div>
-                {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.project?.district && (
+                {projectDistrict && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">District:</span>
                     <span className="font-medium text-gray-900">
-                      {(assignment.policyId as BuilderLiabilityPolicy).project.district}
+                      {projectDistrict}
                     </span>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Contractor:</span>
+                  <span className="font-medium text-gray-900">{contractorName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Cadastral Zone:</span>
+                  <span className="font-medium text-gray-900">{assignmentPolicy?.project?.cadastralZone || 'Not provided'}</span>
+                </div>
               </div>
             </div>
 
@@ -368,7 +386,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Property Builder/Contractor Details */}
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Builder Information</h4>
+              <h4 className="text-sm font-medium text-gray-500 mb-3">Contractor Information</h4>
               <div className="space-y-3">
                 <div className="flex items-center">
                   <User className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -376,7 +394,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                     <p className="text-base font-medium text-gray-900">
                       {typeof assignment.policyId === 'object' && (assignment.policyId as BuilderLiabilityPolicy)?.builder?.nameOfBuilder || 'N/A'}
                     </p>
-                    <p className="text-sm text-gray-500">Builder Name</p>
+                    <p className="text-sm text-gray-500">Contractor Name</p>
                   </div>
                 </div>
 
@@ -411,7 +429,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       <p className="text-base text-gray-900">
                         {(assignment.policyId as BuilderLiabilityPolicy).builder.address}
                       </p>
-                      <p className="text-sm text-gray-500">Builder Address</p>
+                      <p className="text-sm text-gray-500">Contractor Address</p>
                     </div>
                   </div>
                 )}
@@ -420,6 +438,30 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
             {/* Contact Actions & Site Contact */}
             <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-3">Primary Contractor Contact</h4>
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center">
+                  <User className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="text-base font-medium text-gray-900">{contractorName}</p>
+                    <p className="text-sm text-gray-500">Contractor / Primary Contact</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Phone className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-base text-gray-900">{contractorPhone}</p>
+                    <p className="text-sm text-gray-500">Phone Number</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Mail className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="text-base text-gray-900">{contractorEmail}</p>
+                    <p className="text-sm text-gray-500">Email Address</p>
+                  </div>
+                </div>
+              </div>
               <h4 className="text-sm font-medium text-gray-500 mb-3">Contact Actions</h4>
               <div className="space-y-3">
                 <div className="flex space-x-2">
@@ -428,14 +470,14 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
                   >
                     <Phone className="h-4 w-4 mr-2" />
-                    Call Owner
+                    Call Contractor
                   </button>
                   <button
                     onClick={() => handleContactUser('email')}
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
                   >
                     <Mail className="h-4 w-4 mr-2" />
-                    Email Owner
+                    Email Contractor
                   </button>
                 </div>
 
@@ -631,11 +673,11 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium flex items-center justify-center"
               >
                 <Phone className="h-5 w-5 mr-2" />
-                Contact Builder
+                Contact Contractor
               </button>
             </div>
             <p className="text-sm text-gray-500 mt-3 text-center">
-              Make sure to contact the builder before visiting the construction site
+              Make sure to contact the contractor before visiting the construction site
             </p>
           </div>
         </div>

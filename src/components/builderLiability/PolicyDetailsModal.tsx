@@ -11,6 +11,19 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import {
+    getClientEmail,
+    getClientName,
+    getClientPhone,
+    getDisplayValue,
+    getProfessionalBody,
+    getProfessionalRegistrationNumber,
+    getProjectAddress,
+    getProjectDistrict,
+    getProjectEstimateBand,
+    getProjectLga,
+    getProjectTitle
+} from '@/utils/builderLiability';
+import {
     Building,
     User,
     MapPin,
@@ -45,6 +58,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
     onClose
 }) => {
     const [isCalculatingPremium, setIsCalculatingPremium] = React.useState(false);
+    const [isDownloadingReceipt, setIsDownloadingReceipt] = React.useState(false);
     const [premiumResult, setPremiumResult] = React.useState<null | {
         premiumAmount: number;
         premiumDetails?: {
@@ -64,6 +78,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
     React.useEffect(() => {
         setPremiumResult(null);
         setIsCalculatingPremium(false);
+        setIsDownloadingReceipt(false);
     }, [policy?._id, isOpen]);
 
     if (!policy) return null;
@@ -187,6 +202,25 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
             toast.error(message);
         } finally {
             setIsCalculatingPremium(false);
+        }
+    };
+
+    const handleDownloadReceipt = async () => {
+        try {
+            setIsDownloadingReceipt(true);
+            await downloadProtectedFileByPath(
+                `/payment/receipt/${policy._id}`,
+                `payment-receipt-${policy.policyNumber || 'policy'}.pdf`
+            );
+            toast.success('Payment receipt downloaded successfully.');
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                'Unable to download the payment receipt right now.';
+            toast.error(message);
+        } finally {
+            setIsDownloadingReceipt(false);
         }
     };
 
@@ -337,6 +371,17 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         return value ? 'Yes' : 'No';
     };
 
+    const consultantProfessionalBody = getProfessionalBody(policy.organization);
+    const consultantRegistrationNumber = getProfessionalRegistrationNumber(policy.organization);
+    const projectTitle = getProjectTitle(policy.project);
+    const projectAddress = getProjectAddress(policy.project, policy.builder);
+    const projectLga = getProjectLga(policy.project);
+    const projectDistrict = getProjectDistrict(policy.project);
+    const projectEstimateBand = getProjectEstimateBand(policy.project);
+    const clientName = getClientName(policy.client);
+    const clientEmail = getClientEmail(policy.client);
+    const clientPhone = getClientPhone(policy.client);
+
     const getStatusBadge = (status: string) => {
         const statusConfig = {
             draft: { color: 'bg-gray-100 text-gray-800', icon: Clock, label: 'Draft' },
@@ -388,9 +433,12 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 
                 <Tabs defaultValue="builder" className="w-full">
                     <div className="w-full overflow-x-auto">
-                        <TabsList className="flex md:grid md:grid-cols-7 w-max md:w-full min-w-max md:min-w-0">
+                        <TabsList className="flex md:grid md:grid-cols-8 w-max md:w-full min-w-max md:min-w-0">
                             <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
                                 Contractor
+                            </TabsTrigger>
+                            <TabsTrigger value="client" className="whitespace-nowrap text-xs sm:text-sm">
+                                Client
                             </TabsTrigger>
                             <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
                                 Consultant
@@ -472,6 +520,56 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                         </Card>
                     </TabsContent>
 
+                    <TabsContent value="client" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <User className="w-5 h-5" />
+                                    Client Information
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Client Name</label>
+                                    <p className="text-base font-semibold">{getDisplayValue(clientName)}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Client RC Number</label>
+                                    <p className="text-base">{getDisplayValue(policy.client?.rcNumber)}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                                        <Mail className="w-4 h-4" />
+                                        Email
+                                    </label>
+                                    <p className="text-base">{getDisplayValue(clientEmail)}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                                        <Phone className="w-4 h-4" />
+                                        Phone
+                                    </label>
+                                    <p className="text-base">{getDisplayValue(clientPhone)}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Identification Type</label>
+                                    <p className="text-base">{getDisplayValue(policy.client?.identificationType)}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Identification Number</label>
+                                    <p className="text-base">{getDisplayValue(policy.client?.identificationNumber)}</p>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                                        <MapPin className="w-4 h-4" />
+                                        Address
+                                    </label>
+                                    <p className="text-base">{getDisplayValue(policy.client?.address)}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
                     {/* Organization Information */}
                     <TabsContent value="organization" className="space-y-4">
                         <Card>
@@ -483,20 +581,30 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">NIOB Registration Number</label>
-                                    <p className="text-base font-semibold">{policy.organization?.niobRegNo || 'N/A'}</p>
+                                    <label className="text-sm font-medium text-gray-600">Professional Body</label>
+                                    <p className="text-base font-semibold">{getDisplayValue(consultantProfessionalBody)}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Professional Registration Number</label>
+                                    <p className="text-base font-semibold">{getDisplayValue(consultantRegistrationNumber)}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Year of Incorporation</label>
-                                    <p className="text-base">{policy.organization?.yearOfIncorporation ? formatDate(policy.organization.yearOfIncorporation) : 'N/A'}</p>
+                                    <p className="text-base">{policy.organization?.yearOfIncorporation ? formatDate(policy.organization.yearOfIncorporation) : 'Not provided'}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Area of Specialization</label>
-                                    <p className="text-base">{policy.organization?.areaOfSpecialization || 'N/A'}</p>
+                                    <p className="text-base">{getDisplayValue(policy.organization?.areaOfSpecialization)}</p>
                                 </div>
+                                {consultantProfessionalBody === 'Other' && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Other Professional Body Name</label>
+                                        <p className="text-base">{getDisplayValue(policy.organization?.otherProfessionalBodyName)}</p>
+                                    </div>
+                                )}
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Permanent Staff Count</label>
-                                    <p className="text-base">{policy.organization?.noOfPermanentStaff ?? 0}</p>
+                                    <p className="text-base">{policy.organization?.noOfPermanentStaff ?? policy.organization?.permanentStaffCount ?? 0}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -562,6 +670,10 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                         <p className="text-base font-semibold">{policy.project?.coverTypeIdxDetails || 'N/A'}</p>
                                     </div>
                                     <div>
+                                        <label className="text-sm font-medium text-gray-600">Property Title</label>
+                                        <p className="text-base font-semibold">{getDisplayValue(projectTitle)}</p>
+                                    </div>
+                                    <div>
                                         <label className="text-sm font-medium text-gray-600">Contractor Category</label>
                                         <p className="text-base">
                                             {policy.project?.categoryOfContractorId === 1 ? 'Category A' :
@@ -570,7 +682,11 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600">Total Estimate Sum</label>
+                                        <label className="text-sm font-medium text-gray-600">Estimated Sum Range</label>
+                                        <p className="text-base font-semibold">{getDisplayValue(projectEstimateBand)}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Stored Ceiling Amount</label>
                                         <p className="text-xl font-bold text-green-600">
                                             {formatCurrency(policy.project?.totalEstimateSum || 0)}
                                         </p>
@@ -586,20 +702,24 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600">AGIS No</label>
-                                        <p className="text-base">{policy.project?.agisNo || 'N/A'}</p>
+                                        <label className="text-sm font-medium text-gray-600">Plot Number</label>
+                                        <p className="text-base">{getDisplayValue(policy.project?.plotNumber || policy.project?.agisNo)}</p>
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Project Address</label>
-                                        <p className="text-base">{policy.project?.address || 'N/A'}</p>
+                                        <p className="text-base">{getDisplayValue(projectAddress)}</p>
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Project LGA</label>
-                                        <p className="text-base">{policy.project?.lga || 'N/A'}</p>
+                                        <p className="text-base">{getDisplayValue(projectLga)}</p>
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Project District</label>
-                                        <p className="text-base">{policy.project?.district || 'N/A'}</p>
+                                        <p className="text-base">{getDisplayValue(projectDistrict)}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Cadastral Zone</label>
+                                        <p className="text-base">{getDisplayValue(policy.project?.cadastralZone)}</p>
                                     </div>
                                 </div>
                                 <div>
@@ -838,10 +958,29 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 
                         <Card>
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Receipt className="w-5 h-5" />
-                                    Payment Records
-                                </CardTitle>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Receipt className="w-5 h-5" />
+                                        Payment Records
+                                    </CardTitle>
+                                    {isPaymentPaid && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleDownloadReceipt}
+                                            disabled={isDownloadingReceipt}
+                                            className="w-full sm:w-auto"
+                                        >
+                                            {isDownloadingReceipt ? (
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            ) : (
+                                                <Download className="w-4 h-4 mr-2" />
+                                            )}
+                                            {isDownloadingReceipt ? 'Downloading...' : 'Download Receipt'}
+                                        </Button>
+                                    )}
+                                </div>
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -872,6 +1011,11 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <label className="text-sm font-medium text-gray-600">Rejection / Failure Reason</label>
                                     <p className="text-base">{toDisplayText(paymentInfo.reason)}</p>
                                 </div>
+                                {!isPaymentPaid && (
+                                    <div className="md:col-span-2 rounded-md border border-dashed border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+                                        A downloadable receipt will appear here once payment has been confirmed on the system.
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>

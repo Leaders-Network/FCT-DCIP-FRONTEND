@@ -9,6 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    getClientName,
+    getDisplayValue,
+    getProjectAddress,
+    getProjectDistrict,
+    getProjectEstimateBand,
+    getProjectLga,
+    getProjectTitle
+} from '@/utils/builderLiability';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PremiumDetailsModal } from './PremiumDetailsModal';
 import PaymentResultModal, { PaymentConfirmationResult } from './PaymentResultModal';
@@ -556,11 +565,19 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
     // Filter policies based on search and filters
     const filteredPolicies = policies.filter(policy => {
+        const normalizedSearch = searchQuery.toLowerCase();
+        const clientName = getClientName(policy.client)?.toLowerCase() || '';
+        const projectTitle = getProjectTitle(policy.project)?.toLowerCase() || '';
+        const cadastralZone = policy.project?.cadastralZone?.toLowerCase() || '';
+
         const matchesSearch = !searchQuery ||
-            policy.builder.nameOfBuilder.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            policy.builder.customerEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            policy.policyNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            policy.builder.rcNumber.toLowerCase().includes(searchQuery.toLowerCase());
+            policy.builder.nameOfBuilder.toLowerCase().includes(normalizedSearch) ||
+            policy.builder.customerEmail.toLowerCase().includes(normalizedSearch) ||
+            policy.policyNumber.toLowerCase().includes(normalizedSearch) ||
+            policy.builder.rcNumber.toLowerCase().includes(normalizedSearch) ||
+            clientName.includes(normalizedSearch) ||
+            projectTitle.includes(normalizedSearch) ||
+            cadastralZone.includes(normalizedSearch);
 
         const matchesStatus = statusFilter === 'all' || getActualStatus(policy) === statusFilter;
         const matchesPriority = priorityFilter === 'all' || policy.priority === priorityFilter;
@@ -675,7 +692,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
-                                placeholder="Search by contractor name, email, policy number, or RC number..."
+                                placeholder="Search by contractor, client, property title, cadastral zone, policy number, or RC number..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10"
@@ -736,13 +753,22 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                     {filteredPolicies.map((policy) => (
                         <Card key={policy._id} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-4 sm:p-6">
+                                {(() => {
+                                    const projectTitle = getProjectTitle(policy.project);
+                                    const clientName = getClientName(policy.client);
+                                    const projectAddress = getProjectAddress(policy.project, policy.builder);
+                                    const projectLga = getProjectLga(policy.project);
+                                    const projectDistrict = getProjectDistrict(policy.project);
+                                    const projectEstimateBand = getProjectEstimateBand(policy.project);
+
+                                    return (
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                     <div className="flex-1 min-w-0 space-y-3">
                                         {/* Header */}
                                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                             <div className="min-w-0">
                                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
-                                                    {policy.builder.nameOfBuilder}
+                                                    {projectTitle || policy.builder.nameOfBuilder}
                                                 </h3>
                                                 <p className="text-xs sm:text-sm text-gray-600 break-words">
                                                     Policy #{policy.policyNumber}
@@ -759,18 +785,30 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                             <div className="flex items-start gap-2 min-w-0">
                                                 <User className="w-4 h-4 text-gray-400" />
                                                 <div className="min-w-0">
-                                                    <p className="text-gray-600">Builder</p>
+                                                    <p className="text-gray-600">Contractor</p>
                                                     <p className="font-medium break-words">
                                                         {policy.builder.nameOfBuilder}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="flex items-start gap-2 min-w-0">
+                                                <User className="w-4 h-4 text-gray-400" />
+                                                <div className="min-w-0">
+                                                    <p className="text-gray-600">Client</p>
+                                                    <p className="font-medium break-words">
+                                                        {getDisplayValue(clientName)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-start gap-2 min-w-0">
                                                 <Building className="w-4 h-4 text-gray-400" />
                                                 <div className="min-w-0">
-                                                    <p className="text-gray-600">Project Value</p>
+                                                    <p className="text-gray-600">Estimated Sum Range</p>
                                                     <p className="font-medium break-words">
-                                                        {formatCurrency(policy.project.totalEstimateSum)}
+                                                        {getDisplayValue(projectEstimateBand)}
+                                                    </p>
+                                                    <p className="text-[11px] text-gray-500 break-words">
+                                                        Stored ceiling: {formatCurrency(policy.project.totalEstimateSum)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -779,7 +817,10 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                                 <div className="min-w-0">
                                                     <p className="text-gray-600">Location</p>
                                                     <p className="font-medium break-words">
-                                                        {policy.builder.address}
+                                                        {getDisplayValue(projectAddress)}
+                                                    </p>
+                                                    <p className="text-[11px] text-gray-500 break-words">
+                                                        {[projectDistrict, projectLga].filter(Boolean).join(', ') || getDisplayValue(policy.project?.cadastralZone)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -799,8 +840,16 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                             <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                                                 <span className="break-all">RC: {policy.builder.rcNumber}</span>
                                                 <span className="break-words">
+                                                    Property: {getDisplayValue(projectTitle)}
+                                                </span>
+                                                <span className="break-words">
                                                     Coverage: {policy.project.coverTypeIdxDetails}
                                                 </span>
+                                                {policy.project?.cadastralZone && (
+                                                    <span className="break-words">
+                                                        Zone: {policy.project.cadastralZone}
+                                                    </span>
+                                                )}
                                                 {policy.project.extraHazardous && (
                                                     <Badge variant="outline" className="text-[10px] sm:text-xs">
                                                         Extra Hazardous
@@ -876,6 +925,8 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                         </div>
                                     </div>
                                 </div>
+                                    );
+                                })()}
                             </CardContent>
                         </Card>
                     ))}

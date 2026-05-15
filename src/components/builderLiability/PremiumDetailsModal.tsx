@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BuilderLiabilityPolicy } from '@/types/builderLiabilityPolicy.types';
+import { getProjectEstimateBand } from '@/utils/builderLiability';
 import { Building2, Copy, CreditCard, FileText, Mail, Phone, Receipt, ShieldCheck, Sparkles, User } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -61,6 +62,7 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
     const builderName = premiumDetails.builder?.name || policy.builder.nameOfBuilder;
     const builderPhone = premiumDetails.builder?.phone || policy.builder.telNo || '-';
     const builderEmail = premiumDetails.builder?.email || policy.builder.customerEmail || '-';
+    const projectEstimateBand = getProjectEstimateBand(policy.project) || '-';
     const projectValue = premiumDetails.estimates?.declaredProjectSum
         ? formatCurrency(premiumDetails.estimates.declaredProjectSum)
         : '-';
@@ -138,8 +140,8 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
                                             <p className="mt-2 text-lg font-bold text-slate-900">{currency}</p>
                                         </div>
                                         <div className="rounded-2xl bg-slate-50 p-4">
-                                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Project Value</p>
-                                            <p className="mt-2 text-lg font-bold text-slate-900">{projectValue}</p>
+                                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Estimated Sum Range</p>
+                                            <p className="mt-2 text-lg font-bold text-slate-900">{projectEstimateBand}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -209,7 +211,7 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
                                             </p>
                                         </div>
                                         <div className="rounded-2xl bg-slate-50 p-4">
-                                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Project Value</p>
+                                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Stored Ceiling</p>
                                             <p className="mt-2 flex items-center gap-2 font-semibold text-slate-900">
                                                 <Building2 className="h-4 w-4 text-orange-600" />
                                                 {projectValue}

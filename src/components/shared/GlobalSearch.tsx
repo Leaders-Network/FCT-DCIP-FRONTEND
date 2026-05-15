@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
 import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
 import { adminApi } from '@/services/api';
+import { getClientName, getProjectEstimateBand, getProjectTitle } from '@/utils/builderLiability';
 
 interface SearchResult {
     id: string;
@@ -34,16 +35,19 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                 const policiesResponse = await builderLiabilityPolicyAPI.searchPolicies(searchQuery, 5);
                 if (policiesResponse.success && policiesResponse.data.policies) {
                     policiesResponse.data.policies.forEach(policy => {
+                        const projectTitle = getProjectTitle(policy.project);
+                        const clientName = getClientName(policy.client);
                         results.push({
                             id: `policy-${policy._id}`,
-                            title: `Policy: ${policy.builder?.nameOfBuilder || 'Unknown Builder'}`,
-                            subtitle: `Status: ${policy.status} | RC: ${policy.builder?.rcNumber || 'N/A'}`,
+                            title: `Policy: ${projectTitle || policy.builder?.nameOfBuilder || 'Unknown Builder'}`,
+                            subtitle: `Status: ${policy.status} | Client: ${clientName || 'Not provided'}`,
                             type: 'policy',
                             url: userType === 'admin' ? `/admin/dashboard/policies/${policy._id}` : `/nia-admin/dashboard/policies/${policy._id}`,
                             icon: <FileText className="h-5 w-5 text-purple-600" />,
                             metadata: {
                                 'Policy Number': policy.policyNumber || 'N/A',
-                                'Project Value': `₦${policy.project?.totalEstimateSum?.toLocaleString() || '0'}`
+                                'Estimated Sum Range': getProjectEstimateBand(policy.project) || 'Not provided',
+                                'Stored Ceiling': `NGN ${policy.project?.totalEstimateSum?.toLocaleString() || '0'}`
                             }
                         });
                     });
@@ -100,7 +104,7 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                         const surveyorInfo = assignment.surveyorId;
                         results.push({
                             id: `assignment-${assignment._id}`,
-                            title: `Assignment: ${policyInfo?.builder?.nameOfBuilder || 'Unknown Builder'}`,
+                            title: `Assignment: ${policyInfo?.project?.projectTitle || policyInfo?.builder?.nameOfBuilder || 'Unknown Builder'}`,
                             subtitle: `Surveyor: ${surveyorInfo?.firstname || ''} ${surveyorInfo?.lastname || ''} | Status: ${assignment.status}`,
                             type: 'assignment',
                             url: userType === 'admin' ? `/admin/dashboard/assignments/${assignment._id}` : `/nia-admin/assignments/${assignment._id}`,
@@ -157,16 +161,19 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                 const userPoliciesResponse = await builderLiabilityPolicyAPI.searchPolicies(searchQuery, 3);
                 if (userPoliciesResponse.success && userPoliciesResponse.data.policies) {
                     userPoliciesResponse.data.policies.forEach(policy => {
+                        const projectTitle = getProjectTitle(policy.project);
+                        const clientName = getClientName(policy.client);
                         results.push({
                             id: `user-policy-${policy._id}`,
-                            title: `My Policy: ${policy.builder?.nameOfBuilder || 'Builder Liability'}`,
-                            subtitle: `Status: ${policy.status} | ${policy.project?.coverTypeIdxDetails || 'Builder Liability'}`,
+                            title: `My Policy: ${projectTitle || policy.builder?.nameOfBuilder || 'Builder Liability'}`,
+                            subtitle: `Status: ${policy.status} | Client: ${clientName || 'Not provided'}`,
                             type: 'policy',
                             url: `/dashboard/insurance/${policy._id}`,
                             icon: <Shield className="h-5 w-5 text-green-600" />,
                             metadata: {
                                 'Policy Number': policy.policyNumber || 'N/A',
-                                'Project Value': `₦${policy.project?.totalEstimateSum?.toLocaleString() || '0'}`
+                                'Estimated Sum Range': getProjectEstimateBand(policy.project) || 'Not provided',
+                                'Stored Ceiling': `NGN ${policy.project?.totalEstimateSum?.toLocaleString() || '0'}`
                             }
                         });
                     });

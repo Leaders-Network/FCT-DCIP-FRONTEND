@@ -4,6 +4,7 @@ import { Clock, MapPin, Calendar, Eye, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { getSurveyorAssignments, exportSurveyorCsv, triggerCsvDownload } from "@/services/api";
 import ExportCsvPanel from "@/components/shared/ExportCsvPanel";
+import { getDisplayValue } from "@/utils/builderLiability";
 
 interface Assignment {
     _id: string;
@@ -15,10 +16,16 @@ interface Assignment {
             customerEmail: string;
             address: string;
         };
+        client?: {
+            name?: string;
+        };
         project: {
             lga: string;
             address: string;
             projectType?: string;
+            projectTitle?: string;
+            projectName?: string;
+            cadastralZone?: string;
         };
         status: string;
         createdAt: string;
@@ -159,7 +166,7 @@ const AssignmentsList = () => {
                                     <div className="flex-1">
                                         <div className="flex flex-wrap items-center gap-2 mb-2">
                                             <h3 className="text-lg font-semibold text-gray-900 break-words">
-                                                {assignment.policyId?.project?.projectType || "Builder Liability Survey"}
+                                                {assignment.policyId?.project?.projectTitle || assignment.policyId?.project?.projectName || assignment.policyId?.project?.projectType || "Builder Liability Survey"}
                                             </h3>
                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
                                                 {assignment.status.replace("_", " ").toUpperCase()}
@@ -197,7 +204,13 @@ const AssignmentsList = () => {
                                                 LGA: {assignment.policyId?.project?.lga || "N/A"}
                                             </span>
                                             <span className="text-gray-500 break-words">
+                                                Zone: {getDisplayValue(assignment.policyId?.project?.cadastralZone)}
+                                            </span>
+                                            <span className="text-gray-500 break-words">
                                                 Builder: {assignment.policyId?.builder?.nameOfBuilder || "N/A"}
+                                            </span>
+                                            <span className="text-gray-500 break-words">
+                                                Contractor: {getDisplayValue(assignment.policyId?.builder?.nameOfBuilder)}
                                             </span>
                                         </div>
                                     </div>

@@ -189,23 +189,23 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       _id: blp._id,
       userId: blp.userId || '',
       propertyDetails: {
-        propertyType: `Builder Liability - ${blp.builder?.nameOfBuilder || 'Unknown'}`,
-        address: blp.builder?.address || '',
+        propertyType: blp.project?.projectTitle || blp.project?.projectName || `Builder Liability - ${blp.builder?.nameOfBuilder || 'Unknown'}`,
+        address: blp.project?.address || blp.project?.projectAddress || blp.builder?.address || '',
         buildingValue: blp.project?.totalEstimateSum || 0,
-        plotNumber: '',
-        cadastralZone: '',
-        district: '',
-        fullAddress: blp.builder?.address || '',
+        plotNumber: blp.project?.plotNumber || blp.project?.agisNo || '',
+        cadastralZone: blp.project?.cadastralZone || '',
+        district: blp.project?.district || blp.project?.projectDistrict || '',
+        fullAddress: blp.project?.address || blp.project?.projectAddress || blp.builder?.address || '',
         yearBuilt: 0,
         squareFootage: 0,
         constructionMaterial: ''
       },
       contactDetails: {
-        fullName: blp.builder?.nameOfBuilder || '',
-        email: blp.builder?.customerEmail || '',
-        phoneNumber: blp.builder?.telNo || '',
+        fullName: blp.client?.name || blp.builder?.nameOfBuilder || '',
+        email: blp.client?.email || blp.builder?.customerEmail || '',
+        phoneNumber: blp.client?.phoneNumber || blp.builder?.telNo || '',
         alternatePhone: '',
-        rcNumber: blp.builder?.rcNumber || ''
+        rcNumber: blp.client?.rcNumber || blp.builder?.rcNumber || ''
       },
       requestDetails: {
         coverageType: blp.project?.coverTypeIdxDetails || 'Builder Liability',

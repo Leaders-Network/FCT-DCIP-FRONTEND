@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { adminEnforcementAPI } from "@/services/api";
 import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
+import { getProjectEstimateBand } from "@/utils/builderLiability";
 
 interface EnforcementPolicy {
   _id: string;
@@ -29,6 +30,7 @@ interface EnforcementPolicy {
   coverType: string;
   projectAddress: string;
   sumInsured: number;
+  estimatedSumRange: string;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -58,6 +60,7 @@ const EnforcementPage = () => {
     coverType: policy.project?.coverTypeIdxDetails || "Builder Liability",
     projectAddress: policy.project?.address || policy.builder?.address || "N/A",
     sumInsured: Number(policy.project?.totalEstimateSum || 0),
+    estimatedSumRange: getProjectEstimateBand(policy.project) || "Not provided",
     status: policy.status,
     createdAt: String(policy.createdAt),
     updatedAt: String(policy.updatedAt),
@@ -246,7 +249,7 @@ const EnforcementPage = () => {
                       </div>
                       <div className="flex items-center">
                         <Building className="w-4 h-4 mr-2" />
-                        <span>Sum insured: {formatCurrency(policy.sumInsured)}</span>
+                        <span>Estimated sum range: {policy.estimatedSumRange}</span>
                       </div>
                     </div>
                   </div>
@@ -361,6 +364,10 @@ const EnforcementPage = () => {
                     <div>
                       <span className="text-gray-500">Project Address:</span>
                       <p className="font-medium">{selectedPolicy.projectAddress}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Estimated Sum Range:</span>
+                      <p className="font-medium">{selectedPolicy.estimatedSumRange}</p>
                     </div>
                     <div>
                       <span className="text-gray-500">Sum Insured:</span>
