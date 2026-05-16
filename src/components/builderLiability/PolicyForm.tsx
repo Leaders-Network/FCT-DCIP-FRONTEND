@@ -62,7 +62,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         clientRcNumber: '',
 
         // Consultant Info
-        professionalBody: 'Nigerian Institute of Building (NIOB)',
+        professionalBody: 'Nigerian Institute of Architects (NIA)',
         professionalRegistrationNumber: '',
         otherProfessionalBodyName: '',
         yearOfIncorporation: '',
@@ -120,7 +120,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         priority: 'medium'
     });
 
-    const [activeTab, setActiveTab] = useState<FormTab>('builder');
+    const [activeTab, setActiveTab] = useState<FormTab>('client');
     const [tabErrors, setTabErrors] = useState<Partial<Record<FormTab, string[]>>>({});
 
     const isLastTab = activeTab === FORM_TABS[FORM_TABS.length - 1];
@@ -590,7 +590,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                 </TabsList>
                             </div>
 
-                             <TabsContent value="client" className="space-y-4">
+                            <TabsContent value="client" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="clientName">Client/Individual Name or Company Name *</Label>
@@ -1171,6 +1171,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 id="hasInsurance"
                                                 checked={formData.hasInsurance}
                                                 onChange={(e) => handleInputChange('hasInsurance', e.target.checked)}
+                                                placeholder='has insurance'
                                             />
                                             <Label htmlFor="hasInsurance">Do you currently have insurance coverage? *</Label>
                                         </div>
@@ -1198,6 +1199,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 id="underInvestigation"
                                                 checked={formData.underInvestigation}
                                                 onChange={(e) => handleInputChange('underInvestigation', e.target.checked)}
+                                                placeholder='under investigation'
                                             />
                                             <Label htmlFor="underInvestigation">Currently under investigation? *</Label>
                                         </div>
@@ -1225,6 +1227,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 id="disciplinaryAction"
                                                 checked={formData.disciplinaryAction}
                                                 onChange={(e) => handleInputChange('disciplinaryAction', e.target.checked)}
+                                                placeholder='subject to disciplinary action'
                                             />
                                             <Label htmlFor="disciplinaryAction">Subject to disciplinary action? *</Label>
                                         </div>
@@ -1252,6 +1255,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                 id="preEmploymentCheck"
                                                 checked={formData.preEmploymentCheck}
                                                 onChange={(e) => handleInputChange('preEmploymentCheck', e.target.checked)}
+                                                placeholder={"pre-employment checks conducted?"}
                                             />
                                             <Label htmlFor="preEmploymentCheck">Pre-employment checks conducted? *</Label>
                                         </div>
@@ -1310,7 +1314,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             <TabsContent value="project" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <Label htmlFor="coverTypeIndex">Is this Project Seeking Statutory Cover? *</Label>
+                                        <Label htmlFor="coverTypeIndex">Is the Project Seeking Statutory Cover?*</Label>
                                         <Select
                                             value={String(formData.coverTypeIndex)}
                                             onValueChange={(value) => handleInputChange('coverTypeIndex', value === 'true')}
@@ -1391,20 +1395,13 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             id="extraHazardous"
                                             checked={formData.extraHazardous}
                                             onChange={(e) => handleInputChange('extraHazardous', e.target.checked)}
+                                            placeholder='Extra Hazardous'
                                         />
                                         <Label htmlFor="extraHazardous">Extra Hazardous Work? *</Label>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="agisNo">Plot Number</Label>
-                                        <Input
-                                            id="agisNo"
-                                            value={formData.agisNo}
-                                            onChange={(e) => handleInputChange('agisNo', e.target.value)}
-                                            placeholder="Enter plot number"
-                                        />
-                                    </div>
+
                                     <div>
                                         <Label htmlFor="projectTitle">Property Title *</Label>
                                         <Input
@@ -1418,18 +1415,20 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             Enter the title or identifying name for this property.
                                         </p>
                                     </div>
+
+                                    <div>
+                                        <Label htmlFor="agisNo">Plot Number</Label>
+                                        <Input
+                                            id="agisNo"
+                                            value={formData.agisNo}
+                                            onChange={(e) => handleInputChange('agisNo', e.target.value)}
+                                            placeholder="Enter plot number"
+                                        />
+                                    </div>
+
                                 </div>
-                                <div>
-                                    <Label htmlFor="workDetails">Work Details *</Label>
-                                    <Textarea
-                                        id="workDetails"
-                                        value={formData.workDetails}
-                                        onChange={(e) => handleInputChange('workDetails', e.target.value)}
-                                        placeholder="Describe the construction work to be covered..."
-                                        required
-                                    />
-                                </div>
-                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="projectAddress">Project Address *</Label>
                                         <Textarea
@@ -1494,6 +1493,19 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </p>
                                     </div>
                                 </div>
+
+                                <div>
+                                    <Label htmlFor="workDetails">Work Details *</Label>
+                                    <Textarea
+                                        id="workDetails"
+                                        value={formData.workDetails}
+                                        onChange={(e) => handleInputChange('workDetails', e.target.value)}
+                                        placeholder="Describe the construction work to be covered..."
+                                        required
+                                    />
+                                </div>
+
+                       
                             </TabsContent>
                         </Tabs>
 

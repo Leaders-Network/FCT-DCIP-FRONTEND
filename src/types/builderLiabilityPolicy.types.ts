@@ -42,16 +42,16 @@ export interface ClientInfo {
 }
 
 export type ProfessionalBody =
-    | 'Nigerian Institute of Building (NIOB)'
-    | 'Nigerian Society of Engineers (NSE)'
-    | 'Nigerian Insurers Association (NIA)'
+| 'Nigerian Institute of Architects (NIA)'
+| 'Nigerian Society of Engineers (NSE)'
+| 'Nigerian Institute of Building (NIOB)'
     | 'Nigerian Institute of Town Planners (NITP)'
     | 'Other';
 
 export const PROFESSIONAL_BODY_OPTIONS: ProfessionalBody[] = [
-    'Nigerian Institute of Building (NIOB)',
+    'Nigerian Institute of Architects (NIA)',
     'Nigerian Society of Engineers (NSE)',
-    'Nigerian Insurers Association (NIA)',
+    'Nigerian Institute of Building (NIOB)',
     'Nigerian Institute of Town Planners (NITP)',
     'Other'
 ];
