@@ -601,7 +601,7 @@ const Dashview = () => {
                         </button>
                         <button
                           onClick={() => {
-                            const email = 'support@ammc.gov.ng';
+                            const email = 'dsasore01@gmail.com';
                             const subject = 'Insurance Dashboard Support Request';
                             const body = 'Hello, I need assistance with my builder liability dashboard. Please help me with:';
                             window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -747,7 +747,7 @@ const Dashview = () => {
               </p>
               <button
                 onClick={() => {
-                  const email = 'support@ammc.gov.ng';
+                  const email = 'dsadore@gmail.com';
                   const subject = 'Insurance Dashboard Support Request';
                   const body = 'Hello, I need assistance with my builder liability dashboard. Please help me with:';
                   window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

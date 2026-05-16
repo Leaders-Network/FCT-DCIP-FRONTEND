@@ -91,13 +91,13 @@ const AdminContactDisplay: React.FC<AdminContactDisplayProps> = ({
                             }`}>
                             {admin.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </div>
-                        <div className="flex-1">
+                        {/* <div className="flex-1">
                             <h4 className="text-lg font-medium text-gray-900">{admin.name}</h4>
                             <p className="text-sm text-gray-600">{admin.title}</p>
                             {admin.department && (
                                 <p className="text-xs text-gray-500">{admin.department}</p>
                             )}
-                        </div>
+                        </div> */}
                         {admin.emergencyContact && (
                             <div className="flex items-center space-x-1">
                                 <AlertCircle className="w-4 h-4 text-orange-500" />
@@ -206,9 +206,9 @@ const AdminContactDisplay: React.FC<AdminContactDisplayProps> = ({
 
     // Default admin contacts if not provided
     const defaultAMMCAdmin: AdminContact = {
-        name: 'AMMC Survey Administrator',
-        email: 'admin@ammc.gov.ng',
-        phone: '+234-9-234-5678',
+        name: 'Engr Dotun Sasore',
+        email: 'dsasore@gmail.com',
+        phone: '+234 806 006 0826',
         organization: 'AMMC',
         title: 'Survey Department Administrator',
         department: 'Property Assessment Division',

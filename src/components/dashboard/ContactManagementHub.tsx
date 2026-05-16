@@ -241,8 +241,8 @@ const ContactManagementHub: React.FC<ContactManagementHubProps> = ({
                         <h4 className="text-sm font-medium text-red-900">Emergency Contact</h4>
                         <p className="text-sm text-red-800">
                             For urgent issues outside office hours, call the emergency hotline:
-                            <a href="tel:+234-9-911-0000" className="font-medium underline ml-1">
-                                +234-9-911-0000
+                            <a href="tel:+234 806 006 0826" className="font-medium underline ml-1">
+                                +234 806 006 0826
                             </a>
                         </p>
                     </div>

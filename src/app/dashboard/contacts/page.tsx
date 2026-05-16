@@ -7,9 +7,9 @@ import { toast } from "sonner";
 import type { BuilderLiabilityPolicy, AssignedSurveyorContact } from '@/types/builderLiabilityPolicy.types';
 
 const DEFAULT_AMMC_ADMIN: AdminContactInfo = {
-    name: 'Dr. Michael Okonkwo',
-    email: 'admin@ammc.gov.ng',
-    phone: '+234-9-234-5678',
+    name: 'Engr Dotun Sasore',
+    email: 'dsasore@gmail.com',
+    phone: '+234 806 006 0826',
     organization: 'AMMC',
     title: 'Survey Department Administrator',
     department: 'Property Assessment Division',
