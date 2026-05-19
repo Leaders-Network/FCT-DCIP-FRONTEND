@@ -134,7 +134,7 @@ function Logo() {
         {/* SVG paths from original component */}
         {/* ... */}
       </svg>
-      <h1 className="ml-4 text-black text-[23px] font-bold">FCT- DCIP</h1>
+      <h1 className="ml-4 text-black text-[23px] font-bold">Builders Liability</h1>
     </div>
   );
 }
