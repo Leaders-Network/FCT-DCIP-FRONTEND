@@ -281,7 +281,7 @@ function Logo() {
           fill="#333F4D"
         />
       </svg>
-      <h1 className="ml-4 text-black text-[23px] font-bold">FCT- DCIP</h1>
+      <h1 className="ml-4 text-black text-[23px] font-bold">Builders Liability</h1>
     </div>
   );
 }
