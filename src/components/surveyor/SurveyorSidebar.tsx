@@ -75,10 +75,10 @@ const SurveyorSidebar: React.FC<SurveyorSidebarProps> = ({
       <div className="p-4 flex justify-between items-center relative border-b border-gray-200">
         {showExpanded ? (
           <Image
-            src="/logoblack.svg"
+            src="/logo.svg"
             alt="Builders-Liability-AMMC Logo"
             className="cursor-pointer"
-            width={120}
+            width={80}
             height={40}
             onClick={() => !isMobile && toggleSidebar()}
           />
