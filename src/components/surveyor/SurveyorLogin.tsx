@@ -148,12 +148,13 @@ const handleLogin = async (e: React.FormEvent) => {
         <div className="relative z-10 px-10 text-center text-white">
           <div className=" flex justify-center mb-2">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="Builders-Liability-AMMC Logo"
               width={180}
               height={180}
               className="mx-auto"
             />
+            <div className="text-2xl flex gap-1 font-bold text-green-600">Builders Liability</div>
           </div>
           <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">Builders-Liability-AMMC Surveyor Portal</h2>
           <p className="text-sm md:text-[1.1rem] leading-relaxed fade-in-text mt-2">
@@ -169,7 +170,7 @@ const handleLogin = async (e: React.FormEvent) => {
           {/* Logo for mobile */}
           <div className="md:hidden flex justify-center mb-2">
             <Image
-              src="/logoblack.svg"
+              src="/logo.svg"
               alt="Builders-Liability-AMMC Logo"
               width={120}
               height={120}

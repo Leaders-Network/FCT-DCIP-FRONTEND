@@ -61,11 +61,11 @@ const Sidebar = () => {
       <div className="p-4 flex justify-between items-center relative">
         {!isCollapsed ? (
           <Image
-            src="/logoblack.svg"
+            src="/logo.svg"
             alt="Builders-Liability-AMMC Logo"
             className="bg-black-500"
-            width={isCollapsed ? 150 : 300}
-            height={isCollapsed ? 150 : 300}
+            width={80}
+            height={40}
             onClick={toggleSidebar}
           />
         ) : (

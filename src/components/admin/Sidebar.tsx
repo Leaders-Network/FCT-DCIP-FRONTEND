@@ -94,9 +94,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
       <div className="p-4 flex items-center justify-between border-b border-gray-200">
         {!collapsed ? (
           <Image
-            src="/logoblack.svg"
+            src="/logo.svg"
             alt="Logo"
-            width={120}
+            width={80}
             height={40}
             className="cursor-pointer"
             onClick={() => !isMobile && setCollapsed(true)}
