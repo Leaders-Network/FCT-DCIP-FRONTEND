@@ -289,7 +289,13 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Project Type:</span>
                   <span className="font-medium text-gray-900">
-                    {assignmentPolicy?.project?.coverTypeIdxDetails || 'N/A'}
+                    {assignmentPolicy?.project?.projectType || assignmentPolicy?.project?.coverTypeIdxDetails || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Contractor Type:</span>
+                  <span className="font-medium text-gray-900">
+                    {assignmentPolicy?.project?.contractorType || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -429,7 +435,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                       <p className="text-base text-gray-900">
                         {(assignment.policyId as BuilderLiabilityPolicy).builder.address}
                       </p>
-                      <p className="text-sm text-gray-500">Contractor Address</p>
+                      <p className="text-sm text-gray-500">Location / Address</p>
                     </div>
                   </div>
                 )}

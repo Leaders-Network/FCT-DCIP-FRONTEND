@@ -9,8 +9,11 @@ import {
     BUILDER_LIABILITY_COVERAGE_TYPES,
     CLIENT_IDENTIFICATION_TYPES,
     CategoryOfWorkmen,
+    CONTRACTOR_TYPES,
     PROFESSIONAL_BODY_OPTIONS,
+    PROJECT_TYPES,
     Professional,
+    STAFF_STRENGTH_OPTIONS,
     TOTAL_ESTIMATE_SUM_BANDS
 } from '@/types/builderLiabilityPolicy.types';
 import { Button } from '@/components/ui/button';
@@ -64,12 +67,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         // Consultant Info
         consultantName: '',
-        professionalBody: 'Nigerian Institute of Architects (NIA)',
+        professionalBody: 'COREN - Council for regulation of engineering in Nigeria',
         professionalRegistrationNumber: '',
         otherProfessionalBodyName: '',
         yearOfIncorporation: '',
         areaOfSpecialization: '',
-        permanentStaffCount: 0,
+        staffStrength: 'Permanent',
 
 
         // Membership Info
@@ -101,6 +104,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         coverTypeIndex: false,
         coverTypeDetails: 'Public Liability',
         contractorCategoryId: 1,
+        contractorType: 'Local',
+        projectType: 'Residential',
         extraHazardous: false,
         totalEstimateSum: 0,
         totalEstimateSumBand: '',
@@ -188,11 +193,11 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 formData.professionalBody === 'Other' &&
                 isBlank(formData.otherProfessionalBodyName)
             ) {
-                errors.push('Other Professional Body Name is required when Professional Body is Other.');
+                errors.push('Other Regulatory Body Name is required when Regulatory Body is Other.');
             }
             if (isBlank(formData.yearOfIncorporation)) errors.push('Year of Incorporation is required.');
-            if (!isValidNumber(formData.permanentStaffCount) || Number(formData.permanentStaffCount) < 0) {
-                errors.push('Number of Permanent Staff must be 0 or greater.');
+            if (isBlank(formData.staffStrength)) {
+                errors.push('Staff Strength is required.');
             }
         }
 
@@ -270,6 +275,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             if (isBlank(formData.coverTypeDetails)) errors.push('Coverage Type is required.');
             if (!isValidNumber(formData.contractorCategoryId) || Number(formData.contractorCategoryId) <= 0) {
                 errors.push('Contractor Category is required.');
+            }
+            if (isBlank(formData.contractorType)) {
+                errors.push('Contractor Type is required.');
+            }
+            if (isBlank(formData.projectType)) {
+                errors.push('Project Type is required.');
             }
             if (isBlank(formData.totalEstimateSumBand)) {
                 errors.push('Estimated Sum Range is required.');
@@ -447,14 +458,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     formData.professionalBody === 'Other'
                         ? formData.otherProfessionalBodyName || undefined
                         : undefined,
-                niobRegNo:
-                    formData.professionalBody === 'Nigerian Institute of Building (NIOB)'
-                        ? formData.professionalRegistrationNumber
-                        : undefined,
+                niobRegNo: undefined,
                 yearOfIncorporation: new Date(formData.yearOfIncorporation),
                 areaOfSpecialization: formData.areaOfSpecialization,
-                noOfPermanentStaff: formData.permanentStaffCount,
-                permanentStaffCount: formData.permanentStaffCount
+                staffStrength: formData.staffStrength || undefined,
+                noOfPermanentStaff: undefined,
+                permanentStaffCount: undefined
             },
             membership: {
                 MembershipStatusId: formData.membershipStatusId,
@@ -486,6 +495,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 isStatutory: formData.coverTypeIndex,
                 coverTypeIdxDetails: formData.coverTypeDetails,
                 categoryOfContractorId: formData.contractorCategoryId,
+                contractorType: formData.contractorType || undefined,
+                projectType: formData.projectType || undefined,
                 extraHazardous: formData.extraHazardous,
                 totalEstimateSumBand: formData.totalEstimateSumBand || undefined,
                 totalEstimateSum: formData.totalEstimateSum,
@@ -791,7 +802,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                     </div>
                                 </div>
                                 <div>
-                                    <Label htmlFor="builderAddress">Address *</Label>
+                                    <Label htmlFor="builderAddress">Location / Address *</Label>
                                     <Textarea
                                         id="builderAddress"
                                         value={formData.builderAddress}
@@ -799,7 +810,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         required
                                     />
                                     <p className="mt-1 text-sm text-gray-500">
-                                        Provide the contractor&apos;s official contact address.
+                                        Provide the contractor&apos;s location and address (e.g. Headquarters address if different from project site).
                                     </p>
                                 </div>
                             </TabsContent>                          
@@ -820,13 +831,13 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </p>
                                     </div>
                                     <div>
-                                        <Label htmlFor="professionalBody">Professional Body *</Label>
+                                        <Label htmlFor="professionalBody">Regulatory Body *</Label>
                                         <Select
                                             value={formData.professionalBody}
                                             onValueChange={(value) => handleInputChange('professionalBody', value)}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select professional body" />
+                                                <SelectValue placeholder="Select regulatory body" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {PROFESSIONAL_BODY_OPTIONS.map((professionalBody) => (
@@ -837,30 +848,30 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </SelectContent>
                                         </Select>
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Select the consultant&apos;s recognized professional body.
+                                            Select the consultant&apos;s recognized regulatory body.
                                         </p>
                                     </div>
                                     <div>
-                                        <Label htmlFor="professionalRegistrationNumber">Professional Registration Number *</Label>
+                                        <Label htmlFor="professionalRegistrationNumber">Registration Number *</Label>
                                         <Input
                                             id="professionalRegistrationNumber"
                                             value={formData.professionalRegistrationNumber}
                                             onChange={(e) => handleInputChange('professionalRegistrationNumber', e.target.value)}
-                                            placeholder="Enter consultant's professional registration number"
+                                            placeholder="Enter consultant's registration number"
                                             required
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Enter the registration number issued by the selected professional body.
+                                            Enter the registration number issued by the selected regulatory body.
                                         </p>
                                     </div>
                                     {formData.professionalBody === 'Other' && (
                                         <div>
-                                            <Label htmlFor="otherProfessionalBodyName">Other Professional Body Name *</Label>
+                                            <Label htmlFor="otherProfessionalBodyName">Other Regulatory Body Name *</Label>
                                             <Input
                                                 id="otherProfessionalBodyName"
                                                 value={formData.otherProfessionalBodyName}
                                                 onChange={(e) => handleInputChange('otherProfessionalBodyName', e.target.value)}
-                                                placeholder="Enter professional body name"
+                                                placeholder="Enter regulatory body name"
                                                 required
                                             />
                                         </div>
@@ -885,15 +896,25 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="permanentStaffCount">Number of Permanent Staff *</Label>
-                                        <Input
-                                            id="permanentStaffCount"
-                                            type="number"
-                                            min="0"
-                                            value={formData.permanentStaffCount}
-                                            onChange={(e) => handleInputChange('permanentStaffCount', parseInt(e.target.value, 10) || 0)}
-                                            required
-                                        />
+                                        <Label htmlFor="staffStrength">Staff Strength *</Label>
+                                        <Select
+                                            value={formData.staffStrength}
+                                            onValueChange={(value) => handleInputChange('staffStrength', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select staff strength" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {STAFF_STRENGTH_OPTIONS.map((strength) => (
+                                                    <SelectItem key={strength} value={strength}>
+                                                        {strength}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Select the primary staff strength classification for this consultant.
+                                        </p>
                                     </div>
 
                                 </div>
@@ -935,12 +956,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </p>
                                     </div>
                                     <div>
-                                        <Label htmlFor="professionalBodyName">Professional Body Name</Label>
+                                        <Label htmlFor="professionalBodyName">Regulatory Body Name</Label>
                                         <Input
                                             id="professionalBodyName"
                                             value={formData.professionalBodyName}
                                             onChange={(e) => handleInputChange('professionalBodyName', e.target.value)}
-                                            placeholder="e.g. NIA"
+                                            placeholder="e.g. COREN"
                                         />
                                     </div>
                                     <div>
@@ -1381,6 +1402,42 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </Select>
                                     </div>
                                     <div>
+                                        <Label htmlFor="contractorType">Contractor Type *</Label>
+                                        <Select
+                                            value={formData.contractorType}
+                                            onValueChange={(value) => handleInputChange('contractorType', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {CONTRACTOR_TYPES.map((type) => (
+                                                    <SelectItem key={type} value={type}>
+                                                        {type}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="projectType">Project Type *</Label>
+                                        <Select
+                                            value={formData.projectType}
+                                            onValueChange={(value) => handleInputChange('projectType', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {PROJECT_TYPES.map((type) => (
+                                                    <SelectItem key={type} value={type}>
+                                                        {type}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
                                         <Label htmlFor="contractorCategoryId">Contractor Category *</Label>
                                         <Select
                                             value={formData.contractorCategoryId.toString()}
@@ -1495,12 +1552,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                     </div>
 
                                     <div>
-                                        <Label htmlFor="projectAddress">Project Address *</Label>
+                                        <Label htmlFor="projectAddress">Location / Address *</Label>
                                         <Textarea
                                             id="projectAddress"
                                             value={formData.projectAddress}
                                             onChange={(e) => handleInputChange('projectAddress', e.target.value)}
-                                            placeholder="Full project/site address"
+                                            placeholder="Full project/site location or address"
                                             required
                                         />
                                     </div>
