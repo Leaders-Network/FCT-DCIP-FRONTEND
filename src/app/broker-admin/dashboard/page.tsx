@@ -909,7 +909,6 @@ export default function BrokerAdminDashboard() {
                                             {getProfessionalBody(selectedCompletedPolicy.organization) === 'Other' && (
                                                 <KeyValue label="Other Regulatory Body Name" value={selectedCompletedPolicy.organization.otherProfessionalBodyName || 'Not provided'} />
                                             )}
-                                            <KeyValue label="Staff Strength" value={selectedCompletedPolicy.organization.staffStrength || 'N/A'} />
                                             <KeyValue label="Specialization" value={selectedCompletedPolicy.organization.areaOfSpecialization || 'N/A'} />
                                             <KeyValue
                                                 label="Year of Incorporation"

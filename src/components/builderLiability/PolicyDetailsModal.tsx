@@ -612,7 +612,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 )}
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Staff Strength</label>
-                                    <p className="text-base">{firstMeaningfulValue(policy.organization?.staffStrength, policy.organization?.noOfPermanentStaff, policy.organization?.permanentStaffCount) ?? 'Not provided'}</p>
+                                    <p className="text-base">{toDisplayText(firstMeaningfulValue(policy.organization?.staffStrength, policy.organization?.noOfPermanentStaff, policy.organization?.permanentStaffCount), 'Not provided')}</p>
                                 </div>
                             </CardContent>
                         </Card>
