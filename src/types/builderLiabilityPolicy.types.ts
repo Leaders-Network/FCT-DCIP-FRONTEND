@@ -4,6 +4,7 @@ export interface BuilderIdentity {
     customerEmail: string;
     nameOfBuilder: string;
     rcNumber: string;
+    directorOfCompany?: string;
     lga?: string;
     district?: string;
     identification: {
@@ -57,6 +58,7 @@ export const PROFESSIONAL_BODY_OPTIONS: ProfessionalBody[] = [
 ];
 
 export interface OrganizationInfo {
+    consultantName?: string;
     professionalBody?: ProfessionalBody;
     professionalRegistrationNumber?: string;
     otherProfessionalBodyName?: string;
@@ -428,6 +430,7 @@ export interface BuilderLiabilityPolicyFormData {
     builderEmail: string;
     builderName: string;
     rcNumber: string;
+    directorOfCompany: string;
     identificationType: number;
     identificationNumber: string;
     builderAddress: string;
@@ -443,6 +446,7 @@ export interface BuilderLiabilityPolicyFormData {
     clientRcNumber?: string;
 
     // Organization Info
+    consultantName: string;
     professionalBody: ProfessionalBody | '';
     professionalRegistrationNumber: string;
     otherProfessionalBodyName?: string;

@@ -47,6 +47,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         builderEmail: '',
         builderName: '',
         rcNumber: '',
+        directorOfCompany: '',
         identificationType: 1,
         identificationNumber: '',
         builderAddress: '',
@@ -62,6 +63,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         clientRcNumber: '',
 
         // Consultant Info
+        consultantName: '',
         professionalBody: 'Nigerian Institute of Architects (NIA)',
         professionalRegistrationNumber: '',
         otherProfessionalBodyName: '',
@@ -143,6 +145,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         if (tab === 'builder') {
             if (isBlank(formData.builderName)) errors.push('Contractor/Company Name is required.');
+            if (isBlank(formData.directorOfCompany)) errors.push('Director of the company is required.');
             if (isBlank(formData.builderEmail) || !isValidEmail(formData.builderEmail)) {
                 errors.push('A valid Email Address is required.');
             }
@@ -150,7 +153,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             if (isBlank(formData.builderPhone) || !isValidPhoneNumber(formData.builderPhone)) {
                 errors.push('A valid phone number is required.');
             }
-            if (isBlank(formData.identificationNumber)) errors.push('Identification Number is required.');
+            if (isBlank(formData.identificationNumber)) errors.push("Director's Identification Number is required.");
             if (isBlank(formData.builderAddress) || String(formData.builderAddress).trim().length < 10) {
                 errors.push('Address is required and should be at least 10 characters.');
             }
@@ -176,7 +179,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         }
 
         if (tab === 'organization') {
-            if (isBlank(formData.professionalBody)) errors.push('Professional Body is required.');
+
+            if (isBlank(formData.consultantName)) errors.push('Consultant Name is required.');
             if (isBlank(formData.professionalRegistrationNumber)) {
                 errors.push('Professional Registration Number is required.');
             }
@@ -436,6 +440,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 rcNumber: formData.clientRcNumber || undefined
             },
             organization: {
+                consultantName: formData.consultantName,
                 professionalBody: formData.professionalBody || undefined,
                 professionalRegistrationNumber: formData.professionalRegistrationNumber,
                 otherProfessionalBodyName:
@@ -743,6 +748,19 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </p>
                                     </div>
                                     <div>
+                                        <Label htmlFor="directorOfCompany">Director of the company *</Label>
+                                        <Input
+                                            id="directorOfCompany"
+                                            value={formData.directorOfCompany}
+                                            onChange={(e) => handleInputChange('directorOfCompany', e.target.value)}
+                                            required
+                                            placeholder="Enter director of the company"
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Provide the name of the director of the contractor company.
+                                        </p>
+                                    </div>
+                                    <div>
                                         <Label htmlFor="identificationType">Identification Type *</Label>
                                         <Select
                                             value={formData.identificationType.toString()}
@@ -759,16 +777,16 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label htmlFor="identificationNumber">Identification Number *</Label>
+                                        <Label htmlFor="identificationNumber">Director's Identification Number *</Label>
                                         <Input
                                             id="identificationNumber"
                                             value={formData.identificationNumber}
                                             onChange={(e) => handleInputChange('identificationNumber', e.target.value)}
                                             required
-                                            placeholder="Enter identification number"
+                                            placeholder="Enter director's identification number"
                                         />
                                         {!formData.identificationNumber && (
-                                            <p className="text-sm text-red-600 mt-1">Identity number is required</p>
+                                            <p className="text-sm text-red-600 mt-1">Director's identification number is required</p>
                                         )}
                                     </div>
                                 </div>
@@ -788,6 +806,19 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
                             <TabsContent value="organization" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="consultantName">Consultant Name *</Label>
+                                        <Input
+                                            id="consultantName"
+                                            value={formData.consultantName}
+                                            onChange={(e) => handleInputChange('consultantName', e.target.value)}
+                                            placeholder="Enter consultant name"
+                                            required
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Enter the consultant's full name for this organization.
+                                        </p>
+                                    </div>
                                     <div>
                                         <Label htmlFor="professionalBody">Professional Body *</Label>
                                         <Select
