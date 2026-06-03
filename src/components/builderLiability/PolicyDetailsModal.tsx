@@ -507,7 +507,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 {policy.builder.identification && (
                                     <>
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600">Identification Type</label>
+                                            <label className="text-sm font-medium text-gray-600">Director's Identification Type</label>
                                             <p className="text-base">
                                                 {policy.builder.identification.identificationTypeId === 1 ? 'National ID' :
                                                     policy.builder.identification.identificationTypeId === 2 ? 'Passport' :
@@ -515,7 +515,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                             </p>
                                         </div>
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600">Identification Number</label>
+                                            <label className="text-sm font-medium text-gray-600">Director's Identification Number</label>
                                             <p className="text-base">{policy.builder.identification.identityNo}</p>
                                         </div>
                                     </>
