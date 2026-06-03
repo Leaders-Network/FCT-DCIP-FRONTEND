@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
@@ -876,7 +876,7 @@ export default function BrokerAdminDashboard() {
                                             <KeyValue label="RC Number" value={selectedCompletedPolicy.builder.rcNumber} />
                                             <KeyValue label="Email" value={selectedCompletedPolicy.builder.customerEmail} />
                                             <KeyValue label="Phone" value={selectedCompletedPolicy.builder.telNo} />
-                                            <KeyValue label="Address" value={selectedCompletedPolicy.builder.address} />
+                                            <KeyValue label="Location / Address" value={selectedCompletedPolicy.builder.address} />
                                             <KeyValue label="Client Name" value={selectedCompletedPolicy.client?.name || 'Not provided'} />
                                             <KeyValue label="Client Email" value={selectedCompletedPolicy.client?.email || 'Not provided'} />
                                             <KeyValue label="Client Phone" value={selectedCompletedPolicy.client?.phoneNumber || 'Not provided'} />
@@ -891,6 +891,7 @@ export default function BrokerAdminDashboard() {
 
                                         <SectionCard icon={Layers} title="Project">
                                             <KeyValue label="Property Title" value={getDisplayValue(getProjectTitle(selectedCompletedPolicy.project))} />
+                                            <KeyValue label="Project Type" value={selectedCompletedPolicy.project.projectType || 'N/A'} />
                                             <KeyValue label="Cover Type" value={selectedCompletedPolicy.project.coverTypeIdxDetails} />
                                             <KeyValue label="Estimated Sum Range" value={getProjectEstimateBand(selectedCompletedPolicy.project) || 'Not provided'} />
                                             <KeyValue label="Category" value={selectedCompletedPolicy.project.categoryOfContractorId} />
@@ -903,11 +904,12 @@ export default function BrokerAdminDashboard() {
                                         </SectionCard>
 
                                         <SectionCard icon={Building2} title="Consultant">
-                                            <KeyValue label="Professional Body" value={getDisplayValue(getProfessionalBody(selectedCompletedPolicy.organization))} />
+                                            <KeyValue label="Regulatory Body" value={getDisplayValue(getProfessionalBody(selectedCompletedPolicy.organization))} />
                                             <KeyValue label="Registration Number" value={getDisplayValue(getProfessionalRegistrationNumber(selectedCompletedPolicy.organization))} />
                                             {getProfessionalBody(selectedCompletedPolicy.organization) === 'Other' && (
-                                                <KeyValue label="Other Body Name" value={selectedCompletedPolicy.organization.otherProfessionalBodyName || 'Not provided'} />
+                                                <KeyValue label="Other Regulatory Body Name" value={selectedCompletedPolicy.organization.otherProfessionalBodyName || 'Not provided'} />
                                             )}
+                                            <KeyValue label="Staff Strength" value={selectedCompletedPolicy.organization.staffStrength || 'N/A'} />
                                             <KeyValue label="Specialization" value={selectedCompletedPolicy.organization.areaOfSpecialization || 'N/A'} />
                                             <KeyValue
                                                 label="Year of Incorporation"
@@ -915,7 +917,7 @@ export default function BrokerAdminDashboard() {
                                                     ? formatDate(String(selectedCompletedPolicy.organization.yearOfIncorporation))
                                                     : 'N/A'}
                                             />
-                                            <KeyValue label="Permanent Staff" value={selectedCompletedPolicy.organization.noOfPermanentStaff ?? selectedCompletedPolicy.organization.permanentStaffCount} />
+                                            <KeyValue label="Staff Strength" value={selectedCompletedPolicy.organization.staffStrength || selectedCompletedPolicy.organization.noOfPermanentStaff || selectedCompletedPolicy.organization.permanentStaffCount} />
                                         </SectionCard>
 
                                         <SectionCard icon={DollarSign} title="Payment">

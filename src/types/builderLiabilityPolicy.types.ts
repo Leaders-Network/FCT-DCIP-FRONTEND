@@ -43,19 +43,49 @@ export interface ClientInfo {
 }
 
 export type ProfessionalBody =
-| 'Nigerian Institute of Architects (NIA)'
-| 'Nigerian Society of Engineers (NSE)'
-| 'Nigerian Institute of Building (NIOB)'
-    | 'Nigerian Institute of Town Planners (NITP)'
+    | 'COREN - Council for regulation of engineering in Nigeria'
+    | 'ARCON - Architects Registration council of Nigeria'
+    | 'TOPREC - Town Planners Registration council of Nigeria'
+    | 'CORBON - Council of Registered Builders of Nigeria'
+    | 'QSRBN - Quantity Surveyors Registration Board of Nigeria'
     | 'Other';
 
 export const PROFESSIONAL_BODY_OPTIONS: ProfessionalBody[] = [
-    'Nigerian Institute of Architects (NIA)',
-    'Nigerian Society of Engineers (NSE)',
-    'Nigerian Institute of Building (NIOB)',
-    'Nigerian Institute of Town Planners (NITP)',
+    'COREN - Council for regulation of engineering in Nigeria',
+    'ARCON - Architects Registration council of Nigeria',
+    'TOPREC - Town Planners Registration council of Nigeria',
+    'CORBON - Council of Registered Builders of Nigeria',
+    'QSRBN - Quantity Surveyors Registration Board of Nigeria',
     'Other'
 ];
+
+export type StaffStrength = 'Permanent' | 'Casual' | 'Artisans' | 'Other';
+
+export const STAFF_STRENGTH_OPTIONS: StaffStrength[] = [
+    'Permanent',
+    'Casual',
+    'Artisans',
+    'Other'
+];
+
+export type ProjectType =
+    | 'Commercial'
+    | 'Residential'
+    | 'Industrial'
+    | 'Mass Housing (Estate Development)'
+    | 'Other';
+
+export const PROJECT_TYPES: ProjectType[] = [
+    'Commercial',
+    'Residential',
+    'Industrial',
+    'Mass Housing (Estate Development)',
+    'Other'
+];
+
+export type ContractorType = 'Local' | 'International' | 'Other';
+
+export const CONTRACTOR_TYPES: ContractorType[] = ['Local', 'International', 'Other'];
 
 export interface OrganizationInfo {
     consultantName?: string;
@@ -65,7 +95,8 @@ export interface OrganizationInfo {
     niobRegNo?: string;
     yearOfIncorporation: Date | string;
     areaOfSpecialization?: string;
-    noOfPermanentStaff: number;
+    staffStrength?: StaffStrength;
+    noOfPermanentStaff?: number;
     permanentStaffCount?: number;
 }
 
@@ -148,6 +179,8 @@ export interface ProjectInfo {
     coverageType?: BuilderLiabilityCoverageType;
     categoryOfContractorId: number;
     contractorCategory?: number;
+    contractorType?: ContractorType;
+    projectType?: ProjectType;
     extraHazardous: boolean;
     extraHazardousWork?: boolean;
     totalEstimateSum: number;
@@ -452,7 +485,7 @@ export interface BuilderLiabilityPolicyFormData {
     otherProfessionalBodyName?: string;
     yearOfIncorporation: string;
     areaOfSpecialization?: string;
-    permanentStaffCount: number;
+    staffStrength: StaffStrength | '';
 
     // Membership Info
     membershipStatusId: number;
@@ -483,6 +516,8 @@ export interface BuilderLiabilityPolicyFormData {
     coverTypeIndex: boolean;
     coverTypeDetails: BuilderLiabilityCoverageType;
     contractorCategoryId: number;
+    contractorType: ContractorType | '';
+    projectType: ProjectType | '';
     extraHazardous: boolean;
     totalEstimateSum: number;
     totalEstimateSumBand: TotalEstimateSumBand | '';

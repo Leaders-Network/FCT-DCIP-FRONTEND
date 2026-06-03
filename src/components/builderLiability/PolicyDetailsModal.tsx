@@ -500,7 +500,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 <div className="md:col-span-2">
                                     <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
                                         <MapPin className="w-4 h-4" />
-                                        Address
+                                        Location / Address
                                     </label>
                                     <p className="text-base">{policy.builder.address}</p>
                                 </div>
@@ -589,11 +589,11 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <p className="text-base font-semibold">{policy.organization?.consultantName || 'Not provided'}</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Professional Body</label>
+                                    <label className="text-sm font-medium text-gray-600">Regulatory Body</label>
                                     <p className="text-base font-semibold">{getDisplayValue(consultantProfessionalBody)}</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Professional Registration Number</label>
+                                    <label className="text-sm font-medium text-gray-600">Registration Number</label>
                                     <p className="text-base font-semibold">{getDisplayValue(consultantRegistrationNumber)}</p>
                                 </div>
                                 <div>
@@ -606,13 +606,13 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 </div>
                                 {consultantProfessionalBody === 'Other' && (
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600">Other Professional Body Name</label>
+                                        <label className="text-sm font-medium text-gray-600">Other Regulatory Body Name</label>
                                         <p className="text-base">{getDisplayValue(policy.organization?.otherProfessionalBodyName)}</p>
                                     </div>
                                 )}
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Permanent Staff Count</label>
-                                    <p className="text-base">{policy.organization?.noOfPermanentStaff ?? policy.organization?.permanentStaffCount ?? 0}</p>
+                                    <label className="text-sm font-medium text-gray-600">Staff Strength</label>
+                                    <p className="text-base">{firstMeaningfulValue(policy.organization?.staffStrength, policy.organization?.noOfPermanentStaff, policy.organization?.permanentStaffCount) ?? 'Not provided'}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -646,7 +646,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 )}
                                 {policy.membership?.ProfessionalBodyName && (
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600">Professional Body</label>
+                                        <label className="text-sm font-medium text-gray-600">Regulatory Body</label>
                                         <p className="text-base">{policy.membership.ProfessionalBodyName}</p>
                                     </div>
                                 )}
@@ -674,8 +674,16 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                         </p>
                                     </div>
                                     <div>
+                                        <label className="text-sm font-medium text-gray-600">Project Type</label>
+                                        <p className="text-base font-semibold">{getDisplayValue(policy.project?.projectType)}</p>
+                                    </div>
+                                    <div>
                                         <label className="text-sm font-medium text-gray-600">Coverage Type</label>
                                         <p className="text-base font-semibold">{policy.project?.coverTypeIdxDetails || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600">Contractor Type</label>
+                                        <p className="text-base font-semibold">{getDisplayValue(policy.project?.contractorType)}</p>
                                     </div>
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Property Title</label>
@@ -714,7 +722,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                         <p className="text-base">{getDisplayValue(policy.project?.plotNumber || policy.project?.agisNo)}</p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600">Project Address</label>
+                                        <label className="text-sm font-medium text-gray-600">Location / Address</label>
                                         <p className="text-base">{getDisplayValue(projectAddress)}</p>
                                     </div>
                                     <div>
