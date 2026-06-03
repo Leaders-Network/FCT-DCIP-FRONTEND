@@ -476,6 +476,10 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <p className="text-base font-semibold">{policy.builder.nameOfBuilder}</p>
                                 </div>
                                 <div>
+                                    <label className="text-sm font-medium text-gray-600">Director of the company</label>
+                                    <p className="text-base font-semibold">{policy.builder.directorOfCompany || 'Not provided'}</p>
+                                </div>
+                                <div>
                                     <label className="text-sm font-medium text-gray-600">RC Number</label>
                                     <p className="text-base font-semibold">{policy.builder.rcNumber}</p>
                                 </div>
@@ -580,6 +584,10 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Consultant Name</label>
+                                    <p className="text-base font-semibold">{policy.organization?.consultantName || 'Not provided'}</p>
+                                </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Professional Body</label>
                                     <p className="text-base font-semibold">{getDisplayValue(consultantProfessionalBody)}</p>
