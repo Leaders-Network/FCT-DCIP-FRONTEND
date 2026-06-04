@@ -121,7 +121,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         // NIIP Builder's Liability product
         productId: 556,
         salesOutlet: '',
-        brokerAgentName: '',
+        brokerAgentName: 'NSIA - Nigeria Sovereign Investment Authority',
 
         // Optional fields
         priority: 'medium'
@@ -525,6 +525,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             },
             priority: formData.priority
         };
+
+        console.log('POLICY DATA SENT:', JSON.stringify(policyData, null, 2));
 
         const result = await createPolicy(policyData);
         if (result && onSuccess) {
