@@ -1523,25 +1523,28 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
                                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     
-                                    <div>
-                                        <Label htmlFor="projectDistrict">Project District *</Label>
+ <div>
+                                        <Label htmlFor="projectLga">Project LGA *</Label>
                                         <Select
-                                            value={formData.projectDistrict}
-                                            onValueChange={(value) => handleInputChange('projectDistrict', value)}
-                                            disabled={!formData.projectLga}
+                                            value={formData.projectLga}
+                                            onValueChange={(value) => {
+                                                handleInputChange('projectLga', value);
+                                                handleInputChange('projectDistrict', '');
+                                            }}
                                         >
-                                            <SelectTrigger disabled={!formData.projectLga}>
-                                                <SelectValue placeholder={formData.projectLga ? "Select District" : "Select LGA first"} />
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select LGA" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {formData.projectLga && getDistrictsByLGA(formData.projectLga).map((district) => (
-                                                    <SelectItem key={district.value} value={district.value}>
-                                                        {district.label}
+                                                {FCT_LOCATIONS.map((lga) => (
+                                                    <SelectItem key={lga.value} value={lga.value}>
+                                                        {lga.label}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
+
                                     <div>
                                         <Label htmlFor="cadastralZone">Cadastral Zone *</Label>
                                         <Input
@@ -1566,27 +1569,27 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             required
                                         />
                                     </div>
+                                    
+                                       
                                     <div>
-                                        <Label htmlFor="projectLga">Project LGA *</Label>
+                                        <Label htmlFor="projectDistrict">Project District *</Label>
                                         <Select
-                                            value={formData.projectLga}
-                                            onValueChange={(value) => {
-                                                handleInputChange('projectLga', value);
-                                                handleInputChange('projectDistrict', '');
-                                            }}
+                                            value={formData.projectDistrict}
+                                            onValueChange={(value) => handleInputChange('projectDistrict', value)}
+                                            disabled={!formData.projectLga}
                                         >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select LGA" />
+                                            <SelectTrigger disabled={!formData.projectLga}>
+                                                <SelectValue placeholder={formData.projectLga ? "Select District" : "Select LGA first"} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {FCT_LOCATIONS.map((lga) => (
-                                                    <SelectItem key={lga.value} value={lga.value}>
-                                                        {lga.label}
+                                                {formData.projectLga && getDistrictsByLGA(formData.projectLga).map((district) => (
+                                                    <SelectItem key={district.value} value={district.value}>
+                                                        {district.label}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                    </div>    
+                                    </div>
                                     
                                 </div>
 
