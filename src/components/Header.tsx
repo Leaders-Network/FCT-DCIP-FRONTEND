@@ -132,7 +132,7 @@ const Header = () => {
             <div className="px-4 py-3 border-t border-gray-200">
               <div className="flex items-center mb-3">
                 <Phone className="w-5 h-5 text-green-600 mr-2" />
-                <span className="font-semibold text-[1.2rem]">(234) 555-0129</span>
+                <span className="font-semibold text-[1.2rem]">+234 806 006 0826</span>
               </div>
              
             </div>
