@@ -34,7 +34,7 @@ interface PolicyFormProps {
     onCancel?: () => void;
 }
 
-const FORM_TABS = ['builder', 'client', 'organization', 'membership', 'workforce', 'compliance', 'project'] as const;
+const FORM_TABS = ['client', 'builder', 'organization', 'membership', 'workforce', 'compliance', 'project'] as const;
 type FormTab = (typeof FORM_TABS)[number];
 
 // Display labels use contractor/consultant terminology even when internal names remain backward-compatible.

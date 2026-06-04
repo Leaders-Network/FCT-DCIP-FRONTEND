@@ -124,7 +124,7 @@ export default function ChatWidget() {
                 height={32}
                 className="w-8 h-8 rounded-full object-cover border-2 border-white"
               />
-              <h4 className="text-sm font-semibold">DCIP Support Team</h4>
+              <h4 className="text-sm font-semibold">Builders Liability Support</h4>
             </div>
             <button onClick={() => setOpen(false)}>
               <X size={18} />
