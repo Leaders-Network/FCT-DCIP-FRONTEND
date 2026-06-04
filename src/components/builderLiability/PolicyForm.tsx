@@ -150,7 +150,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         if (tab === 'builder') {
             if (isBlank(formData.builderName)) errors.push('Contractor/Company Name is required.');
-            if (isBlank(formData.directorOfCompany)) errors.push('Director of the company is required.');
+            if (isBlank(formData.directorOfCompany) || formData.directorOfCompany.trim().length < 2) {
+                errors.push('Director of the company must be at least 2 characters long.');
+            }
             if (isBlank(formData.builderEmail) || !isValidEmail(formData.builderEmail)) {
                 errors.push('A valid Email Address is required.');
             }
@@ -434,6 +436,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 customerEmail: formData.builderEmail,
                 nameOfBuilder: formData.builderName,
                 rcNumber: formData.rcNumber,
+                directorOfCompany: formData.directorOfCompany,
                 identification: {
                     identificationTypeId: formData.identificationType,
                     identityNo: formData.identificationNumber
