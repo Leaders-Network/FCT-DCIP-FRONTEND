@@ -22,6 +22,7 @@ import {
   getAdminAlerts,
   getAdminSurveyors
 } from '@/services/api';
+import { useNotifications } from '@/context/NotificationContext';
 import { builderLiabilityPolicyAPI } from "@/services/builderLiabilityPolicyApi";
 import {
   DashboardData,
@@ -48,6 +49,8 @@ const AdminDashboard: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [friendlyError, setFriendlyError] = useState<string | null>(null);
+
+  const { notifications } = useNotifications();
 
   // API Data States
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -714,108 +717,79 @@ const AdminDashboard: React.FC = () => {
                   <Bell className="w-5 h-5 mr-2" />
                   Notifications
                 </h3>
-                <button className="text-sm text-blue-600 hover:text-blue-800">
+                <button 
+                  onClick={() => router.push('/admin/dashboard/notifications')}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
                   View All
                 </button>
               </div>
             </div>
             <div className="p-6">
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {/* Policy Notifications */}
-                <div className="border-b border-dashed border-gray-200 pb-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-1 bg-blue-100 rounded-full">
-                      <FileText className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">New Policy Request</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Policy request from John Doe for residential property requires assignment.
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
-                    </div>
+                {notifications.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Bell className="w-8 h-8 mx-auto mb-3 opacity-30" />
+                    <p>No new notifications</p>
                   </div>
-                </div>
+                ) : (
+                  notifications.slice(0, 5).map((notification, idx) => {
+                    const getIcon = (type: string) => {
+                      switch (type) {
+                        case 'policy_created':
+                        case 'report_ready':
+                          return <FileText className="h-4 w-4 text-blue-600" />;
+                        case 'policy_assigned':
+                        case 'assignment_created':
+                          return <Users className="h-4 w-4 text-purple-600" />;
+                        case 'survey_submitted':
+                          return <CheckCircle className="h-4 w-4 text-green-600" />;
+                        case 'system_alert':
+                        case 'conflict_detected':
+                          return <AlertTriangle className="h-4 w-4 text-red-600" />;
+                        case 'assignment_deadline_approaching':
+                          return <Clock className="h-4 w-4 text-yellow-600" />;
+                        default:
+                          return <Bell className="h-4 w-4 text-gray-600" />;
+                      }
+                    };
 
-                {/* Assignment Notifications */}
-                <div className="border-b border-dashed border-gray-200 pb-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-1 bg-yellow-100 rounded-full">
-                      <Clock className="h-4 w-4 text-yellow-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">Assignment Overdue</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Survey assignment for Property ID: A012D30 is overdue by 2 days.
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">4 hours ago</p>
-                    </div>
-                  </div>
-                </div>
+                    const getIconBg = (type: string) => {
+                      switch (type) {
+                        case 'policy_created':
+                        case 'report_ready':
+                          return 'bg-blue-100';
+                        case 'policy_assigned':
+                        case 'assignment_created':
+                          return 'bg-purple-100';
+                        case 'survey_submitted':
+                          return 'bg-green-100';
+                        case 'system_alert':
+                        case 'conflict_detected':
+                          return 'bg-red-100';
+                        case 'assignment_deadline_approaching':
+                          return 'bg-yellow-100';
+                        default:
+                          return 'bg-gray-100';
+                      }
+                    };
 
-                {/* Survey Completion */}
-                <div className="border-b border-dashed border-gray-200 pb-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-1 bg-green-100 rounded-full">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">Survey Completed</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Surveyor Mike Johnson completed survey for Property ID: B045X21.
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">6 hours ago</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* System Alert */}
-                <div className="border-b border-dashed border-gray-200 pb-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-1 bg-red-100 rounded-full">
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">System Alert</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        High volume of pending assignments detected. Consider assigning more surveyors.
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">1 day ago</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Surveyor Status */}
-                <div className="border-b border-dashed border-gray-200 pb-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-1 bg-purple-100 rounded-full">
-                      <Users className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">Surveyor Available</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Sarah Wilson is now available for new assignments.
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">1 day ago</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Policy Approval */}
-                <div className="pb-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-1 bg-emerald-100 rounded-full">
-                      <CheckCircle className="h-4 w-4 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">Policy Approved</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Policy for Property ID: C078M15 has been approved and is now active.
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">2 days ago</p>
-                    </div>
-                  </div>
-                </div>
+                    return (
+                      <div key={notification._id} className={`pb-3 ${idx < Math.min(notifications.length, 5) - 1 ? 'border-b border-dashed border-gray-200' : ''}`}>
+                        <div className="flex items-start space-x-3">
+                          <div className={`p-1 rounded-full ${getIconBg(notification.type)}`}>
+                            {getIcon(notification.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                            <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
+                            <p className="text-xs text-gray-400 mt-1">{formatTimeAgo(notification.createdAt)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
