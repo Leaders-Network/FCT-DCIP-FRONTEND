@@ -7,7 +7,8 @@ import {
   CONSTRUCTION_MATERIALS,
   COVERAGE_TYPES,
   POLICY_DURATIONS,
-  ADDITIONAL_COVERAGE_OPTIONS
+  ADDITIONAL_COVERAGE_OPTIONS,
+  CADASTRAL_ZONES
 } from "@/constants/policyConstants";
 import { useAuth } from "@/context/useAuth";
 
@@ -99,6 +100,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
   };
 
   const [formData, setFormData] = useState<CreatePolicyRequestData>(initializeFormData());
+  const [customZoneMode, setCustomZoneMode] = useState(false);
 
   // Auto-populate user email when form opens
   useEffect(() => {
@@ -338,16 +340,53 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Cadastral Zone *
                   </label>
-                  <input
-                    required
-                    type="text"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
-                    value={formData.propertyDetails.cadastralZone}
-                    onChange={(e) =>
-                      handleInputChange("propertyDetails", "cadastralZone", e.target.value)
-                    }
-                    placeholder="e.g., A01"
-                  />
+                  {!customZoneMode ? (
+                    <select
+                      required
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm bg-white"
+                      value={formData.propertyDetails.cadastralZone}
+                      onChange={(e) => {
+                        if (e.target.value === 'Other') {
+                          setCustomZoneMode(true);
+                          handleInputChange("propertyDetails", "cadastralZone", "");
+                        } else {
+                          handleInputChange("propertyDetails", "cadastralZone", e.target.value);
+                        }
+                      }}
+                    >
+                      <option value="">Select Zone</option>
+                      {CADASTRAL_ZONES.map((zone) => (
+                        <option key={zone} value={zone}>
+                          {zone}
+                        </option>
+                      ))}
+                      <option value="Other">Other (Specify)</option>
+                    </select>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <input
+                        required
+                        type="text"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                        value={formData.propertyDetails.cadastralZone}
+                        onChange={(e) =>
+                          handleInputChange("propertyDetails", "cadastralZone", e.target.value)
+                        }
+                        placeholder="e.g., A01"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomZoneMode(false);
+                          handleInputChange("propertyDetails", "cadastralZone", "");
+                        }}
+                        className="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 whitespace-nowrap"
+                      >
+                        Back
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div>

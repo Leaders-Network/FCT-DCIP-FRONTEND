@@ -63,3 +63,10 @@ export const PRIORITY_LEVELS = {
   HIGH: 'high',
   URGENT: 'urgent'
 } as const;
+
+export const CADASTRAL_ZONES = [
+  "A00 to A14",
+  "B00 to B19",
+  "C00 to C29",
+  "D00 to D42",
+] as const;

@@ -12,7 +12,7 @@ import {
   getProjectDistrict,
   getProjectEstimateBand,
   getProjectLga,
-  getProjectTitle
+  getPolicyDisplayTitle
 } from "@/utils/builderLiability";
 
 interface AssignmentDetailProps {
@@ -137,10 +137,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
   const assignmentPolicy =
     typeof assignment.policyId === 'object' ? (assignment.policyId as BuilderLiabilityPolicy) : null;
-  const projectTitle =
-    getProjectTitle(assignmentPolicy?.project) ||
-    assignmentPolicy?.project?.coverTypeIdxDetails ||
-    'Construction Project';
+  const projectTitle = assignmentPolicy 
+    ? getPolicyDisplayTitle(assignmentPolicy) 
+    : 'Construction Project';
   const projectAddress =
     getProjectAddress(assignmentPolicy?.project, assignmentPolicy?.builder) ||
     assignment.location?.address ||

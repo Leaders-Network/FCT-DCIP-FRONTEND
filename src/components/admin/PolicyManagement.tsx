@@ -13,7 +13,6 @@ import { useRouter } from 'next/navigation';
 import AssignSurveyorModal from './AssignSurveyorModal';
 import { PolicyDetailsModal } from '@/components/builderLiability/PolicyDetailsModal';
 import { toast } from "sonner";
-import Swal from "sweetalert2";
 import ExportCsvPanel from '@/components/shared/ExportCsvPanel';
 import { exportAmmcPoliciesCsv, triggerCsvDownload } from '@/services/api';
 
@@ -348,55 +347,6 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       toast.error(`Failed to send policy: ${err.message}`);
     }
   };
-
-    const handleConfirmPayment = async (policy: MixedPolicy) => {
-      const policyRequest = toPolicyRequest(policy);
-
-      const result = await Swal.fire({
-        title: "Confirm Payment?",
-        html: `
-          <div style="text-align:left; font-size:14px;">
-            <p><strong>Property:</strong> ${policyRequest.propertyDetails.propertyType}</p>
-            <p><strong>Owner:</strong> ${policyRequest.contactDetails.fullName}</p>
-            <p><strong>Value:</strong> ₦${policyRequest.propertyDetails.buildingValue.toLocaleString()}</p>
-            <hr />
-            <p style="color:#b91c1c; font-weight:600;">
-              This will mark the policy as <b>COMPLETED</b> and finalize the workflow.
-            </p>
-          </div>
-        `,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, confirm payment",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#16a34a",
-        cancelButtonColor: "#6b7280",
-        reverseButtons: true,
-      });
-
-      if (!result.isConfirmed) return;
-
-      try {
-        const { builderLiabilityPolicyAPI } = await import("@/services/api");
-
-        await builderLiabilityPolicyAPI.updatePolicy(policy._id, {
-          status: "completed",
-        });
-
-        setPolicies(prev =>
-          prev.map(p =>
-            p._id === policy._id
-              ? { ...p, status: "completed" as PolicyRequest["status"] }
-              : p
-          )
-        );
-
-        toast.success("Payment confirmed! Policy marked as completed.");
-      } catch (error) {
-        const err = error instanceof Error ? error : new Error("Unknown error");
-        toast.error(`Failed to confirm payment: ${err.message}`);
-      }
-    };
 
 
   const handleDeletePolicy = async (policy: MixedPolicy) => {
@@ -815,19 +765,6 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                                   >
                                     <Eye className="inline h-4 w-4 mr-2" />
                                     Review Survey
-                                  </button>
-                                )}
-
-                                {getPolicyStatus(policy) === 'approved' && (
-                                  <button
-                                    onClick={() => {
-                                      handleConfirmPayment(policy);
-                                      setShowActionsDropdown(null);
-                                    }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  >
-                                    <DollarSign className="inline h-4 w-4 mr-2" />
-                                    Confirm Payment
                                   </button>
                                 )}
 

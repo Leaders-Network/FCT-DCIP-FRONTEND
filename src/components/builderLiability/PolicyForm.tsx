@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FCT_LOCATIONS, getDistrictsByLGA } from '@/constants/fctLocations';
+import { CADASTRAL_ZONES } from '@/constants/policyConstants';
 import { toast } from "sonner";
 import { getEstimateAmountFromBand } from '@/utils/builderLiability';
 
@@ -129,6 +130,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
     const [activeTab, setActiveTab] = useState<FormTab>('client');
     const [tabErrors, setTabErrors] = useState<Partial<Record<FormTab, string[]>>>({});
+    const [customZoneMode, setCustomZoneMode] = useState(false);
 
     const isLastTab = activeTab === FORM_TABS[FORM_TABS.length - 1];
 
@@ -163,6 +165,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             if (isBlank(formData.identificationNumber)) errors.push("Director's Identification Number is required.");
             if (isBlank(formData.builderAddress) || String(formData.builderAddress).trim().length < 10) {
                 errors.push('Address is required and should be at least 10 characters.');
+            }
+            if (!isValidNumber(formData.contractorCategoryId) || Number(formData.contractorCategoryId) <= 0) {
+                errors.push('Contractor Category is required.');
+            }
+            if (isBlank(formData.contractorType)) {
+                errors.push('Contractor Type is required.');
             }
         }
 
@@ -275,12 +283,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 errors.push('Please indicate whether this project is applying for statutory cover.');
             }
             if (isBlank(formData.coverTypeDetails)) errors.push('Coverage Type is required.');
-            if (!isValidNumber(formData.contractorCategoryId) || Number(formData.contractorCategoryId) <= 0) {
-                errors.push('Contractor Category is required.');
-            }
-            if (isBlank(formData.contractorType)) {
-                errors.push('Contractor Type is required.');
-            }
             if (isBlank(formData.projectType)) {
                 errors.push('Project Type is required.');
             }
@@ -792,6 +794,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </SelectContent>
                                         </Select>
                                     </div>
+
                                     <div>
                                         <Label htmlFor="identificationNumber">Director's Identification Number *</Label>
                                         <Input
@@ -805,6 +808,47 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             <p className="text-sm text-red-600 mt-1">Director's identification number is required</p>
                                         )}
                                     </div>
+
+                                       <div>
+                                        <Label htmlFor="contractorCategoryId">Contractor Category *</Label>
+                                        <Select
+                                            value={formData.contractorCategoryId.toString()}
+                                            onValueChange={(value) => handleInputChange('contractorCategoryId', parseInt(value))}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="1">ClassA minor (2m - 5m)</SelectItem>
+                                                <SelectItem value="2">ClassB (small scale 5m - 10m)</SelectItem>
+                                                <SelectItem value="3">ClassC (medium scale 10m - 50m)</SelectItem>
+                                                <SelectItem value="4">ClassD (upper medium 50m - 250m)</SelectItem>
+                                                <SelectItem value="5">ClassE (large scale 250m - 1B)</SelectItem>
+                                                <SelectItem value="6">ClassF (mega 1B+)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    
+                                    <div>
+                                        <Label htmlFor="contractorType">Contractor Type *</Label>
+                                        <Select
+                                            value={formData.contractorType}
+                                            onValueChange={(value) => handleInputChange('contractorType', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {CONTRACTOR_TYPES.map((type) => (
+                                                    <SelectItem key={type} value={type}>
+                                                        {type}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+
                                 </div>
                                 <div>
                                     <Label htmlFor="builderAddress">Location / Address *</Label>
@@ -1406,24 +1450,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div>
-                                        <Label htmlFor="contractorType">Contractor Type *</Label>
-                                        <Select
-                                            value={formData.contractorType}
-                                            onValueChange={(value) => handleInputChange('contractorType', value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {CONTRACTOR_TYPES.map((type) => (
-                                                    <SelectItem key={type} value={type}>
-                                                        {type}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+
+
                                     <div>
                                         <Label htmlFor="projectType">Project Type *</Label>
                                         <Select
@@ -1442,23 +1470,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div>
-                                        <Label htmlFor="contractorCategoryId">Contractor Category *</Label>
-                                        <Select
-                                            value={formData.contractorCategoryId.toString()}
-                                            onValueChange={(value) => handleInputChange('contractorCategoryId', parseInt(value))}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="1">Category 1 - Small Scale</SelectItem>
-                                                <SelectItem value="2">Category 2 - Medium Scale</SelectItem>
-                                                <SelectItem value="3">Category 3 - Large Scale</SelectItem>
-                                                <SelectItem value="4">Category 4 - Specialized</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+
+                                 
+
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -1505,7 +1519,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             required
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Enter the title or identifying name for this property.
+                                            Enter the name on conveyance / approval.
                                         </p>
                                     </div>
 
@@ -1547,13 +1561,52 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
                                     <div>
                                         <Label htmlFor="cadastralZone">Cadastral Zone *</Label>
-                                        <Input
-                                            id="cadastralZone"
-                                            value={formData.cadastralZone}
-                                            onChange={(e) => handleInputChange('cadastralZone', e.target.value)}
-                                            placeholder="Enter cadastral zone"
-                                            required
-                                        />
+                                        {!customZoneMode ? (
+                                            <Select
+                                                value={formData.cadastralZone}
+                                                onValueChange={(value) => {
+                                                    if (value === 'Other') {
+                                                        setCustomZoneMode(true);
+                                                        handleInputChange('cadastralZone', '');
+                                                    } else {
+                                                        handleInputChange('cadastralZone', value);
+                                                    }
+                                                }}
+                                            >
+                                                <SelectTrigger id="cadastralZone">
+                                                    <SelectValue placeholder="Select Cadastral Zone" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {CADASTRAL_ZONES.map((zone) => (
+                                                        <SelectItem key={zone} value={zone}>
+                                                            {zone}
+                                                        </SelectItem>
+                                                    ))}
+                                                    <SelectItem value="Other">Other (Specify)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    id="cadastralZone"
+                                                    value={formData.cadastralZone}
+                                                    onChange={(e) => handleInputChange('cadastralZone', e.target.value)}
+                                                    placeholder="Enter custom cadastral zone"
+                                                    required
+                                                    autoFocus
+                                                />
+                                                <Button 
+                                                    type="button" 
+                                                    variant="outline" 
+                                                    onClick={() => {
+                                                        setCustomZoneMode(false);
+                                                        handleInputChange('cadastralZone', '');
+                                                    }}
+                                                >
+                                                    Back
+                                                </Button>
+                                            </div>
+                                        )}
                                         <p className="mt-1 text-sm text-gray-500">
                                             Provide the cadastral zone for the project site.
                                         </p>

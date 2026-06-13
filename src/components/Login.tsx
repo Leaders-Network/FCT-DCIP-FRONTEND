@@ -38,12 +38,36 @@ export function Login() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-white">
-      <div className="w-full md:w-2/3 flex flex-col p-4 md:p-8">
+      <style>{`
+          @keyframes fadeInUp {
+              from {
+                  opacity: 0;
+                  transform: translateY(20px);
+              }
+              to {
+                  opacity: 1;
+                  transform: translateY(0);
+              }
+          }
+          .animate-fade-in-up {
+              opacity: 0;
+              animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          .delay-100 {
+              animation-delay: 100ms;
+          }
+          .delay-200 {
+              animation-delay: 200ms;
+          }
+      `}</style>
+      <div className="w-full md:w-2/3 flex flex-col p-4 md:p-8 animate-fade-in-up">
         <Header />
-        <div className="w-full h-px bg-gray-300 mb-6"></div>
-        <main className="flex flex-col justify-center flex-grow max-w-md mx-auto w-full">
+        <div className="w-full h-px bg-gray-100 mb-6"></div>
+        <main className="flex flex-col justify-center flex-grow max-w-md mx-auto w-full animate-fade-in-up delay-100">
           <LoginTitle />
-          <LoginForm />
+          <div className="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+            <LoginForm />
+          </div>
         </main>
       </div>
       <div className="hidden md:block md:w-1/3 relative">
@@ -54,17 +78,21 @@ export function Login() {
             alt={`Background ${index + 1}`}
             fill
             priority={index === 0}
-            className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
+            className={`object-cover transition-opacity duration-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
           />
         ))}
-        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Modern multi-layer gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-900/80 via-black/50 to-black/80 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        
+        {/* Glassmorphic content container */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 md:px-10 text-white">
-          <div className="max-w-md">
-            <h2 className="text-2xl md:text-4xl font-bold mb-3 typing-text">
+          <div className="max-w-md backdrop-blur-md bg-white/10 p-8 rounded-3xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] animate-fade-in-up delay-200">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-4 leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
               Welcome Back!
             </h2>
-            <p className="text-sm md:text-[1.1rem] leading-relaxed fade-in-text mt-2">
-              We're glad to have you again, log in to continue protecting what matters most.
+            <p className="text-sm md:text-base leading-relaxed font-light text-gray-200">
+              We're glad to have you again. Log in to continue protecting what matters most.
             </p>
           </div>
         </div>
@@ -190,7 +218,7 @@ function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder=" "
-          className="peer w-full h-12 md:h-14 px-4 pt-5 rounded-md bg-gray-100 border border-gray-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="peer w-full h-12 md:h-14 px-4 pt-5 rounded-xl bg-gray-50/50 border border-gray-200 text-gray-900 text-sm md:text-base focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#028835]/20 focus:border-[#028835] transition-all duration-200"
         />
         <label
           htmlFor="email"
@@ -213,7 +241,7 @@ function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder=" "
-          className="peer w-full h-12 md:h-14 px-4 pt-5 pr-12 rounded-md bg-gray-100 border border-gray-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="peer w-full h-12 md:h-14 px-4 pt-5 pr-12 rounded-xl bg-gray-50/50 border border-gray-200 text-gray-900 text-sm md:text-base focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#028835]/20 focus:border-[#028835] transition-all duration-200"
         />
         <label
           htmlFor="password"
@@ -312,7 +340,6 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
       }
     };
 
-
   return (
     <>
       {error && (
@@ -331,9 +358,9 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
       <button
         onClick={handleSubmit}
         disabled={isLoading || !email || !password}
-        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly transition-all duration-200 ${isLoading || !email || !password
-          ? 'opacity-50 cursor-not-allowed'
-          : 'hover:bg-green-700 hover:shadow-lg transform hover:scale-105'
+        className={`group w-full h-12 md:h-14 bg-gradient-to-r from-[#028835] to-green-700 rounded-xl text-white text-sm md:text-base font-semibold flex items-center justify-center transition-all duration-300 shadow-sm ${isLoading || !email || !password
+          ? 'opacity-50 cursor-not-allowed shadow-none'
+          : 'hover:shadow-[0_8px_20px_rgba(2,136,53,0.3)] hover:-translate-y-0.5'
           }`}
       >
         {isLoading ? (
@@ -347,8 +374,8 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
         ) : (
           <>
             Continue
-            <span className="w-[30px] h-[30px] ml-2 md:ml-5 flex items-center justify-center bg-white rounded-full transition-transform duration-200">
-              <MoveRight color="#000000" size={20} />
+            <span className="ml-3 flex items-center justify-center bg-white rounded-full p-1 transition-transform duration-200 group-hover:translate-x-1">
+              <MoveRight color="#028835" size={16} />
             </span>
           </>
         )}
