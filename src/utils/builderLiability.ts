@@ -135,3 +135,8 @@ export const getProjectEstimateBand = (project?: ProjectInfo | null) =>
 export const getClientName = (client?: ClientInfo | null) => client?.name || null;
 export const getClientEmail = (client?: ClientInfo | null) => client?.email || null;
 export const getClientPhone = (client?: ClientInfo | null) => client?.phoneNumber || null;
+
+export const getPolicyDisplayTitle = (policy: any) => {
+    if (!policy) return 'Unknown Policy';
+    return getClientName(policy.client) || 'Builder Liability';
+};

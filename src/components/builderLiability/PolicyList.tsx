@@ -14,9 +14,10 @@ import {
     getDisplayValue,
     getProjectAddress,
     getProjectDistrict,
-    getProjectEstimateBand,
     getProjectLga,
-    getProjectTitle
+    getProjectEstimateBand,
+    getProjectTitle,
+    getPolicyDisplayTitle
 } from '@/utils/builderLiability';
 import { PolicyDetailsModal } from './PolicyDetailsModal';
 import { PremiumDetailsModal } from './PremiumDetailsModal';
@@ -768,7 +769,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                             <div className="min-w-0">
                                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
-                                                    {projectTitle || policy.builder.nameOfBuilder}
+                                                    {getPolicyDisplayTitle(policy)}
                                                 </h3>
                                                 <p className="text-xs sm:text-sm text-gray-600 break-words">
                                                     Policy #{policy.policyNumber}

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
 import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
 import { adminApi } from '@/services/api';
-import { getClientName, getProjectEstimateBand, getProjectTitle } from '@/utils/builderLiability';
+import { getClientName, getProjectEstimateBand, getPolicyDisplayTitle } from '@/utils/builderLiability';
 
 interface SearchResult {
     id: string;
@@ -35,11 +35,10 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                 const policiesResponse = await builderLiabilityPolicyAPI.searchPolicies(searchQuery, 5);
                 if (policiesResponse.success && policiesResponse.data.policies) {
                     policiesResponse.data.policies.forEach(policy => {
-                        const projectTitle = getProjectTitle(policy.project);
                         const clientName = getClientName(policy.client);
                         results.push({
                             id: `policy-${policy._id}`,
-                            title: `Policy: ${projectTitle || policy.builder?.nameOfBuilder || 'Unknown Builder'}`,
+                            title: `Policy: ${getPolicyDisplayTitle(policy)}`,
                             subtitle: `Status: ${policy.status} | Client: ${clientName || 'Not provided'}`,
                             type: 'policy',
                             url: userType === 'admin' ? `/admin/dashboard/policies/${policy._id}` : `/nia-admin/dashboard/policies/${policy._id}`,
@@ -104,7 +103,7 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                         const surveyorInfo = assignment.surveyorId;
                         results.push({
                             id: `assignment-${assignment._id}`,
-                            title: `Assignment: ${policyInfo?.project?.projectTitle || policyInfo?.builder?.nameOfBuilder || 'Unknown Builder'}`,
+                            title: `Assignment: ${getPolicyDisplayTitle(policyInfo)}`,
                             subtitle: `Surveyor: ${surveyorInfo?.firstname || ''} ${surveyorInfo?.lastname || ''} | Status: ${assignment.status}`,
                             type: 'assignment',
                             url: userType === 'admin' ? `/admin/dashboard/assignments/${assignment._id}` : `/nia-admin/assignments/${assignment._id}`,
@@ -161,11 +160,10 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                 const userPoliciesResponse = await builderLiabilityPolicyAPI.searchPolicies(searchQuery, 3);
                 if (userPoliciesResponse.success && userPoliciesResponse.data.policies) {
                     userPoliciesResponse.data.policies.forEach(policy => {
-                        const projectTitle = getProjectTitle(policy.project);
                         const clientName = getClientName(policy.client);
                         results.push({
                             id: `user-policy-${policy._id}`,
-                            title: `My Policy: ${projectTitle || policy.builder?.nameOfBuilder || 'Builder Liability'}`,
+                            title: `My Policy: ${getPolicyDisplayTitle(policy)}`,
                             subtitle: `Status: ${policy.status} | Client: ${clientName || 'Not provided'}`,
                             type: 'policy',
                             url: `/dashboard/insurance/${policy._id}`,

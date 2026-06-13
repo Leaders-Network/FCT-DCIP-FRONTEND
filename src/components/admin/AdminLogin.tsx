@@ -50,11 +50,11 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-      <h2 className="text-xl md:text-3xl font-bold mb-2">
-        Administrative login
+    <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8">
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+        Sign in
       </h2>
-      <p className="text-gray-600 text-sm md:text-base mb-4 md:mb-6">
+      <p className="text-gray-500 text-sm md:text-base mb-6">
         Welcome! Please enter your details
       </p>
       <form onSubmit={handleSubmit}>

@@ -4,7 +4,7 @@ import { Clock, MapPin, Calendar, Eye, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { getSurveyorAssignments, exportSurveyorCsv, triggerCsvDownload } from "@/services/api";
 import ExportCsvPanel from "@/components/shared/ExportCsvPanel";
-import { getDisplayValue } from "@/utils/builderLiability";
+import { getDisplayValue, getPolicyDisplayTitle } from "@/utils/builderLiability";
 
 interface Assignment {
     _id: string;
@@ -166,7 +166,7 @@ const AssignmentsList = () => {
                                     <div className="flex-1">
                                         <div className="flex flex-wrap items-center gap-2 mb-2">
                                             <h3 className="text-lg font-semibold text-gray-900 break-words">
-                                                {assignment.policyId?.project?.projectTitle || assignment.policyId?.project?.projectName || assignment.policyId?.project?.projectType || "Builder Liability Survey"}
+                                                {getPolicyDisplayTitle(assignment.policyId as any)}
                                             </h3>
                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
                                                 {assignment.status.replace("_", " ").toUpperCase()}

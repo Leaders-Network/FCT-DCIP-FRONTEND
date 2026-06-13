@@ -431,14 +431,14 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                     </div>
                 </DialogHeader>
 
-                <Tabs defaultValue="builder" className="w-full">
+                <Tabs defaultValue="client" className="w-full">
                     <div className="w-full overflow-x-auto">
                         <TabsList className="flex md:grid md:grid-cols-8 w-max md:w-full min-w-max md:min-w-0">
-                            <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
-                                Contractor
-                            </TabsTrigger>
                             <TabsTrigger value="client" className="whitespace-nowrap text-xs sm:text-sm">
                                 Client
+                            </TabsTrigger>
+                            <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
+                                Contractor
                             </TabsTrigger>
                             <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
                                 Consultant

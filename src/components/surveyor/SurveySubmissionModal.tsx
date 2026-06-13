@@ -372,7 +372,9 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#028835] transition-colors cursor-pointer">
                                     <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                                     <p className="text-gray-600 mb-2">Upload survey photos and documents</p>
-                                    <p className="text-sm text-gray-500 mb-4">Drag and drop files here, or click to select</p>
+                                    <p className="text-sm text-gray-500 mb-2">Drag and drop files here, or click to select</p>
+                                    
+                                    <p className="text-sm text-red-500 mb-4">Files should not exceed 5mb</p>
                                     <label
                                         htmlFor="survey-file-upload"
                                         className="inline-flex items-center px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 cursor-pointer transition-colors"
