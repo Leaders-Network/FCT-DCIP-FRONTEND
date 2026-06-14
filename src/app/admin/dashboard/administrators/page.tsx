@@ -8,7 +8,7 @@ import {
 import {
   PlusCircle,
   MoreVertical,
-  Trash2,
+  Trash,
   Edit,
   UserPlus,
   X
@@ -22,7 +22,7 @@ import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { toast } from "sonner"
-
+import { CADASTRAL_ZONES } from '@/constants/policyConstants'
 interface Administrator {
   _id: string;
   firstname: string;
@@ -37,6 +37,7 @@ interface Administrator {
     _id: string;
     status: string;
   };
+  cadastralZone?: string;
   deleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -49,6 +50,7 @@ interface User {
   phonenumber: string;
   role?: string;
   isEmailVerified?: boolean;
+  cadastralZone?: string;
   deleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -68,6 +70,7 @@ interface Employee {
     _id: string;
     status: string;
   };
+  cadastralZone?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -95,7 +98,8 @@ export default function AdministratorsPage() {
     status: "Active",
     roleId: "",
     statusId: "active",
-    userType: "administrator" // New field to track what type of user we're creating
+    userType: "administrator", // New field to track what type of user we're creating
+    cadastralZone: ""
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -127,6 +131,7 @@ export default function AdministratorsPage() {
           lastname: formData.lastname,
           email: formData.email,
           phonenumber: formData.phonenumber,
+          cadastralZone: formData.cadastralZone,
         };
         await adminApi.createSurveyor(surveyorPayload);
       } else if (formData.userType === 'user') {
@@ -152,7 +157,8 @@ export default function AdministratorsPage() {
         status: "Active",
         roleId: "",
         statusId: "active",
-        userType: "administrator"
+        userType: "administrator",
+        cadastralZone: ""
       });
       // Refresh data
       await fetchAllData();
@@ -216,13 +222,16 @@ export default function AdministratorsPage() {
       if (activeTab === 'administrators') {
         await adminApi.deleteAdministrator(adminId)
         setAdministrators(administrators.filter(admin => admin._id !== adminId))
+        toast.success('Administrator deleted successfully')
       } else if (activeTab === 'employees') {
         await adminApi.deleteEmployee(adminId)
         setEmployees(employees.filter(emp => emp._id !== adminId))
+        toast.success('Employee deleted successfully')
       } else if (activeTab === 'users') {
         // Admin-driven soft-delete of a platform user
         await adminApi.deletePlatformUser(adminId)
         setUsers(users.filter(user => user._id !== adminId))
+        toast.success('User deleted successfully')
       }
     } catch (error) {
       toast.error('Failed to delete user. Please try again.')
@@ -256,7 +265,8 @@ export default function AdministratorsPage() {
       status: 'employeeStatus' in admin ? admin.employeeStatus?.status || "Active" : 'isEmailVerified' in admin ? (admin.isEmailVerified ? "Active" : "Inactive") : "Active",
       roleId: 'employeeRole' in admin ? admin.employeeRole?._id || "" : "",
       statusId: 'employeeStatus' in admin ? admin.employeeStatus?._id || "active" : "active",
-      userType: activeTab === 'administrators' ? 'administrator' : activeTab === 'employees' ? 'employee' : 'user'
+      userType: activeTab === 'administrators' ? 'administrator' : activeTab === 'employees' ? 'employee' : 'user',
+      cadastralZone: ('cadastralZone' in admin && admin.cadastralZone) ? String(admin.cadastralZone) : ""
     })
     setShowEditModal(true)
   }
@@ -279,7 +289,7 @@ export default function AdministratorsPage() {
       if (formData.userType === 'administrator') {
         await adminApi.updateAdministrator(selectedAdmin._id, updateData)
       } else if (formData.userType === 'employee') {
-        await adminApi.patch(`/admin/employees/${selectedAdmin._id}`, updateData)
+        await adminApi.patch(`/admin/employees/${selectedAdmin._id}`, { ...updateData, cadastralZone: formData.cadastralZone })
       } else if (formData.userType === 'user') {
         toast.warning('User editing by admin is not yet implemented.')
         return
@@ -483,11 +493,11 @@ export default function AdministratorsPage() {
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
                             title="Delete from platform"
-                          >
-                            <Trash2 className="h-4 w-4" />
+                          > 
+                            <Trash className="h-4 w-4 text-red-600 hover:text-red-800" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -515,19 +525,19 @@ export default function AdministratorsPage() {
                       {/* Overflow menu for other actions (edit, delete) */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          <Button variant="outline" className="h-8 w-8 p-0">
                             <span className="sr-only">Open menu</span>
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEditAdministrator(item)}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit
+                            <Edit className="mr-2 h-4 w-4 text-blue-500" /> Edit
                           </DropdownMenuItem>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete from Platform
+                                <Trash className="mr-2 h-4 w-4 text-red-600 hover:text-red-800" /> Delete from Platform
                               </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
@@ -706,6 +716,29 @@ export default function AdministratorsPage() {
                 )}
               </div>
 
+              {/* Show Cadastral Zone only for employees */}
+              {formData.userType === 'employee' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cadastral Zone *
+                  </label>
+                  <select
+                    name="cadastralZone"
+                    value={formData.cadastralZone || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                    required
+                  >
+                    <option value="">Select a cadastral zone</option>
+                    {CADASTRAL_ZONES.map((zone) => (
+                      <option key={zone} value={zone}>
+                        {zone}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
@@ -853,6 +886,29 @@ export default function AdministratorsPage() {
                   )}
                 </select>
               </div>
+
+              {/* Show Cadastral Zone only for employees */}
+              {formData.userType === 'employee' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cadastral Zone *
+                  </label>
+                  <select
+                    name="cadastralZone"
+                    value={formData.cadastralZone || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Select a cadastral zone</option>
+                    {CADASTRAL_ZONES.map((zone) => (
+                      <option key={zone} value={zone}>
+                        {zone}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
