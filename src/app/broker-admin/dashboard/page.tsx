@@ -911,9 +911,9 @@ export default function BrokerAdminDashboard() {
                                             )}
                                             <KeyValue label="Specialization" value={selectedCompletedPolicy.organization.areaOfSpecialization || 'N/A'} />
                                             <KeyValue
-                                                label="Year of Incorporation"
-                                                value={selectedCompletedPolicy.organization.yearOfIncorporation
-                                                    ? formatDate(String(selectedCompletedPolicy.organization.yearOfIncorporation))
+                                                label="Year of Registration"
+                                                value={selectedCompletedPolicy.organization.yearOfRegistration
+                                                    ? formatDate(String(selectedCompletedPolicy.organization.yearOfRegistration))
                                                     : 'N/A'}
                                             />
                                             <KeyValue label="Staff Strength" value={selectedCompletedPolicy.organization.staffStrength || selectedCompletedPolicy.organization.noOfPermanentStaff || selectedCompletedPolicy.organization.permanentStaffCount} />

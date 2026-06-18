@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Builders-Liability-AMMC - Digital Claims & Insurance Platform",
     description: "Comprehensive digital platform for managing insurance claims, property surveys, and policy administration for FCT builders.",
-    url: "https://www.fctbuilders.gladfaith.com",
+    url: "https://www.ammcbuildersinsurance.com",
     siteName: "Builders-Liability-AMMC",
     images: [
       {
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  metadataBase: new URL("https://www.fctbuilders.gladfaith.com"),
+  metadataBase: new URL("https://www.ammcbuildersinsurance.com"),
 };
 
 export default function RootLayout({

@@ -597,8 +597,8 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <p className="text-base font-semibold">{getDisplayValue(consultantRegistrationNumber)}</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Year of Incorporation</label>
-                                    <p className="text-base">{policy.organization?.yearOfIncorporation ? formatDate(policy.organization.yearOfIncorporation) : 'Not provided'}</p>
+                                    <label className="text-sm font-medium text-gray-600">Year of Registration</label>
+                                    <p className="text-base">{policy.organization?.yearOfRegistration ? formatDate(policy.organization.yearOfRegistration) : 'Not provided'}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Area of Specialization</label>

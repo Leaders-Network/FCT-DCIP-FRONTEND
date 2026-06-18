@@ -93,7 +93,7 @@ export interface OrganizationInfo {
     professionalRegistrationNumber?: string;
     otherProfessionalBodyName?: string;
     niobRegNo?: string;
-    yearOfIncorporation: Date | string;
+    yearOfRegistration: Date | string;
     areaOfSpecialization?: string;
     staffStrength?: StaffStrength;
     noOfPermanentStaff?: number;
@@ -483,7 +483,7 @@ export interface BuilderLiabilityPolicyFormData {
     professionalBody: ProfessionalBody | '';
     professionalRegistrationNumber: string;
     otherProfessionalBodyName?: string;
-    yearOfIncorporation: string;
+    yearOfRegistration: string;
     areaOfSpecialization?: string;
     staffStrength: StaffStrength | '';
 
