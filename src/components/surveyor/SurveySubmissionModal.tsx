@@ -221,14 +221,12 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                     </label>
                                     <input
                                         type="number"
-                                        min="0"
                                         value={formData.surveyDetails.estimatedValue || ''}
                                         onChange={(e) => setFormData((prev: SurveySubmissionData) => ({
                                             ...prev,
                                             surveyDetails: { ...prev.surveyDetails, estimatedValue: parseInt(e.target.value) || 0 }
                                         }))}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                                        placeholder="0"
                                     />
                                 </div>
 

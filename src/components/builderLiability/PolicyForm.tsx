@@ -71,7 +71,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         professionalBody: 'COREN - Council for regulation of engineering in Nigeria',
         professionalRegistrationNumber: '',
         otherProfessionalBodyName: '',
-        yearOfIncorporation: '',
+        yearOfRegistration: '',
         areaOfSpecialization: '',
         staffStrength: 'Permanent',
 
@@ -205,7 +205,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
             ) {
                 errors.push('Other Regulatory Body Name is required when Regulatory Body is Other.');
             }
-            if (isBlank(formData.yearOfIncorporation)) errors.push('Year of Incorporation is required.');
+            if (isBlank(formData.yearOfRegistration)) errors.push('Year of Registration is required.');
             if (isBlank(formData.staffStrength)) {
                 errors.push('Staff Strength is required.');
             }
@@ -464,7 +464,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                         ? formData.otherProfessionalBodyName || undefined
                         : undefined,
                 niobRegNo: undefined,
-                yearOfIncorporation: new Date(formData.yearOfIncorporation),
+                yearOfRegistration: new Date(formData.yearOfRegistration),
                 areaOfSpecialization: formData.areaOfSpecialization,
                 staffStrength: formData.staffStrength || undefined,
                 noOfPermanentStaff: undefined,
@@ -926,12 +926,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </div>
                                     )}
                                     <div>
-                                        <Label htmlFor="yearOfIncorporation">Year of Incorporation *</Label>
+                                        <Label htmlFor="yearOfRegistration">Year of Registration *</Label>
                                         <Input
-                                            id="yearOfIncorporation"
+                                            id="yearOfRegistration"
                                             type="date"
-                                            value={formData.yearOfIncorporation}
-                                            onChange={(e) => handleInputChange('yearOfIncorporation', e.target.value)}
+                                            value={formData.yearOfRegistration}
+                                            onChange={(e) => handleInputChange('yearOfRegistration', e.target.value)}
                                             required
                                         />
                                     </div>
@@ -1034,7 +1034,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             <Input
                                                 id="contractStaffCount"
                                                 type="number"
-                                                min="0"
                                                 value={formData.contractStaffCount}
                                                 onChange={(e) => handleInputChange('contractStaffCount', parseInt(e.target.value, 10) || 0)}
                                                 required
@@ -1045,7 +1044,6 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             <Input
                                                 id="bloodRelationsCount"
                                                 type="number"
-                                                min="0"
                                                 value={formData.bloodRelationsCount}
                                                 onChange={(e) => handleInputChange('bloodRelationsCount', parseInt(e.target.value, 10) || 0)}
                                                 required

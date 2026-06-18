@@ -44,8 +44,8 @@ const useBuilderLiabilityPolicy = (policyId?: string) => {
         try {
             // Convert string dates to Date objects if needed
             const processedData = { ...updateData };
-            if (processedData.organization?.yearOfIncorporation && typeof processedData.organization.yearOfIncorporation === 'string') {
-                processedData.organization.yearOfIncorporation = new Date(processedData.organization.yearOfIncorporation);
+            if (processedData.organization?.yearOfRegistration && typeof processedData.organization.yearOfRegistration === 'string') {
+                processedData.organization.yearOfRegistration = new Date(processedData.organization.yearOfRegistration);
             }
             if (processedData.meta?.date && typeof processedData.meta.date === 'string') {
                 processedData.meta.date = new Date(processedData.meta.date);
@@ -211,8 +211,8 @@ const useCreateBuilderLiabilityPolicy = () => {
         try {
             // Convert string dates to Date objects if needed
             const processedData = { ...policyData };
-            if (typeof processedData.organization.yearOfIncorporation === 'string') {
-                processedData.organization.yearOfIncorporation = new Date(processedData.organization.yearOfIncorporation);
+            if (typeof processedData.organization.yearOfRegistration === 'string') {
+                processedData.organization.yearOfRegistration = new Date(processedData.organization.yearOfRegistration);
             }
             if (typeof processedData.meta.date === 'string') {
                 processedData.meta.date = new Date(processedData.meta.date);
@@ -248,8 +248,8 @@ const useCreateBuilderLiabilityPolicy = () => {
         try {
             // Convert string dates to Date objects if needed
             const processedData = { ...policyData };
-            if (typeof processedData.organization.yearOfIncorporation === 'string') {
-                processedData.organization.yearOfIncorporation = new Date(processedData.organization.yearOfIncorporation);
+            if (typeof processedData.organization.yearOfRegistration === 'string') {
+                processedData.organization.yearOfRegistration = new Date(processedData.organization.yearOfRegistration);
             }
             if (typeof processedData.meta.date === 'string') {
                 processedData.meta.date = new Date(processedData.meta.date);
