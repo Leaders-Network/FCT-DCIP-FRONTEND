@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { openSARReport, downloadSARReport } from './SARReportGenerator';
 import {
     getClientEmail,
     getClientName,
@@ -59,6 +60,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 }) => {
     const [isCalculatingPremium, setIsCalculatingPremium] = React.useState(false);
     const [isDownloadingReceipt, setIsDownloadingReceipt] = React.useState(false);
+    const [isGeneratingSAR, setIsGeneratingSAR] = React.useState(false);
     const [premiumResult, setPremiumResult] = React.useState<null | {
         premiumAmount: number;
         premiumDetails?: {
@@ -79,6 +81,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         setPremiumResult(null);
         setIsCalculatingPremium(false);
         setIsDownloadingReceipt(false);
+        setIsGeneratingSAR(false);
     }, [policy?._id, isOpen]);
 
     if (!policy) return null;
@@ -433,7 +436,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 
                 <Tabs defaultValue="client" className="w-full">
                     <div className="w-full overflow-x-auto">
-                        <TabsList className="flex md:grid md:grid-cols-8 w-max md:w-full min-w-max md:min-w-0">
+                        <TabsList className="flex md:grid md:grid-cols-9 w-max md:w-full min-w-max md:min-w-0">
                             <TabsTrigger value="client" className="whitespace-nowrap text-xs sm:text-sm">
                                 Client
                             </TabsTrigger>
@@ -458,6 +461,9 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             <TabsTrigger value="timeline" className="whitespace-nowrap text-xs sm:text-sm">
                                 Timeline
                             </TabsTrigger>
+                            <TabsTrigger value="survey" className="whitespace-nowrap text-xs sm:text-sm">
+                                SAR
+                            </TabsTrigger>
                         </TabsList>
                     </div>
 
@@ -468,57 +474,76 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 <CardTitle className="flex items-center gap-2">
                                     <User className="w-5 h-5" />
                                     Builder Information
+                                    {(policy as any).isDirectLabor && (
+                                        <Badge className="bg-amber-100 text-amber-800 border-amber-200 ml-2">
+                                            Direct Labor
+                                        </Badge>
+                                    )}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Contractor Name</label>
-                                    <p className="text-base font-semibold">{policy.builder.nameOfBuilder}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Director of the company</label>
-                                    <p className="text-base font-semibold">{policy.builder.directorOfCompany || 'Not provided'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">RC Number</label>
-                                    <p className="text-base font-semibold">{policy.builder.rcNumber}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                        <Mail className="w-4 h-4" />
-                                        Email
-                                    </label>
-                                    <p className="text-base">{policy.builder.customerEmail}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                        <Phone className="w-4 h-4" />
-                                        Phone
-                                    </label>
-                                    <p className="text-base">{policy.builder.telNo}</p>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                        <MapPin className="w-4 h-4" />
-                                        Location / Address
-                                    </label>
-                                    <p className="text-base">{policy.builder.address}</p>
-                                </div>
-                                {policy.builder.identification && (
-                                    <>
+                            <CardContent>
+                                {(policy as any).isDirectLabor ? (
+                                    <div className="flex flex-col items-center justify-center py-8 px-4 bg-amber-50 rounded-lg border border-amber-200">
+                                        <AlertCircle className="w-8 h-8 text-amber-600 mb-3" />
+                                        <p className="text-base font-semibold text-amber-900 mb-1">
+                                            Direct Labor Project
+                                        </p>
+                                        <p className="text-sm text-amber-700 text-center max-w-md">
+                                            This project is not assigned to a commercial general contractor. The property owner is managing or building it themselves. No contractor details are required.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600">Director's Identification Type</label>
-                                            <p className="text-base">
-                                                {policy.builder.identification.identificationTypeId === 1 ? 'National ID' :
-                                                    policy.builder.identification.identificationTypeId === 2 ? 'Passport' :
-                                                        policy.builder.identification.identificationTypeId === 3 ? 'Driver\'s License' : 'Other'}
-                                            </p>
+                                            <label className="text-sm font-medium text-gray-600">Contractor Name</label>
+                                            <p className="text-base font-semibold">{policy.builder?.nameOfBuilder || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600">Director's Identification Number</label>
-                                            <p className="text-base">{policy.builder.identification.identityNo}</p>
+                                            <label className="text-sm font-medium text-gray-600">Director of the company</label>
+                                            <p className="text-base font-semibold">{policy.builder?.directorOfCompany || 'Not provided'}</p>
                                         </div>
-                                    </>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600">RC Number</label>
+                                            <p className="text-base font-semibold">{policy.builder?.rcNumber || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                                                <Mail className="w-4 h-4" />
+                                                Email
+                                            </label>
+                                            <p className="text-base">{policy.builder?.customerEmail || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                                                <Phone className="w-4 h-4" />
+                                                Phone
+                                            </label>
+                                            <p className="text-base">{policy.builder?.telNo || 'N/A'}</p>
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                                                <MapPin className="w-4 h-4" />
+                                                Location / Address
+                                            </label>
+                                            <p className="text-base">{policy.builder?.address || 'N/A'}</p>
+                                        </div>
+                                        {policy.builder?.identification && (
+                                            <>
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-600">Director's Identification Type</label>
+                                                    <p className="text-base">
+                                                        {policy.builder.identification.identificationTypeId === 1 ? 'National ID' :
+                                                            policy.builder.identification.identificationTypeId === 2 ? 'Passport' :
+                                                                policy.builder.identification.identificationTypeId === 3 ? 'Driver\'s License' : 'Other'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-600">Director's Identification Number</label>
+                                                    <p className="text-base">{policy.builder.identification.identityNo}</p>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>
@@ -595,6 +620,10 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Registration Number</label>
                                     <p className="text-base font-semibold">{getDisplayValue(consultantRegistrationNumber)}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600">Valid Practice License Number</label>
+                                    <p className="text-base font-semibold">{getDisplayValue(policy.organization?.practiceLicenseNumber)}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Year of Registration</label>
@@ -1004,10 +1033,6 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <p className="text-base">{paymentStatusLabel || 'Pending'}</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Transaction ID / Reference</label>
-                                    <p className="text-base break-all">{paymentTransactionId}</p>
-                                </div>
-                                <div>
                                     <label className="text-sm font-medium text-gray-600">Payment Method</label>
                                     <p className="text-base">{toDisplayText(paymentInfo.method, 'external_payment_service')}</p>
                                 </div>
@@ -1113,6 +1138,143 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             </CardContent>
                         </Card>
                     </TabsContent>
+
+                    {/* ── SAR: Survey Assessment Report ── */}
+                    <TabsContent value="survey" className="space-y-4">
+                        {!(policy as any).surveyorRecommendation ? (
+                            <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500">
+                                <Eye className="w-10 h-10 mb-3 opacity-40" />
+                                <p className="font-medium">No survey assessment data yet</p>
+                                <p className="text-sm mt-1">The SAR will appear here once a surveyor completes the assessment.</p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Quick summary banner */}
+                                <div className={`flex items-start gap-3 p-4 rounded-lg border ${
+                                    (policy as any).surveyorRecommendation === 'approve'
+                                        ? 'bg-green-50 border-green-200'
+                                        : (policy as any).surveyorRecommendation === 'reject'
+                                            ? 'bg-red-50 border-red-200'
+                                            : 'bg-amber-50 border-amber-200'
+                                }`}>
+                                    {(policy as any).surveyorRecommendation === 'approve'
+                                        ? <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                        : (policy as any).surveyorRecommendation === 'reject'
+                                            ? <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                            : <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />}
+                                    <div>
+                                        <p className="font-semibold text-sm">
+                                            {(policy as any).surveyorRecommendation === 'approve' ? 'Recommended for Approval'
+                                                : (policy as any).surveyorRecommendation === 'reject' ? 'Recommended for Rejection'
+                                                    : 'Further Inspection / More Information Required'}
+                                        </p>
+                                        {(policy as any).surveyNotes && (
+                                            <p className="text-xs mt-1 text-gray-600">{(policy as any).surveyNotes}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* SAR data cards */}
+                                {(() => {
+                                    const rawSd = (policy as any).surveyDetails || {};
+                                    const sd: Record<string, any> = {
+                                        ...rawSd,
+                                        plotNumber: rawSd.locationDetails?.plotNumber,
+                                        district: rawSd.locationDetails?.district,
+                                        cadastralZone: rawSd.locationDetails?.cadastralZone,
+                                        landUse: rawSd.locationDetails?.landUse,
+                                        purpose: rawSd.locationDetails?.purpose,
+                                        plotSize: rawSd.locationDetails?.plotSize,
+                                        dateOfApproval: rawSd.locationDetails?.dateOfApproval,
+                                        streetName: rawSd.locationDetails?.streetName,
+                                        buildingType: rawSd.locationDetails?.buildingType,
+                                        proposedBuildingDescription: rawSd.locationDetails?.proposedBuildingDescription,
+                                        
+                                        naturePlotWellDrained: rawSd.siteDetails?.naturePlot?.wellDrained,
+                                        naturePlotRocky: rawSd.siteDetails?.naturePlot?.rocky,
+                                        naturePlotWaterLogged: rawSd.siteDetails?.naturePlot?.waterLogged,
+                                        naturePlotOther: rawSd.siteDetails?.naturePlot?.other,
+                                        naturePlotOtherDescription: rawSd.siteDetails?.naturePlot?.otherDescription,
+                                        estimatedSlope: rawSd.siteDetails?.estimatedSlope,
+                                        vacancyStatus: rawSd.siteDetails?.vacancyStatus,
+                                        developmentDescription: rawSd.siteDetails?.developmentDescription,
+                                        previouslyApproved: rawSd.siteDetails?.previouslyApproved,
+
+                                        conformsWithApproval: rawSd.conformity?.conformsWithApproval,
+                                        nonConformityDescription: rawSd.conformity?.nonConformityDescription,
+                                        levelOfService: rawSd.conformity?.levelOfService,
+
+                                        contractorPresentOnSite: rawSd.contractor?.presentOnSite,
+                                        contractorName: rawSd.contractor?.name,
+                                        contractorCategory: rawSd.contractor?.category,
+
+                                        consultantName: rawSd.consultant?.name,
+                                        consultantCategory: rawSd.consultant?.category,
+
+                                        agentMetOnSite: rawSd.agent?.metOnSite,
+                                        agentName: rawSd.agent?.name,
+                                        agentDesignation: rawSd.agent?.designation,
+                                        agentPhone: rawSd.agent?.phone,
+                                        agentEmail: rawSd.agent?.email,
+
+                                        structuralCondition: rawSd.structuralAssessmentDetails?.condition,
+                                        visibleCracks: rawSd.structuralAssessmentDetails?.visibleCracks,
+                                        foundationStatus: rawSd.structuralAssessmentDetails?.foundationStatus,
+                                    };
+                                    
+                                    const get = (k1: string, k2?: string) => {
+                                        const v1 = (policy as any)[k1] ?? sd[k1];
+                                        if (v1 !== null && v1 !== undefined && String(v1).trim() !== '') return v1;
+                                        if (k2) {
+                                            const v2 = (policy as any)[k2] ?? sd[k2];
+                                            if (v2 !== null && v2 !== undefined && String(v2).trim() !== '') return v2;
+                                        }
+                                        return undefined;
+                                    };
+                                    return (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <Card>
+                                                <CardHeader><CardTitle className="text-sm">Location Details</CardTitle></CardHeader>
+                                                <CardContent className="space-y-2 text-sm">
+                                                    {[['Plot Number', get('plotNumber', 'surveyorPlotNumber')], ['District', get('district', 'surveyorDistrict')], ['Cadastral Zone', get('cadastralZone', 'surveyorCadastralZone')], ['Land Use', get('landUse', 'surveyorLandUse')], ['Purpose', get('purpose', 'surveyorPurpose')], ['Plot Size', get('plotSize', 'surveyorPlotSize')], ['Date of Approval', get('dateOfApproval', 'surveyorDateOfApproval') ? formatDate(get('dateOfApproval', 'surveyorDateOfApproval')) : null], ['Street Name', get('streetName', 'surveyorStreetName')], ['Building Type', get('buildingType', 'surveyorBuildingType')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
+                                                </CardContent>
+                                            </Card>
+                                            <Card>
+                                                <CardHeader><CardTitle className="text-sm">Site Details</CardTitle></CardHeader>
+                                                <CardContent className="space-y-2 text-sm">
+                                                    {[['Slope', get('estimatedSlope', 'surveyorEstimatedSlope')], ['Vacancy', get('vacancyStatus', 'surveyorVacancyStatus')], ['Dev. Description', get('developmentDescription', 'surveyorDevelopmentDescription')], ['Prev. Approved?', get('previouslyApproved', 'surveyorPreviouslyApproved')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
+                                                </CardContent>
+                                            </Card>
+                                            <Card>
+                                                <CardHeader><CardTitle className="text-sm">Conformity & Service</CardTitle></CardHeader>
+                                                <CardContent className="space-y-2 text-sm">
+                                                    {[['Conforms?', get('conformsWithApproval', 'surveyorConformsWithApproval')], ['Non-Conformity', get('nonConformityDescription', 'surveyorNonConformityDescription')], ['Level of Service', get('levelOfService', 'surveyorLevelOfService')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
+                                                </CardContent>
+                                            </Card>
+                                            <Card>
+                                                <CardHeader><CardTitle className="text-sm">Contractor / Consultant</CardTitle></CardHeader>
+                                                <CardContent className="space-y-2 text-sm">
+                                                    {[['Contractor on Site?', get('contractorPresentOnSite', 'surveyorContractorPresentOnSite')], ['Contractor Name', get('contractorName', 'surveyorContractorName')], ['Contractor Category', get('contractorCategory', 'surveyorContractorCategory')], ['Consultant Name', get('consultantName')], ['Consultant Category', get('consultantCategory', 'surveyorConsultantCategory')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
+                                                </CardContent>
+                                            </Card>
+                                            <Card>
+                                                <CardHeader><CardTitle className="text-sm">Agent / Developer</CardTitle></CardHeader>
+                                                <CardContent className="space-y-2 text-sm">
+                                                    {[['Agent on Site?', get('agentMetOnSite', 'surveyorAgentMetOnSite')], ['Agent Name', get('agentName', 'surveyorAgentName')], ['Designation', get('agentDesignation', 'surveyorAgentDesignation')], ['Phone', get('agentPhone', 'surveyorAgentPhone')], ['Email', get('agentEmail', 'surveyorAgentEmail')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
+                                                </CardContent>
+                                            </Card>
+                                            <Card>
+                                                <CardHeader><CardTitle className="text-sm">Structural & Valuation</CardTitle></CardHeader>
+                                                <CardContent className="space-y-2 text-sm">
+                                                    {[['Structural Condition', get('structuralCondition', 'surveyorStructuralCondition')], ['Visible Cracks?', get('visibleCracks', 'surveyorVisibleCracks')], ['Foundation Status', get('foundationStatus', 'surveyorFoundationStatus')], ['Estimated Value', get('surveyorEstimatedValue', 'estimatedPropertyValue') ? formatCurrency(Number(get('surveyorEstimatedValue', 'estimatedPropertyValue'))) : null], ['Valuation Basis', get('valuationBasis', 'surveyorValuationBasis')], ['Risk Level', get('riskLevel', 'surveyorRiskLevel')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
+                                                </CardContent>
+                                            </Card>
+                                        </div>
+                                    );
+                                })()}
+                            </>
+                        )}
+                    </TabsContent>
                 </Tabs>
 
                 {premiumResult?.premiumDetails && (
@@ -1151,7 +1313,36 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                         Close
                     </Button>
                     
-                    {/* Survey Download Action */}
+                    {/* SAR Download Actions — always visible if survey data exists */}
+                    {(policy as any).surveyorRecommendation && (
+                        <>
+                            <Button
+                                variant="outline"
+                                className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200 w-full sm:w-auto"
+                                onClick={() => {
+                                    setIsGeneratingSAR(true);
+                                    try { openSARReport(policy); } catch { toast.error('Could not open report.'); }
+                                    finally { setIsGeneratingSAR(false); }
+                                }}
+                                disabled={isGeneratingSAR}
+                            >
+                                {isGeneratingSAR ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Eye className="w-4 h-4 mr-2" />}
+                                View SAR Report
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200 w-full sm:w-auto"
+                                onClick={() => {
+                                    try { downloadSARReport(policy); toast.success('SAR report downloaded.'); } catch { toast.error('Could not download report.'); }
+                                }}
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                Download SAR
+                            </Button>
+                        </>
+                    )}
+
+                    {/* Existing survey document download */}
                     {(policy.surveyDocument?.downloadUrl || policy.surveyDocument?.downloadPath) && (
                         <Button 
                             variant="outline"
@@ -1174,7 +1365,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             }}
                         >
                             <Download className="w-4 h-4 mr-2" />
-                            Download Survey Report
+                            Download Site Pictures
                         </Button>
                     )}
 

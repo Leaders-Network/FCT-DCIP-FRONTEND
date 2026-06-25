@@ -89,6 +89,10 @@ export interface SurveySubmissionData {
         riskFactors: string;
         recommendations: string;
         estimatedValue?: number;
+        valuationBasis?: 'current_construction_cost' | 'replacement_cost' | 'market_value_estimate' | 'professional_assessment' | 'other';
+        valuationRemarks?: string;
+        riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+        riskRemarks?: string;
         photos: Array<{
             url: string;
             description: string;

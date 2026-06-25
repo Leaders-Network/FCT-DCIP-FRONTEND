@@ -379,11 +379,7 @@ const NIAAdministratorsPage = () => {
                                                 Manage Assignments
                                             </span>
                                         )}
-                                        {/* {admin.permissions.canViewReports && (
-                                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                                View Reports
-                                            </span>
-                                        )} */}
+                                     
                                         {admin.permissions.canManageAdmins && (
                                             <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
                                                 Manage Admins
@@ -521,18 +517,7 @@ const NIAAdministratorsPage = () => {
                                         />
                                         <span className="text-sm">Manage Assignments</span>
                                     </label>
-                                    <label className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.permissions.canViewReports}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                permissions: { ...formData.permissions, canViewReports: e.target.checked }
-                                            })}
-                                            className="mr-2"
-                                        />
-                                        <span className="text-sm">View Reports</span>
-                                    </label>
+                                    
                                     <label className="flex items-center">
                                         <input
                                             type="checkbox"

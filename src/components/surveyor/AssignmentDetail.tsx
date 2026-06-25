@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw, Download } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw, Download, Eye } from "lucide-react";
 import { Assignment, SurveySubmissionData, SurveySubmissionResult, DualAssignment } from "@/types/api.types";
 import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { useRouter } from "next/navigation";
@@ -637,22 +637,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <Camera className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
                 <span>Materials and workmanship documentation</span>
               </div>
-              <div className="flex items-start">
-                <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Detailed survey report with construction assessment</span>
-              </div>
-              <div className="flex items-start">
-                <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Builder liability risk assessment</span>
-              </div>
-              <div className="flex items-start">
-                <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Contact log with builder</span>
-              </div>
-              <div className="flex items-start">
-                <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Safety and compliance verification</span>
-              </div>
             </div>
           </div>
         </div>
@@ -698,16 +682,42 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             </h3>
             <p className="text-sm text-gray-600 mb-4">
               This assignment has been completed and the survey documents have been submitted.
-              You can download a ZIP archive of all submitted survey documents below.
+              You can view the SAR report or download your site pictures below.
             </p>
-            <button
-              onClick={handleDownloadDocs}
-              disabled={isDownloading}
-              className="flex items-center gap-2 bg-[#028835] text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] font-medium disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <Download className="h-5 w-5" />
-              {isDownloading ? 'Downloading...' : 'Download Survey Documents'}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => {
+                  import('@/components/builderLiability/SARReportGenerator').then(m => {
+                    m.openSARReport(assignment.policyId as BuilderLiabilityPolicy);
+                  });
+                }}
+                className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-200 px-4 py-2.5 rounded-md hover:bg-indigo-100 transition-colors font-medium text-sm"
+              >
+                <Eye className="h-4 w-4" />
+                View SAR Report
+              </button>
+              
+              <button
+                onClick={() => {
+                  import('@/components/builderLiability/SARReportGenerator').then(m => {
+                    m.downloadSARReport(assignment.policyId as BuilderLiabilityPolicy);
+                  });
+                }}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2.5 rounded-md hover:bg-blue-100 transition-colors font-medium text-sm"
+              >
+                <Download className="h-4 w-4" />
+                Download SAR
+              </button>
+
+              <button
+                onClick={handleDownloadDocs}
+                disabled={isDownloading}
+                className="flex-1 flex items-center justify-center gap-2 bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-md hover:bg-green-100 transition-colors font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Camera className="h-4 w-4" />
+                {isDownloading ? 'Downloading...' : 'Download Site Pictures'}
+              </button>
+            </div>
           </div>
         </div>
       )}
