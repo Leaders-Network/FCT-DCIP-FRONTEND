@@ -92,6 +92,7 @@ export interface OrganizationInfo {
     professionalBody?: ProfessionalBody;
     professionalRegistrationNumber?: string;
     otherProfessionalBodyName?: string;
+    practiceLicenseNumber?: string;
     niobRegNo?: string;
     yearOfRegistration: Date | string;
     areaOfSpecialization?: string;
@@ -300,6 +301,7 @@ export type BuilderLiabilityPolicyPriority = 'low' | 'medium' | 'high' | 'urgent
 
 export interface BuilderLiabilityPolicyData {
     userId?: string;
+    isDirectLabor?: boolean;
     builder: BuilderIdentity;
     client: ClientInfo;
     organization: OrganizationInfo;
@@ -316,6 +318,7 @@ export interface BuilderLiabilityPolicyData {
 export interface BuilderLiabilityPolicy extends BuilderLiabilityPolicyData {
     _id: string;
     policyNumber: string;
+    isDirectLabor?: boolean;
     status: BuilderLiabilityPolicyStatus;
     rejectionReason?: string;
     assignedSurveyors: string[];
@@ -469,6 +472,9 @@ export interface BuilderLiabilityPolicyFormData {
     builderAddress: string;
     builderPhone: string;
 
+    // Direct labor flag
+    isDirectLabor: boolean;
+
     // Client Info
     clientName: string;
     clientEmail: string;
@@ -483,6 +489,7 @@ export interface BuilderLiabilityPolicyFormData {
     professionalBody: ProfessionalBody | '';
     professionalRegistrationNumber: string;
     otherProfessionalBodyName?: string;
+    practiceLicenseNumber?: string;
     yearOfRegistration: string;
     areaOfSpecialization?: string;
     staffStrength: StaffStrength | '';

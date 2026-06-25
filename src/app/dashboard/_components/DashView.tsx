@@ -486,18 +486,7 @@ const Dashview = () => {
                     </div>
                   </button>
 
-                  {/* <button
-                    onClick={() => setActiveSection('reports')}
-                    className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="text-left">
-                        <div className="text-sm font-medium opacity-90">View Reports</div>
-                        <div className="text-xs opacity-75">Assessment Details</div>
-                      </div>
-                      <BarChart3 className="w-6 h-6" />
-                    </div>
-                  </button> */}
+                 
 
                   <button
                     onClick={() => window.open('http://buildersuat.niip.ng/', '_blank')}
@@ -716,10 +705,7 @@ const Dashview = () => {
                   onClick={() => setActiveSection('reports')}
                   className="w-full flex items-center justify-between p-3 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors group"
                 >
-                  <div className="flex items-center">
-                    <BarChart3 className="w-4 h-4 text-green-600 mr-3" />
-                    <span className="text-sm font-medium text-green-900">View Reports</span>
-                  </div>
+                  
                   <ArrowRight className="w-4 h-4 text-green-600 group-hover:translate-x-1 transition-transform" />
                 </button>
 

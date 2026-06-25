@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useCreateBuilderLiabilityPolicy } from '@/hooks/useBuilderLiabilityPolicy';
 import {
     BuilderLiabilityPolicyFormData,
@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Plus, Save, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FCT_LOCATIONS, getDistrictsByLGA } from '@/constants/fctLocations';
 import { CADASTRAL_ZONES } from '@/constants/policyConstants';
@@ -46,6 +46,11 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 }) => {
     const { createPolicy, loading, error, validationErrors } = useCreateBuilderLiabilityPolicy();
 
+    const DRAFT_KEY = 'builder_liability_policy_draft';
+    const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [draftRestored, setDraftRestored] = useState(false);
+
     const [formData, setFormData] = useState<BuilderLiabilityPolicyFormData>({
         // Builder Identity
         builderEmail: '',
@@ -56,6 +61,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         identificationNumber: '',
         builderAddress: '',
         builderPhone: '',
+
+        // Direct labor flag
+        isDirectLabor: false,
 
         // Client Info
         clientName: '',
@@ -132,6 +140,34 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     const [tabErrors, setTabErrors] = useState<Partial<Record<FormTab, string[]>>>({});
     const [customZoneMode, setCustomZoneMode] = useState(false);
 
+    // ─── Draft persistence ──────────────────────────────────────────────────────
+    const saveDraft = useCallback((data?: typeof formData) => {
+        try {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(data ?? formData));
+            setLastSaved(new Date());
+        } catch { /* ignore quota errors */ }
+    }, [formData]);
+
+    // Restore draft on first mount
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(DRAFT_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                setFormData(prev => ({ ...prev, ...parsed }));
+                setDraftRestored(true);
+                // Hide banner after 5 s
+                setTimeout(() => setDraftRestored(false), 5000);
+            }
+        } catch { /* ignore */ }
+    }, []);
+
+    // Auto-save every 30 s
+    useEffect(() => {
+        autoSaveTimerRef.current = setInterval(() => saveDraft(), 30_000);
+        return () => { if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current); };
+    }, [saveDraft]);
+
     const isLastTab = activeTab === FORM_TABS[FORM_TABS.length - 1];
 
     const isBlank = (value: unknown) => String(value ?? '').trim().length === 0;
@@ -151,6 +187,10 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         const errors: string[] = [];
 
         if (tab === 'builder') {
+            // When direct labor, skip all contractor field validations
+            if (formData.isDirectLabor) {
+                return errors;
+            }
             if (isBlank(formData.builderName)) errors.push('Contractor/Company Name is required.');
             if (isBlank(formData.directorOfCompany) || formData.directorOfCompany.trim().length < 2) {
                 errors.push('Director of the company must be at least 2 characters long.');
@@ -356,6 +396,29 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         }));
     };
 
+    // Handler for direct labor toggle
+    const handleDirectLaborChange = (value: boolean) => {
+        setFormData(prev => ({
+            ...prev,
+            isDirectLabor: value,
+            // When toggling to direct labor, clear all contractor fields
+            ...(value ? {
+                builderName: '',
+                builderEmail: '',
+                rcNumber: '',
+                directorOfCompany: '',
+                identificationNumber: '',
+                builderPhone: '',
+                builderAddress: '',
+                contractorCategoryId: 1,
+                contractorType: '' as const,
+                identificationType: 1
+            } : {})
+        }));
+        // Clear builder tab errors when toggling
+        setTabErrors(prev => ({ ...prev, builder: [] }));
+    };
+
     const addWorkmenCategory = () => {
         setFormData(prev => ({
             ...prev,
@@ -405,7 +468,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
     const handleNext = () => {
         if (!validateSingleTab(activeTab)) return;
-
+        saveDraft();
         const currentIndex = FORM_TABS.indexOf(activeTab);
         const nextTab = FORM_TABS[currentIndex + 1];
         if (nextTab) {
@@ -434,7 +497,19 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         // Convert form data to API format
         const policyData: BuilderLiabilityPolicyData = {
             status: 'submitted',
-            builder: {
+            isDirectLabor: formData.isDirectLabor,
+            builder: formData.isDirectLabor ? {
+                customerEmail: '',
+                nameOfBuilder: '',
+                rcNumber: '',
+                directorOfCompany: '',
+                identification: {
+                    identificationTypeId: 0,
+                    identityNo: ''
+                },
+                address: '',
+                telNo: ''
+            } : {
                 customerEmail: formData.builderEmail,
                 nameOfBuilder: formData.builderName,
                 rcNumber: formData.rcNumber,
@@ -463,6 +538,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     formData.professionalBody === 'Other'
                         ? formData.otherProfessionalBodyName || undefined
                         : undefined,
+                practiceLicenseNumber: formData.practiceLicenseNumber || undefined,
                 niobRegNo: undefined,
                 yearOfRegistration: new Date(formData.yearOfRegistration),
                 areaOfSpecialization: formData.areaOfSpecialization,
@@ -499,8 +575,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 coverTypeIdx: formData.coverTypeIndex,
                 isStatutory: formData.coverTypeIndex,
                 coverTypeIdxDetails: formData.coverTypeDetails,
-                categoryOfContractorId: formData.contractorCategoryId,
-                contractorType: formData.contractorType || undefined,
+                categoryOfContractorId: formData.isDirectLabor ? 0 : formData.contractorCategoryId,
+                contractorType: formData.isDirectLabor ? undefined : (formData.contractorType || undefined),
                 projectType: formData.projectType || undefined,
                 extraHazardous: formData.extraHazardous,
                 totalEstimateSumBand: formData.totalEstimateSumBand || undefined,
@@ -532,6 +608,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         const result = await createPolicy(policyData);
         if (result && onSuccess) {
+            // Clear draft on successful submit
+            try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
             onSuccess(result.data.policyId);
         }
     };
@@ -540,10 +618,29 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         <div className="w-full max-w-4xl mx-auto p-4 sm:p-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Builder Liability Policy Application</CardTitle>
-                    <CardDescription>
-                        Complete all sections to submit your Builder Liability Policy application
-                    </CardDescription>
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <CardTitle>Builder Liability Policy Application</CardTitle>
+                            <CardDescription>
+                                Complete all sections to submit your Builder Liability Policy application
+                            </CardDescription>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => saveDraft()}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#028835] border border-[#028835] rounded-lg hover:bg-green-50 transition-colors"
+                            >
+                                <Save className="w-3.5 h-3.5" />
+                                Save Draft
+                            </button>
+                            {lastSaved && (
+                                <span className="text-xs text-gray-400">
+                                    Saved {lastSaved.toLocaleTimeString()}
+                                </span>
+                            )}
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {error && (
@@ -565,6 +662,23 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                 </ul>
                             </AlertDescription>
                         </Alert>
+                    )}
+
+                    {draftRestored && (
+                        <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                            <span>Your previous draft has been restored. Continue where you left off.</span>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    localStorage.removeItem(DRAFT_KEY);
+                                    window.location.reload();
+                                }}
+                                className="ml-auto text-xs text-green-600 underline hover:text-green-800"
+                            >
+                                Clear draft
+                            </button>
+                        </div>
                     )}
 
                     <p className="mb-4 text-sm text-gray-600">
@@ -715,63 +829,111 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             </TabsContent>
 
                             <TabsContent value="builder" className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Direct Labor Toggle */}
+                                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 mb-2">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex-1">
+                                            <Label htmlFor="isDirectLabor" className="text-base font-semibold text-amber-900">
+                                                Is this a direct labor construction?
+                                            </Label>
+                                            <p className="mt-1 text-sm text-amber-700">
+                                                Select &apos;Yes&apos; if the project is not assigned to a commercial general contractor and you are managing or building it yourself.
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-3 flex-shrink-0">
+                                            <button
+                                                type="button"
+                                                id="isDirectLabor"
+                                                onClick={() => handleDirectLaborChange(!formData.isDirectLabor)}
+                                                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 ${
+                                                    formData.isDirectLabor ? 'bg-amber-600' : 'bg-gray-300'
+                                                }`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                                                        formData.isDirectLabor ? 'translate-x-8' : 'translate-x-1'
+                                                    }`}
+                                                />
+                                            </button>
+                                            <span className={`text-sm font-semibold ${
+                                                formData.isDirectLabor ? 'text-amber-900' : 'text-gray-500'
+                                            }`}>
+                                                {formData.isDirectLabor ? 'Yes' : 'No'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {formData.isDirectLabor && (
+                                        <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-amber-100 rounded-md border border-amber-300">
+                                            <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                                            <p className="text-sm text-amber-800">
+                                                Contractor details below are not required for direct labor projects and have been cleared.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${formData.isDirectLabor ? 'opacity-50 pointer-events-none' : ''}`}>
                                     <div>
-                                        <Label htmlFor="builderName">Builder/Company Name *</Label>
+                                        <Label htmlFor="builderName">Builder/Company Name {!formData.isDirectLabor && '*'}</Label>
                                         <Input
                                             id="builderName"
                                             value={formData.builderName}
                                             onChange={(e) => handleInputChange('builderName', e.target.value)}
-                                            required
+                                            required={!formData.isDirectLabor}
+                                            disabled={formData.isDirectLabor}
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
                                             Enter the contractor or construction company handling the work.
                                         </p>
                                     </div>
                                     <div>
-                                        <Label htmlFor="builderEmail">Email Address *</Label>
+                                        <Label htmlFor="builderEmail">Email Address {!formData.isDirectLabor && '*'}</Label>
                                         <Input
                                             id="builderEmail"
                                             type="email"
                                             value={formData.builderEmail}
                                             onChange={(e) => handleInputChange('builderEmail', e.target.value)}
-                                            required
+                                            required={!formData.isDirectLabor}
+                                            disabled={formData.isDirectLabor}
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
                                             Provide the contractor&apos;s primary email address for project communication.
                                         </p>
                                     </div>
                                     <div>
-                                        <Label htmlFor="rcNumber">RC Number *</Label>
+                                        <Label htmlFor="rcNumber">RC Number {!formData.isDirectLabor && '*'}</Label>
                                         <Input
                                             id="rcNumber"
                                             value={formData.rcNumber}
                                             onChange={(e) => handleInputChange('rcNumber', e.target.value)}
-                                            required
+                                            required={!formData.isDirectLabor}
+                                            disabled={formData.isDirectLabor}
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
                                             Input the organization&apos;s registered company number.
                                         </p>
                                     </div>
                                     <div>
-                                        <Label htmlFor="builderPhone">Phone Number *</Label>
+                                        <Label htmlFor="builderPhone">Phone Number {!formData.isDirectLabor && '*'}</Label>
                                         <Input
                                             id="builderPhone"
                                             value={formData.builderPhone}
                                             onChange={(e) => handleInputChange('builderPhone', e.target.value)}
-                                            required
+                                            required={!formData.isDirectLabor}
+                                            disabled={formData.isDirectLabor}
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
                                             Enter a valid Nigerian or international contact number.
                                         </p>
                                     </div>
                                     <div>
-                                        <Label htmlFor="directorOfCompany">Director of the company *</Label>
+                                        <Label htmlFor="directorOfCompany">Director of the company {!formData.isDirectLabor && '*'}</Label>
                                         <Input
                                             id="directorOfCompany"
                                             value={formData.directorOfCompany}
                                             onChange={(e) => handleInputChange('directorOfCompany', e.target.value)}
-                                            required
+                                            required={!formData.isDirectLabor}
+                                            disabled={formData.isDirectLabor}
                                             placeholder="Enter director of the company"
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
@@ -779,10 +941,11 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         </p>
                                     </div>
                                     <div>
-                                        <Label htmlFor="identificationType">Identification Type *</Label>
+                                        <Label htmlFor="identificationType">Identification Type {!formData.isDirectLabor && '*'}</Label>
                                         <Select
                                             value={formData.identificationType.toString()}
                                             onValueChange={(value) => handleInputChange('identificationType', parseInt(value))}
+                                            disabled={formData.isDirectLabor}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue />
@@ -796,24 +959,26 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                     </div>
 
                                     <div>
-                                        <Label htmlFor="identificationNumber">Director's Identification Number *</Label>
+                                        <Label htmlFor="identificationNumber">Director's Identification Number {!formData.isDirectLabor && '*'}</Label>
                                         <Input
                                             id="identificationNumber"
                                             value={formData.identificationNumber}
                                             onChange={(e) => handleInputChange('identificationNumber', e.target.value)}
-                                            required
+                                            required={!formData.isDirectLabor}
+                                            disabled={formData.isDirectLabor}
                                             placeholder="Enter director's identification number"
                                         />
-                                        {!formData.identificationNumber && (
+                                        {!formData.isDirectLabor && !formData.identificationNumber && (
                                             <p className="text-sm text-red-600 mt-1">Director's identification number is required</p>
                                         )}
                                     </div>
 
                                        <div>
-                                        <Label htmlFor="contractorCategoryId">Contractor Category *</Label>
+                                        <Label htmlFor="contractorCategoryId">Contractor Category {!formData.isDirectLabor && '*'}</Label>
                                         <Select
                                             value={formData.contractorCategoryId.toString()}
                                             onValueChange={(value) => handleInputChange('contractorCategoryId', parseInt(value))}
+                                            disabled={formData.isDirectLabor}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue />
@@ -830,10 +995,11 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                     </div>
                                     
                                     <div>
-                                        <Label htmlFor="contractorType">Contractor Type *</Label>
+                                        <Label htmlFor="contractorType">Contractor Type {!formData.isDirectLabor && '*'}</Label>
                                         <Select
                                             value={formData.contractorType}
                                             onValueChange={(value) => handleInputChange('contractorType', value)}
+                                            disabled={formData.isDirectLabor}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue />
@@ -850,13 +1016,14 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
 
                                 </div>
-                                <div>
-                                    <Label htmlFor="builderAddress">Location / Address *</Label>
+                                <div className={formData.isDirectLabor ? 'opacity-50 pointer-events-none' : ''}>
+                                    <Label htmlFor="builderAddress">Location / Address {!formData.isDirectLabor && '*'}</Label>
                                     <Textarea
                                         id="builderAddress"
                                         value={formData.builderAddress}
                                         onChange={(e) => handleInputChange('builderAddress', e.target.value)}
-                                        required
+                                        required={!formData.isDirectLabor}
+                                        disabled={formData.isDirectLabor}
                                     />
                                     <p className="mt-1 text-sm text-gray-500">
                                         Provide the contractor&apos;s location and address (e.g. Headquarters address if different from project site).
@@ -925,6 +1092,18 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             />
                                         </div>
                                     )}
+                                    <div>
+                                        <Label htmlFor="practiceLicenseNumber">Valid Practice License Number</Label>
+                                        <Input
+                                            id="practiceLicenseNumber"
+                                            value={formData.practiceLicenseNumber || ''}
+                                            onChange={(e) => handleInputChange('practiceLicenseNumber', e.target.value)}
+                                            placeholder="Enter valid practice license number"
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Provide the consultant&apos;s current and valid practice license number, if applicable.
+                                        </p>
+                                    </div>
                                     <div>
                                         <Label htmlFor="yearOfRegistration">Year of Registration *</Label>
                                         <Input
