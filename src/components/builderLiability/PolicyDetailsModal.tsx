@@ -374,8 +374,8 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         return value ? 'Yes' : 'No';
     };
 
-    const consultantProfessionalBody = getProfessionalBody(policy.organization);
-    const consultantRegistrationNumber = getProfessionalRegistrationNumber(policy.organization);
+    const assessorProfessionalBody = getProfessionalBody(policy.organization);
+    const assessorRegistrationNumber = getProfessionalRegistrationNumber(policy.organization);
     const projectTitle = getProjectTitle(policy.project);
     const projectAddress = getProjectAddress(policy.project, policy.builder);
     const projectLga = getProjectLga(policy.project);
@@ -444,7 +444,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 Contractor
                             </TabsTrigger>
                             <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
-                                Consultant
+                                Assessor
                             </TabsTrigger>
                             <TabsTrigger value="project" className="whitespace-nowrap text-xs sm:text-sm">
                                 Project
@@ -605,21 +605,21 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Building className="w-5 h-5" />
-                                    Consultant Details
+                                    Assessor Details
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600">Consultant Name</label>
-                                    <p className="text-base font-semibold">{policy.organization?.consultantName || 'Not provided'}</p>
+                                    <label className="text-sm font-medium text-gray-600">Assessor Name</label>
+                                    <p className="text-base font-semibold">{policy.organization?.assessorName || 'Not provided'}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Regulatory Body</label>
-                                    <p className="text-base font-semibold">{getDisplayValue(consultantProfessionalBody)}</p>
+                                    <p className="text-base font-semibold">{getDisplayValue(assessorProfessionalBody)}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Registration Number</label>
-                                    <p className="text-base font-semibold">{getDisplayValue(consultantRegistrationNumber)}</p>
+                                    <p className="text-base font-semibold">{getDisplayValue(assessorRegistrationNumber)}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-600">Valid Practice License Number</label>
@@ -633,7 +633,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <label className="text-sm font-medium text-gray-600">Area of Specialization</label>
                                     <p className="text-base">{getDisplayValue(policy.organization?.areaOfSpecialization)}</p>
                                 </div>
-                                {consultantProfessionalBody === 'Other' && (
+                                {assessorProfessionalBody === 'Other' && (
                                     <div>
                                         <label className="text-sm font-medium text-gray-600">Other Regulatory Body Name</label>
                                         <p className="text-base">{getDisplayValue(policy.organization?.otherProfessionalBodyName)}</p>
@@ -1208,8 +1208,8 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                         contractorName: rawSd.contractor?.name,
                                         contractorCategory: rawSd.contractor?.category,
 
-                                        consultantName: rawSd.consultant?.name,
-                                        consultantCategory: rawSd.consultant?.category,
+                                        assessorName: rawSd.consultant?.name,
+                                        assessorCategory: rawSd.consultant?.category,
 
                                         agentMetOnSite: rawSd.agent?.metOnSite,
                                         agentName: rawSd.agent?.name,
@@ -1252,9 +1252,9 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                                 </CardContent>
                                             </Card>
                                             <Card>
-                                                <CardHeader><CardTitle className="text-sm">Contractor / Consultant</CardTitle></CardHeader>
+                                                <CardHeader><CardTitle className="text-sm">Contractor / Assessor</CardTitle></CardHeader>
                                                 <CardContent className="space-y-2 text-sm">
-                                                    {[['Contractor on Site?', get('contractorPresentOnSite', 'surveyorContractorPresentOnSite')], ['Contractor Name', get('contractorName', 'surveyorContractorName')], ['Contractor Category', get('contractorCategory', 'surveyorContractorCategory')], ['Consultant Name', get('consultantName')], ['Consultant Category', get('consultantCategory', 'surveyorConsultantCategory')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
+                                                    {[['Contractor on Site?', get('contractorPresentOnSite', 'surveyorContractorPresentOnSite')], ['Contractor Name', get('contractorName', 'surveyorContractorName')], ['Contractor Category', get('contractorCategory', 'surveyorContractorCategory')], ['Assessor Name', get('assessorName')], ['Assessor Category', get('assessorCategory', 'surveyorConsultantCategory')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
                                                 </CardContent>
                                             </Card>
                                             <Card>

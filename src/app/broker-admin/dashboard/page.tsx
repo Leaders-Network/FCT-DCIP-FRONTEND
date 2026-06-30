@@ -903,7 +903,7 @@ export default function BrokerAdminDashboard() {
                                             <KeyValue label="Extra Hazardous" value={selectedCompletedPolicy.project.extraHazardous ? 'Yes' : 'No'} />
                                         </SectionCard>
 
-                                        <SectionCard icon={Building2} title="Consultant">
+                                        <SectionCard icon={Building2} title="Assessor">
                                             <KeyValue label="Regulatory Body" value={getDisplayValue(getProfessionalBody(selectedCompletedPolicy.organization))} />
                                             <KeyValue label="Registration Number" value={getDisplayValue(getProfessionalRegistrationNumber(selectedCompletedPolicy.organization))} />
                                             {getProfessionalBody(selectedCompletedPolicy.organization) === 'Other' && (

@@ -38,7 +38,7 @@ interface PolicyFormProps {
 const FORM_TABS = ['client', 'builder', 'organization', 'membership', 'workforce', 'compliance', 'project'] as const;
 type FormTab = (typeof FORM_TABS)[number];
 
-// Display labels use contractor/consultant terminology even when internal names remain backward-compatible.
+// Display labels use contractor/assessor terminology.
 
 export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     onSuccess,
@@ -74,8 +74,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         clientAddress: '',
         clientRcNumber: '',
 
-        // Consultant Info
-        consultantName: '',
+        // Assessor Info
+        assessorName: '',
         professionalBody: 'COREN - Council for regulation of engineering in Nigeria',
         professionalRegistrationNumber: '',
         otherProfessionalBodyName: '',
@@ -235,7 +235,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         if (tab === 'organization') {
 
-            if (isBlank(formData.consultantName)) errors.push('Consultant Name is required.');
+            if (isBlank(formData.assessorName)) errors.push('Assessor Name is required.');
             if (isBlank(formData.professionalRegistrationNumber)) {
                 errors.push('Professional Registration Number is required.');
             }
@@ -531,7 +531,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                 rcNumber: formData.clientRcNumber || undefined
             },
             organization: {
-                consultantName: formData.consultantName,
+                assessorName: formData.assessorName,
                 professionalBody: formData.professionalBody || undefined,
                 professionalRegistrationNumber: formData.professionalRegistrationNumber,
                 otherProfessionalBodyName:
@@ -710,7 +710,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         Contractor
                                     </TabsTrigger>
                                     <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
-                                        Consultant
+                                        Assessor
                                     </TabsTrigger>
                                     <TabsTrigger value="membership" className="whitespace-nowrap text-xs sm:text-sm">
                                         Membership
@@ -1034,16 +1034,16 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             <TabsContent value="organization" className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <Label htmlFor="consultantName">Consultant Name *</Label>
+                                        <Label htmlFor="assessorName">Assessor Name *</Label>
                                         <Input
-                                            id="consultantName"
-                                            value={formData.consultantName}
-                                            onChange={(e) => handleInputChange('consultantName', e.target.value)}
-                                            placeholder="Enter consultant name"
+                                            id="assessorName"
+                                            value={formData.assessorName}
+                                            onChange={(e) => handleInputChange('assessorName', e.target.value)}
+                                            placeholder="Enter assessor name"
                                             required
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Enter the consultant's full name for this organization.
+                                            Enter the assessor's full name for this organization.
                                         </p>
                                     </div>
                                     <div>
@@ -1064,7 +1064,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </SelectContent>
                                         </Select>
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Select the consultant&apos;s recognized regulatory body.
+                                            Select the assessor&apos;s recognized regulatory body.
                                         </p>
                                     </div>
                                     <div>
@@ -1073,7 +1073,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             id="professionalRegistrationNumber"
                                             value={formData.professionalRegistrationNumber}
                                             onChange={(e) => handleInputChange('professionalRegistrationNumber', e.target.value)}
-                                            placeholder="Enter consultant's registration number"
+                                            placeholder="Enter assessor's registration number"
                                             required
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
@@ -1101,7 +1101,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             placeholder="Enter valid practice license number"
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Provide the consultant&apos;s current and valid practice license number, if applicable.
+                                            Provide the assessor's current and valid practice license number, if applicable.
                                         </p>
                                     </div>
                                     <div>
@@ -1141,7 +1141,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </SelectContent>
                                         </Select>
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Select the primary staff strength classification for this consultant.
+                                            Select the primary staff strength classification for this assessor.
                                         </p>
                                     </div>
 

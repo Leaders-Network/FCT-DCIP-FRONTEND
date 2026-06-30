@@ -113,8 +113,8 @@ function buildHTML(policy: BuilderLiabilityPolicy): string {
         contractorName: rawSd.contractor?.name,
         contractorCategory: rawSd.contractor?.category,
 
-        consultantName: rawSd.consultant?.name,
-        consultantCategory: rawSd.consultant?.category,
+        assessorName: rawSd.consultant?.name,
+        assessorCategory: rawSd.consultant?.category,
 
         agentMetOnSite: rawSd.agent?.metOnSite,
         agentName: rawSd.agent?.name,
@@ -324,13 +324,13 @@ ${section('3. Development Conformity', [
     row('Level of Service', na(get('levelOfService', 'surveyorLevelOfService'))),
 ].join(''))}
 
-<!-- ════ 4. CONTRACTOR & CONSULTANT ════ -->
-${section('4. Contractor & Consultant Information', [
+<!-- ════ 4. CONTRACTOR & ASSESSOR ════ -->
+${section('4. Contractor & Assessor Information', [
     row('Contractor Present on Site?', boolText(get('contractorPresentOnSite', 'surveyorContractorPresentOnSite'))),
     row('Contractor Name', na(get('contractorName', 'surveyorContractorName'))),
     row('Contractor Category', na(get('contractorCategory', 'surveyorContractorCategory'))),
-    row('Consultant Name', na(get('consultantName') ?? org.consultantName)),
-    row('Consultant Category', na(get('consultantCategory', 'surveyorConsultantCategory'))),
+    row('Assessor Name', na(get('assessorName') ?? org.assessorName)),
+    row('Assessor Category', na(get('assessorCategory', 'surveyorConsultantCategory'))),
 ].join(''))}
 
 <!-- ════ 5. AGENT / DEVELOPER MET ON SITE ════ -->
