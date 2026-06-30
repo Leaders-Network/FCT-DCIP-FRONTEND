@@ -29,7 +29,7 @@ const TABS: TabConfig[] = [
     { id: 'location',       label: 'Location Details',          shortLabel: 'Location',     icon: MapPin },
     { id: 'site',           label: 'Site Details',              shortLabel: 'Site',         icon: Building2 },
     { id: 'conformity',     label: 'Development Conformity',    shortLabel: 'Conformity',   icon: ClipboardCheck },
-    { id: 'contractor',     label: 'Contractor & Consultant',   shortLabel: 'Contractor',   icon: Shield },
+    { id: 'contractor', label: 'Contractor & Assessor', shortLabel: 'Contractor', icon: Shield },
     { id: 'agent',          label: 'Agent / Developer',         shortLabel: 'Agent',        icon: Users },
     { id: 'structural',     label: 'Structural Assessment',     shortLabel: 'Structural',   icon: AlertCircle },
     { id: 'images',         label: 'Site Images & Documents',   shortLabel: 'Images',       icon: Image },
@@ -134,12 +134,12 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
         nonConformityDescription: '',
         levelOfService: '',
 
-        // Tab 4 – Contractor & Consultant
+        // Tab 4 – Contractor & Assessor
         contractorPresentOnSite: '',
         contractorName: '',
         contractorCategory: '',
-        consultantName: '',
-        consultantCategory: '',
+        assessorName: '',
+        assessorCategory: '',
 
         // Tab 5 – Agent / Developer
         agentMetOnSite: '',
@@ -284,9 +284,9 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                 name: form.contractorName,
                 category: form.contractorCategory,
             },
-            consultant: {
-                name: form.consultantName,
-                category: form.consultantCategory,
+            assessor: {
+                name: form.assessorName,
+                category: form.assessorCategory,
             },
             agent: {
                 metOnSite: form.agentMetOnSite,
@@ -614,10 +614,10 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                             </div>
                         )}
 
-                        {/* ════════════════ TAB 4: CONTRACTOR & CONSULTANT ════════ */}
+                        {/* ════════════════ TAB 4: CONTRACTOR & ASSESSOR ════════ */}
                         {activeTab.id === 'contractor' && (
                             <div className="space-y-5">
-                                <h3 className="text-base font-semibold text-gray-900">Contractor & Consultant Information</h3>
+                                <h3 className="text-base font-semibold text-gray-900">Contractor & Assessor Information</h3>
 
                                 <div className={sectionCls}>
                                     <p className={sectionTitleCls}>Contractor</p>
@@ -654,16 +654,16 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </div>
 
                                 <div className={sectionCls}>
-                                    <p className={sectionTitleCls}>Consultant</p>
+                                    <p className={sectionTitleCls}>Assessor</p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className={labelCls}>Consultant Name</label>
-                                            <input type="text" className={inputCls} value={form.consultantName}
-                                                onChange={e => updateForm('consultantName', e.target.value)} placeholder="Consultant full name" />
+                                            <label className={labelCls}>Assessor Name</label>
+                                            <input type="text" className={inputCls} value={form.assessorName}
+                                                onChange={e => updateForm('assessorName', e.target.value)} placeholder="Assessor full name" />
                                         </div>
                                         <div>
-                                            <label className={labelCls}>Consultant Category</label>
-                                            <select className={inputCls} value={form.consultantCategory} onChange={e => updateForm('consultantCategory', e.target.value)}>
+                                            <label className={labelCls}>Assessor Category</label>
+                                            <select className={inputCls} value={form.assessorCategory} onChange={e => updateForm('assessorCategory', e.target.value)}>
                                                 <option value="">Select category</option>
                                                 <option>Architect</option>
                                                 <option>Civil/Structural Engineer</option>
@@ -982,7 +982,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                             description="The site and development fully meet requirements for insurance coverage." />
                                         <RadioOption name="recommendation" value="request_more_info"
                                             checked={form.recommendedAction === 'request_more_info'}
-                                            onChange={() => updateForm('recommendedAction', 'request_more_info')}
+                                            onChange={() => updateForm('recommendation', 'request_more_info')}
                                             label="Recommend for Further Inspection"
                                             description="Additional information or inspection is needed before a final decision can be made." />
                                         <RadioOption name="recommendation" value="reject"
@@ -1001,7 +1001,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                             { label: 'Location Details',             done: !!(form.plotNumber || form.district) },
                                             { label: 'Site Details',                  done: !!(form.estimatedSlope || form.vacancyStatus) },
                                             { label: 'Development Conformity',        done: !!form.conformsWithApproval },
-                                            { label: 'Contractor & Consultant',       done: !!form.contractorPresentOnSite },
+                                            { label: 'Contractor & Assessor',         done: !!form.contractorPresentOnSite },
                                             { label: 'Agent / Developer',             done: !!form.agentMetOnSite },
                                             { label: 'Structural Assessment',         done: !!form.structuralCondition },
                                             { label: 'Property Valuation',            done: !!(form.estimatedPropertyValue && form.valuationBasis) },

@@ -88,7 +88,7 @@ export type ContractorType = 'Local' | 'International' | 'Other';
 export const CONTRACTOR_TYPES: ContractorType[] = ['Local', 'International', 'Other'];
 
 export interface OrganizationInfo {
-    consultantName?: string;
+    assessorName?: string;
     professionalBody?: ProfessionalBody;
     professionalRegistrationNumber?: string;
     otherProfessionalBodyName?: string;
@@ -485,7 +485,7 @@ export interface BuilderLiabilityPolicyFormData {
     clientRcNumber?: string;
 
     // Organization Info
-    consultantName: string;
+    assessorName: string;
     professionalBody: ProfessionalBody | '';
     professionalRegistrationNumber: string;
     otherProfessionalBodyName?: string;
