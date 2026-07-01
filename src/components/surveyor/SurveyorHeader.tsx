@@ -1,30 +1,116 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Search, Menu } from "lucide-react";
+import {
+  Bell,
+  Calculator,
+  ClipboardList,
+  FileSearch,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { clearAuthTokens } from "@/utils/auth"
 import { getCookie } from "@/utils/cookies";
 import { getSurveyorProfile } from "@/services/api";
 import Swal from "sweetalert2";
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from "next/navigation";
 import NotificationBell from "@/components/shared/NotificationBell";
+import type { LucideIcon } from "lucide-react";
 
 interface SurveyorHeaderProps {
   onMenuClick?: () => void;
 }
 
+interface PageContext {
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+}
+
+const getSurveyorPageContext = (pathname: string | null): PageContext => {
+  if (!pathname) {
+    return {
+      title: "Surveyor Portal",
+      subtitle: "Manage assignments, reports, and premium work in one place.",
+      icon: Sparkles,
+    };
+  }
+
+  if (pathname.includes("/survey-assessment-report")) {
+    return {
+      title: "Survey Assessment Report",
+      subtitle: "Record findings, notes, and recommendations before submission.",
+      icon: FileSearch,
+    };
+  }
+
+  if (pathname.includes("/assignments/")) {
+    return {
+      title: "Assignment Details",
+      subtitle: "Review the job context, status, and project information.",
+      icon: ClipboardList,
+    };
+  }
+
+  if (pathname.endsWith("/premium-calculator")) {
+    return {
+      title: "Premium Calculator",
+      subtitle: "Estimate risk loading and premium from the survey data.",
+      icon: Calculator,
+    };
+  }
+
+  if (pathname.endsWith("/assignments")) {
+    return {
+      title: "Assignments",
+      subtitle: "Track active survey jobs and progress at a glance.",
+      icon: ClipboardList,
+    };
+  }
+
+  if (pathname.endsWith("/notifications")) {
+    return {
+      title: "Notifications",
+      subtitle: "Stay on top of alerts, updates, and new activity.",
+      icon: Bell,
+    };
+  }
+
+  if (pathname.endsWith("/settings")) {
+    return {
+      title: "Settings",
+      subtitle: "Update your profile and portal preferences.",
+      icon: Settings,
+    };
+  }
+
+  return {
+    title: "Surveyor Dashboard",
+    subtitle: "Keep assignments, reports, and premium tasks organized.",
+    icon: LayoutDashboard,
+  };
+};
+
 const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
   const [surveyorName, setSurveyorName] = useState("Surveyor");
+  const pathname = usePathname();
+  const pageContext = getSurveyorPageContext(pathname);
   const initials = surveyorName
     .split(" ")
     .map((word) => word[0])
     .join("")
     .toUpperCase();
+  const PageIcon = pageContext.icon;
   const router = useRouter();
   const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -110,58 +196,102 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
 
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* Mobile menu button */}
+    <header className="relative sticky top-3 z-20 mb-4 overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.16),_transparent_42%)]" />
+      <div className="relative flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 md:hidden"
+            aria-label="Toggle sidebar"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md md:hidden"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">
-            <span className="hidden sm:inline">AMMC Surveyor Portal</span>
-            <span className="sm:hidden">Surveyor</span>
-          </h1>
+
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#028835] to-emerald-700 text-white shadow-lg shadow-emerald-200/60">
+            <PageIcon className="h-5 w-5" />
+          </div>
+
+          <div className="min-w-0">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
+                Surveyor workspace
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[10px] font-medium tracking-[0.18em] text-slate-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Live
+              </span>
+            </div>
+            <h1 className="truncate text-lg font-bold text-slate-900 sm:text-xl lg:text-2xl">
+              {pageContext.title}
+            </h1>
+            <p className="truncate text-sm text-slate-500">{pageContext.subtitle}</p>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* Search - hidden on mobile */}
-          <div className="relative hidden lg:block">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="hidden xl:flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-left shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+              <Sparkles className="h-4 w-4" />
             </div>
-            <input
-              type="text"
-              placeholder="Search..."
-              className="block w-48 xl:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#028835] focus:border-[#028835] sm:text-sm"
-            />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Active workspace
+              </p>
+              <p className="text-sm text-slate-500">Assignments, reports, premiums</p>
+            </div>
           </div>
 
-          <NotificationBell />
+          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-1.5 shadow-sm backdrop-blur">
+            <NotificationBell />
+          </div>
 
-          {/* Profile */}
-          <div className="flex items-center">
-            <span className="text-sm font-medium text-gray-900 mr-2 hidden lg:inline truncate max-w-[120px]">
-              {surveyorName}
-            </span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="w-8 h-8 sm:w-9 sm:h-9 bg-[#028835] rounded-lg flex items-center justify-center text-white text-sm font-bold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="group flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#028835]/20">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#028835] to-emerald-700 text-sm font-bold text-white shadow-md shadow-emerald-200/60 transition-transform duration-300 group-hover:scale-105">
                   {initials}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onSelect={() => window.location.href = '/surveyor/dashboard/settings'}>
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleLogout}>
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                </span>
+                <span className="hidden text-left sm:block">
+                  <span className="block text-sm font-semibold text-slate-900">
+                    {surveyorName}
+                  </span>
+                  <span className="block text-[11px] text-slate-500">
+                    Surveyor profile
+                  </span>
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-64 rounded-3xl border border-slate-200/80 bg-white/95 p-2 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+            >
+              <DropdownMenuLabel className="px-3 py-2">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                  Signed in as
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-900">
+                  {surveyorName}
+                </div>
+                <div className="text-xs text-slate-500">Surveyor account</div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-1 bg-slate-200" />
+              <DropdownMenuItem
+                onSelect={() => router.push("/surveyor/dashboard/settings")}
+                className="cursor-pointer rounded-2xl px-3 py-2.5 text-sm text-slate-700 transition-colors focus:bg-emerald-50 focus:text-emerald-800"
+              >
+                <Settings className="h-4 w-4 text-slate-500" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleLogout}
+                className="cursor-pointer rounded-2xl px-3 py-2.5 text-sm text-red-600 transition-colors focus:bg-red-50 focus:text-red-700"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

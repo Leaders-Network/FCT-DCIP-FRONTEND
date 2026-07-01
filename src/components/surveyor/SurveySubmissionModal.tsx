@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-    X, Upload, Save, FileText, Camera, Phone, Mail, MessageSquare,
+    ArrowLeft, X, Upload, Save, FileText, Camera, Phone, Mail, MessageSquare,
     CheckCircle, AlertCircle, ChevronDown, ChevronUp, Building2,
     MapPin, Users, Shield, ClipboardCheck, Image, Send
 } from 'lucide-react';
@@ -12,6 +12,7 @@ interface SurveySubmissionModalProps {
     policy: any;
     assignment: Assignment;
     isOpen: boolean;
+    variant?: "modal" | "page";
     onSubmit: (submission: FormData) => Promise<void>;
     onClose: () => void;
 }
@@ -36,10 +37,10 @@ const TABS: TabConfig[] = [
     { id: 'recommendation', label: 'Recommendation & Submit',   shortLabel: 'Submit',       icon: Send },
 ];
 
-const inputCls = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835] text-sm transition-colors";
-const labelCls = "block text-sm font-medium text-gray-700 mb-1";
-const sectionCls = "bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4";
-const sectionTitleCls = "text-sm font-semibold text-gray-800 flex items-center gap-2";
+const inputCls = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:outline-none focus:ring-4 focus:ring-[#028835]/10";
+const labelCls = "mb-1.5 block text-sm font-medium text-slate-700";
+const sectionCls = "space-y-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur";
+const sectionTitleCls = "flex items-center gap-2 text-sm font-semibold text-slate-800";
 
 const RadioOption: React.FC<{
     name: string;
@@ -51,10 +52,10 @@ const RadioOption: React.FC<{
     color?: string;
 }> = ({ name, value, checked, onChange, label, description, color = 'green' }) => (
     <label
-        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+        className={`group flex items-start gap-3 rounded-2xl border p-3 transition-all duration-300 ${
             checked
-                ? `border-[#028835] bg-green-50 shadow-sm`
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                ? "border-emerald-200 bg-emerald-50/80 shadow-sm ring-1 ring-emerald-500/10"
+                : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-slate-50 hover:shadow-sm"
         }`}
     >
         <input
@@ -66,8 +67,8 @@ const RadioOption: React.FC<{
             className="mt-0.5 h-4 w-4 accent-[#028835]"
         />
         <div>
-            <span className={`text-sm font-medium ${checked ? 'text-[#028835]' : 'text-gray-700'}`}>{label}</span>
-            {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+            <span className={`text-sm font-medium ${checked ? 'text-[#028835]' : 'text-slate-700'}`}>{label}</span>
+            {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
         </div>
     </label>
 );
@@ -77,7 +78,7 @@ const CheckboxOption: React.FC<{
     onChange: () => void;
     label: string;
 }> = ({ checked, onChange, label }) => (
-    <label className="flex items-center gap-2 cursor-pointer">
+    <label className="flex items-center gap-2 cursor-pointer rounded-full px-2 py-1 transition-colors hover:bg-slate-50">
         <input
             type="checkbox"
             checked={checked}
@@ -92,9 +93,12 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     policy,
     assignment,
     isOpen,
+    variant = "modal",
     onSubmit,
     onClose,
 }) => {
+    const isPage = variant === "page";
+    const isVisible = isPage || isOpen;
     const [activeTabIndex, setActiveTabIndex] = useState(0);
     const [loading, setLoading] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -103,6 +107,21 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
     const [structuralExpanded, setStructuralExpanded] = useState(true);
     const [valuationExpanded, setValuationExpanded] = useState(true);
     const [riskExpanded, setRiskExpanded] = useState(true);
+
+    useEffect(() => {
+        if (!isOpen || isPage) return;
+
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = previousBodyOverflow;
+            document.documentElement.style.overflow = previousHtmlOverflow;
+        };
+    }, [isOpen, isPage]);
 
     // ─── Form State ────────────────────────────────────────────────────────────
     const [form, setForm] = useState({
@@ -354,52 +373,73 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
         });
     };
 
-    if (!isOpen) return null;
+    if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
+        <div
+            className={
+                isPage
+                    ? "flex h-full min-h-[calc(100vh-10rem)] w-full min-w-0 flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]"
+                    : "fixed inset-0 z-50 flex h-screen w-screen items-center justify-center overflow-hidden bg-black/85 p-2 sm:p-3 lg:p-4"
+            }
+        >
+            <div
+                className={
+                    isPage
+                        ? "flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[1.5rem] bg-white"
+                        : "flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-white shadow-[0_30px_120px_rgba(0,0,0,0.45)] md:w-[calc(100vw-2rem)] lg:w-[calc(100vw-18rem)] lg:max-w-[calc(100vw-18rem)]"
+                }
+            >
 
                 {/* ── Header ───────────────────────────────────────────────── */}
-                <div className="bg-gradient-to-r from-[#028835] to-[#025c24] text-white px-6 py-4 flex-shrink-0">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <h2 className="text-xl font-bold">Survey Assessment Report</h2>
-                            <p className="text-green-100 text-sm mt-0.5">
-                                {policy?.project?.projectType || 'Construction Project'} — {policy?.project?.address || assignment?.location?.address || 'Address not available'}
-                            </p>
-                            {policy?.policyNumber && (
-                                <span className="text-green-200 text-xs">Policy #{policy.policyNumber}</span>
-                            )}
+                <div className="flex-shrink-0 bg-gradient-to-r from-[#028835] via-[#02742d] to-[#025c24] px-5 py-5 text-white sm:px-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2">
+                            <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-50">
+                                Survey Assessment Report
+                            </span>
+                            <div>
+                                <h2 className="text-xl font-bold sm:text-2xl">Survey Assessment Report</h2>
+                                <p className="mt-1 text-sm text-emerald-50/90">
+                                    {policy?.project?.projectType || 'Construction Project'} — {policy?.project?.address || assignment?.location?.address || 'Address not available'}
+                                </p>
+                                {policy?.policyNumber && (
+                                    <p className="mt-1 text-xs text-emerald-100/80">Policy #{policy.policyNumber}</p>
+                                )}
+                            </div>
                         </div>
-                        <button onClick={onClose} className="text-green-100 hover:text-white transition-colors mt-1">
-                            <X className="w-5 h-5" />
+                        <button
+                            onClick={onClose}
+                            aria-label={isPage ? "Back to assignment" : "Close report"}
+                            className="rounded-full border border-white/20 bg-white/10 p-2 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20"
+                        >
+                            {isPage ? <ArrowLeft className="w-5 h-5" /> : <X className="w-5 h-5" />}
                         </button>
                     </div>
 
                     {/* Progress bar */}
-                    <div className="mt-3">
-                        <div className="flex items-center justify-between text-xs text-green-100 mb-1">
+                    <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm">
+                        <div className="mb-1 flex items-center justify-between text-xs text-green-100">
                             <span>Step {activeTabIndex + 1} of {TABS.length} — {activeTab.label}</span>
                             <span>{progress}%</span>
                         </div>
-                        <div className="h-1.5 bg-green-900/50 rounded-full overflow-hidden">
+                        <div className="h-1.5 overflow-hidden rounded-full bg-green-950/40">
                             <div
-                                className="h-full bg-white/80 rounded-full transition-all duration-500"
+                                className="h-full rounded-full bg-white/80 transition-all duration-500"
                                 style={{ width: `${progress}%` }}
                             />
                         </div>
                     </div>
                     {lastSaved && (
-                        <p className="text-green-200 text-xs mt-1">
+                        <p className="mt-2 text-xs text-emerald-100/80">
                             Draft saved {lastSaved.toLocaleTimeString()}
                         </p>
                     )}
                 </div>
 
                 {/* ── Tab Navigation ───────────────────────────────────────── */}
-                <div className="border-b border-gray-200 overflow-x-auto flex-shrink-0">
-                    <nav className="flex min-w-max">
+                <div className="flex-shrink-0 overflow-x-auto border-b border-slate-200/80 bg-slate-50/90 px-3 py-3">
+                    <nav className="flex min-w-max gap-2">
                         {TABS.map((tab, idx) => {
                             const Icon = tab.icon;
                             const isCurrent = idx === activeTabIndex;
@@ -409,12 +449,12 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                     key={tab.id}
                                     type="button"
                                     onClick={() => goToTab(idx)}
-                                    className={`flex items-center gap-1.5 px-3 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                    className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-300 ${
                                         isCurrent
-                                            ? 'border-[#028835] text-[#028835] bg-green-50/60'
+                                            ? 'bg-[#028835] text-white shadow-md shadow-emerald-200/60'
                                             : isDone
-                                                ? 'border-transparent text-green-600 hover:text-[#028835]'
-                                                : 'border-transparent text-gray-400 hover:text-gray-600'
+                                                ? 'border border-emerald-200 bg-emerald-50/80 text-emerald-700 hover:-translate-y-0.5 hover:bg-emerald-100'
+                                                : 'border border-slate-200 bg-white text-slate-400 hover:-translate-y-0.5 hover:border-emerald-200 hover:text-slate-600 hover:shadow-sm'
                                     }`}
                                 >
                                     {isDone
@@ -429,8 +469,8 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                 </div>
 
                 {/* ── Scrollable Form Body ─────────────────────────────────── */}
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-                    <div className="p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-slate-50/40">
+                    <div className="space-y-5 p-4 sm:p-6">
 
                         {/* ════════════════ TAB 1: LOCATION DETAILS ═══════════════ */}
                         {activeTab.id === 'location' && (
@@ -733,9 +773,9 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 <h3 className="text-base font-semibold text-gray-900">Structural & Property Assessment</h3>
 
                                 {/* Structural Condition */}
-                                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                                     <button type="button"
-                                        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                        className="flex w-full items-center justify-between bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100"
                                         onClick={() => setStructuralExpanded(v => !v)}>
                                         <span className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                                             <AlertCircle className="w-4 h-4 text-gray-500" /> Structural Condition
@@ -785,9 +825,9 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </div>
 
                                 {/* Property Valuation */}
-                                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                                     <button type="button"
-                                        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                        className="flex w-full items-center justify-between bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100"
                                         onClick={() => setValuationExpanded(v => !v)}>
                                         <span className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                                             <Shield className="w-4 h-4 text-gray-500" /> Property Valuation
@@ -838,9 +878,9 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </div>
 
                                 {/* Risk Assessment */}
-                                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                                     <button type="button"
-                                        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                        className="flex w-full items-center justify-between bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100"
                                         onClick={() => setRiskExpanded(v => !v)}>
                                         <span className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                                             <AlertCircle className="w-4 h-4 text-orange-500" /> Risk Assessment
@@ -900,7 +940,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </p>
 
                                 {/* Suggested categories */}
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div className="rounded-2xl border border-blue-200 bg-blue-50/80 p-3 shadow-sm">
                                     <p className="text-xs font-semibold text-blue-800 mb-2">Suggested Upload Categories</p>
                                     <div className="flex flex-wrap gap-1.5">
                                         {['Front View', 'Rear View', 'Left Elevation', 'Right Elevation', 'Foundation', 'Structural Components', 'Site Overview', 'Other'].map(cat => (
@@ -912,12 +952,12 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 {/* Drop zone */}
                                 <label
                                     htmlFor="survey-file-upload"
-                                    className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer hover:border-[#028835] hover:bg-green-50/30 transition-all"
+                                    className="flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-300 p-10 text-center cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:border-[#028835] hover:bg-emerald-50/30 hover:shadow-sm"
                                 >
                                     <Upload className="w-10 h-10 text-gray-400 mb-3" />
                                     <p className="text-sm font-medium text-gray-700">Drag & drop files here</p>
                                     <p className="text-xs text-gray-500 mt-1">or click to select files</p>
-                                    <span className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-[#028835] text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                                    <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#028835] px-4 py-2 text-sm text-white transition-all duration-300 hover:bg-green-700">
                                         <Camera className="w-4 h-4" /> Choose Files
                                     </span>
                                     <input id="survey-file-upload" type="file" multiple accept=".jpg,.jpeg,.png,.pdf"
@@ -935,12 +975,12 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                             {uploadedFiles.map((file, idx) => {
                                                 const isImage = file.type.startsWith('image/');
                                                 return (
-                                                    <div key={idx} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                    <div key={idx} className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3 shadow-sm">
                                                         <div className="flex items-center gap-3">
                                                             {isImage
                                                                 ? <img src={URL.createObjectURL(file)} alt={file.name}
-                                                                    className="w-10 h-10 rounded object-cover border border-green-300" />
-                                                                : <div className="w-10 h-10 rounded bg-red-50 border border-red-200 flex items-center justify-center">
+                                                                    className="h-10 w-10 rounded-2xl object-cover border border-emerald-200" />
+                                                                : <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-red-200 bg-red-50">
                                                                     <FileText className="w-5 h-5 text-red-500" />
                                                                   </div>
                                                             }
@@ -951,7 +991,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                                         </div>
                                                         <button type="button"
                                                             onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
-                                                            className="text-red-500 hover:text-red-700 transition-colors">
+                                                            className="rounded-full p-1 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700">
                                                             <X className="w-5 h-5" />
                                                         </button>
                                                     </div>
@@ -982,7 +1022,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                             description="The site and development fully meet requirements for insurance coverage." />
                                         <RadioOption name="recommendation" value="request_more_info"
                                             checked={form.recommendedAction === 'request_more_info'}
-                                            onChange={() => updateForm('recommendation', 'request_more_info')}
+                                            onChange={() => updateForm('recommendedAction', 'request_more_info')}
                                             label="Recommend for Further Inspection"
                                             description="Additional information or inspection is needed before a final decision can be made." />
                                         <RadioOption name="recommendation" value="reject"
@@ -994,7 +1034,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </div>
 
                                 {/* Summary checklist */}
-                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
                                     <p className="text-sm font-semibold text-gray-700 mb-3">Assessment Summary</p>
                                     <div className="space-y-2">
                                         {[
@@ -1021,7 +1061,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 </div>
 
                                 {!form.recommendedAction && (
-                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                                    <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-3">
                                         <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                                         <p className="text-sm text-amber-700">Please select a recommendation status before submitting.</p>
                                     </div>
@@ -1031,32 +1071,35 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                     </div>
 
                     {/* ── Footer ───────────────────────────────────────────── */}
-                    <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+                    <div className="flex flex-col gap-3 border-t border-slate-200/80 bg-white/95 px-6 py-4 shadow-[0_-12px_40px_rgba(15,23,42,0.05)] sm:flex-row sm:items-center sm:justify-between flex-shrink-0">
+                        <div className="text-xs text-slate-500">
+                            {activeTabIndex + 1} of {TABS.length} • {activeTab.label}
+                        </div>
                         <div className="flex gap-2">
                             <button type="button" onClick={() => goToTab(Math.max(0, activeTabIndex - 1))}
                                 disabled={activeTabIndex === 0}
-                                className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40">
                                 ← Previous
                             </button>
                             {activeTabIndex < TABS.length - 1 && (
                                 <button type="button" onClick={() => goToTab(activeTabIndex + 1)}
-                                    className="px-4 py-2 text-sm bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors">
+                                    className="rounded-full bg-[#028835] px-4 py-2 text-sm text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-lg">
                                     Next →
                                 </button>
                             )}
                         </div>
                         <div className="flex gap-2">
                             <button type="button" onClick={saveDraft}
-                                className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5">
+                                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm">
                                 <Save className="w-4 h-4" /> Save Draft
                             </button>
                             <button type="button" onClick={onClose}
-                                className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm">
                                 Cancel
                             </button>
                             {activeTab.id === 'recommendation' && (
                                 <button type="submit" disabled={loading || !form.recommendedAction}
-                                    className="px-5 py-2 text-sm bg-[#028835] text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                                    className="flex items-center gap-2 rounded-full bg-[#028835] px-5 py-2 text-sm text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50">
                                     {loading
                                         ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /><span>Submitting…</span></>
                                         : <><Send className="w-4 h-4" /><span>Submit SAR</span></>

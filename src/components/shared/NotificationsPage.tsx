@@ -83,15 +83,15 @@ const NotificationsPage: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-cyan-50/20 py-8">
+            <div className="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
                 {/* Header */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur-xl">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-3">
                             <Bell className="h-8 w-8 text-blue-600" />
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+                                <h1 className="text-2xl font-bold tracking-tight text-gray-900">Notifications</h1>
                                 <p className="text-sm text-gray-600">
                                     {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
                                 </p>
@@ -100,7 +100,7 @@ const NotificationsPage: React.FC = () => {
                         {unreadCount > 0 && (
                             <button
                                 onClick={markAllAsRead}
-                                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                className="flex items-center rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-white shadow-md shadow-blue-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
                             >
                                 <CheckCheck className="h-4 w-4 mr-2" />
                                 Mark All Read
@@ -114,21 +114,21 @@ const NotificationsPage: React.FC = () => {
                             <Filter className="h-4 w-4 text-gray-500" />
                             <span className="text-sm font-medium text-gray-700">Filter:</span>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex gap-2">
                             <button
                                 onClick={() => setFilter('all')}
-                                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === 'all'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 ${filter === 'all'
+                                    ? 'bg-slate-900 text-white shadow-md'
+                                    : 'bg-white/90 text-gray-700 border border-gray-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm'
                                     }`}
                             >
                                 All ({notifications.length})
                             </button>
                             <button
                                 onClick={() => setFilter('unread')}
-                                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === 'unread'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 ${filter === 'unread'
+                                    ? 'bg-slate-900 text-white shadow-md'
+                                    : 'bg-white/90 text-gray-700 border border-gray-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm'
                                     }`}
                             >
                                 Unread ({unreadCount})
@@ -137,7 +137,7 @@ const NotificationsPage: React.FC = () => {
                         <select
                             value={typeFilter}
                             onChange={(e) => setTypeFilter(e.target.value)}
-                            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="rounded-full border border-white/70 bg-white/90 px-4 py-2 text-sm shadow-sm transition-all duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         >
                             {notificationTypes.map(type => (
                                 <option key={type.value} value={type.value}>
@@ -155,7 +155,7 @@ const NotificationsPage: React.FC = () => {
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                         </div>
                     ) : filteredNotifications.length === 0 ? (
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                        <div className="rounded-[2rem] border border-white/70 bg-white/85 p-12 text-center shadow-sm backdrop-blur-xl">
                             <Bell className="h-16 w-16 mx-auto mb-4 text-gray-300" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
                                 {notifications.length === 0 ? 'No notifications yet' : 'No matching notifications'}
@@ -171,12 +171,12 @@ const NotificationsPage: React.FC = () => {
                             <div
                                 key={notification._id}
                                 onClick={() => handleNotificationClick(notification)}
-                                className={`bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-all cursor-pointer ${!notification.read ? 'border-l-4 border-l-blue-600' : ''
+                                className={`group cursor-pointer rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${!notification.read ? 'ring-2 ring-blue-100' : ''
                                     }`}
                             >
                                 <div className="flex items-start space-x-4">
                                     {/* Icon */}
-                                    <div className="flex-shrink-0 text-3xl">
+                                    <div className="flex-shrink-0 rounded-2xl bg-slate-50 p-3 text-3xl transition-transform duration-300 group-hover:scale-105">
                                         {getNotificationIcon(notification.type)}
                                     </div>
 
@@ -198,18 +198,18 @@ const NotificationsPage: React.FC = () => {
                                                 <span className="text-xs text-gray-500">
                                                     {formatTimeAgo(notification.createdAt)}
                                                 </span>
-                                                <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(notification.priority)}`}>
+                                                <span className={`rounded-full border px-3 py-1 text-xs shadow-sm ${getPriorityColor(notification.priority)}`}>
                                                     {notification.priority}
                                                 </span>
                                             </div>
                                             <div className="flex items-center space-x-2">
                                                 {!notification.read && (
                                                     <button
-                                                        onClick={(e) => {
+                                                    onClick={(e) => {
                                                             e.stopPropagation();
                                                             markAsRead(notification._id);
                                                         }}
-                                                        className="text-blue-600 hover:text-blue-800 text-xs flex items-center"
+                                                        className="rounded-full p-2 text-blue-600 transition-all duration-300 hover:bg-blue-50 hover:text-blue-800"
                                                         title="Mark as read"
                                                     >
                                                         <Check className="h-4 w-4" />
@@ -220,7 +220,7 @@ const NotificationsPage: React.FC = () => {
                                                         e.stopPropagation();
                                                         deleteNotification(notification._id);
                                                     }}
-                                                    className="text-gray-400 hover:text-red-600 transition-colors"
+                                                    className="rounded-full p-2 text-gray-400 transition-all duration-300 hover:bg-red-50 hover:text-red-600"
                                                     title="Delete"
                                                 >
                                                     <Trash2 className="h-4 w-4" />

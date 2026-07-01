@@ -1,10 +1,20 @@
 "use client";
+
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, FileText, Settings, LogOut, X, Bell } from "lucide-react";
-import { clearAuthTokens } from "@/utils/auth"
+import {
+  Home,
+  FileText,
+  Settings,
+  LogOut,
+  X,
+  Bell,
+  Calculator,
+  Menu,
+} from "lucide-react";
+import { clearAuthTokens } from "@/utils/auth";
 import Swal from "sweetalert2";
 
 interface SurveyorSidebarProps {
@@ -16,119 +26,163 @@ interface SurveyorSidebarProps {
 const SurveyorSidebar: React.FC<SurveyorSidebarProps> = ({
   isOpen = true,
   onClose,
-  isMobile = false
+  isMobile = false,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
-   const router = useRouter();
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  const router = useRouter();
+  const isDarkMode =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   const showExpanded = isMobile || !isCollapsed;
 
+  const toggleSidebar = () => {
+    setIsCollapsed((prev) => !prev);
+  };
 
-      // Handle logout
-    const handleLogout = async () => {
-      const result = await Swal.fire({
-        title: 'Logout?',
-        text: 'Are you sure you want to logout?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, logout',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        background: isDarkMode ? '#111827' : '#ffffff',
-        color: isDarkMode ? '#ffffff' : '#111827',
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      background: isDarkMode ? "#111827" : "#ffffff",
+      color: isDarkMode ? "#ffffff" : "#111827",
     });
-  
+
     if (result.isConfirmed) {
-    clearAuthTokens();
-    localStorage.removeItem("surveyorToken");
-    localStorage.removeItem("surveyorName");
-    localStorage.removeItem("surveyorRole");
-    localStorage.removeItem("surveyorOrganization");
-    localStorage.removeItem("surveyorInfo");
-    router.push('/surveyor');
+      clearAuthTokens();
+      localStorage.removeItem("surveyorToken");
+      localStorage.removeItem("surveyorName");
+      localStorage.removeItem("surveyorRole");
+      localStorage.removeItem("surveyorOrganization");
+      localStorage.removeItem("surveyorInfo");
+      router.push("/surveyor");
     }
   };
-    const isDarkMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   const menuItems = [
     { href: "/surveyor/dashboard", label: "Dashboard", icon: Home },
     { href: "/surveyor/dashboard/assignments", label: "My Assignments", icon: FileText },
+    { href: "/surveyor/dashboard/premium-calculator", label: "Premium Calculator", icon: Calculator },
     { href: "/surveyor/dashboard/notifications", label: "Notifications", icon: Bell },
     { href: "/surveyor/dashboard/settings", label: "Settings", icon: Settings },
   ];
 
+  const sidebarWidth = isMobile
+    ? isOpen
+      ? "translate-x-0 w-64"
+      : "-translate-x-full w-64"
+    : isCollapsed
+      ? "w-16"
+      : "w-64";
+
   return (
     <aside
-      className={`bg-white shadow-md transition-all duration-300 flex flex-col fixed md:relative z-30 h-full border-r border-gray-200
-        ${isMobile
-          ? (isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64")
-          : (isCollapsed ? "w-16" : "w-64")
-        }
-        md:translate-x-0`}
+      className={`fixed z-30 flex h-full flex-col overflow-hidden rounded-r-[2rem] border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl transition-all duration-300 print:hidden md:relative md:translate-x-0 ${sidebarWidth}`}
     >
-      <div className="p-4 flex justify-between items-center relative border-b border-gray-200">
+      <div className="flex items-center justify-between gap-3 border-b border-white/70 bg-gradient-to-r from-white via-white to-emerald-50/70 p-4">
         {showExpanded ? (
-          <Image
-            src="/logo.svg"
-            alt="Builders-Liability-AMMC Logo"
-            className="cursor-pointer"
-            width={80}
-            height={40}
+          <button
+            type="button"
             onClick={() => !isMobile && toggleSidebar()}
-          />
+            className="flex min-w-0 items-center gap-3 text-left transition-transform duration-300 hover:-translate-y-0.5"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#028835] to-emerald-700 shadow-lg shadow-emerald-200/60">
+              <Image
+                src="/logo.svg"
+                alt="Builders Liability Logo"
+                className="h-6 w-6 object-contain"
+                width={24}
+                height={24}
+              />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold tracking-tight text-slate-900">
+                Builders Liability
+              </span>
+              <span className="block truncate text-[11px] text-slate-500">
+                Surveyor Portal
+              </span>
+            </span>
+          </button>
         ) : (
           <button
+            type="button"
             onClick={toggleSidebar}
-            className="p-1 text-2xl rounded-full hover:bg-gray-100 mx-auto"
+            aria-label="Expand sidebar"
+            className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md"
           >
-            ☰
+            <Menu className="h-5 w-5" />
           </button>
         )}
+
         {isMobile && (
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+            aria-label="Close sidebar"
+            className="rounded-2xl border border-slate-200/80 bg-white/90 p-2 text-slate-500 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-700"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </button>
         )}
       </div>
 
-      <nav className="mt-4 flex flex-col flex-grow px-2">
+      <nav className="mt-4 flex flex-1 flex-col px-3 pb-3">
         {menuItems.map((item) => {
           const Icon = item.icon;
+          const isActive =
+            item.href === "/surveyor/dashboard"
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center px-4 py-3 rounded-lg transition-colors mb-1 ${pathname === item.href
-                ? "bg-[#028835] text-white"
-                : "text-gray-700 hover:bg-gray-100"
-                } ${!showExpanded ? "justify-center" : ""}`}
+              title={!showExpanded ? item.label : undefined}
+              aria-current={isActive ? "page" : undefined}
+              className={`group mb-1.5 flex items-center rounded-2xl px-4 py-3 transition-all duration-300 ${
+                isActive
+                  ? "bg-gradient-to-r from-[#028835] to-[#0a7f37] text-white shadow-lg shadow-emerald-200/60"
+                  : "text-slate-700 hover:-translate-y-0.5 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-md"
+              } ${!showExpanded ? "justify-center px-0" : ""}`}
             >
               <Icon
-                className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"
-                  } ${pathname === item.href ? "text-white" : "text-gray-500"}`}
+                className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
+                  isActive
+                    ? "text-white"
+                    : "text-slate-500 group-hover:scale-105 group-hover:text-emerald-700"
+                } ${showExpanded ? "mr-3" : ""}`}
               />
-              {showExpanded && <span>{item.label}</span>}
+              {showExpanded && <span className="truncate text-sm font-medium">{item.label}</span>}
             </Link>
           );
         })}
 
-        <div className="flex-grow"></div>
+        <div className="flex-1" />
 
         <button
+          type="button"
           onClick={handleLogout}
-          className={`flex items-center px-4 py-3 mb-4 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${!showExpanded ? "justify-center" : ""}`}
+          title={!showExpanded ? "Logout" : undefined}
+          className={`mb-4 flex items-center rounded-2xl px-4 py-3 text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-50 hover:text-red-600 hover:shadow-md ${
+            !showExpanded ? "justify-center px-0" : ""
+          }`}
         >
-          <LogOut className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"}`} />
-          {showExpanded && <span>Logout</span>}
+          <LogOut
+            className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
+              showExpanded ? "mr-3" : ""
+            }`}
+          />
+          {showExpanded && <span className="text-sm font-medium">Logout</span>}
         </button>
       </nav>
     </aside>
