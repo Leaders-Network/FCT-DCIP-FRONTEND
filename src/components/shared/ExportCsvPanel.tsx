@@ -52,7 +52,7 @@ const ExportCsvPanel: React.FC<ExportCsvPanelProps> = ({
 
   return (
     <div
-      className={`bg-white border border-gray-200 rounded-lg p-5 shadow-sm ${className}`}
+      className={`rounded-3xl border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl ${className}`}
     >
       <div className="flex items-center gap-2 mb-4">
         <Download className="h-5 w-5 text-indigo-600" />
@@ -71,7 +71,7 @@ const ExportCsvPanel: React.FC<ExportCsvPanelProps> = ({
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+            className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-300 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20"
           />
         </div>
 
@@ -86,7 +86,7 @@ const ExportCsvPanel: React.FC<ExportCsvPanelProps> = ({
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+            className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-300 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20"
           />
         </div>
 
@@ -94,7 +94,7 @@ const ExportCsvPanel: React.FC<ExportCsvPanelProps> = ({
         <button
           onClick={handleExport}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2 text-sm font-medium text-white shadow-md shadow-indigo-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -107,12 +107,12 @@ const ExportCsvPanel: React.FC<ExportCsvPanelProps> = ({
 
       {/* Status messages */}
       {error && (
-        <p className="mt-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+        <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
           {error}
         </p>
       )}
       {success && (
-        <p className="mt-3 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
+        <p className="mt-3 rounded-2xl border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
           ✓ CSV downloaded successfully.
         </p>
       )}

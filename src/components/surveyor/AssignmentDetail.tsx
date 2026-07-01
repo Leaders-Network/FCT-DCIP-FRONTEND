@@ -1,11 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, Calendar, User, Phone, Mail, FileText, Upload, CheckCircle, Clock, Camera, RefreshCw, Download, Eye } from "lucide-react";
-import { Assignment, SurveySubmissionData, SurveySubmissionResult, DualAssignment } from "@/types/api.types";
+import { Assignment } from "@/types/api.types";
 import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { useRouter } from "next/navigation";
-import SurveySubmissionModal from "./SurveySubmissionModal";
-import SurveySubmissionConfirmation from "./SurveySubmissionConfirmation";
 import { downloadSubmissionZipByAssignment } from "@/services/api";
 import {
   getProjectAddress,
@@ -26,9 +24,6 @@ interface EnhancedAssignment extends Omit<Assignment, 'policyId'> {
 const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => {
   const [assignment, setAssignment] = useState<EnhancedAssignment | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showSurveyForm, setShowSurveyForm] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState<SurveySubmissionResult | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const router = useRouter();
 
@@ -50,44 +45,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
     fetchAssignment();
   }, [assignmentId]);
-
-  const handleSurveySubmission = async (submission: FormData) => {
-    try {
-      if (!assignment) {
-        throw new Error("No assignment selected for submission.");
-      }
-
-      const { submitSurvey } = await import("@/services/api");
-
-      const policyId = typeof assignment.policyId === 'object' ? (assignment.policyId as BuilderLiabilityPolicy)._id : assignment.policyId;
-
-      submission.append('policyId', policyId);
-      submission.append('assignmentId', assignmentId || '');
-
-      // The 'submission' FormData object now also includes the files from the modal
-
-      const result = await submitSurvey(submission);
-
-      // Store submission result for confirmation display
-      setSubmissionResult(result.data);
-      setShowSurveyForm(false);
-      setShowConfirmation(true);
-
-      // Refresh assignment data to show updated progress
-      setTimeout(async () => {
-        try {
-          const { getSurveyorAssignmentById } = await import("@/services/api");
-          const response = await getSurveyorAssignmentById(assignmentId);
-          if (response.success) {
-            setAssignment(response.data);
-          }
-        } catch (refreshError) {
-        }
-      }, 1000); // Small delay to allow backend processing
-    } catch (error) {
-      throw error;
-    }
-  };
 
   const handleContactUser = (method: 'phone' | 'email') => {
     if (!assignment || typeof assignment.policyId === 'string') return;
@@ -114,12 +71,12 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
   if (loading) {
     return (
       <div className="animate-pulse space-y-6">
-        <div className="h-8 bg-gray-300 rounded w-1/3"></div>
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="h-6 bg-gray-300 rounded w-1/2 mb-4"></div>
+        <div className="h-8 w-1/3 rounded-2xl bg-gray-300"></div>
+        <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-sm">
+          <div className="mb-4 h-6 w-1/2 rounded-full bg-gray-300"></div>
           <div className="space-y-2">
-            <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+            <div className="h-4 w-3/4 rounded-full bg-gray-300"></div>
+            <div className="h-4 w-1/2 rounded-full bg-gray-300"></div>
           </div>
         </div>
       </div>
@@ -128,8 +85,8 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
   if (!assignment) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-900">Assignment not found</h2>
+      <div className="rounded-3xl border border-white/70 bg-white/85 py-12 text-center shadow-sm backdrop-blur-xl">
+        <h2 className="text-xl font-semibold tracking-tight text-gray-900">Assignment not found</h2>
         <p className="text-gray-600 mt-2">The assignment you're looking for doesn't exist.</p>
       </div>
     );
@@ -160,20 +117,20 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
         <div className="p-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-start sm:items-center">
               <button
                 onClick={() => router.back()}
-                className="mr-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+                className="mr-4 rounded-full p-2 text-gray-500 transition-all duration-300 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-md"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Builder Liability Survey Assignment</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900">Builder Liability Survey Assignment</h1>
                 <p className="text-gray-600 mt-1">
                   {projectTitle}
                 </p>
@@ -185,7 +142,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <div className="sm:text-right">
                 <div className="flex flex-wrap items-center gap-2 mb-2 sm:justify-end">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium shadow-sm ${assignment.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
                     assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
                       assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
                         'bg-gray-100 text-gray-800'
@@ -196,7 +153,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                           <FileText className="w-3 h-3 mr-1" />}
                     {assignment.status.replace('_', ' ').toUpperCase()}
                   </span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium shadow-sm ${assignment.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                     assignment.priority === 'high' ? 'bg-orange-100 text-orange-800' :
                       assignment.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-green-100 text-green-800'
@@ -213,24 +170,38 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
               {assignment.status === 'assigned' && (
                 <button
-                  onClick={() => {
-                    setShowSurveyForm(true);
-                  }}
-                  className="w-full sm:w-auto bg-[#028835] text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] font-medium"
+                  onClick={() => router.push(`/surveyor/dashboard/assignments/${assignmentId}/survey-assessment-report`)}
+                  className="w-full rounded-full bg-gradient-to-r from-[#028835] to-emerald-700 px-6 py-3 font-medium text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] sm:w-auto"
                 >
                   Start Survey
                 </button>
               )}
             </div>
           </div>
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/60">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Status</p>
+              <p className="mt-2 text-sm font-medium text-slate-800">{assignment.status.replace('_', ' ').toUpperCase()}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/60">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Priority</p>
+              <p className="mt-2 text-sm font-medium text-slate-800">{assignment.priority.toUpperCase()} PRIORITY</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50/60">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Deadline</p>
+              <p className={`mt-2 text-sm font-medium ${new Date(assignment.deadline) < new Date() ? 'text-red-600' : 'text-slate-800'}`}>
+                {new Date(assignment.deadline).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Property Information */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
+        <div className="border-b border-white/70 bg-slate-50/80 px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h2 className="text-lg font-semibold text-gray-900">Property Information</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900">Property Information</h2>
             <span className="text-sm text-gray-500">
               Assigned: {new Date(assignment.assignedAt).toLocaleDateString()}
             </span>
@@ -238,10 +209,10 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         </div>
         <div className="p-6">
           {/* Property Overview */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="mb-6 rounded-2xl border border-gray-100 bg-gray-50/80 p-4 transition-all duration-300 hover:border-emerald-100 hover:bg-emerald-50/60">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold tracking-tight text-gray-900">
                   {projectTitle}
                 </h3>
                 <p className="text-gray-600 mt-1 flex items-start">
@@ -383,15 +354,15 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       </div>
 
       {/* Contact Information */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Contact Information</h2>
+      <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
+        <div className="border-b border-white/70 bg-slate-50/80 px-6 py-4">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900">Contact Information</h2>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Property Builder/Contractor Details */}
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Contractor Information</h4>
+              <h4 className="mb-3 text-sm font-medium text-gray-500">Contractor Information</h4>
               <div className="space-y-3">
                 <div className="flex items-center">
                   <User className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -443,7 +414,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
             {/* Contact Actions & Site Contact */}
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Primary Contractor Contact</h4>
+              <h4 className="mb-3 text-sm font-medium text-gray-500">Primary Contractor Contact</h4>
               <div className="space-y-3 mb-4">
                 <div className="flex items-center">
                   <User className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -472,14 +443,14 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleContactUser('phone')}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                    className="flex-1 inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
                   >
                     <Phone className="h-4 w-4 mr-2" />
                     Call Contractor
                   </button>
                   <button
                     onClick={() => handleContactUser('email')}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                    className="flex-1 inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
                   >
                     <Mail className="h-4 w-4 mr-2" />
                     Email Contractor
@@ -488,7 +459,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
                 {/* Site Contact Information */}
                 {assignment.location?.contactPerson && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 shadow-sm">
                     <h5 className="text-sm font-medium text-blue-900 mb-2">Site Contact Person</h5>
                     <div className="space-y-1 text-sm">
                       <p className="text-blue-800">
@@ -513,7 +484,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
                 {/* Access Instructions */}
                 {assignment.location?.accessInstructions && (
-                  <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
+                  <div className="mt-3 rounded-2xl border border-yellow-200 bg-yellow-50/80 p-4 shadow-sm">
                     <h5 className="text-sm font-medium text-yellow-900 mb-1">Access Instructions</h5>
                     <p className="text-sm text-yellow-800">{assignment.location.accessInstructions}</p>
                   </div>
@@ -525,14 +496,14 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
       </div>
 
       {/* Policy Details */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Policy Details</h2>
+      <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl">
+        <div className="border-b border-white/70 bg-slate-50/80 px-6 py-4">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900">Policy Details</h2>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Policy Information</h4>
+              <h4 className="mb-3 text-sm font-medium text-gray-500">Policy Information</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Policy Number:</span>
@@ -556,7 +527,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             </div>
 
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">Survey Focus Areas</h4>
+              <h4 className="mb-3 text-sm font-medium text-gray-500">Survey Focus Areas</h4>
               <div className="space-y-1 text-sm text-gray-600">
                 <p>• Construction quality assessment</p>
                 <p>• Structural integrity verification</p>
@@ -569,8 +540,8 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
           {assignment.specialRequirements && assignment.specialRequirements.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-2">Survey Requirements</h4>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <h4 className="mb-2 text-sm font-medium text-gray-500">Survey Requirements</h4>
+              <div className="rounded-2xl border border-green-200 bg-green-50/80 p-3 shadow-sm">
                 <ul className="space-y-1 text-sm text-green-800">
                   {assignment.specialRequirements.map((req, index) => (
                     <li key={index} className="flex items-start">
@@ -587,9 +558,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
       {/* Survey Guidelines & Checklist */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-blue-50 rounded-lg border border-blue-200">
+        <div className="rounded-[2rem] border border-blue-200 bg-blue-50/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+            <h2 className="mb-4 flex items-center text-lg font-semibold text-blue-900">
               <FileText className="h-5 w-5 mr-2" />
               Builder Liability Survey Guidelines
             </h2>
@@ -622,9 +593,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
           </div>
         </div>
 
-        <div className="bg-green-50 rounded-lg border border-green-200">
+        <div className="rounded-[2rem] border border-green-200 bg-green-50/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-green-900 mb-4 flex items-center">
+            <h2 className="mb-4 flex items-center text-lg font-semibold text-green-900">
               <Upload className="h-5 w-5 mr-2" />
               Required Documentation
             </h2>
@@ -644,22 +615,20 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
       {/* Quick Actions - Start Survey */}
       {assignment.status === 'assigned' && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ready to Start?</h3>
+            <h3 className="mb-4 text-lg font-semibold tracking-tight text-gray-900">Ready to Start?</h3>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={() => {
-                  setShowSurveyForm(true);
-                }}
-                className="flex-1 bg-[#028835] text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] font-medium flex items-center justify-center"
+                onClick={() => router.push(`/surveyor/dashboard/assignments/${assignmentId}/survey-assessment-report`)}
+                className="flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-[#028835] to-emerald-700 px-6 py-3 font-medium text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
               >
                 <FileText className="h-5 w-5 mr-2" />
                 Start Survey Process
               </button>
               <button
                 onClick={() => handleContactUser('phone')}
-                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium flex items-center justify-center"
+                className="flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 font-medium text-white shadow-md shadow-blue-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <Phone className="h-5 w-5 mr-2" />
                 Contact Contractor
@@ -674,9 +643,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
 
       {/* Completed Assignment – Download Documents */}
       {assignment.status === 'completed' && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:shadow-[0_24px_80px_rgba(15,23,42,0.1)]">
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <h3 className="mb-4 flex items-center text-lg font-semibold tracking-tight text-gray-900">
               <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
               Survey Completed
             </h3>
@@ -691,7 +660,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                     m.openSARReport(assignment.policyId as BuilderLiabilityPolicy);
                   });
                 }}
-                className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-200 px-4 py-2.5 rounded-md hover:bg-indigo-100 transition-colors font-medium text-sm"
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow-lg"
               >
                 <Eye className="h-4 w-4" />
                 View SAR Report
@@ -703,7 +672,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                     m.downloadSARReport(assignment.policyId as BuilderLiabilityPolicy);
                   });
                 }}
-                className="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2.5 rounded-md hover:bg-blue-100 transition-colors font-medium text-sm"
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-lg"
               >
                 <Download className="h-4 w-4" />
                 Download SAR
@@ -712,7 +681,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               <button
                 onClick={handleDownloadDocs}
                 disabled={isDownloading}
-                className="flex-1 flex items-center justify-center gap-2 bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-md hover:bg-green-100 transition-colors font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-100 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Camera className="h-4 w-4" />
                 {isDownloading ? 'Downloading...' : 'Download Site Pictures'}
@@ -722,33 +691,6 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
         </div>
       )}
 
-      {/* Survey Submission Modal */}
-      {(() => {
-        return assignment && typeof assignment.policyId === 'object' && (
-          <SurveySubmissionModal
-            policy={assignment.policyId as any}
-            assignment={assignment as Assignment}
-            isOpen={showSurveyForm}
-            onSubmit={handleSurveySubmission}
-            onClose={() => {
-              setShowSurveyForm(false);
-            }}
-          />
-        );
-      })()}
-
-      {/* Submission Confirmation Modal */}
-      {submissionResult && showConfirmation && assignment && typeof assignment.policyId === 'object' && (
-        <SurveySubmissionConfirmation
-          submissionResult={submissionResult}
-          policy={assignment.policyId as any}
-          onClose={() => {
-            setShowConfirmation(false);
-            setSubmissionResult(null);
-            router.push("/surveyor/dashboard/assignments");
-          }}
-        />
-      )}
     </div>
   );
 };

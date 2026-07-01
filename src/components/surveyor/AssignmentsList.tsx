@@ -100,13 +100,13 @@ const AssignmentsList = () => {
         return (
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">My Assignments</h1>
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">My Assignments</h1>
                 </div>
                 <div className="animate-pulse space-y-4">
                     {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-white p-6 rounded-lg border border-gray-200">
-                            <div className="h-6 bg-gray-300 rounded w-1/3 mb-4"></div>
-                            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                        <div key={i} className="rounded-3xl border border-gray-200 bg-white/80 p-6">
+                            <div className="mb-4 h-6 w-1/3 rounded-full bg-gray-300"></div>
+                            <div className="h-4 w-1/2 rounded-full bg-gray-300"></div>
                         </div>
                     ))}
                 </div>
@@ -115,15 +115,18 @@ const AssignmentsList = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 sm:space-y-8">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Assignments</h1>
-                <div className="flex items-center space-x-2">
+            <div className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur-xl sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">My Assignments</h1>
+                        <p className="mt-1 text-sm text-gray-500">Review, filter, and open your assigned surveys.</p>
+                    </div>
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
+                        className="w-full rounded-full border border-white/70 bg-white/90 px-4 py-3 text-sm shadow-sm transition-all duration-300 focus:border-[#028835] focus:outline-none focus:ring-2 focus:ring-[#028835]/20 sm:w-auto"
                     >
                         <option value="all">All Assignments</option>
                         <option value="assigned">Assigned</option>
@@ -144,9 +147,9 @@ const AssignmentsList = () => {
 
             {/* Assignments List */}
             {assignments.length === 0 ? (
-                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+                <div className="rounded-[2rem] border border-white/70 bg-white/85 p-12 text-center shadow-sm backdrop-blur-xl">
                     <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No assignments found</h3>
+                    <h3 className="mb-2 text-lg font-semibold text-gray-900">No assignments found</h3>
                     <p className="text-gray-600">
                         {filter === "all"
                             ? "You don't have any assignments yet."
@@ -159,19 +162,19 @@ const AssignmentsList = () => {
                     {assignments.map((assignment) => (
                         <div
                             key={assignment._id}
-                            className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                            className="group overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
                         >
                             <div className="p-4 sm:p-6">
                                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                                            <h3 className="text-lg font-semibold text-gray-900 break-words">
+                                            <h3 className="text-lg font-semibold tracking-tight text-gray-900 break-words">
                                                 {getPolicyDisplayTitle(assignment.policyId as any)}
                                             </h3>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
+                                            <span className={`rounded-full px-3 py-1 text-xs font-medium shadow-sm ${getStatusColor(assignment.status)}`}>
                                                 {assignment.status.replace("_", " ").toUpperCase()}
                                             </span>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(assignment.priority)}`}>
+                                            <span className={`rounded-full px-3 py-1 text-xs font-medium shadow-sm ${getPriorityColor(assignment.priority)}`}>
                                                 {assignment.priority.toUpperCase()}
                                             </span>
                                         </div>
@@ -218,7 +221,7 @@ const AssignmentsList = () => {
                                     <div className="lg:ml-6">
                                         <Link
                                             href={`/surveyor/dashboard/assignments/${assignment._id}`}
-                                            className="inline-flex w-full lg:w-auto justify-center items-center px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors"
+                                            className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#028835] to-emerald-700 px-5 py-2.5 text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg lg:w-auto"
                                         >
                                             <Eye className="h-4 w-4 mr-2" />
                                             View Details

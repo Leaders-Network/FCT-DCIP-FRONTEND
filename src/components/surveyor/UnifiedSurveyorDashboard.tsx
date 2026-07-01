@@ -11,10 +11,10 @@ import {
     AlertCircle,
     Building,
     Phone,
-    Mail,
     Eye,
     TrendingUp,
-    Award
+    Award,
+    Calculator
 } from "lucide-react";
 import Link from "next/link";
 import { getSurveyorAssignments, getSurveyorProfile } from "@/services/api";
@@ -71,12 +71,11 @@ interface StatCardProps {
 }
 
 const StatCard = ({ icon, label, value, color, subtitle }: StatCardProps) => (
-    // Avoid dynamic Tailwind classes so production builds keep the styles.
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="group relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-100/60">
         <div className="flex items-center">
             <div
                 className={[
-                    "p-2 rounded-lg flex-shrink-0",
+                    "flex-shrink-0 rounded-2xl p-3 transition-transform duration-300 group-hover:scale-105",
                     color === "blue" ? "bg-blue-100" : "",
                     color === "yellow" ? "bg-yellow-100" : "",
                     color === "purple" ? "bg-purple-100" : "",
@@ -96,9 +95,9 @@ const StatCard = ({ icon, label, value, color, subtitle }: StatCardProps) => (
                 })}
             </div>
             <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-600">{label}</p>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
-                {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+                <p className="text-sm font-medium text-gray-500">{label}</p>
+                <p className="text-2xl font-bold tracking-tight text-gray-900">{value}</p>
+                {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
             </div>
         </div>
     </div>
@@ -149,6 +148,7 @@ const UnifiedSurveyorDashboard = () => {
                     const parsed = JSON.parse(infoCookie) as { name?: string };
                     if (applyName(parsed?.name)) return;
                 } catch (error) {
+                    // ignore
                 }
             }
 
@@ -162,6 +162,7 @@ const UnifiedSurveyorDashboard = () => {
                 const lastName = surveyor?.userId?.lastname || "";
                 applyName(`${firstName} ${lastName}`);
             } catch (error) {
+                // ignore
             }
         };
 
@@ -179,16 +180,14 @@ const UnifiedSurveyorDashboard = () => {
         setLoading(true);
         setError(null);
         setFriendlyError(null);
-        
+
         try {
-            // Fetch surveyor's assignments using surveyor-specific endpoint
             const assignmentsResponse = await getSurveyorAssignments({ status: 'all', page: 1, limit: 100 });
 
             const fetchedAssignments = assignmentsResponse?.data?.assignments || [];
             if (fetchedAssignments.length) {
                 setAssignments(fetchedAssignments);
 
-                // Calculate stats
                 const total = fetchedAssignments.length;
                 const assigned = fetchedAssignments.filter((a: Assignment) => a.status === 'assigned').length;
                 const inProgress = fetchedAssignments.filter((a: Assignment) =>
@@ -201,13 +200,12 @@ const UnifiedSurveyorDashboard = () => {
                     assigned,
                     inProgress,
                     completed,
-                    rating: 4.5 // This should come from surveyor profile
+                    rating: 4.5
                 });
             } else {
                 setAssignments([]);
                 setFriendlyError("No surveyor assignments found. If this seems wrong, please contact the Gladfaith team.");
             }
-
         } catch (err) {
             setError("Failed to load dashboard data. Please try again later.");
             setFriendlyError("We couldn't load your survey dashboard right now. Please refresh or contact the Gladfaith team.");
@@ -217,11 +215,10 @@ const UnifiedSurveyorDashboard = () => {
     };
 
     const firstName = surveyorName.split(" ")[0];
-
     const recentAssignments = assignments.slice(0, 5);
 
     const getStatusBadge = (status: string) => {
-        const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
+        const baseClasses = "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium shadow-sm";
 
         switch (status) {
             case 'assigned':
@@ -277,7 +274,7 @@ const UnifiedSurveyorDashboard = () => {
         };
 
         return (
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityConfig[priority] || priorityConfig.medium}`}>
+            <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium shadow-sm ${priorityConfig[priority] || priorityConfig.medium}`}>
                 {priority?.toUpperCase() || 'MEDIUM'}
             </span>
         );
@@ -286,26 +283,26 @@ const UnifiedSurveyorDashboard = () => {
     if (loading) {
         return (
             <div className="space-y-6 animate-pulse">
-                <div className="h-8 bg-gray-300 rounded w-1/3"></div>
+                <div className="h-8 w-1/3 rounded-2xl bg-gray-200"></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     {[...Array(5)].map((_, i) => (
-                        <div key={i} className="bg-gray-200 p-6 rounded-lg h-24"></div>
+                        <div key={i} className="h-24 rounded-3xl bg-gray-200 p-6"></div>
                     ))}
                 </div>
-                <div className="bg-gray-200 rounded-lg h-64"></div>
+                <div className="h-64 rounded-3xl bg-gray-200"></div>
             </div>
         );
     }
 
     if (error && !friendlyError) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-red-200 bg-red-50/80 shadow-sm">
                 <AlertCircle className="h-12 w-12 text-red-500" />
                 <h3 className="mt-4 text-lg font-medium text-red-800">An error occurred</h3>
                 <p className="mt-1 text-sm text-red-600">{error}</p>
                 <button
                     onClick={fetchSurveyorData}
-                    className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    className="mt-4 rounded-full bg-red-600 px-5 py-2 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-lg"
                 >
                     Retry
                 </button>
@@ -314,13 +311,15 @@ const UnifiedSurveyorDashboard = () => {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
             {friendlyError && (
                 <DashboardErrorBanner message={friendlyError} />
             )}
+
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-6 text-white">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-600 via-green-600 to-teal-600 p-6 text-white shadow-[0_24px_80px_rgba(16,185,129,0.22)]">
+                <div className="pointer-events-none absolute inset-0 bg-white/10" />
+                <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold">Welcome back, {firstName}!</h1>
                         <p className="mt-1 opacity-90">
@@ -339,14 +338,13 @@ const UnifiedSurveyorDashboard = () => {
             </div>
 
             {/* Unified System Notice */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="rounded-3xl border border-blue-200/70 bg-blue-50/80 p-4 shadow-sm backdrop-blur">
                 <div className="flex items-start">
                     <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5 mr-3" />
                     <div>
                         <h3 className="font-semibold text-blue-900 mb-1">Unified Assignment System</h3>
                         <p className="text-sm text-blue-800">
-                            You're now part of a unified surveyor pool with LGA-based automated assignment.
-                            Assignments are distributed using round-robin based on your location coverage.
+                            {"You're now part of a unified surveyor pool with LGA-based automated assignment. Assignments are distributed using round-robin based on your location coverage."}
                         </p>
                     </div>
                 </div>
@@ -354,61 +352,35 @@ const UnifiedSurveyorDashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
-                <StatCard
-                    icon={FileText}
-                    label="Total Assignments"
-                    value={stats.total}
-                    color="blue"
-                />
-                <StatCard
-                    icon={Clock}
-                    label="New Assignments"
-                    value={stats.assigned}
-                    color="yellow"
-                />
-                <StatCard
-                    icon={ClipboardList}
-                    label="In Progress"
-                    value={stats.inProgress}
-                    color="purple"
-                />
-                <StatCard
-                    icon={CheckCircle}
-                    label="Completed"
-                    value={stats.completed}
-                    color="green"
-                />
-                <StatCard
-                    icon={Award}
-                    label="Rating"
-                    value={`${stats.rating}/5.0`}
-                    color="orange"
-                    subtitle="Performance score"
-                />
+                <StatCard icon={FileText} label="Total Assignments" value={stats.total} color="blue" />
+                <StatCard icon={Clock} label="New Assignments" value={stats.assigned} color="yellow" />
+                <StatCard icon={ClipboardList} label="In Progress" value={stats.inProgress} color="purple" />
+                <StatCard icon={CheckCircle} label="Completed" value={stats.completed} color="green" />
+                <StatCard icon={Award} label="Rating" value={`${stats.rating}/5.0`} color="orange" subtitle="Performance score" />
             </div>
 
             {/* Recent Assignments */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
+            <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-sm backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-3 border-b border-white/70 px-4 py-4 sm:px-6">
                     <h2 className="text-lg font-semibold text-gray-900">Recent Assignments</h2>
-                    <Link href="/surveyor/dashboard/assignments" className="text-green-600 hover:text-green-700 text-sm font-medium">
+                    <Link href="/surveyor/dashboard/assignments" className="text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700">
                         View All
                     </Link>
                 </div>
 
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-gray-100">
                     {recentAssignments.length > 0 ? (
                         recentAssignments.map((assignment) => (
-                            <div key={assignment._id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                            <div key={assignment._id} className="group p-4 transition-all duration-300 hover:bg-emerald-50/40 sm:p-6">
                                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center space-x-3 mb-3">
-                                            <div className="p-2 bg-gray-100 rounded-lg">
+                                            <div className="rounded-2xl bg-gray-100 p-3 transition-transform duration-300 group-hover:scale-105">
                                                 <Building className="h-5 w-5 text-gray-600" />
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <h3 className="text-md font-semibold text-gray-900 break-words">
+                                                    <h3 className="text-md font-semibold tracking-tight text-gray-900 break-words">
                                                         Policy #{assignment.policyId?.policyNumber}
                                                     </h3>
                                                     {getPriorityBadge(assignment.priority)}
@@ -420,7 +392,7 @@ const UnifiedSurveyorDashboard = () => {
                                         </div>
 
                                         {/* Location Information */}
-                                        <div className="mb-3 p-3 bg-gray-50 rounded-lg">
+                                        <div className="mb-3 rounded-2xl border border-gray-100 bg-gray-50/80 p-3 transition-all duration-300 group-hover:border-emerald-100 group-hover:bg-emerald-50/60">
                                             <div className="flex items-start">
                                                 <MapPin className="w-4 h-4 text-gray-500 mt-0.5 mr-2" />
                                                 <div className="flex-1">
@@ -472,7 +444,7 @@ const UnifiedSurveyorDashboard = () => {
                                         {getStatusBadge(assignment.status)}
                                         <Link
                                             href={`/surveyor/dashboard/assignments/${assignment._id}`}
-                                            className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center"
+                                            className="inline-flex items-center rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-600 hover:text-white hover:shadow-lg"
                                         >
                                             <Eye className="w-4 h-4 mr-1" />
                                             View Details
@@ -482,7 +454,7 @@ const UnifiedSurveyorDashboard = () => {
                             </div>
                         ))
                     ) : (
-                        <div className="p-12 text-center text-gray-500">
+                        <div className="m-4 rounded-3xl border border-dashed border-gray-200 bg-slate-50/70 p-12 text-center text-gray-500">
                             <FileText className="mx-auto h-12 w-12 text-gray-400" />
                             <h3 className="mt-4 text-lg font-medium text-gray-900">No assignments yet</h3>
                             <p className="mt-1 text-sm text-gray-500">
@@ -494,10 +466,10 @@ const UnifiedSurveyorDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <Link href="/surveyor/dashboard/assignments" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-green-500 transition-colors">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <Link href="/surveyor/dashboard/assignments" className="group rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-2xl">
                     <div className="flex items-center space-x-3">
-                        <div className="p-3 bg-green-100 rounded-lg">
+                        <div className="rounded-2xl bg-emerald-100 p-3 transition-transform duration-300 group-hover:scale-105">
                             <ClipboardList className="h-6 w-6 text-green-600" />
                         </div>
                         <div>
@@ -507,9 +479,21 @@ const UnifiedSurveyorDashboard = () => {
                     </div>
                 </Link>
 
-                <Link href="/surveyor/dashboard/settings" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-blue-500 transition-colors">
+                <Link href="/surveyor/dashboard/premium-calculator" className="group rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#028835]/30 hover:shadow-2xl">
                     <div className="flex items-center space-x-3">
-                        <div className="p-3 bg-blue-100 rounded-lg">
+                        <div className="rounded-2xl border border-green-200 bg-green-50 p-3 transition-transform duration-300 group-hover:scale-105">
+                            <Calculator className="h-6 w-6 text-[#028835]" />
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-900">Premium Calculator</h3>
+                            <p className="text-sm text-gray-500">Calculate policy premiums</p>
+                        </div>
+                    </div>
+                </Link>
+
+                <Link href="/surveyor/dashboard/settings" className="group rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-2xl">
+                    <div className="flex items-center space-x-3">
+                        <div className="rounded-2xl bg-blue-100 p-3 transition-transform duration-300 group-hover:scale-105">
                             <Users className="h-6 w-6 text-blue-600" />
                         </div>
                         <div>
@@ -519,9 +503,9 @@ const UnifiedSurveyorDashboard = () => {
                     </div>
                 </Link>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur-xl">
                     <div className="flex items-center space-x-3">
-                        <div className="p-3 bg-purple-100 rounded-lg">
+                        <div className="rounded-2xl bg-purple-100 p-3">
                             <Award className="h-6 w-6 text-purple-600" />
                         </div>
                         <div>

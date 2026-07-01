@@ -148,20 +148,20 @@ export default function SurveyorSettingsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">Manage your surveyor account settings</p>
+    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+      <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur-xl">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">Settings</h1>
+        <p className="mt-1 text-gray-600">Manage your surveyor account settings</p>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="flex border-b border-gray-200">
+      <div className="rounded-[2rem] border border-white/70 bg-white/85 p-2 shadow-sm backdrop-blur-xl">
+        <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium transition-colors ${activeTab === 'profile'
-              ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            className={`flex-1 rounded-[1.25rem] px-4 py-3 text-sm font-medium transition-all duration-300 sm:px-6 sm:py-4 sm:text-base ${activeTab === 'profile'
+              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-200/60'
+              : 'text-gray-600 hover:-translate-y-0.5 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <User className="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-2" />
@@ -169,9 +169,9 @@ export default function SurveyorSettingsPage() {
           </button>
           <button
             onClick={() => setActiveTab('password')}
-            className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium transition-colors ${activeTab === 'password'
-              ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            className={`flex-1 rounded-[1.25rem] px-4 py-3 text-sm font-medium transition-all duration-300 sm:px-6 sm:py-4 sm:text-base ${activeTab === 'password'
+              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-200/60'
+              : 'text-gray-600 hover:-translate-y-0.5 hover:bg-gray-50 hover:text-gray-900'
               }`}
           >
             <Lock className="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-2" />
@@ -182,7 +182,7 @@ export default function SurveyorSettingsPage() {
 
       {/* Message Alert */}
       {message && (
-        <div className={`mb-6 p-4 rounded-lg flex items-start ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+        <div className={`rounded-2xl p-4 flex items-start shadow-sm ${message.type === 'success' ? 'border border-green-200 bg-green-50 text-green-800' : 'border border-red-200 bg-red-50 text-red-800'
           }`}>
           {message.type === 'success' ? (
             <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" />
@@ -195,8 +195,8 @@ export default function SurveyorSettingsPage() {
 
       {/* Profile Tab */}
       {activeTab === 'profile' && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Profile Information</h2>
+        <div className="rounded-[2rem] border border-white/70 bg-white/85 p-4 shadow-sm backdrop-blur-xl sm:p-6">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 sm:mb-6 sm:text-xl">Profile Information</h2>
           <form onSubmit={handleProfileUpdate} className="space-y-4 sm:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div>
@@ -209,7 +209,7 @@ export default function SurveyorSettingsPage() {
                     type="text"
                     value={profileData.firstname}
                     onChange={(e) => setProfileData({ ...profileData, firstname: e.target.value })}
-                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-10 shadow-sm transition-all duration-300 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                     required
                   />
                 </div>
@@ -225,7 +225,7 @@ export default function SurveyorSettingsPage() {
                     type="text"
                     value={profileData.lastname}
                     onChange={(e) => setProfileData({ ...profileData, lastname: e.target.value })}
-                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-10 shadow-sm transition-all duration-300 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                     required
                   />
                 </div>
@@ -242,7 +242,7 @@ export default function SurveyorSettingsPage() {
                   type="email"
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-10 shadow-sm transition-all duration-300 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                   required
                 />
               </div>
@@ -258,7 +258,7 @@ export default function SurveyorSettingsPage() {
                   type="tel"
                   value={profileData.phonenumber}
                   onChange={(e) => setProfileData({ ...profileData, phonenumber: e.target.value })}
-                  className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-10 shadow-sm transition-all duration-300 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                   required
                 />
               </div>
@@ -268,7 +268,7 @@ export default function SurveyorSettingsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 text-white shadow-md shadow-purple-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -289,8 +289,8 @@ export default function SurveyorSettingsPage() {
 
       {/* Password Tab */}
       {activeTab === 'password' && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Change Password</h2>
+        <div className="rounded-[2rem] border border-white/70 bg-white/85 p-4 shadow-sm backdrop-blur-xl sm:p-6">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 sm:mb-6 sm:text-xl">Change Password</h2>
           <form onSubmit={handlePasswordChange} className="space-y-4 sm:space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -302,13 +302,13 @@ export default function SurveyorSettingsPage() {
                   type={showPasswords.current ? 'text' : 'password'}
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  className="pl-10 pr-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-10 pr-10 shadow-sm transition-all duration-300 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 rounded-full p-1 text-gray-400 transition-all duration-300 hover:bg-gray-100 hover:text-gray-600"
                 >
                   {showPasswords.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -325,14 +325,14 @@ export default function SurveyorSettingsPage() {
                   type={showPasswords.new ? 'text' : 'password'}
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="pl-10 pr-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-10 pr-10 shadow-sm transition-all duration-300 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                   required
                   minLength={6}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 rounded-full p-1 text-gray-400 transition-all duration-300 hover:bg-gray-100 hover:text-gray-600"
                 >
                   {showPasswords.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -350,21 +350,21 @@ export default function SurveyorSettingsPage() {
                   type={showPasswords.confirm ? 'text' : 'password'}
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="pl-10 pr-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 pl-10 pr-10 shadow-sm transition-all duration-300 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                   required
                   minLength={6}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 rounded-full p-1 text-gray-400 transition-all duration-300 hover:bg-gray-100 hover:text-gray-600"
                 >
                   {showPasswords.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 shadow-sm">
               <div className="flex">
                 <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0" />
                 <div className="text-sm text-yellow-800">
@@ -382,7 +382,7 @@ export default function SurveyorSettingsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 text-white shadow-md shadow-purple-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
                   <>
