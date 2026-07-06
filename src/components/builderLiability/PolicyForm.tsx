@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Plus, Save, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, ChevronLeft, ChevronRight, Plus, Save, Trash2, Shield, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FCT_LOCATIONS, getDistrictsByLGA } from '@/constants/fctLocations';
 import { CADASTRAL_ZONES } from '@/constants/policyConstants';
@@ -165,6 +165,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     // Auto-save every 30 s
     useEffect(() => {
         autoSaveTimerRef.current = setInterval(() => saveDraft(), 30_000);
+
         return () => { if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current); };
     }, [saveDraft]);
 
@@ -614,35 +615,49 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         }
     };
 
+    const tabTriggerClass = "relative h-11 px-4 sm:px-5 text-xs sm:text-sm font-medium text-slate-500 border-b-2 border-transparent rounded-none bg-transparent transition-all duration-200 hover:text-slate-800 hover:bg-slate-50/80 data-[state=active]:text-emerald-700 data-[state=active]:border-emerald-600 whitespace-nowrap flex items-center gap-1.5";
+    const currentIndex = FORM_TABS.indexOf(activeTab);
+    const progressPercentage = ((currentIndex + 1) / FORM_TABS.length) * 100;
+
     return (
-        <div className="w-full max-w-4xl mx-auto p-4 sm:p-6">
-            <Card>
-                <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                        <div>
-                            <CardTitle>Builder Liability Policy Application</CardTitle>
-                            <CardDescription>
-                                Complete all sections to submit your Builder Liability Policy application
-                            </CardDescription>
+        <div className="w-full max-w-5xl mx-auto flex flex-col min-h-[calc(100vh-4rem)] bg-white border-x border-slate-200 shadow-sm">
+            {/* Header with Progress */}
+            <div className="bg-white border-b border-slate-200 pt-6 px-6 sm:px-10 pb-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <Shield className="w-4 h-4 text-emerald-600" />
+                            <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">New Policy</span>
                         </div>
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => saveDraft()}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#028835] border border-[#028835] rounded-lg hover:bg-green-50 transition-colors"
-                            >
-                                <Save className="w-3.5 h-3.5" />
-                                Save Draft
-                            </button>
-                            {lastSaved && (
-                                <span className="text-xs text-gray-400">
-                                    Saved {lastSaved.toLocaleTimeString()}
-                                </span>
-                            )}
-                        </div>
+                        <h1 className="text-2xl font-bold text-slate-900">Builder Liability Application</h1>
+                        <p className="mt-1 text-sm text-slate-500">Complete all required sections to submit your application.</p>
                     </div>
-                </CardHeader>
-                <CardContent>
+                    <div className="flex flex-col items-start sm:items-end gap-1.5 flex-shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => saveDraft()}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full hover:bg-emerald-100 transition-colors"
+                        >
+                            <Save className="w-3.5 h-3.5" />
+                            Save Draft
+                        </button>
+                        {lastSaved && <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">Auto-saved at {lastSaved.toLocaleTimeString()}</span>}
+                    </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="hidden sm:block">
+                    <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
+                        <span>Step {currentIndex + 1} of {FORM_TABS.length}</span>
+                        <span>{Math.round(progressPercentage)}% Complete</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-emerald-500 h-full rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }} />
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex-1 px-6 sm:px-10 py-8 bg-slate-50/30">
                     {error && (
                         <Alert className="mb-6" variant="destructive">
                             <AlertCircle className="h-4 w-4" />
@@ -699,32 +714,36 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                         </Alert>
                     ) : null}
 
-                    <form onSubmit={handleSubmit}>
-                        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as FormTab)}>
-                            <div className="w-full overflow-x-auto">
-                                <TabsList className="flex md:grid md:grid-cols-7 w-max md:w-full min-w-max md:min-w-0">
-                                    <TabsTrigger value="client" className="whitespace-nowrap text-xs sm:text-sm">
+
+
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as FormTab)} className="flex-1 flex flex-col min-h-0">
+                            <div className="w-full border-b border-slate-200 bg-white sticky top-[152px] z-10 px-6 sm:px-10 -mx-6 sm:-mx-10 mb-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+                                <div className="overflow-x-auto no-scrollbar">
+                                    <TabsList className="flex bg-transparent p-0 h-auto gap-0 w-max min-w-full">
+                                    <TabsTrigger value="client" className={tabTriggerClass}>
                                         Client 
                                     </TabsTrigger>
-                                    <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
+                                    <TabsTrigger value="builder" className={tabTriggerClass}>
                                         Contractor
                                     </TabsTrigger>
-                                    <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
+                                    <TabsTrigger value="organization" className={tabTriggerClass}>
                                         Assessor
                                     </TabsTrigger>
-                                    <TabsTrigger value="membership" className="whitespace-nowrap text-xs sm:text-sm">
+                                    <TabsTrigger value="membership" className={tabTriggerClass}>
                                         Membership
                                     </TabsTrigger>
-                                    <TabsTrigger value="workforce" className="whitespace-nowrap text-xs sm:text-sm">
+                                    <TabsTrigger value="workforce" className={tabTriggerClass}>
                                         Workforce
                                     </TabsTrigger>
-                                    <TabsTrigger value="compliance" className="whitespace-nowrap text-xs sm:text-sm">
+                                    <TabsTrigger value="compliance" className={tabTriggerClass}>
                                         Compliance
                                     </TabsTrigger>
-                                    <TabsTrigger value="project" className="whitespace-nowrap text-xs sm:text-sm">
+                                    <TabsTrigger value="project" className={tabTriggerClass}>
                                         Project
                                     </TabsTrigger>
-                                </TabsList>
+                                    </TabsList>
+                                </div>
                             </div>
 
                             <TabsContent value="client" className="space-y-4">
@@ -1440,18 +1459,22 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             </TabsContent>
 
                             <TabsContent value="compliance" className="space-y-6">
-                                <Card className="p-4">
-                                    <h3 className="text-lg font-semibold mb-4">Insurance Information</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center space-x-2">
-                                            <input
-                                                type="checkbox"
-                                                id="hasInsurance"
-                                                checked={formData.hasInsurance}
-                                                onChange={(e) => handleInputChange('hasInsurance', e.target.checked)}
-                                                placeholder='has insurance'
-                                            />
-                                            <Label htmlFor="hasInsurance">Do you currently have insurance coverage? *</Label>
+                                <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <Shield className="w-5 h-5 text-emerald-600" />
+                                        <h3 className="text-base font-bold text-slate-800">Insurance Information</h3>
+                                    </div>
+                                    <div className="space-y-5">
+                                        <div className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer select-none ${formData.hasInsurance ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => handleInputChange('hasInsurance', !formData.hasInsurance)}>
+                                            <div className="mt-0.5 flex-shrink-0">
+                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border ${formData.hasInsurance ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'}`}>
+                                                    {formData.hasInsurance && <CheckCircle className="w-3.5 h-3.5" />}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label className="text-sm font-semibold text-slate-900 cursor-pointer pointer-events-none">Do you currently have insurance coverage? *</Label>
+                                                <p className="text-xs text-slate-500 mt-0.5">Check this box if there is an existing insurance policy related to this application.</p>
+                                            </div>
                                         </div>
                                         {formData.hasInsurance && (
                                             <div className="mt-4">
@@ -1460,26 +1483,30 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                                     id="insuranceDetails"
                                                     value={formData.insuranceDetails}
                                                     onChange={(e) => handleInputChange('insuranceDetails', e.target.value)}
-                                                    placeholder="Provide insurer name, policy number and coverage details"
+                                                    placeholder="Provide details about your current insurance coverage"
                                                     required={formData.hasInsurance}
                                                 />
                                             </div>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
 
-                                <Card className="p-4">
-                                    <h3 className="text-lg font-semibold mb-4">Investigation & Disciplinary Status</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center space-x-2">
-                                            <input
-                                                type="checkbox"
-                                                id="underInvestigation"
-                                                checked={formData.underInvestigation}
-                                                onChange={(e) => handleInputChange('underInvestigation', e.target.checked)}
-                                                placeholder='under investigation'
-                                            />
-                                            <Label htmlFor="underInvestigation">Currently under investigation? *</Label>
+                                <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <AlertCircle className="w-5 h-5 text-emerald-600" />
+                                        <h3 className="text-base font-bold text-slate-800">Investigation & Disciplinary Status</h3>
+                                    </div>
+                                    <div className="space-y-5">
+                                        <div className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer select-none ${formData.underInvestigation ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => handleInputChange('underInvestigation', !formData.underInvestigation)}>
+                                            <div className="mt-0.5 flex-shrink-0">
+                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border ${formData.underInvestigation ? 'bg-rose-600 border-rose-600 text-white' : 'border-slate-300 bg-white'}`}>
+                                                    {formData.underInvestigation && <CheckCircle className="w-3.5 h-3.5" />}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label className="text-sm font-semibold text-slate-900 cursor-pointer pointer-events-none">Currently under investigation? *</Label>
+                                                <p className="text-xs text-slate-500 mt-0.5">Check this box if you or your firm are currently under any official investigation.</p>
+                                            </div>
                                         </div>
                                         {formData.underInvestigation && (
                                             <div className="mt-4">
@@ -1494,20 +1521,24 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </div>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
 
-                                <Card className="p-4">
-                                    <h3 className="text-lg font-semibold mb-4">Disciplinary Action</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center space-x-2">
-                                            <input
-                                                type="checkbox"
-                                                id="disciplinaryAction"
-                                                checked={formData.disciplinaryAction}
-                                                onChange={(e) => handleInputChange('disciplinaryAction', e.target.checked)}
-                                                placeholder='subject to disciplinary action'
-                                            />
-                                            <Label htmlFor="disciplinaryAction">Subject to disciplinary action? *</Label>
+                                <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <AlertCircle className="w-5 h-5 text-emerald-600" />
+                                        <h3 className="text-base font-bold text-slate-800">Disciplinary Action</h3>
+                                    </div>
+                                    <div className="space-y-5">
+                                        <div className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer select-none ${formData.disciplinaryAction ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => handleInputChange('disciplinaryAction', !formData.disciplinaryAction)}>
+                                            <div className="mt-0.5 flex-shrink-0">
+                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border ${formData.disciplinaryAction ? 'bg-rose-600 border-rose-600 text-white' : 'border-slate-300 bg-white'}`}>
+                                                    {formData.disciplinaryAction && <CheckCircle className="w-3.5 h-3.5" />}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label className="text-sm font-semibold text-slate-900 cursor-pointer pointer-events-none">Subject to disciplinary action? *</Label>
+                                                <p className="text-xs text-slate-500 mt-0.5">Check this box if you have faced disciplinary actions from regulatory bodies.</p>
+                                            </div>
                                         </div>
                                         {formData.disciplinaryAction && (
                                             <div className="mt-4">
@@ -1522,20 +1553,24 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </div>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
 
-                                <Card className="p-4">
-                                    <h3 className="text-lg font-semibold mb-4">Pre-Employment Checks</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center space-x-2">
-                                            <input
-                                                type="checkbox"
-                                                id="preEmploymentCheck"
-                                                checked={formData.preEmploymentCheck}
-                                                onChange={(e) => handleInputChange('preEmploymentCheck', e.target.checked)}
-                                                placeholder={"pre-employment checks conducted?"}
-                                            />
-                                            <Label htmlFor="preEmploymentCheck">Pre-employment checks conducted? *</Label>
+                                <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <AlertCircle className="w-5 h-5 text-emerald-600" />
+                                        <h3 className="text-base font-bold text-slate-800">Pre-Employment Checks</h3>
+                                    </div>
+                                    <div className="space-y-5">
+                                        <div className={`flex items-start gap-3 p-4 rounded-xl border transition-colors cursor-pointer select-none ${formData.preEmploymentCheck ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`} onClick={() => handleInputChange('preEmploymentCheck', !formData.preEmploymentCheck)}>
+                                            <div className="mt-0.5 flex-shrink-0">
+                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border ${formData.preEmploymentCheck ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'}`}>
+                                                    {formData.preEmploymentCheck && <CheckCircle className="w-3.5 h-3.5" />}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label className="text-sm font-semibold text-slate-900 cursor-pointer pointer-events-none">Pre-employment checks conducted? *</Label>
+                                                <p className="text-xs text-slate-500 mt-0.5">Check this box if background checks were conducted on employees.</p>
+                                            </div>
                                         </div>
                                         {formData.preEmploymentCheck && (
                                             <div className="mt-4">
@@ -1550,11 +1585,14 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </div>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
 
-                                <Card className="p-4">
-                                    <h3 className="text-lg font-semibold mb-4">Legal Information</h3>
-                                    <div className="space-y-4">
+                                <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <AlertCircle className="w-5 h-5 text-emerald-600" />
+                                        <h3 className="text-base font-bold text-slate-800">Legal Information</h3>
+                                    </div>
+                                    <div className="space-y-5">
                                         <div>
                                             <Label htmlFor="legalSuitDetails">Legal Suit Details (if any)</Label>
                                             <Textarea
@@ -1565,11 +1603,14 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             />
                                         </div>
                                     </div>
-                                </Card>
+                                </div>
 
-                                <Card className="p-4">
-                                    <h3 className="text-lg font-semibold mb-4">Practice Outside Nigeria</h3>
-                                    <div className="space-y-4">
+                                <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <AlertCircle className="w-5 h-5 text-emerald-600" />
+                                        <h3 className="text-base font-bold text-slate-800">Practice Outside Nigeria</h3>
+                                    </div>
+                                    <div className="space-y-5">
                                         <div>
                                             <Label htmlFor="practiceOutsideNigeria">Do you practice outside Nigeria? *</Label>
                                             <Select
@@ -1586,7 +1627,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                             </Select>
                                         </div>
                                     </div>
-                                </Card>
+                                </div>
                             </TabsContent>
 
                             <TabsContent value="project" className="space-y-4">
@@ -1838,28 +1879,41 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             </TabsContent>
                         </Tabs>
 
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-gray-200">
+                        {isLastTab && !formIsComplete && (
+                            <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <p className="text-sm font-semibold text-amber-900">Application Incomplete</p>
+                                        <p className="text-xs text-amber-700 mt-1">Please review previous sections and ensure all required fields are filled out before submitting.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Footer */}
+                        <div className="mt-8 border-t border-slate-200 bg-white px-6 sm:px-10 py-5 -mx-6 sm:-mx-10 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={onCancel}
                                 disabled={loading}
-                                className="w-full sm:w-auto"
+                                className="w-full sm:w-auto rounded-full px-6 border-slate-200 text-slate-600 hover:bg-slate-50"
                             >
                                 Cancel
                             </Button>
 
-                            <div className="flex w-full sm:w-auto gap-2 sm:justify-end">
+                            <div className="flex w-full sm:w-auto gap-3">
                                 {FORM_TABS.indexOf(activeTab) > 0 && (
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={handleBack}
                                         disabled={loading}
-                                        className="flex-1 sm:flex-none"
+                                        className="flex-1 sm:flex-none rounded-full px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
                                     >
-                                        <ChevronLeft className="w-4 h-4 mr-2" />
-                                        Back
+                                        <ChevronLeft className="w-4 h-4 mr-1.5" />
+                                        Previous
                                     </Button>
                                 )}
 
@@ -1868,20 +1922,20 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                                         type="button"
                                         onClick={handleNext}
                                         disabled={loading}
-                                        className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                                        className="flex-1 sm:flex-none rounded-full px-8 bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
                                     >
-                                        Next
-                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                        Next Step
+                                        <ChevronRight className="w-4 h-4 ml-1.5" />
                                     </Button>
                                 ) : (
                                     <Button
                                         type="submit"
                                         disabled={loading || !formIsComplete}
-                                        className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
+                                        className="flex-1 sm:flex-none rounded-full px-8 bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
                                     >
                                         {loading ? (
                                             <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                <Loader2 className="animate-spin w-4 h-4 mr-2" />
                                                 Submitting...
                                             </>
                                         ) : (
@@ -1895,14 +1949,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                             </div>
                         </div>
 
-                        {isLastTab && !formIsComplete && (
-                            <p className="mt-3 text-sm text-amber-700">
-                                Complete all required fields in each section before submitting.
-                            </p>
-                        )}
                     </form>
-                </CardContent>
-            </Card>
+            </div>
         </div>
     );
 };

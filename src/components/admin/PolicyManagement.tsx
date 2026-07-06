@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign, Search, Filter, X } from 'lucide-react';
+import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign, Search, Filter, X, UserPlus } from 'lucide-react';
 import { Surveyor, EnhancedSurveySubmission, Assignment } from '@/types/api.types';
 import { BuilderLiabilityPolicy } from '@/types/builderLiabilityPolicy.types';
 import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
@@ -395,99 +395,95 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Insurance Policy Management</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Insurance Policy Management</h2>
+        
+        {/* CSV Export Panel */}
+        <ExportCsvPanel
+          onExport={async (startDate, endDate) => {
+            const csv = await exportAmmcPoliciesCsv(startDate, endDate);
+            triggerCsvDownload(csv, 'ammc_policies.csv');
+          }}
+          buttonLabel="Export Policies CSV"
+        />
       </div>
 
-      {/* CSV Export Panel */}
-      <ExportCsvPanel
-        onExport={async (startDate, endDate) => {
-          const csv = await exportAmmcPoliciesCsv(startDate, endDate);
-          triggerCsvDownload(csv, 'ammc_policies.csv');
-        }}
-        buttonLabel="Export Policies CSV"
-      />
+      {/* Filter bar */}
+      <div className="flex flex-col gap-3 rounded-[1.5rem] border border-white/70 bg-white/90 p-4 shadow-[0_8px_32px_rgba(15,23,42,0.05)] backdrop-blur-xl sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by policy number, builder, email, RC number..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2.5 pl-9 pr-9 text-sm text-slate-700 placeholder-slate-400 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
-      {/* Search and Filter Bar */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search Input */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by policy number, builder/contractor name, email, phone, RC number, coverage type, or notes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Filter Toggle Button */}
+        <div className="flex gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${showFilters || hasActiveFilters
-              ? 'bg-[#028835] text-white border-[#028835]'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-medium shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${
+              showFilters || hasActiveFilters
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:border-emerald-300'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+            }`}
           >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Filters</span>
             {hasActiveFilters && !showFilters && (
-              <span className="ml-2 bg-white text-[#028835] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+              <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
                 !
               </span>
             )}
           </button>
 
-          {/* Clear Filters Button */}
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+              className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md"
             >
-              <X className="h-4 w-4 mr-2" />
-              Clear
+              <X className="h-4 w-4" />
+              <span className="hidden sm:inline">Clear</span>
             </button>
           )}
         </div>
+      </div>
 
-        {/* Advanced Filters Panel */}
-        {showFilters && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
-            {/* Insurance Type Filter */}
+      {/* Advanced Filters Panel */}
+      {showFilters && (
+        <div className="rounded-[1.5rem] border border-white/70 bg-white/90 p-5 shadow-[0_8px_32px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Insurance Type</label>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">Insurance Type</label>
               <select
                 value={filters.insuranceType}
                 onChange={(e) => setFilters({ ...filters, insuranceType: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
               >
                 <option value="">All Insurance Types</option>
                 <option value="Builder Liability">Builder Liability</option>
-                {/* <option value="Occupiers Liability">Occupiers Liability</option> */}
                 <option value="Professional Indemnity">Professional Indemnity</option>
                 <option value="Public Liability">Public Liability</option>
                 <option value="Product Liability">Product Liability</option>
               </select>
             </div>
-
-            {/* Coverage Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Coverage Type</label>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">Coverage Type</label>
               <select
                 value={filters.coverageType}
                 onChange={(e) => setFilters({ ...filters, coverageType: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
               >
                 <option value="">All Coverage Types</option>
                 <option value="Public Liability">Public Liability</option>
@@ -496,14 +492,12 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                 <option value="Professional Indemnity">Professional Indemnity</option>
               </select>
             </div>
-
-            {/* Priority Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">Priority</label>
               <select
                 value={filters.priority}
                 onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
               >
                 <option value="">All Priorities</option>
                 <option value="low">Low</option>
@@ -512,60 +506,12 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                 <option value="urgent">Urgent</option>
               </select>
             </div>
-
-            {/* Min Insurance Value Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Min Insurance Value (₦)</label>
-              <input
-                type="number"
-                placeholder="0"
-                value={filters.minValue}
-                onChange={(e) => setFilters({ ...filters, minValue: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
-              />
-            </div>
-
-            {/* Max Insurance Value Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Insurance Value (₦)</label>
-              <input
-                type="number"
-                placeholder="âˆž"
-                value={filters.maxValue}
-                onChange={(e) => setFilters({ ...filters, maxValue: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
-              />
-            </div>
-
-            {/* Date From Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Application Date From</label>
-              <input
-                type="date"
-                value={filters.dateFrom}
-                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
-              />
-            </div>
-
-            {/* Date To Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Application Date To</label>
-              <input
-                type="date"
-                value={filters.dateTo}
-                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
-              />
-            </div>
-
-            {/* Claim Status Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">Status</label>
               <select
                 value={filters.claimStatus}
                 onChange={(e) => setFilters({ ...filters, claimStatus: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
               >
                 <option value="">All Statuses</option>
                 <option value="submitted">Submitted</option>
@@ -577,235 +523,268 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                 <option value="completed">Completed</option>
               </select>
             </div>
-
-            {/* Surveyor Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Surveyor</label>
-              <select
-                value={filters.surveyorAssigned}
-                onChange={(e) => setFilters({ ...filters, surveyorAssigned: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-transparent"
-              >
-                <option value="">All Surveyors</option>
-                {surveyors.map(surveyor => (
-                  <option key={surveyor._id} value={surveyor._id}>
-                    {surveyor.firstname} {surveyor.lastname}
-                  </option>
-                ))}
-              </select>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">Min Insurance Value (₦)</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={filters.minValue}
+                onChange={(e) => setFilters({ ...filters, minValue: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">Max Insurance Value (₦)</label>
+              <input
+                type="number"
+                placeholder="∞"
+                value={filters.maxValue}
+                onChange={(e) => setFilters({ ...filters, maxValue: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">Date From</label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">Date To</label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
+              />
             </div>
           </div>
-        )}
-
-        {/* Results Count */}
-        <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-200">
-          <span>
-            Showing <span className="font-semibold text-gray-900">{filteredPolicies.length}</span> of{' '}
-            <span className="font-semibold text-gray-900">{allPoliciesForDisplay.length}</span> insurance policies
-          </span>
-          {hasActiveFilters && (
-            <span className="text-[#028835] font-medium">Filters active</span>
-          )}
         </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex space-x-1 overflow-x-auto pb-2 scrollbar-hide">
+        {[
+          { key: 'all', label: 'All Policies', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.length : 0 },
+          { key: 'submitted', label: 'New Apps', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'submitted').length : 0 },
+          { key: 'assigned', label: 'Under Review', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'assigned').length : 0 },
+          { key: 'surveyed', label: 'Survey Complete', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'surveyed').length : 0 },
+          { key: 'revision_required', label: 'Pending Info', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'revision_required').length : 0 },
+          { key: 'rejected', label: 'Declined', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'rejected').length : 0 }
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key as typeof activeTab)}
+            className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+              activeTab === tab.key
+                ? 'bg-[#028835] text-white shadow-md'
+                : 'bg-white/60 text-slate-600 hover:bg-white'
+            }`}
+          >
+            {tab.label}
+            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+              activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+            }`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
       </div>
 
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {[
-            { key: 'all', label: 'All Insurance Policies', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.length : 0 },
-            { key: 'submitted', label: 'New Applications', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'submitted').length : 0 },
-            { key: 'assigned', label: 'Under Review', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'assigned').length : 0 },
-            { key: 'surveyed', label: 'Survey Complete', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'surveyed').length : 0 },
-            { key: 'revision_required', label: 'Pending Info', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'revision_required').length : 0 },
-            { key: 'rejected', label: 'Declined', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'rejected').length : 0 }
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as typeof activeTab)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.key
-                ? 'border-[#028835] text-[#028835]'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              {tab.label}
-              <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* Policy list */}
+      <div className="rounded-[1.5rem] border border-white/70 bg-white/90 shadow-[0_8px_32px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        {filteredPolicies.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+              <Search className="h-6 w-6 text-slate-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-700">No insurance policies found</p>
+              <p className="mt-0.5 text-xs text-slate-400">
+                {hasActiveFilters
+                  ? "Try adjusting your search or filters"
+                  : "No insurance applications have been submitted yet"}
+              </p>
+            </div>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {/* Table header */}
+            <div className="hidden grid-cols-12 gap-4 px-6 py-4 md:grid">
+              <p className="col-span-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Insurance Details</p>
+              <p className="col-span-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Applicant/Builder</p>
+              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Value</p>
+              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</p>
+              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 text-right">Actions</p>
+            </div>
 
-      <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Insurance Details</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applicant/Builder</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coverage & Value</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Application Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPolicies.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center text-gray-500">
-                      <Search className="h-12 w-12 mb-3 opacity-30" />
-                      <p className="text-lg font-medium">No insurance policies found</p>
-                      <p className="text-sm mt-1">
-                        {hasActiveFilters
-                          ? "Try adjusting your search or filters"
-                          : "No insurance applications have been submitted yet"}
-                      </p>
-                      {hasActiveFilters && (
-                        <button
-                          onClick={clearFilters}
-                          className="mt-4 px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors"
-                        >
-                          Clear Filters
-                        </button>
+            {filteredPolicies?.map((policy) => {
+              const statusCfg: Record<string, { label: string; dot: string; bg: string; border: string; text: string }> = {
+                submitted:         { label: "Submitted",    dot: "bg-blue-400",   bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-700"   },
+                assigned:          { label: "Assigned",     dot: "bg-indigo-400", bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700" },
+                surveyed:          { label: "Surveyed",     dot: "bg-purple-400", bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700" },
+                approved:          { label: "Approved",     dot: "bg-emerald-400",bg: "bg-emerald-50",border: "border-emerald-200",text: "text-emerald-700"},
+                completed:         { label: "Completed",    dot: "bg-emerald-400",bg: "bg-emerald-50",border: "border-emerald-200",text: "text-emerald-700"},
+                sent_to_user:      { label: "Sent",         dot: "bg-cyan-400",   bg: "bg-cyan-50",   border: "border-cyan-200",   text: "text-cyan-700"   },
+                rejected:          { label: "Rejected",     dot: "bg-red-400",    bg: "bg-red-50",    border: "border-red-200",    text: "text-red-700"    },
+                revision_required: { label: "Needs Info",   dot: "bg-orange-400", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700" }
+              };
+              const cfg = statusCfg[getPolicyStatus(policy)] ?? statusCfg.submitted;
+
+              return (
+                <div key={policy._id} className="grid grid-cols-1 md:grid-cols-12 items-center gap-4 px-6 py-5 transition-colors hover:bg-slate-50/70">
+                  
+                  {/* Insurance Details */}
+                  <div className="col-span-3 min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">{policy.requestDetails.coverageType}</p>
+                    <p className="mt-0.5 truncate text-xs text-slate-500">
+                      Policy #{policy.policyNumber || policy._id.substring(0, 8)}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-slate-400 max-w-xs">{policy.propertyDetails.fullAddress || policy.propertyDetails.address}</p>
+                  </div>
+
+                  {/* Applicant */}
+                  <div className="col-span-3 min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-800">{policy.contactDetails.fullName}</p>
+                    <p className="mt-0.5 truncate text-xs text-slate-500">{policy.contactDetails.email}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="truncate text-xs text-slate-400">{policy.contactDetails.phoneNumber}</p>
+                      {policy.contactDetails.rcNumber && (
+                        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">RC: {policy.contactDetails.rcNumber}</span>
                       )}
                     </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredPolicies?.map((policy) => (
-                  <tr key={policy._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{policy.requestDetails.coverageType}</p>
-                        <p className="text-xs text-gray-600">
-                          Policy: {policy.policyNumber || policy._id.substring(0, 8)}
-                        </p>
-                        <p className="text-sm text-gray-500 truncate max-w-xs">{policy.propertyDetails.fullAddress || policy.propertyDetails.address}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{policy.contactDetails.fullName}</p>
-                        <p className="text-xs text-gray-500">{policy.contactDetails.email}</p>
-                        <p className="text-xs text-gray-500">{policy.contactDetails.phoneNumber}</p>
-                        {policy.contactDetails.rcNumber && (
-                          <p className="text-xs text-gray-500">RC: {policy.contactDetails.rcNumber}</p>
+                  </div>
+
+                  {/* Value */}
+                  <div className="col-span-2 min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-900">₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                    <p className="mt-0.5 truncate text-xs text-slate-500">{policy.requestDetails.policyDuration}</p>
+                    <p className="mt-1 truncate text-[10px] text-slate-400">{new Date(policy.createdAt).toLocaleDateString('en-NG')}</p>
+                  </div>
+
+                  {/* Status */}
+                  <div className="col-span-2">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${cfg.bg} ${cfg.border} ${cfg.text}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+                      {cfg.label}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-2 flex justify-end gap-2 relative dropdown-container">
+                    <button
+                      onClick={() => {
+                        if ((policy as any).isBuilderLiabilityPolicy && (policy as any).originalBLPolicy) {
+                          setSelectedBLPolicy((policy as ExtendedPolicyRequest).originalBLPolicy as BuilderLiabilityPolicy);
+                          setShowBLPolicyModal(true);
+                        } else {
+                          setSelectedPolicy(policy);
+                          setShowDetailsModal(true);
+                        }
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md"
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
+                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md"
+                      title="More Actions"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+
+                    {showActionsDropdown === policy._id && (
+                      <div className="absolute right-0 top-10 z-[60] w-48 rounded-xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_8px_32px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+                        {getPolicyStatus(policy) === 'submitted' && (
+                          <button
+                            onClick={() => {
+                              setSelectedPolicy(policy);
+                              setShowAssignModal(true);
+                              setShowActionsDropdown(null);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                          >
+                            <Users className="h-4 w-4" /> Assign Surveyor
+                          </button>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{policy.requestDetails.coverageType}</p>
-                        <p className="text-xs text-gray-500">₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
-                        <p className="text-xs text-gray-500">{policy.requestDetails.policyDuration}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(getPolicyStatus(policy))}
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-gray-900">{new Date(policy.createdAt).toLocaleDateString()}</p>
-                      <p className="text-xs text-gray-500">{new Date(policy.createdAt).toLocaleTimeString()}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
+                        
+                        {(getPolicyStatus(policy) === 'assigned' || getPolicyStatus(policy) === 'submitted') && (
+                          <button
+                            onClick={() => {
+                              setSelectedPolicy(policy);
+                              setShowAssignModal(true);
+                              setShowActionsDropdown(null);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                          >
+                            <UserPlus className="h-4 w-4" /> Reassign Surveyor
+                          </button>
+                        )}
+
+                        {getPolicyStatus(policy) === 'surveyed' && (
+                          <button
+                            onClick={async () => {
+                              setSelectedPolicy(policy);
+                              const response = await adminApi.getSurveySubmissions({ policyId: policy._id });
+                              setSelectedPolicySubmissions(response.data.submissions);
+                              setShowReviewModal(true);
+                              setShowActionsDropdown(null);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                          >
+                            <Eye className="h-4 w-4" /> Review Survey
+                          </button>
+                        )}
+
+                        {getPolicyStatus(policy) === 'completed' && (
+                          <button
+                            onClick={() => {
+                              if (policy._id) handleSendToUser(policy._id);
+                              setShowActionsDropdown(null);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                          >
+                            <CheckCircle className="h-4 w-4" /> Send to User
+                          </button>
+                        )}
+
                         <button
                           onClick={() => {
-                            // If this is a Builder Liability Policy, show the rich BL details modal
-                            if ((policy as any).isBuilderLiabilityPolicy && (policy as any).originalBLPolicy) {
-                              setSelectedBLPolicy((policy as ExtendedPolicyRequest).originalBLPolicy as BuilderLiabilityPolicy);
-                              setShowBLPolicyModal(true);
-                            } else {
-                              // Fallback to legacy modal for old policy types
-                              setSelectedPolicy(policy);
-                              setShowDetailsModal(true);
-                            }
+                            setPolicyToDelete(policy);
+                            setShowDeleteModal(true);
+                            setShowActionsDropdown(null);
                           }}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
                         >
-                          View Details
+                          <Trash2 className="h-4 w-4" /> Delete Policy
                         </button>
-
-                        <div className="relative dropdown-container">
-                          <button
-                            onClick={() => setShowActionsDropdown(showActionsDropdown === policy._id ? null : policy._id)}
-                            className="text-gray-400 hover:text-gray-600 p-1"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
-
-                          {showActionsDropdown === policy._id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                              <div className="py-1">
-                                {getPolicyStatus(policy) === 'submitted' && (
-                                  <button
-                                    onClick={() => {
-                                      setSelectedPolicy(policy);
-                                      setShowAssignModal(true);
-                                      setShowActionsDropdown(null);
-                                    }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  >
-                                    <Users className="inline h-4 w-4 mr-2" />
-                                    Assign Surveyor
-                                  </button>
-                                )}
-
-                                {getPolicyStatus(policy) === 'surveyed' && (
-                                  <button
-                                    onClick={async () => {
-                                      setSelectedPolicy(policy);
-                                      const response = await adminApi.getSurveySubmissions({ policyId: policy._id });
-                                      setSelectedPolicySubmissions(response.data.submissions);
-                                      setShowReviewModal(true);
-                                      setShowActionsDropdown(null);
-                                    }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  >
-                                    <Eye className="inline h-4 w-4 mr-2" />
-                                    Review Survey
-                                  </button>
-                                )}
-
-                                {getPolicyStatus(policy) === 'completed' && (
-                                  <button
-                                    onClick={() => {
-                                      if (policy._id) {
-                                        handleSendToUser(policy._id);
-                                      }
-                                      setShowActionsDropdown(null);
-                                    }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  >
-                                    <CheckCircle className="inline h-4 w-4 mr-2" />
-                                    Send to User
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={() => {
-                                    setPolicyToDelete(policy);
-                                    setShowDeleteModal(true);
-                                    setShowActionsDropdown(null);
-                                  }}
-                                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                >
-                                  <Trash2 className="inline h-4 w-4 mr-2" />
-                                  Delete Policy
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                    )}
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between px-2 text-sm text-slate-500">
+        <p>Showing <span className="font-semibold text-slate-900">{filteredPolicies.length}</span> of <span className="font-semibold text-slate-900">{allPoliciesForDisplay.length}</span> policies</p>
       </div>
 
       {/* Assign Surveyor Modal */}
@@ -814,6 +793,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
           show={showAssignModal}
           onClose={() => setShowAssignModal(false)}
           selectedPolicy={selectedPolicy ? toPolicyRequest(selectedPolicy) : null}
+          isReassign={selectedPolicy ? getPolicyStatus(selectedPolicy) === 'assigned' : false}
           onAssignmentCreated={fetchPoliciesAndSurveyors}
           onAssignmentReassigned={fetchPoliciesAndSurveyors}
         />

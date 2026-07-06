@@ -1,15 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X } from "lucide-react";
 import Image from "next/image";
 
-type Position = { x: number; y: number };
-
 export default function ChatWidget() {
   const iconSize = 56;
-  const chatWidth = 320;
-  const chatHeight = 400;
   const lightBg = "#fffbea";
   const brandColor = "#25D366";
 
@@ -19,70 +15,10 @@ export default function ChatWidget() {
     "It's not verifying me",
   ];
 
-  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [offset, setOffset] = useState<Position>({ x: 0, y: 0 });
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [typing, setTyping] = useState(false);
-
-  // Start at bottom-right
-  useEffect(() => {
-    setPosition({
-      x: window.innerWidth - iconSize - 20,
-      y: window.innerHeight - iconSize - 20,
-    });
-  }, []);
-
-  const clamp = (x: number, y: number) => ({
-    x: Math.min(Math.max(0, x), window.innerWidth - iconSize),
-    y: Math.min(Math.max(0, y), window.innerHeight - iconSize),
-  });
-
-  const startDrag = (clientX: number, clientY: number) => {
-    setIsDragging(true);
-    setOffset({ x: clientX - position.x, y: clientY - position.y });
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      setPosition(clamp(e.clientX - offset.x, e.clientY - offset.y));
-    };
-    const handleMouseUp = () => setIsDragging(false);
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging, offset]);
-
-  useEffect(() => {
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging) return;
-      const t = e.touches[0];
-      setPosition(clamp(t.clientX - offset.x, t.clientY - offset.y));
-    };
-    const handleTouchEnd = () => setIsDragging(false);
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("touchend", handleTouchEnd);
-    return () => {
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [isDragging, offset]);
-
-  const chatPosition = () => {
-    let top = position.y - chatHeight;
-    let left = position.x - chatWidth + iconSize;
-    if (left < 0) left = 0;
-    if (top < 0) top = position.y + iconSize;
-    if (left + chatWidth > window.innerWidth) left = window.innerWidth - chatWidth;
-    if (top + chatHeight > window.innerHeight) top = window.innerHeight - chatHeight;
-    return { top, left };
-  };
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
@@ -99,20 +35,12 @@ export default function ChatWidget() {
   };
 
   return (
-    <div
-      className="fixed z-50 select-none"
-      style={{ left: position.x, top: position.y }}
-      onMouseDown={(e) => startDrag(e.clientX, e.clientY)}
-      onTouchStart={(e) => startDrag(e.touches[0].clientX, e.touches[0].clientY)}
-    >
+    <div className="fixed bottom-5 right-5 z-50 select-none flex flex-col items-end gap-3">
+      {/* Chat modal — always above the icon */}
       {open && (
         <div
-          className="absolute w-80 h-[350px] bg-white border border-gray-200 shadow-2xl rounded-2xl overflow-hidden transition-transform duration-300"
-          style={{
-            top: chatPosition().top - position.y,
-            left: chatPosition().left - position.x,
-            borderTop: `3px solid ${brandColor}`,
-          }}
+          className="w-80 max-w-[calc(100vw-40px)] h-[350px] bg-white border border-gray-200 shadow-2xl rounded-2xl overflow-hidden"
+          style={{ borderTop: `3px solid ${brandColor}` }}
         >
           {/* Header */}
           <div className="flex justify-between items-center bg-green-500 text-white p-3">
@@ -134,23 +62,20 @@ export default function ChatWidget() {
           {/* Chat body */}
           <div className="p-4 h-56 overflow-y-auto text-sm space-y-3 bg-gray-50 flex flex-col">
             {messages.map((msg, i) => (
-              <div
-                key={i}
-                className="px-3 py-2 rounded-lg bg-white shadow-sm self-start"
-              >
+              <div key={i} className="px-3 py-2 rounded-lg bg-white shadow-sm self-start">
                 {msg}
               </div>
             ))}
 
             {typing && (
               <div
-                className="text-gray-700 px-3 py-2 rounded-lg inline-block shadow-sm items-center gap-2"
+                className="text-gray-700 px-3 py-2 rounded-lg inline-block shadow-sm"
                 style={{ backgroundColor: lightBg }}
               >
-                <div className="flex space-x-1">
-                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
-                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100"></span>
-                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200"></span>
+                <div className="flex space-x-1 mb-1">
+                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
+                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100" />
+                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200" />
                 </div>
                 <span className="text-xs text-gray-500">Typing...</span>
               </div>
@@ -187,6 +112,7 @@ export default function ChatWidget() {
             <input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendMessage(message)}
               placeholder="Type your message..."
               className="flex-1 border border-gray-300 rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-600"
             />
@@ -203,7 +129,7 @@ export default function ChatWidget() {
       {/* Chat icon */}
       <button
         onClick={() => setOpen(!open)}
-        className="rounded-full flex items-center justify-center text-white shadow-lg transition hover:scale-105"
+        className="rounded-full flex items-center justify-center text-white shadow-lg transition hover:scale-105 flex-shrink-0"
         style={{
           backgroundColor: brandColor,
           width: iconSize,

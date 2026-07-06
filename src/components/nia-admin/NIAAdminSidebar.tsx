@@ -4,226 +4,217 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
-    Home,
-    Users,
-    FileText,
-    ClipboardList,
-    Settings,
-    LogOut,
-    Building2,
-    UserCheck,
-    AlertTriangle,
-    Bell,
-    ChevronLeft,
-    ChevronRight,
-    X
+  Home,
+  Users,
+  FileText,
+  ClipboardList,
+  Settings,
+  Bell,
+  LogOut,
+  UserCheck,
+  Menu,
+  X,
 } from "lucide-react";
 import { clearAuthTokens } from "@/utils/auth";
+import Swal from "sweetalert2";
 
 interface NIAAdminSidebarProps {
-    isOpen?: boolean;
-    onClose?: () => void;
-    isMobile?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
+  isMobile?: boolean;
 }
 
+const menuItems = [
+  {
+    href: "/nia-admin/dashboard",
+    label: "Dashboard",
+    icon: Home,
+  },
+  {
+    href: "/nia-admin/surveyors",
+    label: "Surveyors",
+    icon: Users,
+  },
+  {
+    href: "/nia-admin/assignments",
+    label: "Assignments",
+    icon: ClipboardList,
+  },
+  {
+    href: "/nia-admin/administrators",
+    label: "Administrators",
+    icon: UserCheck,
+  },
+  {
+    href: "/nia-admin/notifications",
+    label: "Notifications",
+    icon: Bell,
+  },
+  {
+    href: "/nia-admin/settings",
+    label: "Settings",
+    icon: Settings,
+  },
+];
+
 const NIAAdminSidebar: React.FC<NIAAdminSidebarProps> = ({
-    isOpen = true,
-    onClose,
-    isMobile = false
+  isOpen = true,
+  onClose,
+  isMobile = false,
 }) => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const pathname = usePathname();
-    const router = useRouter();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
-    const toggleSidebar = () => {
-        setIsCollapsed(!isCollapsed);
-    };
+  const isDarkMode =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-    const handleLogout = () => {
-        clearAuthTokens();
-        localStorage.removeItem("niaAdminToken");
-        localStorage.removeItem("niaAdminInfo");
-        localStorage.removeItem("organization");
-        router.push("/nia-admin/login");
-    };
+  const showExpanded = isMobile || !isCollapsed;
 
-    const menuItems = [
-        {
-            href: "/nia-admin/dashboard",
-            label: "Dashboard",
-            icon: Home,
-            description: "Overview and statistics"
-        },
-        {
-            href: "/nia-admin/dashboard/policies",
-            label: "Policies",
-            icon: FileText,
-            description: "Builder Liability policies"
-        },
-        {
-            href: "/nia-admin/surveyors",
-            label: "Surveyors",
-            icon: Users,
-            description: "Manage surveyors"
-        },
-        {
-            href: "/nia-admin/assignments",
-            label: "Assignments",
-            icon: ClipboardList,
-            description: "Automated assignments"
-        },
-        {
-            href: "/nia-admin/administrators",
-            label: "Administrators",
-            icon: UserCheck,
-            description: "Manage NIA administrators"
-        },
-        {
-            href: "/nia-admin/notifications",
-            label: "Notifications",
-            icon: Bell,
-            description: "Alerts and updates"
-        },
-        {
-            href: "/nia-admin/settings",
-            label: "Settings",
-            icon: Settings,
-            description: "Admin settings"
-        },
-    ];
+  const toggleSidebar = () => setIsCollapsed((prev) => !prev);
 
-    // Determine if sidebar should show content expanded
-    const showExpanded = isMobile || !isCollapsed;
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      background: isDarkMode ? "#111827" : "#ffffff",
+      color: isDarkMode ? "#ffffff" : "#111827",
+    });
 
-    return (
-        <aside
-            className={`bg-white shadow-lg transition-all duration-300 flex flex-col border-r border-gray-200 fixed md:relative z-30 h-full
-                ${isMobile
-                    ? (isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64")
-                    : (isCollapsed ? "w-16" : "w-64")
-                }
-                md:translate-x-0`}
+    if (result.isConfirmed) {
+      clearAuthTokens();
+      localStorage.removeItem("niaAdminToken");
+      localStorage.removeItem("niaAdminInfo");
+      localStorage.removeItem("organization");
+      router.push("/nia-admin/login");
+    }
+  };
+
+  const sidebarWidth = isMobile
+    ? isOpen
+      ? "translate-x-0 w-64"
+      : "-translate-x-full w-64"
+    : isCollapsed
+      ? "w-16"
+      : "w-64";
+
+  return (
+    <aside
+      className={`fixed z-30 flex h-full flex-col overflow-hidden rounded-r-[2rem] border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl transition-all duration-300 print:hidden md:relative md:translate-x-0 ${sidebarWidth}`}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 border-b border-white/70 bg-gradient-to-r from-white via-white to-violet-50/70 p-4">
+        {showExpanded ? (
+          <button
+            type="button"
+            onClick={() => !isMobile && toggleSidebar()}
+            className="flex min-w-0 items-center gap-3 text-left transition-transform duration-300 hover:-translate-y-0.5"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-violet-800 shadow-lg shadow-violet-200/60">
+              <Image
+                src="/logo.svg"
+                alt="Builders Liability Logo"
+                className="h-6 w-6 object-contain"
+                width={24}
+                height={24}
+              />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold tracking-tight text-slate-900">
+                Builders Liability
+              </span>
+              <span className="block truncate text-[11px] text-slate-500">
+                NIA Portal
+              </span>
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label="Expand sidebar"
+            className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-200 hover:text-violet-700 hover:shadow-md"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+
+        {isMobile && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close sidebar"
+            className="rounded-2xl border border-slate-200/80 bg-white/90 p-2 text-slate-500 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-700"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="mt-4 flex flex-1 flex-col px-3 pb-3">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            item.href === "/nia-admin/dashboard"
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => isMobile && onClose?.()}
+              aria-current={isActive ? "page" : undefined}
+              title={!showExpanded ? item.label : undefined}
+              className={`group mb-1.5 flex items-center rounded-2xl px-4 py-3 transition-all duration-300 ${
+                isActive
+                  ? "bg-gradient-to-r from-violet-600 to-violet-700 text-white shadow-lg shadow-violet-200/60"
+                  : "text-slate-700 hover:-translate-y-0.5 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md"
+              } ${!showExpanded ? "justify-center px-0" : ""}`}
+            >
+              <Icon
+                className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
+                  isActive
+                    ? "text-white"
+                    : "text-slate-500 group-hover:scale-105 group-hover:text-violet-700"
+                } ${showExpanded ? "mr-3" : ""}`}
+              />
+              {showExpanded && (
+                <span className="truncate text-sm font-medium">{item.label}</span>
+              )}
+            </Link>
+          );
+        })}
+
+        <div className="flex-1" />
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          title={!showExpanded ? "Logout" : undefined}
+          className={`mb-4 flex items-center rounded-2xl px-4 py-3 text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-50 hover:text-red-600 hover:shadow-md ${
+            !showExpanded ? "justify-center px-0" : ""
+          }`}
         >
-            {/* Header */}
-            <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                    {showExpanded ? (
-                        <div className="flex items-center space-x-3">
-                            <div className="bg-blue-600 p-2 rounded-lg">
-                                <Building2 className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-gray-900">NIA Portal</h2>
-                                <p className="text-xs text-gray-500">Admin Dashboard</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="bg-blue-600 p-2 rounded-lg mx-auto">
-                            <Building2 className="h-6 w-6 text-white" />
-                        </div>
-                    )}
-
-                    {isMobile ? (
-                        <button
-                            onClick={onClose}
-                            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                        >
-                            <X className="h-5 w-5 text-gray-500" />
-                        </button>
-                    ) : (
-                        <button
-                            onClick={toggleSidebar}
-                            className="p-1 rounded-full hover:bg-gray-100 transition-colors hidden md:block"
-                        >
-                            {isCollapsed ? (
-                                <ChevronRight className="h-4 w-4 text-gray-500" />
-                            ) : (
-                                <ChevronLeft className="h-4 w-4 text-gray-500" />
-                            )}
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Organization Badge */}
-            {showExpanded && (
-                <div className="px-4 py-2 bg-blue-50 border-b border-gray-200">
-                    <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-xs font-medium text-blue-700">
-                            Nigerian Insurers Association
-                        </span>
-                    </div>
-                </div>
-            )}
-
-            {/* Navigation */}
-            <nav className="flex-1 py-4 overflow-y-auto">
-                <div className="space-y-1 px-2">
-                    {menuItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = pathname === item.href;
-
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center px-3 py-2 rounded-lg transition-colors group ${isActive
-                                    ? "bg-blue-100 text-blue-700 border border-blue-200"
-                                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                    } ${!showExpanded ? "justify-center" : ""}`}
-                                title={!showExpanded ? item.label : ""}
-                            >
-                                <Icon
-                                    className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"} ${isActive ? "text-blue-600" : "text-gray-500 group-hover:text-gray-700"
-                                        }`}
-                                />
-                                {showExpanded && (
-                                    <div className="flex-1">
-                                        <div className="font-medium">{item.label}</div>
-                                        <div className="text-xs text-gray-500 group-hover:text-gray-600">
-                                            {item.description}
-                                        </div>
-                                    </div>
-                                )}
-                            </Link>
-                        );
-                    })}
-                </div>
-            </nav>
-
-            {/* User Info & Logout */}
-            <div className="border-t border-gray-200 p-4">
-                {showExpanded && (
-                    <div className="mb-3">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                                <UserCheck className="h-4 w-4 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">
-                                    NIA Administrator
-                                </p>
-                                <p className="text-xs text-gray-500 truncate">
-                                    {typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('niaAdminInfo') || '{}').email || 'admin@nia.org' : 'admin@nia.org'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <button
-                    onClick={handleLogout}
-                    className={`flex items-center w-full px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors ${!showExpanded ? "justify-center" : ""
-                        }`}
-                    title={!showExpanded ? "Logout" : ""}
-                >
-                    <LogOut className={`w-5 h-5 ${!showExpanded ? "" : "mr-3"}`} />
-                    {showExpanded && <span>Logout</span>}
-                </button>
-            </div>
-        </aside>
-    );
+          <LogOut
+            className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
+              showExpanded ? "mr-3" : ""
+            }`}
+          />
+          {showExpanded && <span className="text-sm font-medium">Logout</span>}
+        </button>
+      </nav>
+    </aside>
+  );
 };
 
 export default NIAAdminSidebar;

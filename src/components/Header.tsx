@@ -15,129 +15,163 @@ const Header = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      if (window.scrollY > 20) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
 
   return (
-    <header className="bg-white">
+    <header className="relative z-[60]">
       {/* Top bar - NOT fixed */}
-      <div className="bg-green-600 py-2 hidden md:block">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <MapPin className="w-4 h-4 text-white mr-1" />
-                <span className="text-white text-[1rem]">Abuja, Nigeria 110111</span>
+      <div className="bg-[#028835] py-2 hidden md:block">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex justify-between items-center text-xs font-medium">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center text-white/90">
+                <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                <span>Abuja, Nigeria 110111</span>
               </div>
-              <div className="flex items-center">
-                <Clock className="w-4 h-4 text-white mr-1" />
-                <span className="text-white text-[1rem]">Sunday-Friday 9am-8pm</span>
+              <div className="flex items-center text-white/90">
+                <Clock className="w-3.5 h-3.5 mr-1.5" />
+                <span>Sunday-Friday 9am-8pm</span>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <a href="#" className="text-white hover:text-green-600">
-                <FaFacebookF size={18} />
+            <div className="flex items-center space-x-5">
+              <a href="#" className="text-white/80 hover:text-white hover:scale-110 transition-all">
+                <FaFacebookF size={14} />
               </a>
-              <a href="#" className="text-white hover:text-green-600">
-                <FaInstagram size={18} />
+              <a href="#" className="text-white/80 hover:text-white hover:scale-110 transition-all">
+                <FaInstagram size={14} />
               </a>
-              <a href="#" className="text-white hover:text-green-600">
-                <FaTwitter size={18} />
+              <a href="#" className="text-white/80 hover:text-white hover:scale-110 transition-all">
+                <FaTwitter size={14} />
               </a>
-              <a href="#" className="text-white hover:text-green-600">
-                <FaLinkedinIn size={18} />
+              <a href="#" className="text-white/80 hover:text-white hover:scale-110 transition-all">
+                <FaLinkedinIn size={14} />
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main navigation - FIXED to top when scrolled past 50px */}
-      <nav className={`
-    ${isScrolled ? 'fixed top-0 left-0 right-0 z-50' : ''}
-    bg-white border-b border-gray-200
-    shadow-lg
-    transition-all duration-500 ease-in-out
-    will-change-transform
-  `}>
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center py-4">
-            <Link href="/" className="text-2xl flex gap-1 font-bold text-green-600">
-            <Image
-            src="/logo.svg" 
-            height={32}
-            width={32}
-            alt="Builders Liability Logo"
-            priority
-            />
-              Builders Liability
+      {/* Main navigation - FIXED to top when scrolled past 20px */}
+      <nav 
+        className={`
+          transition-all duration-300 ease-in-out
+          ${isScrolled 
+            ? 'fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-[0_8px_32px_rgba(15,23,42,0.08)] py-3' 
+            : 'bg-white border-b border-gray-100 py-4'}
+        `}
+      >
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex justify-between items-center">
+            
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-green-50 flex items-center justify-center group-hover:shadow-md transition-shadow">
+                <Image
+                  src="/logo.svg" 
+                  height={28}
+                  width={28}
+                  alt="Builders Liability Logo"
+                  priority
+                  className="object-contain"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[1.3rem] leading-tight font-bold text-gray-900 tracking-tight">
+                  Builders Liability
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-green-600 font-bold">
+                  FCT-DCIP Portal
+                </span>
+              </div>
             </Link>
 
             {/* Desktop menu */}
-            <div className="hidden md:flex items-center space-x-6 ">
-              <Link href="/" className={`${pathname === '/' ? 'text-green-600 underline' : 'text-gray-600'} font-semibold text-[1.2rem] hover:text-green-600 hover:underline`}>
-                Home
-              </Link>
-              <Link href="/about" className={`${pathname === '/about' ? 'text-green-600 underline' : 'text-gray-600'} font-semibold text-[1.2rem] hover:text-green-600 hover:underline`}>
-                About
-              </Link>
-              <Link href="/faq" className={`${pathname === '/faq' ? 'text-green-600 underline' : 'text-gray-600'} font-semibold text-[1.2rem] hover:text-green-600 hover:underline`}>
-                FAQ
-              </Link>
-              <Link href="/contact" className={`${pathname === '/contact' ? 'text-green-600 underline' : 'text-gray-600'} font-semibold text-[1.2rem] hover:text-green-600 hover:underline`}>
-                Contact
-              </Link>
+            <div className="hidden md:flex items-center space-x-1">
+              {[
+                { name: 'Home', path: '/' },
+                { name: 'About', path: '/about' },
+                { name: 'FAQ', path: '/faq' },
+                { name: 'Contact', path: '/contact' }
+              ].map((link) => (
+                <Link 
+                  key={link.path}
+                  href={link.path} 
+                  className={`relative px-4 py-2 text-[0.95rem] font-semibold rounded-lg transition-colors overflow-hidden group
+                    ${pathname === link.path ? 'text-green-700' : 'text-gray-600 hover:text-green-700'}
+                  `}
+                >
+                  <span className="relative z-10">{link.name}</span>
+                  {/* Subtle active/hover background */}
+                  <div className={`absolute inset-0 bg-green-50 rounded-lg -z-10 transition-transform duration-300 ease-out origin-left
+                    ${pathname === link.path ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}
+                  `} />
+                </Link>
+              ))}
             </div>
 
-           
+            {/* CTA Button & Mobile Toggle */}
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center">
+                <Link href="/login" className="flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 shadow-[0_4px_14px_0_rgba(2,136,53,0.39)] hover:shadow-[0_6px_20px_rgba(2,136,53,0.23)] hover:-translate-y-0.5 transition-all duration-200">
+                  Login to Portal
+                </Link>
+              </div>
 
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center">
+              {/* Mobile menu button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-600 hover:text-green-600 focus:outline-none"
+                className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors"
+                aria-label="Toggle menu"
               >
                 {isMenuOpen ? <CgClose size={24} /> : <CgMenuLeft size={24} />}
               </button>
             </div>
+
           </div>
         </div>
 
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 text-[1.2rem] pb-3 space-y-1 sm:px-3">
-              <Link href="/" className="block px-3 py-2 text-gray-600 hover:text-green-600">
-                Home
+        {/* Mobile menu dropdown */}
+        <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-4 py-4 space-y-2 bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-xl">
+            {[
+              { name: 'Home', path: '/' },
+              { name: 'About', path: '/about' },
+              { name: 'FAQ', path: '/faq' },
+              { name: 'Contact', path: '/contact' }
+            ].map((link) => (
+              <Link 
+                key={link.path}
+                href={link.path} 
+                className={`block px-4 py-3 rounded-xl text-base font-semibold transition-colors
+                  ${pathname === link.path ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'}
+                `}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.name}
               </Link>
-              <Link href="/about" className="block px-3 py-2 text-gray-600 hover:text-green-600">
-                About
-              </Link>
-              <Link href="/faq" className="block px-3 py-2 text-gray-600 hover:text-green-600">
-                FAQ
-              </Link>
-              <Link href="/contact" className="block px-3 py-2 text-gray-600 hover:text-green-600">
-                Contact
+            ))}
+            
+            <div className="pt-4 mt-2 border-t border-gray-100">
+              <Link href="/login" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center w-full px-6 py-3 text-base font-bold text-white bg-green-600 rounded-xl shadow-md">
+                Login to Portal
               </Link>
             </div>
-            <div className="px-4 py-3 border-t border-gray-200">
-              <div className="flex items-center mb-3">
-                <Phone className="w-5 h-5 text-green-600 mr-2" />
-                <span className="font-semibold text-[1.2rem]">+234 806 006 0826</span>
-              </div>
-             
+            
+            <div className="pt-4 flex items-center justify-center text-sm text-gray-500 font-medium">
+              <Phone className="w-4 h-4 text-green-600 mr-2" />
+              <span>+234 806 006 0826</span>
             </div>
           </div>
-        )}
+        </div>
 
       </nav>
     </header>
