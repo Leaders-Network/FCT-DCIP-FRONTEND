@@ -322,7 +322,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
     };
 
     return (
-        <div ref={searchRef} className={`relative ${className}`}>
+        <div ref={searchRef} className={`relative z-[60] ${className}`}>
             {/* Search Input */}
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
@@ -338,7 +338,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                             ? "Search policies, surveyors, assignments... (⌘K)"
                             : "Search... (⌘K)"
                     }
-                    className="pl-9 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-2xl border border-slate-200 bg-white/90 py-3 pl-10 pr-4 text-sm text-slate-900 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-200"
                 />
                 {query && (
                     <button
@@ -352,12 +352,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
 
             {/* Search Results Dropdown */}
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 max-h-[500px] overflow-y-auto z-50">
+                <div className="absolute left-0 right-0 top-full z-[80] mt-3 max-h-[32rem] overflow-y-auto rounded-[1.5rem] border border-slate-200 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl">
                     {/* Loading State */}
                     {loading && (
-                        <div className="p-4 text-center text-gray-500">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                            <p className="text-sm mt-2">Searching...</p>
+                        <div className="p-5 text-center text-slate-500">
+                            <div className="mx-auto h-6 w-6 animate-spin rounded-full border-b-2 border-emerald-600"></div>
+                            <p className="mt-2 text-sm">Searching...</p>
                         </div>
                     )}
 
@@ -367,10 +367,10 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                             {recentSearches.length > 0 && (
                                 <div className="mb-4">
                                     <div className="flex items-center justify-between mb-2 px-2">
-                                        <h3 className="text-xs font-semibold text-gray-500 uppercase">Recent Searches</h3>
+                                        <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Recent Searches</h3>
                                         <button
                                             onClick={clearRecentSearches}
-                                            className="text-xs text-blue-600 hover:text-blue-800"
+                                            className="text-xs text-emerald-600 transition-colors hover:text-emerald-700"
                                         >
                                             Clear
                                         </button>
@@ -379,17 +379,17 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                                         <button
                                             key={index}
                                             onClick={() => handleRecentSearchClick(search)}
-                                            className="w-full flex items-center px-3 py-2 hover:bg-gray-50 rounded-md text-left"
+                                            className="flex w-full items-center rounded-2xl px-3 py-3 text-left transition-colors hover:bg-slate-50"
                                         >
-                                            <Clock className="h-4 w-4 text-gray-400 mr-3" />
-                                            <span className="text-sm text-gray-700">{search}</span>
+                                            <Clock className="mr-3 h-4 w-4 text-slate-400" />
+                                            <span className="text-sm text-slate-700">{search}</span>
                                         </button>
                                     ))}
                                 </div>
                             )}
 
                             <div>
-                                <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2 px-2">Quick Navigation</h3>
+                                <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Quick Navigation</h3>
                                 {getQuickLinks(userType).map((link, index) => (
                                     <button
                                         key={index}
@@ -397,12 +397,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                                             router.push(link.url);
                                             setIsOpen(false);
                                         }}
-                                        className="w-full flex items-center px-3 py-2 hover:bg-gray-50 rounded-md text-left"
+                                        className="flex w-full items-center rounded-2xl px-3 py-3 text-left transition-colors hover:bg-slate-50"
                                     >
                                         {link.icon}
                                         <div className="ml-3">
-                                            <p className="text-sm font-medium text-gray-900">{link.title}</p>
-                                            <p className="text-xs text-gray-500">{link.subtitle}</p>
+                                            <p className="text-sm font-medium text-slate-900">{link.title}</p>
+                                            <p className="text-xs text-slate-500">{link.subtitle}</p>
                                         </div>
                                     </button>
                                 ))}
@@ -415,25 +415,25 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                         <div className="p-2">
                             <p className="text-xs text-gray-500 px-3 py-2">
                                 Found {results.length} result{results.length !== 1 ? 's' : ''} for "{query}"
-                                {results.length === 10 && <span className="text-blue-600"> (showing first 10)</span>}
+                                {results.length === 10 && <span className="text-emerald-600"> (showing first 10)</span>}
                             </p>
                             {results.map((result, index) => (
                                 <button
                                     key={result.id}
                                     onClick={() => handleSelect(result)}
-                                    className={`w-full flex items-start px-3 py-3 rounded-md text-left transition-colors ${index === selectedIndex ? 'bg-blue-50 border-l-2 border-blue-500' : 'hover:bg-gray-50'
+                                    className={`flex w-full items-start rounded-2xl px-3 py-3 text-left transition-all ${index === selectedIndex ? 'bg-emerald-50 ring-1 ring-emerald-200' : 'hover:bg-slate-50'
                                         }`}
                                 >
                                     <div className="flex-shrink-0 mt-0.5">{result.icon}</div>
                                     <div className="ml-3 flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">{result.title}</p>
+                                        <p className="truncate text-sm font-medium text-slate-900">{result.title}</p>
                                         {result.subtitle && (
-                                            <p className="text-xs text-gray-500 truncate mt-0.5">{result.subtitle}</p>
+                                            <p className="mt-0.5 truncate text-xs text-slate-500">{result.subtitle}</p>
                                         )}
                                         {result.metadata && (
                                             <div className="flex flex-wrap gap-3 mt-1">
                                                 {Object.entries(result.metadata).map(([key, value]) => (
-                                                    <span key={key} className="text-xs text-gray-400">
+                                                    <span key={key} className="text-xs text-slate-400">
                                                         <span className="font-medium">{key}:</span> {value}
                                                     </span>
                                                 ))}
@@ -441,7 +441,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                                         )}
                                     </div>
                                     <div className="ml-2 flex flex-col items-end">
-                                        <span className="text-xs text-gray-400 capitalize bg-gray-100 px-2 py-0.5 rounded-full">
+                                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs capitalize text-slate-500">
                                             {result.type}
                                         </span>
                                     </div>
@@ -452,7 +452,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
 
                     {/* No Results */}
                     {query && !loading && results.length === 0 && (
-                        <div className="p-8 text-center text-gray-500">
+                        <div className="p-8 text-center text-slate-500">
                             <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
                             <p className="text-sm font-medium">No results found for "{query}"</p>
                             <p className="text-xs mt-1">
@@ -465,9 +465,9 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
                     )}
 
                     {/* Footer */}
-                    <div className="border-t border-gray-200 px-3 py-2 bg-gray-50 text-xs text-gray-500 flex items-center justify-between">
-                        <span>Press ⌘K to search anytime</span>
-                        <span>↑↓ to navigate, ↵ to select</span>
+                    <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                        <span>Press Cmd/Ctrl+K to search anytime</span>
+                        <span>Use arrows and Enter to select</span>
                     </div>
                 </div>
             )}

@@ -1,181 +1,268 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, User, Settings, LogOut, Building2, RefreshCw, Menu } from "lucide-react";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  Bell,
+  Building2,
+  CheckCircle,
+  ClipboardList,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Users,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { brokerAdminAPI } from "@/services/api";
 import { removeAuthToken } from "@/utils/auth";
 import NotificationBell from "@/components/shared/NotificationBell";
+import Swal from "sweetalert2";
+import { usePathname, useRouter } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 
 interface BrokerHeaderProps {
-    onMenuClick?: () => void;
+  onMenuClick?: () => void;
 }
 
-const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
-    const [adminInfo, setAdminInfo] = useState<{
-        fullname: string;
-        email: string;
-        organization: string;
-        brokerFirmName?: string;
-        firstname?: string;
-        lastname?: string;
-    } | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
+interface PageContext {
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+}
 
-    useEffect(() => {
-        // Get admin info from localStorage
-        const storedAdminInfo = localStorage.getItem("brokerAdminInfo");
-        if (storedAdminInfo) {
-            setAdminInfo(JSON.parse(storedAdminInfo));
-        }
-
-    }, []);
-
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+const getBrokerPageContext = (pathname: string | null): PageContext => {
+  if (!pathname) {
+    return {
+      title: "Broker Dashboard",
+      subtitle: "Manage insurance claims and track completed policies.",
+      icon: LayoutDashboard,
     };
+  }
 
-    const adminName =
-        adminInfo?.fullname ||
-        [adminInfo?.firstname, adminInfo?.lastname].filter(Boolean).join(" ").trim() ||
-        "Broker Admin";
+  if (pathname.includes("/claims")) {
+    return {
+      title: "Claims",
+      subtitle: "Review and update claim submissions and status.",
+      icon: FileText,
+    };
+  }
 
-    const initials = adminName
-        .split(" ")
-        .map((word: string) => word[0])
-        .join("")
-        .toUpperCase();
+  if (pathname.includes("/administrators")) {
+    return {
+      title: "Administrators",
+      subtitle: "Manage broker admin accounts and access.",
+      icon: Users,
+    };
+  }
 
-    return (
-        <header className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">
-            <div className="flex items-center justify-between">
-                {/* Left side - Menu button and Organization info */}
-                <div className="flex items-center space-x-2 sm:space-x-4">
-                    {/* Mobile menu button */}
-                    <button
-                        onClick={onMenuClick}
-                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 md:hidden"
-                    >
-                        <Menu className="h-5 w-5" />
-                    </button>
+  if (pathname.includes("/notifications")) {
+    return {
+      title: "Notifications",
+      subtitle: "Stay on top of alerts and system updates.",
+      icon: Bell,
+    };
+  }
 
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                        <div className="bg-blue-100 p-1.5 sm:p-2 rounded-lg">
-                            <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                        </div>
-                        <div className="hidden sm:block">
-                            <h1 className="text-base sm:text-lg font-semibold text-gray-900">Broker Admin Portal</h1>
-                            <p className="text-xs text-gray-500">Faith Broker Firm</p>
-                        </div>
-                    </div>
-                </div>
+  if (pathname.includes("/settings")) {
+    return {
+      title: "Settings",
+      subtitle: "Configure broker portal preferences.",
+      icon: Settings,
+    };
+  }
 
-                {/* Right side - Search, notifications, and user menu */}
-                <div className="flex items-center space-x-2 sm:space-x-4">
-                    {/* Search - hidden on mobile */}
-                    <form onSubmit={handleSearch} className="relative hidden lg:block">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-gray-400" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-48 xl:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                    </form>
+  return {
+    title: "Broker Dashboard",
+    subtitle: "Manage insurance claims and track completed policies.",
+    icon: LayoutDashboard,
+  };
+};
 
-                    {/* Refresh Button - hidden on small screens */}
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-colors hidden sm:block"
-                        title="Refresh Dashboard"
-                    >
-                        <RefreshCw className="h-5 w-5" />
-                    </button>
+const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const pageContext = getBrokerPageContext(pathname);
+  const PageIcon = pageContext.icon;
 
-                    <NotificationBell />
+  const [adminInfo, setAdminInfo] = useState<{
+    fullname?: string;
+    email?: string;
+    firstname?: string;
+    lastname?: string;
+    brokerFirmName?: string;
+  } | null>(null);
 
-                    {/* User Menu */}
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                        <div className="hidden lg:block text-right">
-                            <p className="text-sm font-medium text-gray-900 truncate max-w-[100px]">John Doe</p>
-                            <p className="text-xs text-gray-500">Administrator</p>
-                        </div>
+  const isDarkMode =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                    {initials}
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                                <div className="px-3 py-2 border-b border-gray-100">
-                                    <p className="text-sm font-medium text-gray-900">{adminName}</p>
-                                    <p className="text-xs text-gray-500">{adminInfo?.email || 'admin@broker.org'}</p>
-                                    <div className="flex items-center mt-1">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                                        <span className="text-xs text-blue-600 font-medium">Faith Trust Firm</span>
-                                    </div>
-                                </div>
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("brokerAdminInfo");
+      if (stored) {
+        setAdminInfo(JSON.parse(stored));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
-                                <DropdownMenuItem onSelect={() => window.location.href = '/broker-admin/settings'}>
-                                    <User className="mr-2 h-4 w-4" />
-                                    <span>Profile</span>
-                                </DropdownMenuItem>
+  const adminName =
+    adminInfo?.fullname ||
+    [adminInfo?.firstname, adminInfo?.lastname].filter(Boolean).join(" ").trim() ||
+    "Broker Admin";
 
-                                <DropdownMenuItem onSelect={() => window.location.href = '/broker-admin/settings'}>
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    <span>Settings</span>
-                                </DropdownMenuItem>
+  const initials = adminName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
-                                <DropdownMenuSeparator />
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      background: isDarkMode ? "#111827" : "#ffffff",
+      color: isDarkMode ? "#ffffff" : "#111827",
+    });
 
-                                <DropdownMenuItem
-                                    className="text-red-600"
-                                    onSelect={async () => {
-                                        try {
-                                            await brokerAdminAPI.logout();
-                                        } catch (error) {
-                                        } finally {
-                                            removeAuthToken('broker-admin');
-                                            localStorage.removeItem('brokerAdminInfo');
-                                            window.location.href = '/broker-admin/login';
-                                        }
-                                    }}
-                                >
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Logout</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </div>
+    if (result.isConfirmed) {
+      try {
+        await brokerAdminAPI.logout();
+      } catch {
+        // ignore
+      } finally {
+        removeAuthToken("broker-admin");
+        localStorage.removeItem("brokerAdminInfo");
+        router.push("/broker-admin/login");
+      }
+    }
+  };
+
+  return (
+    <header className="relative sticky top-3 z-20 mb-4 rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.12),_transparent_42%)]" />
+      <div className="relative flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        {/* Left: mobile toggle + page context */}
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            onClick={onMenuClick}
+            aria-label="Toggle sidebar"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-700 hover:shadow-md md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-200/60">
+            <PageIcon className="h-5 w-5" />
+          </div>
+
+          <div className="min-w-0">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-700">
+                Broker workspace
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[10px] font-medium tracking-[0.18em] text-slate-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                Live
+              </span>
             </div>
+            <h1 className="truncate text-lg font-bold text-slate-900 sm:text-xl lg:text-2xl">
+              {pageContext.title}
+            </h1>
+            <p className="truncate text-sm text-slate-500">{pageContext.subtitle}</p>
+          </div>
+        </div>
 
-            {/* Mobile Search */}
-            <div className="mt-4 md:hidden">
-                <form onSubmit={handleSearch} className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Search assignments, surveyors..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                </form>
+        {/* Right: notifications + user menu */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {adminInfo?.brokerFirmName && (
+            <div className="hidden xl:flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-left shadow-sm">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <Building2 className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Firm
+                </p>
+                <p className="text-sm text-slate-600 font-medium truncate max-w-[140px]">
+                  {adminInfo.brokerFirmName}
+                </p>
+              </div>
             </div>
-        </header>
-    );
+          )}
+
+          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-1.5 shadow-sm backdrop-blur">
+            <NotificationBell />
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="group flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-600/20">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-sm font-bold text-white shadow-md shadow-blue-200/60 transition-transform duration-300 group-hover:scale-105">
+                  {initials}
+                </span>
+                <span className="hidden text-left sm:block">
+                  <span className="block text-sm font-semibold text-slate-900">
+                    {adminName}
+                  </span>
+                  <span className="block text-[11px] text-slate-500">
+                    Broker admin
+                  </span>
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-64 rounded-3xl border border-slate-200/80 bg-white/95 p-2 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+            >
+              <DropdownMenuLabel className="px-3 py-2">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                  Signed in as
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-900">
+                  {adminName}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {adminInfo?.email || "Broker admin account"}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-1 bg-slate-200" />
+              <DropdownMenuItem
+                onSelect={() => router.push("/broker-admin/settings")}
+                className="cursor-pointer rounded-2xl px-3 py-2.5 text-sm text-slate-700 transition-colors focus:bg-blue-50 focus:text-blue-800"
+              >
+                <Settings className="h-4 w-4 text-slate-500" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleLogout}
+                className="cursor-pointer rounded-2xl px-3 py-2.5 text-sm text-red-600 transition-colors focus:bg-red-50 focus:text-red-700"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </header>
+  );
 };
 
 export default BrokerHeader;

@@ -53,7 +53,7 @@ const SurveyorLayout: React.FC<SurveyorLayoutProps> = ({ children }) => {
           isMobile={isMobile}
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden print:block print:overflow-visible print:bg-white">
+        <div className="flex-1 flex flex-col overflow-visible print:block print:overflow-visible print:bg-white">
           <SurveyorHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
           <main className="flex-1 overflow-auto rounded-[2rem] border border-white/70 bg-white/55 p-3 sm:p-4 md:p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl print:overflow-visible print:bg-white print:p-0 print:shadow-none print:border-0">
             {children}

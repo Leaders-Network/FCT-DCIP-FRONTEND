@@ -1,13 +1,18 @@
 "use client";
+
 import React, { useState } from "react";
-import Image from "next/image";
-import { Plus, Building } from "lucide-react";
-import InsuranceSidebar from "@/components/dashboard/usersComponent/InsuranceSidebar";
+import { useRouter } from "next/navigation";
+import { Plus, Sparkles, ArrowRight, ShieldAlert, Clock3 } from "lucide-react";
 import { BuilderLiabilityPolicyList } from "@/components/builderLiability/PolicyList";
-import { PolicyFormRouter } from "@/components/dashboard/PolicyFormRouter";
 import { useAuth } from "@/context/useAuth";
 import { getCookie } from "@/utils/cookies";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface UserData {
@@ -15,15 +20,9 @@ interface UserData {
   firstname?: string;
 }
 
-type PolicyType = 'builder-liability' | 'property';
-
 const InsurancePage: React.FC = () => {
-  const [showInsuranceSidebar, setShowInsuranceSidebar] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("builder-liability");
-  const [showPolicyFormRouter, setShowPolicyFormRouter] = useState<boolean>(false);
-  const [selectedPolicyType, setSelectedPolicyType] = useState<PolicyType | null>(null);
-
-  // Get user from AuthContext or cookies with proper typing
+  const router = useRouter();
   const { user } = useAuth();
 
   const getUserName = (): string => {
@@ -32,15 +31,16 @@ const InsurancePage: React.FC = () => {
       return userData.fullname || userData.firstname || "User";
     }
 
-    const storedUser = typeof window !== 'undefined' ? getCookie('user') : null;
+    const storedUser = typeof window !== "undefined" ? getCookie("user") : null;
     if (storedUser) {
       try {
         const userData: UserData = JSON.parse(storedUser);
         return userData.fullname || userData.firstname || "User";
-      } catch (error) {
+      } catch {
         return "User";
       }
     }
+
     return "User";
   };
 
@@ -48,134 +48,113 @@ const InsurancePage: React.FC = () => {
   const nameParts = userName.split(" ");
   const lastName = nameParts[nameParts.length - 1] || "User";
 
-  const handleNewPolicy = (policyType: PolicyType): void => {
-    setSelectedPolicyType(policyType);
-    setShowPolicyFormRouter(true);
-  };
-
-  const handlePolicyFormClose = (): void => {
-    setShowPolicyFormRouter(false);
-    setSelectedPolicyType(null);
-  };
-
-  const handleBuilderLiabilityPolicyCreated = (): void => {
-    // Switch to the Builder Liability tab to show the new policy
-    setActiveTab('builder-liability');
-    // The BuilderLiabilityPolicyList component will automatically fetch and display the new policy
+  const handleOpenNewPolicyPage = (): void => {
+    router.push("/dashboard/insurance/new");
   };
 
   return (
     <>
-      {/* Greeting */}
-      <h1 className="text-[23px] font-extrabold p-4 sm:p-8 pb-4">
-        Hello {lastName}
-      </h1>
-
-      {/* Full-width Banner */}
-      <div className="px-4 sm:px-8">
-        <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] lg:h-[160px] relative mb-6">
-          <div className="w-full h-full absolute">
-            <div className="w-full h-full absolute opacity-20 bg-white rounded-xl border border-black" />
-            <Image
-              className="w-full h-full absolute rounded-xl object-cover"
-              src="/abuja-bg.png"
-              alt="Abuja background"
-              width={500}
-              height={500}
-            />
-            <div className="w-full h-full absolute opacity-20 bg-black rounded-xl" />
-          </div>
-          <div className="absolute inset-0 flex flex-col justify-center p-4">
-            <div className="text-white text-sm sm:text-base md:text-lg lg:text-[17px] font-bold mb-2">
-              Comprehensive insurance solutions for builders and property owners.
-            </div>
-            <div className="text-white text-xs sm:text-sm md:text-base lg:text-[13px] font-semibold">
-              We have you covered for all Builder Liability insurance need.
-            </div>
-          </div>
-          <div className="absolute lg:mb-12 right-2 sm:right-4 bottom-2 sm:bottom-4">
-            <button
-              onClick={() => setActiveTab('new-policy')}
-              className="px-2 sm:px-4 py-1 sm:py-2 bg-white rounded-[40px] text-[#028835] text-sm sm:text-base lg:text-lg font-semibold flex items-center"
-            >
-              <div className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 bg-[#028835] rounded-full mr-1 sm:mr-2 flex items-center justify-center">
-                <svg
-                  width="12"
-                  height="13"
-                  viewBox="0 0 12 13"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M0 6.62816V5.70509H5.53846V0.166626H6.46154V5.70509H12V6.62816H6.46154V12.1666H5.53846V6.62816H0Z"
-                    fill="white"
-                  />
-                </svg>
+      <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-[#015a23] via-[#028835] to-emerald-500 p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.22)]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_36%)]" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-50">
+                <Sparkles className="h-3.5 w-3.5" />
+                Insurance center
               </div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Hello {lastName}
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/90 sm:text-base">
+                Manage Builder Liability policies, start new applications, and keep your coverage journey in one modern workspace.
+              </p>
+            </div>
+
+            <button
+              onClick={handleOpenNewPolicyPage}
+              className="inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/15 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-black/10 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#028835] shadow-sm">
+                <Plus className="h-5 w-5" />
+              </span>
               New Policy
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Main Content with Tabs */}
-      <main className="flex-1 px-4 sm:px-8 pb-8 overflow-y-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="builder-liability">Builder Liability</TabsTrigger>
-            <TabsTrigger value="new-policy">New Policy</TabsTrigger>
-          </TabsList>
+        <div className="rounded-[2rem] border border-white/70 bg-white/85 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-slate-100/90 h-[3.5rem]">
+              <TabsTrigger
+                value="builder-liability"
+                className="rounded-2xl py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-[#028835] data-[state=active]:shadow-sm"
+              >
+                Builder Liability
+              </TabsTrigger>
+              <TabsTrigger
+                value="new-policy"
+                className="rounded-2xl py-3 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-[#028835] data-[state=active]:shadow-sm"
+              >
+                New Policy
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="builder-liability">
-            <BuilderLiabilityPolicyList />
-          </TabsContent>
+            <TabsContent value="builder-liability" className="mt-6">
+              <div className="overflow-visible rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+                <div className="p-5 sm:p-7 lg:p-10">
+                  <BuilderLiabilityPolicyList />
+                </div>
+              </div>
+            </TabsContent>
 
-
-          <TabsContent value="new-policy">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create New Insurance Policy</CardTitle>
-                  <CardDescription>Choose the type of insurance policy you want to create</CardDescription>
+            <TabsContent value="new-policy" className="mt-6">
+              <Card className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+                <CardHeader className="border-b border-slate-100 bg-slate-50/80">
+                  <CardTitle className="text-xl text-slate-900">
+                    Open the dedicated application page
+                  </CardTitle>
+                  <CardDescription className="text-slate-500">
+                    Builder Liability applications now use a standalone page for a cleaner, full-screen workflow.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div
-                      className="p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#028835] transition-colors cursor-pointer"
-                      onClick={() => handleNewPolicy('builder-liability')}
-                    >
-                      <Building className="h-12 w-12 text-[#028835] mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">Builder Liability Insurance</h3>
-                      <p className="text-gray-600 text-sm">
-                        Comprehensive coverage for construction projects and builder liability
+                <CardContent className="space-y-5 p-6">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-5">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-emerald-800">
+                        <ShieldAlert className="h-4 w-4" />
+                        Full-page application
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-emerald-800/90">
+                        Complete the Builder Liability policy application in a dedicated page with autosave, validation, and a calmer workflow.
                       </p>
                     </div>
-
-
-
+                    <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                        <Clock3 className="h-4 w-4" />
+                        Renewal timing
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                        Renewals are only available when a paid policy is close to expiry, so the current page focuses on fresh applications.
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleOpenNewPolicyPage}
+                    className="inline-flex items-center gap-3 rounded-2xl bg-[#028835] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Start Builder Liability Application
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* Policy Form Router Modal */}
-      {showPolicyFormRouter && (
-        <PolicyFormRouter
-          isOpen={showPolicyFormRouter}
-          onClose={handlePolicyFormClose}
-          defaultPolicyType={selectedPolicyType}
-          onPolicyCreated={handleBuilderLiabilityPolicyCreated}
-        />
-      )}
-
-      {/* Insurance Sidebar */}
-      <InsuranceSidebar
-        isOpen={showInsuranceSidebar}
-        onClose={() => setShowInsuranceSidebar(false)}
-      />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </>
   );
 };

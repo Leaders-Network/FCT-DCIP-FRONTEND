@@ -2,15 +2,15 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { X, ShieldCheck, FileText, ArrowRight } from "lucide-react";
 
 const Hero: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"auth" | "contact" | null>(null);
   const [currentImage, setCurrentImage] = useState(0)
 
-const backgroundImages = [
-     "/bg-hero-1.jpg",
+  const backgroundImages = [
+    "/bg-hero-1.jpg",
     "/bg-hero-4.jpg",
     "/bg-hero-5.jpg",
     "/bg-hero-6.jpg",
@@ -20,14 +20,14 @@ const backgroundImages = [
     "/bg-hero-11.jpg",
     "/bg-construct-2.webp",
     "/bg-construct-3.jpg",
-]
+  ]
 
-useEffect(() => {
-  const interval = setInterval(()=> {
-    setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
-  },5000); 
-  return () => clearInterval(interval);
-}, [backgroundImages.length]);
+  useEffect(() => {
+    const interval = setInterval(()=> {
+      setCurrentImage((prev) => (prev + 1) % backgroundImages.length);
+    }, 6000); 
+    return () => clearInterval(interval);
+  }, [backgroundImages.length]);
 
   const openModal = (type: "auth" | "contact") => {
     setModalType(type);
@@ -35,7 +35,7 @@ useEffect(() => {
   };
   const closeModal = () => {
     setIsModalOpen(false);
-    setModalType(null);
+    setTimeout(() => setModalType(null), 300); // allow transition
   };
 
   // Close on Escape
@@ -54,174 +54,198 @@ useEffect(() => {
   }, [isModalOpen]);
 
   return (
-    <div className="relative h-[700px]">
+    <div className="relative h-[85vh] min-h-[600px] max-h-[800px] w-full overflow-hidden">
     
       {backgroundImages.map((src, index) => (
         <Image 
-        key={index}
-        src={src}
-        alt={`Background ${index + 1}`}
-        fill
-        priority={index === 0}
-        className={`object-cover transition-opacity duraion-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
+          key={index}
+          src={src}
+          alt={`Background ${index + 1}`}
+          fill
+          priority={index === 0}
+          className={`object-cover transition-all duration-[2500ms] ease-in-out transform ${
+            index === currentImage ? "opacity-100 scale-100" : "opacity-0 scale-105"
+          }`}
         />
       ))}
-      <div className="absolute inset-0 bg-black/75"></div>
+      
+      {/* Modern gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
 
       {/* Hero content */}
       <div className="absolute inset-0 flex items-center">
-        <div data-aos="zoom-in" className="container mx-auto px-4">
-          {/* Content wrapper with professional background */}
-          <div className="max-w-3xl backdrop-blur-lg bg-white/10 p-8 md:p-12 rounded-2xl border border-white/20 shadow-2xl">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-              Protect Your Properties <br /> with Confidence
-            </h1>
-            <p className="text-lg md:text-xl text-white/95 mb-8 leading-relaxed">
-              Comprehensive insurance solutions tailored to your needs. <br />
-              Get started today and secure your peace of mind.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/signup">
-                <button
-                  className="w-full sm:w-auto bg-green-600 text-white px-8 py-3 font-semibold rounded-lg shadow-lg hover:bg-green-700 hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                  Register Now<span className="ml-2">→</span>
-                </button>
-              </Link>
+        <div data-aos="fade-up" data-aos-duration="1200" className="container mx-auto px-4 lg:px-8">
+          <div className="max-w-2xl relative">
+            
+            {/* Subtle decorative elements */}
+            <div className="absolute -left-4 -top-4 w-20 h-20 bg-green-500/20 rounded-full blur-2xl"></div>
+            <div className="absolute right-10 bottom-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl"></div>
+            
+            {/* Glassmorphic content card */}
+            <div className="relative z-10 rounded-[2rem] border border-white/10 bg-white/5 p-8 md:p-12 shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-md">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 mb-6 backdrop-blur-sm">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-xs font-semibold uppercase tracking-widest text-emerald-300">FCT-DCIP Portal</span>
+              </div>
               
-              <Link href="/login">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-[1.15] tracking-tight">
+                Protect Your Properties <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
+                  With Confidence
+                </span>
+              </h1>
+              
+              <p className="text-lg text-gray-300 mb-10 leading-relaxed max-w-xl font-medium">
+                Comprehensive Builders Liability Insurance tailored for the FCT construction sector. Get legally compliant and secure your peace of mind today.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  className="w-full sm:w-auto bg-white text-green-600 px-8 font-semibold py-3 rounded-lg shadow-lg hover:bg-gray-50 hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  onClick={() => openModal('auth')}
+                  className="group flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-8 py-4 font-bold rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-all duration-300 hover:-translate-y-1"
                 >
-                  Login
+                  <ShieldCheck className="w-5 h-5" />
+                  Get Insured Now
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
-              </Link>
+                
+                <button
+                  onClick={() => openModal('contact')}
+                  className="group flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 px-8 font-bold py-4 rounded-xl backdrop-blur-md transition-all duration-300 hover:-translate-y-1"
+                >
+                  <FileText className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  Contact Support
+                </button>
+              </div>
             </div>
+            
           </div>
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modern Glassmorphic Modals */}
       {isModalOpen && (
         <div
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 modalOverlay"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity"
         >
-          <div
-            className={`relative w-[480px] max-w-[92%] p-8 rounded-2xl shadow-xl modalCard
-              ${modalType === "auth"
-                ? "border border-white/30 bg-white/20 backdrop-blur-lg" // glassmorphism
-                : "bg-white/80"} // solid white
-            `}
+          <div 
+            className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/20 bg-white/95 shadow-[0_32px_120px_rgba(15,23,42,0.3)] backdrop-blur-xl animate-in zoom-in-95 duration-200"
           >
+            {/* Gradient accent bar */}
+            <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-[#028835] via-emerald-500 to-teal-400" />
+            
             {/* Close button */}
             <button
               onClick={closeModal}
-              aria-label="Close modal"
-              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 transition p-1 rounded"
+              className="absolute right-4 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
             >
-              <X size={22} />
+              <X className="h-4 w-4" />
             </button>
 
-            {/* Auth Modal */}
-            {modalType === "auth" && (
-              <>
-                <h2 className="text-2xl font-bold mb-4 text-white text-center">
-                  Choose Login
-                </h2>
-                <p className="text-sm text-gray-100 mb-6 text-center">
-                  Pick an action to continue.
-                </p>
-                <div className="space-y-3">
-                  <Link
-                    href="/login"
-                    className="block w-full text-center bg-blue-600 text-white py-3 rounded-lg shadow hover:bg-blue-700 transition"
-                  >
-                    Builder Login
-                  </Link>
+            <div className="px-8 pb-8 pt-6">
+              {/* Auth Modal */}
+              {modalType === "auth" && (
+                <>
+                  <div className="mb-8 text-center">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+                      <ShieldCheck className="h-6 w-6" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900">Welcome to FCT-DCIP</h2>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Select an option below to access the Builders Liability portal.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3">
                     <Link
-                    href="/signup"
-                    className="block w-full text-center bg-blue-600 text-white py-3 rounded-lg shadow hover:bg-blue-700 transition"
-                  >
-                    Builder Registration
-                  </Link>
-                </div>
-              </>
-            )}
+                      href="/login"
+                      className="group relative flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-md"
+                    >
+                      <div>
+                        <p className="font-bold text-slate-900">Builder Login</p>
+                        <p className="text-xs text-slate-500">Access your existing account</p>
+                      </div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </Link>
+                    
+                    <Link
+                      href="/signup"
+                      className="group relative flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-md"
+                    >
+                      <div>
+                        <p className="font-bold text-slate-900">Builder Registration</p>
+                        <p className="text-xs text-slate-500">Create a new builder profile</p>
+                      </div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </Link>
+                  </div>
+                </>
+              )}
 
-            {/* Contact Modal */}
-            {modalType === "contact" && (
-              <>
-                <h2 className="text-3xl font-bold text-center mb-6 text-green-700">
-                  Contact Us
-                </h2>
-                <p className="text-center text-gray-600 mb-8">
-                  We'd love to hear from you. Fill out the form below and we'll get back to you shortly.
-                </p>
+              {/* Contact Modal */}
+              {modalType === "contact" && (
+                <>
+                  <div className="mb-6 text-center">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+                      <FileText className="h-6 w-6" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900">Get in Touch</h2>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Need help? Send us a message and our support team will respond shortly.
+                    </p>
+                  </div>
 
-                <form className="space-y-5">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 
-                               focus:outline-none focus:ring-2 focus:ring-green-500 
-                               bg-white shadow-sm transition"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 
-                               focus:outline-none focus:ring-2 focus:ring-green-500 
-                               bg-white shadow-sm transition"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Subject"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 
-                               focus:outline-none focus:ring-2 focus:ring-green-500 
-                               bg-white shadow-sm transition"
-                  />
-                  <textarea
-                    rows={4}
-                    placeholder="Your Message"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 
-                               focus:outline-none focus:ring-2 focus:ring-green-500 
-                               bg-white shadow-sm transition"
-                  ></textarea>
-                  <button
-                    type="submit"
-                    className="w-full py-3 rounded-xl bg-green-600 text-white font-semibold 
-                               shadow-md hover:bg-green-700 hover:shadow-lg transition"
-                  >
-                    Send Message ✉️
-                  </button>
-                </form>
-              </>
-            )}
+                  <form className="space-y-4">
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Full Name"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="email"
+                        placeholder="Email Address"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Subject"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <textarea
+                        rows={3}
+                        placeholder="Your Message"
+                        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+                      ></textarea>
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3 font-bold text-white shadow-md shadow-emerald-200 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    >
+                      Send Message
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Animations */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideDown {
-          from { transform: translateY(-10px) scale(0.95); opacity: 0; }
-          to { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        .modalOverlay {
-          animation: fadeIn 0.3s ease-in-out;
-        }
-        .modalCard {
-          animation: slideDown 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
-        }
-      `}</style>
     </div>
   );
 };

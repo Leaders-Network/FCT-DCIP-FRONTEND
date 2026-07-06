@@ -412,1002 +412,576 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         );
     };
 
+    const tabTriggerClass = "relative h-11 px-4 sm:px-5 text-xs sm:text-sm font-medium text-slate-500 border-b-2 border-transparent rounded-none bg-transparent transition-all duration-200 hover:text-slate-800 hover:bg-slate-50/80 data-[state=active]:text-emerald-700 data-[state=active]:border-emerald-600 whitespace-nowrap flex items-center gap-1.5";
+
+    // ── Inner UI helpers (display-only, no state) ────────────────────────────
+    const InfoRow = ({ label, value, icon: Icon, full = false }: {
+        label: string;
+        value?: string | React.ReactNode;
+        icon?: React.ElementType;
+        full?: boolean;
+    }) => (
+        <div className={full ? 'col-span-full' : ''}>
+            <dt className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-0.5">
+                {Icon && <Icon className="w-3 h-3" />}
+                {label}
+            </dt>
+            <dd className="text-sm font-medium text-slate-900 leading-snug">
+                {value ?? <span className="text-slate-400 italic text-xs">Not provided</span>}
+            </dd>
+        </div>
+    );
+
+    const SectionCard = ({ icon: Icon, title, children }: {
+        icon: React.ElementType;
+        title: string;
+        children: React.ReactNode;
+    }) => (
+        <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100 bg-slate-50/60">
+                <Icon className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+            </div>
+            <div className="p-5">{children}</div>
+        </div>
+    );
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <DialogTitle className="text-2xl font-bold">
-                                Builder Liability Policy Details
+            <DialogContent className="w-[94vw] max-w-5xl max-h-[94vh] flex flex-col overflow-hidden rounded-2xl border-0 shadow-2xl p-0 gap-0">
+
+                {/* ── Sticky Header ──────────────────────────────────────────── */}
+                <div className="flex-shrink-0 bg-gradient-to-br from-green-900 via-green-800 to-green-700 px-6 py-5 rounded-t-2xl">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Shield className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                                <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-widest">Builder Liability Policy</span>
+                            </div>
+                            <DialogTitle className="text-xl font-bold text-white sm:text-2xl leading-tight">
+                                {clientName || 'Policy Details'}
                             </DialogTitle>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Policy #{policy.policyNumber}
+                            <p className="mt-0.5 text-sm text-slate-400 truncate max-w-md">
+                                {projectTitle || projectAddress || 'No project title provided'}
                             </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
                             {getStatusBadge(getActualStatus(policy))}
-                            <Badge variant="outline">
-                                {policy.priority?.toUpperCase() || 'MEDIUM'}
+                            <Badge variant="outline" className="rounded-full border-slate-600 bg-slate-700/50 px-3 py-1 text-slate-300 text-xs">
+                                {policy.priority?.toUpperCase() || 'MEDIUM'} priority
                             </Badge>
                         </div>
                     </div>
-                </DialogHeader>
+                    {/* Quick-facts strip */}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {policy.policyNumber && (
+                            <div className="flex items-center gap-1.5 rounded-full bg-slate-700/60 px-3 py-1">
+                                <FileText className="w-3 h-3 text-slate-400" />
+                                <span className="text-xs text-slate-300">#{policy.policyNumber}</span>
+                            </div>
+                        )}
+                        {clientEmail && (
+                            <div className="flex items-center gap-1.5 rounded-full bg-slate-700/60 px-3 py-1">
+                                <Mail className="w-3 h-3 text-slate-400" />
+                                <span className="text-xs text-slate-300">{clientEmail}</span>
+                            </div>
+                        )}
+                        {projectLga && (
+                            <div className="flex items-center gap-1.5 rounded-full bg-slate-700/60 px-3 py-1">
+                                <MapPin className="w-3 h-3 text-slate-400" />
+                                <span className="text-xs text-slate-300">{projectLga}</span>
+                            </div>
+                        )}
+                        {projectEstimateBand && (
+                            <div className="flex items-center gap-1.5 rounded-full bg-slate-700/60 px-3 py-1">
+                                <Briefcase className="w-3 h-3 text-slate-400" />
+                                <span className="text-xs text-slate-300">{projectEstimateBand}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-                <Tabs defaultValue="client" className="w-full">
-                    <div className="w-full overflow-x-auto">
-                        <TabsList className="flex md:grid md:grid-cols-9 w-max md:w-full min-w-max md:min-w-0">
-                            <TabsTrigger value="client" className="whitespace-nowrap text-xs sm:text-sm">
-                                Client
-                            </TabsTrigger>
-                            <TabsTrigger value="builder" className="whitespace-nowrap text-xs sm:text-sm">
-                                Contractor
-                            </TabsTrigger>
-                            <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm">
-                                Assessor
-                            </TabsTrigger>
-                            <TabsTrigger value="project" className="whitespace-nowrap text-xs sm:text-sm">
-                                Project
-                            </TabsTrigger>
-                            <TabsTrigger value="workforce" className="whitespace-nowrap text-xs sm:text-sm">
-                                Workforce
-                            </TabsTrigger>
-                            <TabsTrigger value="compliance" className="whitespace-nowrap text-xs sm:text-sm">
-                                Compliance
-                            </TabsTrigger>
-                            <TabsTrigger value="payment" className="whitespace-nowrap text-xs sm:text-sm">
-                                Payment
-                            </TabsTrigger>
-                            <TabsTrigger value="timeline" className="whitespace-nowrap text-xs sm:text-sm">
-                                Timeline
-                            </TabsTrigger>
-                            <TabsTrigger value="survey" className="whitespace-nowrap text-xs sm:text-sm">
-                                SAR
-                            </TabsTrigger>
-                        </TabsList>
+                <Tabs defaultValue="client" className="flex flex-col flex-1 min-h-0">
+                    {/* ── Tab Strip ──────────────────────────────────────────── */}
+                    <div className="flex-shrink-0 border-b border-slate-200 bg-white">
+                        <div className="overflow-x-auto">
+                            <TabsList className="flex bg-transparent p-0 h-auto gap-0 w-max min-w-full">
+                                {([
+                                    { value: 'client',       icon: User,       label: 'Client' },
+                                    { value: 'builder',      icon: Building,   label: 'Contractor' },
+                                    { value: 'organization', icon: Shield,     label: 'Assessor' },
+                                    { value: 'project',      icon: Briefcase,  label: 'Project' },
+                                    { value: 'workforce',    icon: Users,      label: 'Workforce' },
+                                    { value: 'compliance',   icon: FileText,   label: 'Compliance' },
+                                    { value: 'payment',      icon: CreditCard, label: 'Payment' },
+                                    { value: 'timeline',     icon: Calendar,   label: 'Timeline' },
+                                    { value: 'survey',       icon: Eye,        label: 'SAR' },
+                                ] as const).map(({ value, icon: Icon, label }) => (
+                                    <TabsTrigger key={value} value={value} className={tabTriggerClass}>
+                                        <Icon className="w-3.5 h-3.5" />
+                                        {label}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                        </div>
                     </div>
 
-                    {/* Builder Information */}
-                    <TabsContent value="builder" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <User className="w-5 h-5" />
-                                    Builder Information
-                                    {(policy as any).isDirectLabor && (
-                                        <Badge className="bg-amber-100 text-amber-800 border-amber-200 ml-2">
-                                            Direct Labor
-                                        </Badge>
-                                    )}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {(policy as any).isDirectLabor ? (
-                                    <div className="flex flex-col items-center justify-center py-8 px-4 bg-amber-50 rounded-lg border border-amber-200">
-                                        <AlertCircle className="w-8 h-8 text-amber-600 mb-3" />
-                                        <p className="text-base font-semibold text-amber-900 mb-1">
-                                            Direct Labor Project
-                                        </p>
-                                        <p className="text-sm text-amber-700 text-center max-w-md">
-                                            This project is not assigned to a commercial general contractor. The property owner is managing or building it themselves. No contractor details are required.
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-600">Contractor Name</label>
-                                            <p className="text-base font-semibold">{policy.builder?.nameOfBuilder || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-600">Director of the company</label>
-                                            <p className="text-base font-semibold">{policy.builder?.directorOfCompany || 'Not provided'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-600">RC Number</label>
-                                            <p className="text-base font-semibold">{policy.builder?.rcNumber || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                                <Mail className="w-4 h-4" />
-                                                Email
-                                            </label>
-                                            <p className="text-base">{policy.builder?.customerEmail || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                                <Phone className="w-4 h-4" />
-                                                Phone
-                                            </label>
-                                            <p className="text-base">{policy.builder?.telNo || 'N/A'}</p>
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                                <MapPin className="w-4 h-4" />
-                                                Location / Address
-                                            </label>
-                                            <p className="text-base">{policy.builder?.address || 'N/A'}</p>
-                                        </div>
-                                        {policy.builder?.identification && (
-                                            <>
-                                                <div>
-                                                    <label className="text-sm font-medium text-gray-600">Director's Identification Type</label>
-                                                    <p className="text-base">
-                                                        {policy.builder.identification.identificationTypeId === 1 ? 'National ID' :
-                                                            policy.builder.identification.identificationTypeId === 2 ? 'Passport' :
-                                                                policy.builder.identification.identificationTypeId === 3 ? 'Driver\'s License' : 'Other'}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <label className="text-sm font-medium text-gray-600">Director's Identification Number</label>
-                                                    <p className="text-base">{policy.builder.identification.identityNo}</p>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                    {/* ── Scrollable Content ─────────────────────────────────── */}
+                    <div className="flex-1 overflow-y-auto bg-slate-50/40 p-5 space-y-5">
 
-                    <TabsContent value="client" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <User className="w-5 h-5" />
-                                    Client Information
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Client Name</label>
-                                    <p className="text-base font-semibold">{getDisplayValue(clientName)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Client RC Number</label>
-                                    <p className="text-base">{getDisplayValue(policy.client?.rcNumber)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                        <Mail className="w-4 h-4" />
-                                        Email
-                                    </label>
-                                    <p className="text-base">{getDisplayValue(clientEmail)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                        <Phone className="w-4 h-4" />
-                                        Phone
-                                    </label>
-                                    <p className="text-base">{getDisplayValue(clientPhone)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Identification Type</label>
-                                    <p className="text-base">{getDisplayValue(policy.client?.identificationType)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Identification Number</label>
-                                    <p className="text-base">{getDisplayValue(policy.client?.identificationNumber)}</p>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                                        <MapPin className="w-4 h-4" />
-                                        Address
-                                    </label>
-                                    <p className="text-base">{getDisplayValue(policy.client?.address)}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                        {/* CLIENT */}
+                        <TabsContent value="client" className="m-0">
+                            <SectionCard icon={User} title="Client Information">
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                                    <InfoRow label="Full Name / Company"     value={getDisplayValue(clientName)} />
+                                    <InfoRow label="Email Address" icon={Mail}  value={getDisplayValue(clientEmail)} />
+                                    <InfoRow label="Phone Number"  icon={Phone} value={getDisplayValue(clientPhone)} />
+                                    <InfoRow label="Identification Type"     value={getDisplayValue(policy.client?.identificationType)} />
+                                    <InfoRow label="Identification Number"   value={getDisplayValue(policy.client?.identificationNumber)} />
+                                    <InfoRow label="RC Number"               value={getDisplayValue(policy.client?.rcNumber)} />
+                                    <InfoRow label="Address" icon={MapPin}      value={getDisplayValue(policy.client?.address)} full />
+                                </dl>
+                            </SectionCard>
+                        </TabsContent>
 
-                    {/* Organization Information */}
-                    <TabsContent value="organization" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Building className="w-5 h-5" />
-                                    Assessor Details
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Assessor Name</label>
-                                    <p className="text-base font-semibold">{policy.organization?.assessorName || 'Not provided'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Regulatory Body</label>
-                                    <p className="text-base font-semibold">{getDisplayValue(assessorProfessionalBody)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Registration Number</label>
-                                    <p className="text-base font-semibold">{getDisplayValue(assessorRegistrationNumber)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Valid Practice License Number</label>
-                                    <p className="text-base font-semibold">{getDisplayValue(policy.organization?.practiceLicenseNumber)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Year of Registration</label>
-                                    <p className="text-base">{policy.organization?.yearOfRegistration ? formatDate(policy.organization.yearOfRegistration) : 'Not provided'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Area of Specialization</label>
-                                    <p className="text-base">{getDisplayValue(policy.organization?.areaOfSpecialization)}</p>
-                                </div>
-                                {assessorProfessionalBody === 'Other' && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Other Regulatory Body Name</label>
-                                        <p className="text-base">{getDisplayValue(policy.organization?.otherProfessionalBodyName)}</p>
+                        {/* CONTRACTOR */}
+                        <TabsContent value="builder" className="m-0">
+                            {(policy as any).isDirectLabor ? (
+                                <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl bg-amber-50 border border-amber-200 text-center">
+                                    <div className="rounded-full bg-amber-100 p-3 mb-3">
+                                        <AlertCircle className="w-6 h-6 text-amber-600" />
                                     </div>
-                                )}
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Staff Strength</label>
-                                    <p className="text-base">{toDisplayText(firstMeaningfulValue(policy.organization?.staffStrength, policy.organization?.noOfPermanentStaff, policy.organization?.permanentStaffCount), 'Not provided')}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Shield className="w-5 h-5" />
-                                    Membership Information
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">NIA Membership Status</label>
-                                    <p className="text-base">
-                                        {policy.membership?.MembershipStatusId === 1 ? 'Yes, applicant is a Nigerian Insurers Association (NIA) member' :
-                                            policy.membership?.MembershipStatusId === 2 ? 'No, applicant is not a Nigerian Insurers Association (NIA) member' : 'Unknown'}
+                                    <p className="text-base font-semibold text-amber-900">Direct Labor Project</p>
+                                    <p className="text-sm text-amber-700 mt-1 max-w-md">
+                                        This project is not assigned to a commercial general contractor. No contractor details are required.
                                     </p>
                                 </div>
-                                {policy.membership?.MembershipName && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Membership Name</label>
-                                        <p className="text-base">{policy.membership.MembershipName}</p>
-                                    </div>
-                                )}
-                                {(policy.membership?.MemberId || policy.membership?.MembershipNo) && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">NIA Member ID</label>
-                                        <p className="text-base">{policy.membership.MemberId || policy.membership.MembershipNo}</p>
-                                    </div>
-                                )}
-                                {policy.membership?.ProfessionalBodyName && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Regulatory Body</label>
-                                        <p className="text-base">{policy.membership.ProfessionalBodyName}</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                            ) : (
+                                <SectionCard icon={Building} title="Contractor / Builder Information">
+                                    <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                                        <InfoRow label="Contractor / Company Name" value={policy.builder?.nameOfBuilder || undefined} />
+                                        <InfoRow label="Director of Company"       value={policy.builder?.directorOfCompany || undefined} />
+                                        <InfoRow label="RC Number"                 value={policy.builder?.rcNumber || undefined} />
+                                        <InfoRow label="Email Address" icon={Mail}    value={policy.builder?.customerEmail || undefined} />
+                                        <InfoRow label="Phone Number"  icon={Phone}   value={policy.builder?.telNo || undefined} />
+                                        <InfoRow label="Director ID Type" value={
+                                            policy.builder?.identification?.identificationTypeId === 1 ? 'National ID' :
+                                            policy.builder?.identification?.identificationTypeId === 2 ? 'Passport' :
+                                            policy.builder?.identification?.identificationTypeId === 3 ? "Driver's License" : 'Other'
+                                        } />
+                                        <InfoRow label="Director ID Number" value={policy.builder?.identification?.identityNo || undefined} />
+                                        <InfoRow label="Address" icon={MapPin}        value={policy.builder?.address || undefined} full />
+                                    </dl>
+                                </SectionCard>
+                            )}
+                        </TabsContent>
 
-                    {/* Project Information */}
-                    <TabsContent value="project" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Briefcase className="w-5 h-5" />
-                                    Project Details
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Statutory Cover</label>
-                                        <p className="text-base">
-                                            {(typeof policy.project?.isStatutory === 'boolean'
-                                                ? policy.project.isStatutory
-                                                : policy.project?.coverTypeIdx) ? 'Yes' : 'No'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Project Type</label>
-                                        <p className="text-base font-semibold">{getDisplayValue(policy.project?.projectType)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Coverage Type</label>
-                                        <p className="text-base font-semibold">{policy.project?.coverTypeIdxDetails || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Contractor Type</label>
-                                        <p className="text-base font-semibold">{getDisplayValue(policy.project?.contractorType)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Property Title</label>
-                                        <p className="text-base font-semibold">{getDisplayValue(projectTitle)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Contractor Category</label>
-                                        <p className="text-base">
-                                            {policy.project?.categoryOfContractorId === 1 ? 'Category A' :
-                                                policy.project?.categoryOfContractorId === 2 ? 'Category B' :
-                                                    policy.project?.categoryOfContractorId === 3 ? 'Category C' : 'Other'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Estimated Sum Range</label>
-                                        <p className="text-base font-semibold">{getDisplayValue(projectEstimateBand)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Stored Ceiling Amount</label>
-                                        <p className="text-xl font-bold text-green-600">
-                                            {formatCurrency(policy.project?.totalEstimateSum || 0)}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Extra Hazardous</label>
-                                        <p className="text-base">
-                                            {policy.project?.extraHazardous ? (
-                                                <Badge variant="destructive">Yes</Badge>
-                                            ) : (
-                                                <Badge variant="outline">No</Badge>
-                                            )}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Plot Number</label>
-                                        <p className="text-base">{getDisplayValue(policy.project?.plotNumber || policy.project?.agisNo)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Location / Address</label>
-                                        <p className="text-base">{getDisplayValue(projectAddress)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Project LGA</label>
-                                        <p className="text-base">{getDisplayValue(projectLga)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Project District</label>
-                                        <p className="text-base">{getDisplayValue(projectDistrict)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Cadastral Zone</label>
-                                        <p className="text-base">{getDisplayValue(policy.project?.cadastralZone)}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Work Details</label>
-                                    <p className="text-base bg-gray-50 p-3 rounded-md">{policy.project?.workDetails || 'N/A'}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                        {/* ASSESSOR */}
+                        <TabsContent value="organization" className="m-0 space-y-5">
+                            <SectionCard icon={Shield} title="Assessor Details">
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                                    <InfoRow label="Assessor Name"          value={policy.organization?.assessorName || undefined} />
+                                    <InfoRow label="Regulatory Body"        value={getDisplayValue(assessorProfessionalBody)} />
+                                    <InfoRow label="Registration Number"    value={getDisplayValue(assessorRegistrationNumber)} />
+                                    <InfoRow label="Practice License"       value={getDisplayValue(policy.organization?.practiceLicenseNumber)} />
+                                    <InfoRow label="Year of Registration"   value={policy.organization?.yearOfRegistration ? formatDate(policy.organization.yearOfRegistration) : undefined} />
+                                    <InfoRow label="Area of Specialization" value={getDisplayValue(policy.organization?.areaOfSpecialization)} />
+                                    <InfoRow label="Staff Strength"         value={toDisplayText(firstMeaningfulValue(policy.organization?.staffStrength, policy.organization?.noOfPermanentStaff, policy.organization?.permanentStaffCount), 'Not provided')} />
+                                    {assessorProfessionalBody === 'Other' && (
+                                        <InfoRow label="Other Body Name" value={getDisplayValue(policy.organization?.otherProfessionalBodyName)} />
+                                    )}
+                                </dl>
+                            </SectionCard>
+                            <SectionCard icon={Users} title="Membership Information">
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                                    <InfoRow label="NIA Membership Status" full value={
+                                        policy.membership?.MembershipStatusId === 1 ? 'Member — Nigerian Insurers Association (NIA)' :
+                                        policy.membership?.MembershipStatusId === 2 ? 'Not a member of NIA' : 'Unknown'
+                                    } />
+                                    {policy.membership?.MembershipName && <InfoRow label="Membership Description" value={policy.membership.MembershipName} />}
+                                    {(policy.membership?.MemberId || policy.membership?.MembershipNo) && (
+                                        <InfoRow label="NIA Member ID" value={policy.membership.MemberId || policy.membership.MembershipNo} />
+                                    )}
+                                    {policy.membership?.ProfessionalBodyName && (
+                                        <InfoRow label="Regulatory Body" value={policy.membership.ProfessionalBodyName} />
+                                    )}
+                                </dl>
+                            </SectionCard>
+                        </TabsContent>
 
-                    {/* Workforce Information */}
-                    <TabsContent value="workforce" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Users className="w-5 h-5" />
-                                    Workforce Details
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Contract Staff Count</label>
-                                        <p className="text-base font-semibold">{policy.workforce?.contractStaffCount ?? 0}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Blood Relations Count</label>
-                                        <p className="text-base font-semibold">{policy.workforce?.bloodRelationsCount ?? 0}</p>
-                                    </div>
-                                </div>
+                        {/* PROJECT */}
+                        <TabsContent value="project" className="m-0">
+                            <SectionCard icon={Briefcase} title="Project Details">
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                                    <InfoRow label="Property Title"      value={getDisplayValue(projectTitle)} />
+                                    <InfoRow label="Project Type"        value={getDisplayValue(policy.project?.projectType)} />
+                                    <InfoRow label="Coverage Type"       value={policy.project?.coverTypeIdxDetails || undefined} />
+                                    <InfoRow label="Statutory Cover"     value={(typeof policy.project?.isStatutory === 'boolean' ? policy.project.isStatutory : policy.project?.coverTypeIdx) ? 'Yes' : 'No'} />
+                                    <InfoRow label="Contractor Type"     value={getDisplayValue(policy.project?.contractorType)} />
+                                    <InfoRow label="Contractor Category" value={
+                                        policy.project?.categoryOfContractorId === 1 ? 'Class A – Minor (₦2m–₦5m)' :
+                                        policy.project?.categoryOfContractorId === 2 ? 'Class B – Small (₦5m–₦10m)' :
+                                        policy.project?.categoryOfContractorId === 3 ? 'Class C – Medium (₦10m–₦50m)' :
+                                        policy.project?.categoryOfContractorId === 4 ? 'Class D – Upper Medium (₦50m–₦250m)' :
+                                        policy.project?.categoryOfContractorId === 5 ? 'Class E – Large (₦250m–₦1B)' :
+                                        policy.project?.categoryOfContractorId === 6 ? 'Class F – Mega (₦1B+)' : 'Other'
+                                    } />
+                                    <InfoRow label="Estimated Sum Range"   value={getDisplayValue(projectEstimateBand)} />
+                                    <InfoRow label="Total Estimate Ceiling" value={<span className="text-emerald-700 font-bold">{formatCurrency(policy.project?.totalEstimateSum || 0)}</span>} />
+                                    <InfoRow label="Extra Hazardous" value={
+                                        policy.project?.extraHazardous
+                                            ? <Badge variant="destructive" className="text-[10px]">Yes — Hazardous</Badge>
+                                            : <Badge variant="outline" className="text-[10px]">No</Badge>
+                                    } />
+                                    <InfoRow label="Plot Number"      value={getDisplayValue(policy.project?.plotNumber || policy.project?.agisNo)} />
+                                    <InfoRow label="Project LGA"      value={getDisplayValue(projectLga)} />
+                                    <InfoRow label="Project District" value={getDisplayValue(projectDistrict)} />
+                                    <InfoRow label="Cadastral Zone"   value={getDisplayValue(policy.project?.cadastralZone)} />
+                                    <InfoRow label="Location / Address" icon={MapPin} value={getDisplayValue(projectAddress)} full />
+                                    <InfoRow label="Work Details"       value={policy.project?.workDetails || undefined} full />
+                                </dl>
+                            </SectionCard>
+                        </TabsContent>
 
-                                {/* Category of Workmen */}
-                                {policy.workforce?.categoryOfWorkmen && policy.workforce.categoryOfWorkmen.length > 0 && (
-                                    <div>
-                                        <h4 className="font-semibold mb-3">Category of Workmen</h4>
-                                        <div className="space-y-2">
-                                            {policy.workforce.categoryOfWorkmen.map((workman, index) => (
-                                                <div key={index} className="bg-gray-50 p-3 rounded-md">
-                                                    <div className="grid grid-cols-3 gap-2 text-sm">
-                                                        <div>
-                                                            <span className="text-gray-600">Category:</span>
-                                                            <p className="font-medium">{workman.categoryOfWorkmen}</p>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-gray-600">Number:</span>
-                                                            <p className="font-medium">{workman.numberOfEmployment}</p>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-gray-600">Years:</span>
-                                                            <p className="font-medium">{workman.yearsOfEmployment}</p>
-                                                        </div>
-                                                    </div>
+                        {/* WORKFORCE */}
+                        <TabsContent value="workforce" className="m-0 space-y-5">
+                            <SectionCard icon={Users} title="Workforce Summary">
+                                <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-5">
+                                    <InfoRow label="Contract Staff"   value={String(policy.workforce?.contractStaffCount ?? 0)} />
+                                    <InfoRow label="Blood Relations"  value={String(policy.workforce?.bloodRelationsCount ?? 0)} />
+                                </dl>
+                            </SectionCard>
+                            {policy.workforce?.categoryOfWorkmen && policy.workforce.categoryOfWorkmen.length > 0 && (
+                                <SectionCard icon={Users} title="Categories of Workmen">
+                                    <div className="space-y-3">
+                                        {policy.workforce.categoryOfWorkmen.map((workman, index) => (
+                                            <div key={index} className="grid grid-cols-3 gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100">
+                                                <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Category</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.categoryOfWorkmen}</dd></div>
+                                                <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Employees</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.numberOfEmployment}</dd></div>
+                                                <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Years</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.yearsOfEmployment}</dd></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </SectionCard>
+                            )}
+                            {policy.workforce?.professionals && policy.workforce.professionals.length > 0 && (
+                                <SectionCard icon={Briefcase} title="Professional Staff">
+                                    <div className="space-y-3">
+                                        {policy.workforce.professionals.map((prof, index) => (
+                                            <div key={index} className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                                                <p className="text-sm font-semibold text-slate-900 mb-2">{prof.surname} {prof.otherName}</p>
+                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                    <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Profession</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.profession}</dd></div>
+                                                    <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Qualification</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.qualification}</dd></div>
+                                                    <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Experience</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.yearsInEmployment} yrs</dd></div>
+                                                    <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Gender / Age</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.gender}, {prof.age}</dd></div>
                                                 </div>
-                                            ))}
-                                        </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                )}
+                                </SectionCard>
+                            )}
+                        </TabsContent>
 
-                                {/* Professionals */}
-                                {policy.workforce?.professionals && policy.workforce.professionals.length > 0 && (
-                                    <div>
-                                        <h4 className="font-semibold mb-3">Professionals</h4>
-                                        <div className="space-y-2">
-                                            {policy.workforce.professionals.map((prof, index) => (
-                                                <div key={index} className="bg-gray-50 p-3 rounded-md">
-                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                                                        <div>
-                                                            <span className="text-gray-600">Name:</span>
-                                                            <p className="font-medium">{prof.surname} {prof.otherName}</p>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-gray-600">Profession:</span>
-                                                            <p className="font-medium">{prof.profession}</p>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-gray-600">Qualification:</span>
-                                                            <p className="font-medium">{prof.qualification}</p>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-gray-600">Years:</span>
-                                                            <p className="font-medium">{prof.yearsInEmployment}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    {/* Compliance Information */}
-                    <TabsContent value="compliance" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <FileText className="w-5 h-5" />
-                                    Compliance Information
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                                        <span className="text-sm font-medium">Has Insurance</span>
-                                        <span className="flex items-center gap-2">
-                                            {hasInsurance === true ? (
-                                                <CheckCircle className="w-5 h-5 text-green-600" />
-                                            ) : hasInsurance === false ? (
-                                                <XCircle className="w-5 h-5 text-red-600" />
-                                            ) : (
-                                                <Clock className="w-5 h-5 text-gray-500" />
-                                            )}
-                                            <span className="text-sm font-semibold">{getBooleanText(hasInsurance)}</span>
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                                        <span className="text-sm font-medium">Under Investigation</span>
-                                        <span className="flex items-center gap-2">
-                                            {underInvestigation === true ? (
-                                                <AlertCircle className="w-5 h-5 text-orange-600" />
-                                            ) : underInvestigation === false ? (
-                                                <CheckCircle className="w-5 h-5 text-green-600" />
-                                            ) : (
-                                                <Clock className="w-5 h-5 text-gray-500" />
-                                            )}
-                                            <span className="text-sm font-semibold">{getBooleanText(underInvestigation)}</span>
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                                        <span className="text-sm font-medium">Disciplinary Action</span>
-                                        <span className="flex items-center gap-2">
-                                            {disciplinaryAction === true ? (
-                                                <AlertCircle className="w-5 h-5 text-orange-600" />
-                                            ) : disciplinaryAction === false ? (
-                                                <CheckCircle className="w-5 h-5 text-green-600" />
-                                            ) : (
-                                                <Clock className="w-5 h-5 text-gray-500" />
-                                            )}
-                                            <span className="text-sm font-semibold">{getBooleanText(disciplinaryAction)}</span>
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                                        <span className="text-sm font-medium">Pre-Employment Check</span>
-                                        <span className="flex items-center gap-2">
-                                            {preEmploymentCheck === true ? (
-                                                <CheckCircle className="w-5 h-5 text-green-600" />
-                                            ) : preEmploymentCheck === false ? (
-                                                <XCircle className="w-5 h-5 text-red-600" />
-                                            ) : (
-                                                <Clock className="w-5 h-5 text-gray-500" />
-                                            )}
-                                            <span className="text-sm font-semibold">{getBooleanText(preEmploymentCheck)}</span>
-                                        </span>
-                                    </div>
+                        {/* COMPLIANCE */}
+                        <TabsContent value="compliance" className="m-0">
+                            <SectionCard icon={FileText} title="Compliance Information">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                                    {([
+                                        { label: 'Has Insurance Coverage', value: hasInsurance,       trueColor: 'bg-emerald-50 border-emerald-200 text-emerald-800', falseColor: 'bg-slate-50 border-slate-200 text-slate-600', trueIcon: CheckCircle, falseIcon: XCircle },
+                                        { label: 'Under Investigation',     value: underInvestigation, trueColor: 'bg-rose-50 border-rose-200 text-rose-800',           falseColor: 'bg-emerald-50 border-emerald-200 text-emerald-800', trueIcon: AlertCircle, falseIcon: CheckCircle },
+                                        { label: 'Disciplinary Action',    value: disciplinaryAction,  trueColor: 'bg-rose-50 border-rose-200 text-rose-800',           falseColor: 'bg-emerald-50 border-emerald-200 text-emerald-800', trueIcon: AlertCircle, falseIcon: CheckCircle },
+                                        { label: 'Pre-Employment Check',   value: preEmploymentCheck, trueColor: 'bg-emerald-50 border-emerald-200 text-emerald-800', falseColor: 'bg-slate-50 border-slate-200 text-slate-600',     trueIcon: CheckCircle, falseIcon: XCircle },
+                                    ] as const).map(({ label, value, trueColor, falseColor, trueIcon: TIcon, falseIcon: FIcon }) => {
+                                        const colorClass = value === true ? trueColor : value === false ? falseColor : 'bg-slate-50 border-slate-200 text-slate-500';
+                                        const Icon = value === true ? TIcon : value === false ? FIcon : Clock;
+                                        return (
+                                            <div key={label} className={`flex items-center justify-between rounded-lg border px-4 py-3 ${colorClass}`}>
+                                                <span className="text-sm font-medium">{label}</span>
+                                                <div className="flex items-center gap-1.5"><Icon className="w-4 h-4" /><span className="text-xs font-semibold">{getBooleanText(value)}</span></div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
+                                <dl className="space-y-4">
+                                    {hasInsuranceDetails && <InfoRow label="Insurance Details"      value={hasInsuranceDetails} />}
+                                    {investigationDetails && <InfoRow label="Investigation Details" value={investigationDetails} />}
+                                    {disciplinaryDetails  && <InfoRow label="Disciplinary Details"  value={disciplinaryDetails} />}
+                                    {preEmploymentDetails && <InfoRow label="Pre-Employment Details" value={preEmploymentDetails} />}
+                                    {legalSuitDetails     && <InfoRow label="Legal Suit Details"    value={legalSuitDetails} />}
+                                    <InfoRow label="Practice Outside Nigeria" value={practiceOutsideNigeria} />
+                                </dl>
+                            </SectionCard>
+                        </TabsContent>
 
-                                {hasInsuranceDetails && (
+                        {/* PAYMENT */}
+                        <TabsContent value="payment" className="m-0 space-y-5">
+                            <div className={`rounded-xl border p-5 ${isPaymentPaid ? 'bg-emerald-50 border-emerald-200' : isPaymentPending ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600">Insurance Details</label>
-                                        <p className="text-base bg-gray-50 p-3 rounded-md">{hasInsuranceDetails}</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Premium Amount</p>
+                                        <p className="text-3xl font-bold text-slate-900 mt-1">
+                                            {premiumAmount !== null ? formatCurrency(premiumAmount) : <span className="text-slate-400 text-xl italic">Not yet calculated</span>}
+                                        </p>
                                     </div>
-                                )}
-
-                                {investigationDetails && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Investigation Details</label>
-                                        <p className="text-base bg-gray-50 p-3 rounded-md">{investigationDetails}</p>
-                                    </div>
-                                )}
-
-                                {disciplinaryDetails && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Disciplinary Action Details</label>
-                                        <p className="text-base bg-gray-50 p-3 rounded-md">{disciplinaryDetails}</p>
-                                    </div>
-                                )}
-
-                                {preEmploymentDetails && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Pre-Employment Check Details</label>
-                                        <p className="text-base bg-gray-50 p-3 rounded-md">{preEmploymentDetails}</p>
-                                    </div>
-                                )}
-
-                                {legalSuitDetails && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Legal Suit Details</label>
-                                        <p className="text-base bg-gray-50 p-3 rounded-md">{legalSuitDetails}</p>
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Practice Outside Nigeria</label>
-                                    <p className="text-base">{practiceOutsideNigeria}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    {/* Payment & Premium Information */}
-                    <TabsContent value="payment" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <CreditCard className="w-5 h-5" />
-                                    Premium & Payment Summary
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-4 rounded-md border bg-gray-50">
-                                    <label className="text-sm font-medium text-gray-600">Payment State</label>
-                                    <div className="mt-1 flex items-center gap-2">
-                                        <Badge className={`border ${paymentStatusBadgeClass}`}>
+                                    <div className="flex flex-col items-start sm:items-end gap-1">
+                                        <Badge className={`border ${paymentStatusBadgeClass} text-xs px-3 py-1`}>
                                             {isPaymentPaid ? 'PAID' : isPaymentPending ? 'PENDING' : paymentStatusLabel.toUpperCase()}
                                         </Badge>
-                                        <span className="text-sm text-gray-700">{paymentSummaryText}</span>
+                                        <span className="text-xs text-slate-500">{paymentSummaryText}</span>
                                     </div>
                                 </div>
-                                <div className="p-4 rounded-md border bg-gray-50">
-                                    <label className="text-sm font-medium text-gray-600">Premium Amount</label>
-                                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                                        {premiumAmount !== null ? formatCurrency(premiumAmount) : 'N/A'}
-                                    </p>
-                                </div>
-                                <div className="p-4 rounded-md border bg-gray-50">
-                                    <label className="text-sm font-medium text-gray-600">NIIP Invoice Number</label>
-                                    <p className="text-base font-semibold mt-1">{niipInvoiceNumber}</p>
-                                </div>
-                                <div className="p-4 rounded-md border bg-gray-50">
-                                    <label className="text-sm font-medium text-gray-600">NIIP Reference</label>
-                                    <p className="text-base font-semibold break-all mt-1">{niipTransactionReference}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Receipt className="w-5 h-5" />
-                                        Payment Records
-                                    </CardTitle>
-                                    {isPaymentPaid && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleDownloadReceipt}
-                                            disabled={isDownloadingReceipt}
-                                            className="w-full sm:w-auto"
-                                        >
-                                            {isDownloadingReceipt ? (
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            ) : (
-                                                <Download className="w-4 h-4 mr-2" />
-                                            )}
-                                            {isDownloadingReceipt ? 'Downloading...' : 'Download Receipt'}
-                                        </Button>
-                                    )}
-                                </div>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Payment Status</label>
-                                    <p className="text-base">{paymentStatusLabel || 'Pending'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Payment Method</label>
-                                    <p className="text-base">{toDisplayText(paymentInfo.method, 'external_payment_service')}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Initiated At</label>
-                                    <p className="text-base">
-                                        {paymentInfo.initiatedAt ? formatDate(paymentInfo.initiatedAt as string | Date) : 'N/A'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Paid At</label>
-                                    <p className="text-base">
-                                        {paymentInfo.paidAt ? formatDate(paymentInfo.paidAt as string | Date) : 'Not Paid Yet'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-600">Rejection / Failure Reason</label>
-                                    <p className="text-base">{toDisplayText(paymentInfo.reason)}</p>
-                                </div>
+                            </div>
+                            <SectionCard icon={Receipt} title="Payment Records">
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                                    <InfoRow label="Payment Status"  value={paymentStatusLabel || 'Pending'} />
+                                    <InfoRow label="Payment Method"  value={toDisplayText(paymentInfo.method, 'External Payment Service')} />
+                                    <InfoRow label="Initiated At"    value={paymentInfo.initiatedAt ? formatDate(paymentInfo.initiatedAt as string | Date) : undefined} />
+                                    <InfoRow label="Paid At"         value={paymentInfo.paidAt ? formatDate(paymentInfo.paidAt as string | Date) : undefined} />
+                                    <InfoRow label="NIIP Invoice #"  value={niipInvoiceNumber !== 'N/A' ? niipInvoiceNumber : undefined} />
+                                    <InfoRow label="NIIP Reference"  value={niipTransactionReference !== 'N/A' ? niipTransactionReference : undefined} />
+                                    {paymentInfo.reason && <InfoRow label="Failure Reason" value={toDisplayText(paymentInfo.reason)} full />}
+                                </dl>
                                 {!isPaymentPaid && (
-                                    <div className="md:col-span-2 rounded-md border border-dashed border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-                                        A downloadable receipt will appear here once payment has been confirmed on the system.
+                                    <div className="mt-5 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 text-center">
+                                        A downloadable receipt will appear here once payment has been confirmed.
                                     </div>
                                 )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    {/* Timeline */}
-                    <TabsContent value="timeline" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Calendar className="w-5 h-5" />
-                                    Policy Timeline
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Created At</label>
-                                        <p className="text-base">{formatDate(policy.createdAt)}</p>
+                            </SectionCard>
+                            {premiumResult?.premiumDetails && (
+                                <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <Receipt className="w-4 h-4 text-amber-700" />
+                                        <h3 className="text-sm font-semibold text-amber-900">Premium Calculation Result</h3>
                                     </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Last Updated</label>
-                                        <p className="text-base">{formatDate(policy.updatedAt)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Deadline</label>
-                                        <p className="text-base font-semibold text-orange-600">{formatDate(policy.deadline)}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-600">Payment Status</label>
-                                        <p className="text-base">
-                                            <Badge variant={policy.paymentInfo?.status === 'paid' ? 'default' : 'outline'}>
-                                                {policy.paymentInfo?.status?.toUpperCase() || 'PENDING'}
-                                            </Badge>
-                                        </p>
-                                    </div>
+                                    <dl className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
+                                        <div>
+                                            <dt className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest">Amount</dt>
+                                            <dd className="text-lg font-bold text-amber-950 mt-0.5">{formatCurrency(Number(premiumResult.premiumDetails.amount || premiumResult.premiumAmount || 0))}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest">Invoice Number</dt>
+                                            <dd className="text-sm font-semibold text-amber-950 mt-0.5">{premiumResult.premiumDetails.invoiceNumber || 'N/A'}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest">NIIP Reference</dt>
+                                            <dd className="text-sm font-semibold text-amber-950 mt-0.5 break-all">{premiumResult.premiumDetails.transactionReference || 'N/A'}</dd>
+                                        </div>
+                                    </dl>
                                 </div>
+                            )}
+                        </TabsContent>
 
-                                {/* Status History */}
+                        {/* TIMELINE */}
+                        <TabsContent value="timeline" className="m-0">
+                            <SectionCard icon={Calendar} title="Policy Timeline">
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5 mb-6">
+                                    <InfoRow label="Created At"    value={formatDate(policy.createdAt)} />
+                                    <InfoRow label="Last Updated"  value={formatDate(policy.updatedAt)} />
+                                    <InfoRow label="Deadline"      value={<span className="text-orange-600 font-semibold">{formatDate(policy.deadline)}</span>} />
+                                    <InfoRow label="Payment Status" value={
+                                        <Badge variant={policy.paymentInfo?.status === 'paid' ? 'default' : 'outline'} className="text-[10px]">
+                                            {policy.paymentInfo?.status?.toUpperCase() || 'PENDING'}
+                                        </Badge>
+                                    } />
+                                </dl>
                                 {policy.statusHistory && policy.statusHistory.length > 0 && (
                                     <div>
-                                        <h4 className="font-semibold mb-3">Status History</h4>
-                                        <div className="space-y-2">
+                                        <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Status History</h4>
+                                        <div className="space-y-0">
                                             {policy.statusHistory.map((history, index) => (
-                                                <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-md">
-                                                    <div className="flex-shrink-0 mt-1">
-                                                        {getStatusBadge(history.status)}
+                                                <div key={index} className="flex gap-3 pb-4 last:pb-0">
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                                                        {index < policy.statusHistory!.length - 1 && <div className="w-px flex-1 bg-slate-200 mt-1" />}
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <p className="text-sm text-gray-600">
-                                                            {formatDate(history.changedAt)}
-                                                        </p>
-                                                        {history.reason && (
-                                                            <p className="text-sm mt-1">{history.reason}</p>
-                                                        )}
+                                                    <div className="pb-1">
+                                                        {getStatusBadge(history.status)}
+                                                        <p className="text-xs text-slate-500 mt-1">{formatDate(history.changedAt)}</p>
+                                                        {history.reason && <p className="text-xs text-slate-700 mt-0.5">{history.reason}</p>}
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Notes */}
                                 {(policy.surveyNotes || policy.adminNotes) && (
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 mt-5">
                                         {policy.surveyNotes && (
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-600">Survey Notes</label>
-                                                <p className="text-base bg-blue-50 p-3 rounded-md">{policy.surveyNotes}</p>
+                                            <div className="rounded-lg bg-blue-50 border border-blue-100 p-4">
+                                                <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-1">Survey Notes</p>
+                                                <p className="text-sm text-blue-900">{policy.surveyNotes}</p>
                                             </div>
                                         )}
                                         {policy.adminNotes && (
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-600">Admin Notes</label>
-                                                <p className="text-base bg-yellow-50 p-3 rounded-md">{policy.adminNotes}</p>
+                                            <div className="rounded-lg bg-yellow-50 border border-yellow-100 p-4">
+                                                <p className="text-[10px] font-semibold text-yellow-700 uppercase tracking-widest mb-1">Admin Notes</p>
+                                                <p className="text-sm text-yellow-900">{policy.adminNotes}</p>
                                             </div>
                                         )}
                                     </div>
                                 )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                            </SectionCard>
+                        </TabsContent>
 
-                    {/* ── SAR: Survey Assessment Report ── */}
-                    <TabsContent value="survey" className="space-y-4">
-                        {!(policy as any).surveyorRecommendation ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500">
-                                <Eye className="w-10 h-10 mb-3 opacity-40" />
-                                <p className="font-medium">No survey assessment data yet</p>
-                                <p className="text-sm mt-1">The SAR will appear here once a surveyor completes the assessment.</p>
-                            </div>
-                        ) : (
-                            <>
-                                {/* Quick summary banner */}
-                                <div className={`flex items-start gap-3 p-4 rounded-lg border ${
-                                    (policy as any).surveyorRecommendation === 'approve'
-                                        ? 'bg-green-50 border-green-200'
-                                        : (policy as any).surveyorRecommendation === 'reject'
-                                            ? 'bg-red-50 border-red-200'
-                                            : 'bg-amber-50 border-amber-200'
-                                }`}>
-                                    {(policy as any).surveyorRecommendation === 'approve'
-                                        ? <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                                        : (policy as any).surveyorRecommendation === 'reject'
-                                            ? <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                                            : <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />}
-                                    <div>
-                                        <p className="font-semibold text-sm">
-                                            {(policy as any).surveyorRecommendation === 'approve' ? 'Recommended for Approval'
-                                                : (policy as any).surveyorRecommendation === 'reject' ? 'Recommended for Rejection'
-                                                    : 'Further Inspection / More Information Required'}
-                                        </p>
-                                        {(policy as any).surveyNotes && (
-                                            <p className="text-xs mt-1 text-gray-600">{(policy as any).surveyNotes}</p>
-                                        )}
-                                    </div>
+                        {/* SAR */}
+                        <TabsContent value="survey" className="m-0">
+                            {!(policy as any).surveyorRecommendation ? (
+                                <div className="flex flex-col items-center justify-center py-16 text-center">
+                                    <div className="rounded-full bg-slate-100 p-4 mb-4"><Eye className="w-8 h-8 text-slate-400" /></div>
+                                    <p className="font-semibold text-slate-700">No survey assessment yet</p>
+                                    <p className="text-sm text-slate-500 mt-1">The SAR will appear here once a surveyor completes the assessment.</p>
                                 </div>
-
-                                {/* SAR data cards */}
-                                {(() => {
-                                    const rawSd = (policy as any).surveyDetails || {};
-                                    const sd: Record<string, any> = {
-                                        ...rawSd,
-                                        plotNumber: rawSd.locationDetails?.plotNumber,
-                                        district: rawSd.locationDetails?.district,
-                                        cadastralZone: rawSd.locationDetails?.cadastralZone,
-                                        landUse: rawSd.locationDetails?.landUse,
-                                        purpose: rawSd.locationDetails?.purpose,
-                                        plotSize: rawSd.locationDetails?.plotSize,
-                                        dateOfApproval: rawSd.locationDetails?.dateOfApproval,
-                                        streetName: rawSd.locationDetails?.streetName,
-                                        buildingType: rawSd.locationDetails?.buildingType,
-                                        proposedBuildingDescription: rawSd.locationDetails?.proposedBuildingDescription,
-                                        
-                                        naturePlotWellDrained: rawSd.siteDetails?.naturePlot?.wellDrained,
-                                        naturePlotRocky: rawSd.siteDetails?.naturePlot?.rocky,
-                                        naturePlotWaterLogged: rawSd.siteDetails?.naturePlot?.waterLogged,
-                                        naturePlotOther: rawSd.siteDetails?.naturePlot?.other,
-                                        naturePlotOtherDescription: rawSd.siteDetails?.naturePlot?.otherDescription,
-                                        estimatedSlope: rawSd.siteDetails?.estimatedSlope,
-                                        vacancyStatus: rawSd.siteDetails?.vacancyStatus,
-                                        developmentDescription: rawSd.siteDetails?.developmentDescription,
-                                        previouslyApproved: rawSd.siteDetails?.previouslyApproved,
-
-                                        conformsWithApproval: rawSd.conformity?.conformsWithApproval,
-                                        nonConformityDescription: rawSd.conformity?.nonConformityDescription,
-                                        levelOfService: rawSd.conformity?.levelOfService,
-
-                                        contractorPresentOnSite: rawSd.contractor?.presentOnSite,
-                                        contractorName: rawSd.contractor?.name,
-                                        contractorCategory: rawSd.contractor?.category,
-
-                                        assessorName: rawSd.consultant?.name,
-                                        assessorCategory: rawSd.consultant?.category,
-
-                                        agentMetOnSite: rawSd.agent?.metOnSite,
-                                        agentName: rawSd.agent?.name,
-                                        agentDesignation: rawSd.agent?.designation,
-                                        agentPhone: rawSd.agent?.phone,
-                                        agentEmail: rawSd.agent?.email,
-
-                                        structuralCondition: rawSd.structuralAssessmentDetails?.condition,
-                                        visibleCracks: rawSd.structuralAssessmentDetails?.visibleCracks,
-                                        foundationStatus: rawSd.structuralAssessmentDetails?.foundationStatus,
-                                    };
-                                    
-                                    const get = (k1: string, k2?: string) => {
-                                        const v1 = (policy as any)[k1] ?? sd[k1];
-                                        if (v1 !== null && v1 !== undefined && String(v1).trim() !== '') return v1;
-                                        if (k2) {
-                                            const v2 = (policy as any)[k2] ?? sd[k2];
-                                            if (v2 !== null && v2 !== undefined && String(v2).trim() !== '') return v2;
-                                        }
-                                        return undefined;
-                                    };
-                                    return (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <Card>
-                                                <CardHeader><CardTitle className="text-sm">Location Details</CardTitle></CardHeader>
-                                                <CardContent className="space-y-2 text-sm">
-                                                    {[['Plot Number', get('plotNumber', 'surveyorPlotNumber')], ['District', get('district', 'surveyorDistrict')], ['Cadastral Zone', get('cadastralZone', 'surveyorCadastralZone')], ['Land Use', get('landUse', 'surveyorLandUse')], ['Purpose', get('purpose', 'surveyorPurpose')], ['Plot Size', get('plotSize', 'surveyorPlotSize')], ['Date of Approval', get('dateOfApproval', 'surveyorDateOfApproval') ? formatDate(get('dateOfApproval', 'surveyorDateOfApproval')) : null], ['Street Name', get('streetName', 'surveyorStreetName')], ['Building Type', get('buildingType', 'surveyorBuildingType')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
-                                                </CardContent>
-                                            </Card>
-                                            <Card>
-                                                <CardHeader><CardTitle className="text-sm">Site Details</CardTitle></CardHeader>
-                                                <CardContent className="space-y-2 text-sm">
-                                                    {[['Slope', get('estimatedSlope', 'surveyorEstimatedSlope')], ['Vacancy', get('vacancyStatus', 'surveyorVacancyStatus')], ['Dev. Description', get('developmentDescription', 'surveyorDevelopmentDescription')], ['Prev. Approved?', get('previouslyApproved', 'surveyorPreviouslyApproved')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
-                                                </CardContent>
-                                            </Card>
-                                            <Card>
-                                                <CardHeader><CardTitle className="text-sm">Conformity & Service</CardTitle></CardHeader>
-                                                <CardContent className="space-y-2 text-sm">
-                                                    {[['Conforms?', get('conformsWithApproval', 'surveyorConformsWithApproval')], ['Non-Conformity', get('nonConformityDescription', 'surveyorNonConformityDescription')], ['Level of Service', get('levelOfService', 'surveyorLevelOfService')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
-                                                </CardContent>
-                                            </Card>
-                                            <Card>
-                                                <CardHeader><CardTitle className="text-sm">Contractor / Assessor</CardTitle></CardHeader>
-                                                <CardContent className="space-y-2 text-sm">
-                                                    {[['Contractor on Site?', get('contractorPresentOnSite', 'surveyorContractorPresentOnSite')], ['Contractor Name', get('contractorName', 'surveyorContractorName')], ['Contractor Category', get('contractorCategory', 'surveyorContractorCategory')], ['Assessor Name', get('assessorName')], ['Assessor Category', get('assessorCategory', 'surveyorConsultantCategory')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
-                                                </CardContent>
-                                            </Card>
-                                            <Card>
-                                                <CardHeader><CardTitle className="text-sm">Agent / Developer</CardTitle></CardHeader>
-                                                <CardContent className="space-y-2 text-sm">
-                                                    {[['Agent on Site?', get('agentMetOnSite', 'surveyorAgentMetOnSite')], ['Agent Name', get('agentName', 'surveyorAgentName')], ['Designation', get('agentDesignation', 'surveyorAgentDesignation')], ['Phone', get('agentPhone', 'surveyorAgentPhone')], ['Email', get('agentEmail', 'surveyorAgentEmail')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
-                                                </CardContent>
-                                            </Card>
-                                            <Card>
-                                                <CardHeader><CardTitle className="text-sm">Structural & Valuation</CardTitle></CardHeader>
-                                                <CardContent className="space-y-2 text-sm">
-                                                    {[['Structural Condition', get('structuralCondition', 'surveyorStructuralCondition')], ['Visible Cracks?', get('visibleCracks', 'surveyorVisibleCracks')], ['Foundation Status', get('foundationStatus', 'surveyorFoundationStatus')], ['Estimated Value', get('surveyorEstimatedValue', 'estimatedPropertyValue') ? formatCurrency(Number(get('surveyorEstimatedValue', 'estimatedPropertyValue'))) : null], ['Valuation Basis', get('valuationBasis', 'surveyorValuationBasis')], ['Risk Level', get('riskLevel', 'surveyorRiskLevel')]].map(([l, v]) => v ? <div key={l as string} className="flex justify-between"><span className="text-gray-500">{l}</span><span className="font-medium text-right">{String(v)}</span></div> : null)}
-                                                </CardContent>
-                                            </Card>
-                                        </div>
-                                    );
-                                })()}
-                            </>
-                        )}
-                    </TabsContent>
-                </Tabs>
-
-                {premiumResult?.premiumDetails && (
-                    <Card className="mt-6 border-orange-200 bg-orange-50">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-orange-900">
-                                <Receipt className="w-5 h-5" />
-                                Premium Calculation Result
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label className="text-sm font-medium text-orange-700">Premium Amount</label>
-                                <p className="text-base font-semibold text-orange-950">
-                                    {formatCurrency(Number(premiumResult.premiumDetails.amount || premiumResult.premiumAmount || 0))}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-orange-700">Invoice Number</label>
-                                <p className="text-base font-semibold text-orange-950">
-                                    {premiumResult.premiumDetails.invoiceNumber || 'N/A'}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-orange-700">NIIP Reference</label>
-                                <p className="text-base font-semibold text-orange-950 break-all">
-                                    {premiumResult.premiumDetails.transactionReference || 'N/A'}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6 pt-4 border-t">
-                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-                        Close
-                    </Button>
-                    
-                    {/* SAR Download Actions — always visible if survey data exists */}
-                    {(policy as any).surveyorRecommendation && (
-                        <>
-                            <Button
-                                variant="outline"
-                                className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200 w-full sm:w-auto"
-                                onClick={() => {
-                                    setIsGeneratingSAR(true);
-                                    try { openSARReport(policy); } catch { toast.error('Could not open report.'); }
-                                    finally { setIsGeneratingSAR(false); }
-                                }}
-                                disabled={isGeneratingSAR}
-                            >
-                                {isGeneratingSAR ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Eye className="w-4 h-4 mr-2" />}
-                                View SAR Report
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200 w-full sm:w-auto"
-                                onClick={() => {
-                                    try { downloadSARReport(policy); toast.success('SAR report downloaded.'); } catch { toast.error('Could not download report.'); }
-                                }}
-                            >
-                                <Download className="w-4 h-4 mr-2" />
-                                Download SAR
-                            </Button>
-                        </>
-                    )}
-
-                    {/* Existing survey document download */}
-                    {(policy.surveyDocument?.downloadUrl || policy.surveyDocument?.downloadPath) && (
-                        <Button 
-                            variant="outline"
-                            className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 w-full sm:w-auto"
-                            onClick={async () => {
-                                const downloadTarget = policy.surveyDocument?.downloadUrl || policy.surveyDocument?.downloadPath;
-                                if (!downloadTarget) {
-                                    toast.error('Survey report is not available for download.');
-                                    return;
-                                }
-
-                                try {
-                                    await downloadProtectedFileByPath(
-                                        downloadTarget,
-                                        policy.surveyDocument?.name || policy.surveyDocument?.fileName || 'survey-report'
-                                    );
-                                } catch {
-                                    toast.error('Unable to download the survey report right now.');
-                                }
-                            }}
-                        >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download Site Pictures
-                        </Button>
-                    )}
-
-                    {shouldShowCalculatePremiumButton && (
-                        <Button
-                            className="bg-amber-600 hover:bg-amber-700 w-full sm:w-auto"
-                            onClick={handleCalculatePremium}
-                            disabled={isCalculatingPremium}
-                        >
-                            {isCalculatingPremium ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             ) : (
-                                <Receipt className="w-4 h-4 mr-2" />
+                                <>
+                                    <div className={`flex items-start gap-3 p-4 rounded-xl border mb-5 ${
+                                        (policy as any).surveyorRecommendation === 'approve' ? 'bg-emerald-50 border-emerald-200' :
+                                        (policy as any).surveyorRecommendation === 'reject'  ? 'bg-rose-50 border-rose-200' :
+                                        'bg-amber-50 border-amber-200'
+                                    }`}>
+                                        {(policy as any).surveyorRecommendation === 'approve' ? <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" /> :
+                                         (policy as any).surveyorRecommendation === 'reject'  ? <XCircle    className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"    /> :
+                                                                                                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"  />}
+                                        <div>
+                                            <p className="font-semibold text-sm">
+                                                {(policy as any).surveyorRecommendation === 'approve' ? 'Recommended for Approval' :
+                                                 (policy as any).surveyorRecommendation === 'reject'  ? 'Recommended for Rejection' :
+                                                 'Further Inspection / More Information Required'}
+                                            </p>
+                                            {(policy as any).surveyNotes && <p className="text-xs mt-1 text-slate-600">{(policy as any).surveyNotes}</p>}
+                                        </div>
+                                    </div>
+                                    {(() => {
+                                        const rawSd = (policy as any).surveyDetails || {};
+                                        const sd: Record<string, any> = {
+                                            ...rawSd,
+                                            plotNumber: rawSd.locationDetails?.plotNumber,
+                                            district: rawSd.locationDetails?.district,
+                                            cadastralZone: rawSd.locationDetails?.cadastralZone,
+                                            landUse: rawSd.locationDetails?.landUse,
+                                            purpose: rawSd.locationDetails?.purpose,
+                                            plotSize: rawSd.locationDetails?.plotSize,
+                                            dateOfApproval: rawSd.locationDetails?.dateOfApproval,
+                                            streetName: rawSd.locationDetails?.streetName,
+                                            buildingType: rawSd.locationDetails?.buildingType,
+                                            proposedBuildingDescription: rawSd.locationDetails?.proposedBuildingDescription,
+                                            naturePlotWellDrained: rawSd.siteDetails?.naturePlot?.wellDrained,
+                                            naturePlotRocky: rawSd.siteDetails?.naturePlot?.rocky,
+                                            naturePlotWaterLogged: rawSd.siteDetails?.naturePlot?.waterLogged,
+                                            naturePlotOther: rawSd.siteDetails?.naturePlot?.other,
+                                            naturePlotOtherDescription: rawSd.siteDetails?.naturePlot?.otherDescription,
+                                            estimatedSlope: rawSd.siteDetails?.estimatedSlope,
+                                            vacancyStatus: rawSd.siteDetails?.vacancyStatus,
+                                            developmentDescription: rawSd.siteDetails?.developmentDescription,
+                                            previouslyApproved: rawSd.siteDetails?.previouslyApproved,
+                                            conformsWithApproval: rawSd.conformity?.conformsWithApproval,
+                                            nonConformityDescription: rawSd.conformity?.nonConformityDescription,
+                                            levelOfService: rawSd.conformity?.levelOfService,
+                                            contractorPresentOnSite: rawSd.contractor?.presentOnSite,
+                                            contractorName: rawSd.contractor?.name,
+                                            contractorCategory: rawSd.contractor?.category,
+                                            assessorName: rawSd.consultant?.name,
+                                            assessorCategory: rawSd.consultant?.category,
+                                            agentMetOnSite: rawSd.agent?.metOnSite,
+                                            agentName: rawSd.agent?.name,
+                                            agentDesignation: rawSd.agent?.designation,
+                                            agentPhone: rawSd.agent?.phone,
+                                            agentEmail: rawSd.agent?.email,
+                                            structuralCondition: rawSd.structuralAssessmentDetails?.condition,
+                                            visibleCracks: rawSd.structuralAssessmentDetails?.visibleCracks,
+                                            foundationStatus: rawSd.structuralAssessmentDetails?.foundationStatus,
+                                        };
+                                        const get = (k1: string, k2?: string) => {
+                                            const v1 = (policy as any)[k1] ?? sd[k1];
+                                            if (v1 !== null && v1 !== undefined && String(v1).trim() !== '') return v1;
+                                            if (k2) { const v2 = (policy as any)[k2] ?? sd[k2]; if (v2 !== null && v2 !== undefined && String(v2).trim() !== '') return v2; }
+                                            return undefined;
+                                        };
+                                        const SarCard = ({ title, items }: { title: string; items: [string, unknown][] }) => {
+                                            const filtered = items.filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== '');
+                                            if (filtered.length === 0) return null;
+                                            return (
+                                                <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+                                                    <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/60"><h4 className="text-xs font-semibold text-slate-600">{title}</h4></div>
+                                                    <dl className="p-4 space-y-3">
+                                                        {filtered.map(([l, v]) => (
+                                                            <div key={l as string} className="flex justify-between gap-4">
+                                                                <dt className="text-xs text-slate-500 flex-shrink-0">{l as string}</dt>
+                                                                <dd className="text-xs font-medium text-slate-900 text-right">{String(v)}</dd>
+                                                            </div>
+                                                        ))}
+                                                    </dl>
+                                                </div>
+                                            );
+                                        };
+                                        return (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <SarCard title="Location Details" items={[['Plot Number', get('plotNumber', 'surveyorPlotNumber')], ['District', get('district', 'surveyorDistrict')], ['Cadastral Zone', get('cadastralZone', 'surveyorCadastralZone')], ['Land Use', get('landUse', 'surveyorLandUse')], ['Purpose', get('purpose', 'surveyorPurpose')], ['Plot Size', get('plotSize', 'surveyorPlotSize')], ['Date of Approval', get('dateOfApproval', 'surveyorDateOfApproval') ? formatDate(get('dateOfApproval', 'surveyorDateOfApproval')) : null], ['Street Name', get('streetName', 'surveyorStreetName')], ['Building Type', get('buildingType', 'surveyorBuildingType')]]} />
+                                                <SarCard title="Site Details" items={[['Slope', get('estimatedSlope', 'surveyorEstimatedSlope')], ['Vacancy', get('vacancyStatus', 'surveyorVacancyStatus')], ['Development', get('developmentDescription', 'surveyorDevelopmentDescription')], ['Previously Approved?', get('previouslyApproved', 'surveyorPreviouslyApproved')]]} />
+                                                <SarCard title="Conformity & Service" items={[['Conforms?', get('conformsWithApproval', 'surveyorConformsWithApproval')], ['Non-Conformity', get('nonConformityDescription', 'surveyorNonConformityDescription')], ['Level of Service', get('levelOfService', 'surveyorLevelOfService')]]} />
+                                                <SarCard title="Contractor / Assessor" items={[['Contractor on Site?', get('contractorPresentOnSite', 'surveyorContractorPresentOnSite')], ['Contractor Name', get('contractorName', 'surveyorContractorName')], ['Contractor Category', get('contractorCategory', 'surveyorContractorCategory')], ['Assessor Name', get('assessorName')], ['Assessor Category', get('assessorCategory', 'surveyorConsultantCategory')]]} />
+                                                <SarCard title="Agent / Developer" items={[['Agent on Site?', get('agentMetOnSite', 'surveyorAgentMetOnSite')], ['Agent Name', get('agentName', 'surveyorAgentName')], ['Designation', get('agentDesignation', 'surveyorAgentDesignation')], ['Phone', get('agentPhone', 'surveyorAgentPhone')], ['Email', get('agentEmail', 'surveyorAgentEmail')]]} />
+                                                <SarCard title="Structural & Valuation" items={[['Structural Condition', get('structuralCondition', 'surveyorStructuralCondition')], ['Visible Cracks?', get('visibleCracks', 'surveyorVisibleCracks')], ['Foundation Status', get('foundationStatus', 'surveyorFoundationStatus')], ['Estimated Value', get('surveyorEstimatedValue', 'estimatedPropertyValue') ? formatCurrency(Number(get('surveyorEstimatedValue', 'estimatedPropertyValue'))) : null], ['Valuation Basis', get('valuationBasis', 'surveyorValuationBasis')], ['Risk Level', get('riskLevel', 'surveyorRiskLevel')]]} />
+                                            </div>
+                                        );
+                                    })()}
+                                </>
                             )}
-                            {isCalculatingPremium ? 'Calculating...' : 'Calculate Premium'}
-                        </Button>
-                    )}
+                        </TabsContent>
+                    </div>
 
-                    {shouldShowProceedToPaymentButton && (
-                        <Button
-                            className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
-                            onClick={() => toast.info('Proceed to Payment is available, but checkout is still handled from the policy list flow.')}
-                        >
-                            <CreditCard className="w-4 h-4 mr-2" />
-                            {resolvedAction?.label || 'Proceed to Payment'}
-                        </Button>
-                    )}
-
-                    {/* NIIP Retry Info */}
-                    {actualStatus === 'paid_niip_failed' && (
-                        <div className="bg-rose-50 p-3 rounded-lg border border-rose-100 text-xs text-rose-800 w-full">
-                            <p className="font-semibold flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" />
-                                Action Required
-                            </p>
-                            <p className="mt-1">
-                                Your payment was received, but the NIIP automated withdrawal failed. 
-                                An administrator will manually reconcile this. You do not need to pay again.
-                            </p>
+                    {/* ── Sticky Footer ──────────────────────────────────────── */}
+                    <div className="flex-shrink-0 border-t border-slate-200 bg-white px-5 py-4 rounded-b-2xl">
+                        {actualStatus === 'paid_niip_failed' && (
+                            <div className="mb-3 rounded-xl border border-rose-100 bg-rose-50 p-3 text-xs text-rose-800">
+                                <p className="font-semibold flex items-center gap-1 mb-0.5"><AlertCircle className="w-3 h-3" /> Action Required</p>
+                                <p>Your payment was received, but the NIIP automated withdrawal failed. An administrator will manually reconcile this. You do not need to pay again.</p>
+                            </div>
+                        )}
+                        <div className="flex flex-wrap justify-end gap-2">
+                            <Button variant="outline" onClick={onClose} className="rounded-full px-5">
+                                <X className="w-3.5 h-3.5 mr-1.5" /> Close
+                            </Button>
+                            {(policy as any).surveyorRecommendation && (
+                                <>
+                                    <Button variant="outline" className="rounded-full border-indigo-200 bg-indigo-50 px-4 text-indigo-700 hover:bg-indigo-100" onClick={() => { setIsGeneratingSAR(true); try { openSARReport(policy); } catch { toast.error('Could not open report.'); } finally { setIsGeneratingSAR(false); } }} disabled={isGeneratingSAR}>
+                                        {isGeneratingSAR ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Eye className="w-3.5 h-3.5 mr-1.5" />} View SAR
+                                    </Button>
+                                    <Button variant="outline" className="rounded-full border-purple-200 bg-purple-50 px-4 text-purple-700 hover:bg-purple-100" onClick={() => { try { downloadSARReport(policy); toast.success('SAR report downloaded.'); } catch { toast.error('Could not download report.'); } }}>
+                                        <Download className="w-3.5 h-3.5 mr-1.5" /> Download SAR
+                                    </Button>
+                                </>
+                            )}
+                            {(policy.surveyDocument?.downloadUrl || policy.surveyDocument?.downloadPath) && (
+                                <Button variant="outline" className="rounded-full border-blue-200 bg-blue-50 px-4 text-blue-700 hover:bg-blue-100" onClick={async () => {
+                                    const target = policy.surveyDocument?.downloadUrl || policy.surveyDocument?.downloadPath;
+                                    if (!target) { toast.error('Survey report not available for download.'); return; }
+                                    try { await downloadProtectedFileByPath(target, policy.surveyDocument?.name || policy.surveyDocument?.fileName || 'survey-report'); }
+                                    catch { toast.error('Unable to download the survey report right now.'); }
+                                }}>
+                                    <Download className="w-3.5 h-3.5 mr-1.5" /> Site Pictures
+                                </Button>
+                            )}
+                            {isPaymentPaid && (
+                                <Button variant="outline" onClick={handleDownloadReceipt} disabled={isDownloadingReceipt} className="rounded-full border-emerald-200 bg-emerald-50 px-4 text-emerald-700 hover:bg-emerald-100">
+                                    {isDownloadingReceipt ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Receipt className="w-3.5 h-3.5 mr-1.5" />}
+                                    {isDownloadingReceipt ? 'Downloading…' : 'Receipt'}
+                                </Button>
+                            )}
+                            {shouldShowCalculatePremiumButton && (
+                                <Button className="rounded-full bg-amber-600 px-5 hover:bg-amber-700" onClick={handleCalculatePremium} disabled={isCalculatingPremium}>
+                                    {isCalculatingPremium ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Receipt className="w-3.5 h-3.5 mr-1.5" />}
+                                    {isCalculatingPremium ? 'Calculating…' : 'Calculate Premium'}
+                                </Button>
+                            )}
+                            {shouldShowProceedToPaymentButton && (
+                                <Button className="rounded-full bg-emerald-600 px-5 hover:bg-emerald-700" onClick={() => toast.info('Proceed to Payment is available, but checkout is handled from the policy list flow.')}>
+                                    <CreditCard className="w-3.5 h-3.5 mr-1.5" /> {resolvedAction?.label || 'Proceed to Payment'}
+                                </Button>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </div>
+                </Tabs>
             </DialogContent>
         </Dialog>
     );

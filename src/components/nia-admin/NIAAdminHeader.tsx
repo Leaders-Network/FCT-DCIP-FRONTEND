@@ -1,315 +1,254 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, User, Settings, LogOut, Building2, RefreshCw, Menu } from "lucide-react";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  Bell,
+  ClipboardList,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Users,
+  UserCheck,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Assignment, Surveyor, PolicyRequest } from "@/types/api.types";
 import { clearAuthTokens, decodeToken, getAuthToken } from "@/utils/auth";
 import NotificationBell from "@/components/shared/NotificationBell";
-
-interface SearchResult {
-    _id: string;
-    type: 'assignment' | 'surveyor' | 'policy';
-    firstname?: string;
-    lastname?: string;
-    email?: string;
-    location?: {
-        address: string;
-    };
-    propertyDetails?: {
-        address: string;
-    };
-}
+import Swal from "sweetalert2";
+import { usePathname, useRouter } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 
 interface NIAAdminHeaderProps {
-    onMenuClick?: () => void;
+  onMenuClick?: () => void;
 }
 
+interface PageContext {
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+}
+
+const getNIAPageContext = (pathname: string | null): PageContext => {
+  if (!pathname) {
+    return {
+      title: "NIA Dashboard",
+      subtitle: "Overview of assignments, surveyors, and policy operations.",
+      icon: LayoutDashboard,
+    };
+  }
+
+  if (pathname.includes("/surveyors")) {
+    return {
+      title: "Surveyors",
+      subtitle: "Manage surveyor registrations and availability.",
+      icon: Users,
+    };
+  }
+
+  if (pathname.includes("/assignments")) {
+    return {
+      title: "Assignments",
+      subtitle: "Track automated assignment workflows and status.",
+      icon: ClipboardList,
+    };
+  }
+
+  if (pathname.includes("/administrators")) {
+    return {
+      title: "Administrators",
+      subtitle: "Manage NIA administrator accounts.",
+      icon: UserCheck,
+    };
+  }
+
+  if (pathname.includes("/notifications")) {
+    return {
+      title: "Notifications",
+      subtitle: "Stay on top of system alerts and activity.",
+      icon: Bell,
+    };
+  }
+
+  if (pathname.includes("/settings")) {
+    return {
+      title: "Settings",
+      subtitle: "Configure NIA portal preferences and options.",
+      icon: Settings,
+    };
+  }
+
+  return {
+    title: "NIA Dashboard",
+    subtitle: "Overview of assignments, surveyors, and policy operations.",
+    icon: LayoutDashboard,
+  };
+};
+
 const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
-    const [adminInfo, setAdminInfo] = useState<{
-        fullname: string;
-        email: string;
-        organization: string;
-    } | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [showSearchResults, setShowSearchResults] = useState(false);
-    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const pathname = usePathname();
+  const router = useRouter();
+  const pageContext = getNIAPageContext(pathname);
+  const PageIcon = pageContext.icon;
 
-    const getDashboardToken = (): string | null => {
-        return getAuthToken('nia-admin');
-    };
+  const [adminInfo, setAdminInfo] = useState<{
+    fullname?: string;
+    email?: string;
+    organization?: string;
+  } | null>(null);
 
-    useEffect(() => {
-        // Get admin info from localStorage
-        const storedAdminInfo = localStorage.getItem("niaAdminInfo");
-        if (storedAdminInfo) {
-            setAdminInfo(JSON.parse(storedAdminInfo));
-        } else {
-            const decoded = decodeToken(getDashboardToken() || undefined) as { fullname?: string } | null;
-            if (decoded?.fullname) {
-                setAdminInfo({
-                    fullname: decoded.fullname,
-                    email: '',
-                    organization: 'AMMC'
-                });
-            }
+  const isDarkMode =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("niaAdminInfo");
+      if (stored) {
+        setAdminInfo(JSON.parse(stored));
+      } else {
+        const token = getAuthToken("nia-admin");
+        const decoded = decodeToken(token ?? undefined) as { fullname?: string } | null;
+        if (decoded?.fullname) {
+          setAdminInfo({ fullname: decoded.fullname, email: "", organization: "NIA" });
         }
-    }, []);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
-    const handleLogout = () => {
-        clearAuthTokens();
-        localStorage.removeItem("niaAdminToken");
-        localStorage.removeItem("niaAdminInfo");
-        localStorage.removeItem("organization");
-        window.location.href = "/nia-admin/login";
-    };
+  const adminName = adminInfo?.fullname || "NIA Admin";
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) return;
+  const initials = adminName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
-        try {
-            const token = getDashboardToken();
-            if (!token) {
-                return;
-            }
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      background: isDarkMode ? "#111827" : "#ffffff",
+      color: isDarkMode ? "#ffffff" : "#111827",
+    });
 
-            // Search across multiple resources
-            const [assignmentsRes, surveyorsRes, policiesRes] = await Promise.all([
-                fetch(`/api/nia-admin/assignments?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`/api/nia-admin/surveyors?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`/api/nia-admin/policies?search=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-            ]);
+    if (result.isConfirmed) {
+      clearAuthTokens();
+      localStorage.removeItem("niaAdminToken");
+      localStorage.removeItem("niaAdminInfo");
+      localStorage.removeItem("organization");
+      router.push("/nia-admin/login");
+    }
+  };
 
-            const results = [];
+  return (
+    <header className="relative sticky top-3 z-20 mb-4 rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(139,92,246,0.12),_transparent_42%)]" />
+      <div className="relative flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        {/* Left: mobile toggle + page context */}
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            onClick={onMenuClick}
+            aria-label="Toggle sidebar"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-200 hover:text-violet-700 hover:shadow-md md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
 
-            if (assignmentsRes.ok) {
-                const data = await assignmentsRes.json();
-                results.push(...(data.data || []).map((item: Assignment) => ({ ...item, type: 'assignment' as const })));
-            }
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-violet-800 text-white shadow-lg shadow-violet-200/60">
+            <PageIcon className="h-5 w-5" />
+          </div>
 
-            if (surveyorsRes.ok) {
-                const data = await surveyorsRes.json();
-                results.push(...(data.data || []).map((item: Surveyor) => ({ ...item, type: 'surveyor' as const })));
-            }
-
-            if (policiesRes.ok) {
-                const data = await policiesRes.json();
-                results.push(...(data.data || []).map((item: PolicyRequest) => ({ ...item, type: 'policy' as const })));
-            }
-
-            setSearchResults(results);
-            setShowSearchResults(true);
-        } catch (error) {
-        }
-    };
-
-    const adminName = adminInfo?.fullname || "NIA Admin";
-
-    const initials = adminName
-        .split(" ")
-        .map((word: string) => word[0])
-        .join("")
-        .toUpperCase();
-
-    return (
-        <header className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">
-            <div className="flex items-center justify-between">
-                {/* Left side - Menu button and Organization info */}
-                <div className="flex items-center space-x-2 sm:space-x-4">
-                    {/* Mobile menu button */}
-                    <button
-                        onClick={onMenuClick}
-                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 md:hidden"
-                    >
-                        <Menu className="h-5 w-5" />
-                    </button>
-
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                        <div className="bg-blue-100 p-1.5 sm:p-2 rounded-lg">
-                            <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                        </div>
-                        <div className="hidden sm:block">
-                            <h1 className="text-base sm:text-lg font-semibold text-gray-900">NIA Admin Portal</h1>
-                            <p className="text-xs text-gray-500">Nigerian Insurers Association</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right side - Search, notifications, and user menu */}
-                <div className="flex items-center space-x-2 sm:space-x-4">
-                    {/* Search - hidden on mobile, shown in separate row */}
-                    <form onSubmit={handleSearch} className="relative hidden lg:block">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-gray-400" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-48 xl:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                    </form>
-
-                    {/* Refresh Button - hidden on small screens */}
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-colors hidden sm:block"
-                        title="Refresh Dashboard"
-                    >
-                        <RefreshCw className="h-5 w-5" />
-                    </button>
-
-                    <NotificationBell />
-
-                    {/* User Menu */}
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                        <div className="hidden lg:block text-right">
-                            <p className="text-sm font-medium text-gray-900 truncate max-w-[120px]">{adminName}</p>
-                            <p className="text-xs text-gray-500">NIA Administrator</p>
-                        </div>
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                    {initials}
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                                <div className="px-3 py-2 border-b border-gray-100">
-                                    <p className="text-sm font-medium text-gray-900">{adminName}</p>
-                                    <p className="text-xs text-gray-500">{adminInfo?.email || 'admin@nia.org'}</p>
-                                    <div className="flex items-center mt-1">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                                        <span className="text-xs text-blue-600 font-medium">Nigerian Insurers Association</span>
-                                    </div>
-                                </div>
-
-                                <DropdownMenuItem onSelect={() => window.location.href = '/nia-admin/profile'}>
-                                    <User className="mr-2 h-4 w-4" />
-                                    <span>Profile</span>
-                                </DropdownMenuItem>
-
-                                <DropdownMenuItem onSelect={() => window.location.href = '/nia-admin/settings'}>
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    <span>Settings</span>
-                                </DropdownMenuItem>
-
-                                <DropdownMenuSeparator />
-
-                                <DropdownMenuItem onSelect={handleLogout} className="text-red-600">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Logout</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </div>
+          <div className="min-w-0">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-700">
+                NIA workspace
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[10px] font-medium tracking-[0.18em] text-slate-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+                Live
+              </span>
             </div>
+            <h1 className="truncate text-lg font-bold text-slate-900 sm:text-xl lg:text-2xl">
+              {pageContext.title}
+            </h1>
+            <p className="truncate text-sm text-slate-500">{pageContext.subtitle}</p>
+          </div>
+        </div>
 
-            {/* Mobile Search */}
-            <div className="mt-4 md:hidden">
-                <form onSubmit={handleSearch} className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Search assignments, surveyors..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                </form>
-            </div>
+        {/* Right: notifications + user menu */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-1.5 shadow-sm backdrop-blur">
+            <NotificationBell />
+          </div>
 
-            {/* Search Results Modal */}
-            {showSearchResults && (
-                <>
-                    <div
-                        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-                        onClick={() => setShowSearchResults(false)}
-                    />
-                    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-2xl bg-white rounded-lg shadow-xl z-50 max-h-[600px] overflow-hidden flex flex-col mx-4">
-                        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                                Search Results for "{searchQuery}"
-                            </h3>
-                            <button
-                                onClick={() => setShowSearchResults(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                ×
-                            </button>
-                        </div>
-                        <div className="overflow-y-auto flex-1 p-4">
-                            {searchResults.length === 0 ? (
-                                <div className="text-center py-12 text-gray-500">
-                                    <Search className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                                    <p>No results found</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {searchResults.map((result, index) => (
-                                        <div
-                                            key={index}
-                                            onClick={() => {
-                                                const url = result.type === 'assignment'
-                                                    ? `/nia-admin/assignments/${result._id}`
-                                                    : result.type === 'surveyor'
-                                                        ? `/nia-admin/surveyors`
-                                                        : `/nia-admin/dashboard/policies/${result._id}`;
-                                                window.location.href = url;
-                                            }}
-                                            className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center space-x-2 mb-1">
-                                                        <span className={`px-2 py-1 text-xs rounded-full ${result.type === 'assignment' ? 'bg-blue-100 text-blue-800' :
-                                                            result.type === 'surveyor' ? 'bg-green-100 text-green-800' :
-                                                                'bg-purple-100 text-purple-800'
-                                                            }`}>
-                                                            {result.type}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-sm font-medium text-gray-900">
-                                                        {result.type === 'assignment'
-                                                            ? `Assignment ${result._id?.substring(0, 8)}`
-                                                            : result.type === 'surveyor'
-                                                                ? `${result.firstname} ${result.lastname}`
-                                                                : `Policy ${result._id?.substring(0, 8)}`
-                                                        }
-                                                    </p>
-                                                    <p className="text-xs text-gray-600 mt-1">
-                                                        {result.type === 'assignment' && result.location?.address}
-                                                        {result.type === 'surveyor' && result.email}
-                                                        {result.type === 'policy' && result.propertyDetails?.address}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </>
-            )}
-        </header>
-    );
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="group flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-violet-600/20">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-violet-800 text-sm font-bold text-white shadow-md shadow-violet-200/60 transition-transform duration-300 group-hover:scale-105">
+                  {initials}
+                </span>
+                <span className="hidden text-left sm:block">
+                  <span className="block text-sm font-semibold text-slate-900">
+                    {adminName}
+                  </span>
+                  <span className="block text-[11px] text-slate-500">
+                    NIA Administrator
+                  </span>
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-64 rounded-3xl border border-slate-200/80 bg-white/95 p-2 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+            >
+              <DropdownMenuLabel className="px-3 py-2">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                  Signed in as
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-900">
+                  {adminName}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {adminInfo?.email || "NIA admin account"}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-1 bg-slate-200" />
+              <DropdownMenuItem
+                onSelect={() => router.push("/nia-admin/settings")}
+                className="cursor-pointer rounded-2xl px-3 py-2.5 text-sm text-slate-700 transition-colors focus:bg-violet-50 focus:text-violet-800"
+              >
+                <Settings className="h-4 w-4 text-slate-500" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleLogout}
+                className="cursor-pointer rounded-2xl px-3 py-2.5 text-sm text-red-600 transition-colors focus:bg-red-50 focus:text-red-700"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </header>
+  );
 };
 
 export default NIAAdminHeader;

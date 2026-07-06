@@ -1,14 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { BuilderLiabilityPolicyForm } from '@/components/builderLiability/PolicyForm';
 import { BuilderLiabilityPolicyList } from '@/components/builderLiability/PolicyList';
 // DEPRECATED: Legacy property builder liability form - system now uses Builder Liability Policy exclusively
 // import PolicyRequestForm from "@/components/dashboard/PolicyRequestForm";
-import ReportSection from "@/components/dashboard/ReportSection";
 // REMOVED: MergedReportsSummary - not applicable for Builder Liability policies
-import NotificationTester from "@/components/shared/NotificationTester";
 import { PolicyRequest } from "@/types/api.types";
-import Image from "next/image";
 import { useAuth } from "@/context/useAuth";
 import { getCookie } from "@/utils/cookies";
 import { getAuthToken } from "@/utils/auth";
@@ -50,7 +48,9 @@ import {
 } from "@/constants/policyConstants";
 
 const Dashview = () => {
-  const [showBuilderLiabilityForm, setShowBuilderLiabilityForm] = useState(false);
+  const router = useRouter();
+  const showBuilderLiabilityForm = false;
+  const setShowBuilderLiabilityForm = (_value: boolean) => {};
   const [stats, setStats] = useState({
     active: 0,
     expired: 0,
@@ -65,8 +65,6 @@ const Dashview = () => {
   const [surveyedPolicies, setSurveyedPolicies] = useState<PolicyRequest[]>([]);
   const [allPolicies, setAllPolicies] = useState<PolicyRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<'overview' | 'reports'>('overview');
-
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -78,6 +76,9 @@ const Dashview = () => {
     sortBy: "newest"
   });
   const [filteredPolicies, setFilteredPolicies] = useState<PolicyRequest[]>([]);
+  const handleOpenBuilderLiabilityForm = () => {
+    router.push("/dashboard/insurance/new");
+  };
 
   // Apply search and filters to policies
   useEffect(() => {
@@ -260,7 +261,7 @@ const Dashview = () => {
         // Set recent builder liabilities (first 5 items from all policies)
         setRecentInsurances(allPolicyData.slice(0, 5) || []);
 
-        // Store all policies for report section and filtering
+        // Store all policies for filtering
         setAllPolicies(allPolicyData);
         setFilteredPolicies(allPolicyData);
 
@@ -294,74 +295,31 @@ const Dashview = () => {
 
   return (
     <>
-      <div className="flex-1 flex flex-col overflow-hidden p-6">
-        {/* Greeting */}
-        <h1 className="text-[23px] font-extrabold pb-4">
-          Hello {getUserName()}
-        </h1>
+      <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-[#015a23] via-[#028835] to-emerald-500 p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.22)]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_36%)]" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Hello {getUserName()}
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/90 sm:text-base">
+                Your builder liability dashboard keeps policies, approvals, and support actions in one polished workspace.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {statsError && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="rounded-[1.5rem] border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm">
             {statsError}
           </div>
         )}
-
-        {/* Full-width Banner */}
-        <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] lg:h-[160px] relative mb-6">
-          <div className="w-full h-full absolute">
-            <div className="w-full h-full absolute opacity-20 bg-white rounded-xl border border-black" />
-            <Image
-              className="w-full h-full absolute rounded-xl object-cover"
-              src="/abuja-bg.png"
-              alt="Abuja background"
-              width={500}
-              height={500}
-            />
-            <div className="w-full h-full absolute opacity-20 bg-black rounded-xl" />
-          </div>
-          <div className="absolute inset-0 flex flex-col justify-center p-4">
-            <div className="text-white text-sm sm:text-base md:text-lg lg:text-[17px] font-bold mb-2">
-              Life is unpredictable, but your home&apos;s builder liability doesn&apos;t
-              have to be.
-            </div>
-            <div className="text-white text-xs sm:text-sm md:text-base lg:text-[13px] font-semibold">
-              Get peace of mind with a policy that covers you against
-              life&apos;s unexpected twists
-            </div>
-          </div>
-
-        </div>
-
-        {/* Section Navigation */}
-        <div className="mb-6">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveSection('overview')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeSection === 'overview'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Dashboard Overview
-            </button>
-
-            {/* <button
-              onClick={() => setActiveSection('reports')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeSection === 'reports'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-            >
-              Assessment Reports
-            </button> */}
-          </nav>
-        </div>
 
         {/* Main Content and Right Sidebar */}
         <div className="flex-1 flex overflow-hidden">
           {/* Main Content */}
           <main className="flex-1 pb-8 overflow-y-auto">
-            {activeSection === 'overview' && (
               <>
                 {/* Notification Tester - Temporary for debugging */}
                 {/* <NotificationTester /> */}
@@ -474,7 +432,7 @@ const Dashview = () => {
                 {/* Quick Actions */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   <button
-                    onClick={() => setShowBuilderLiabilityForm(true)}
+                    onClick={handleOpenBuilderLiabilityForm}
                     className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <div className="flex items-center justify-between">
@@ -520,8 +478,6 @@ const Dashview = () => {
                   </button>
                 </div>
 
-                {/* Removed MergedReportsSummary - not applicable for Builder Liability policies */}
-
                 {/* Builder Liability Policies List */}
                 <div className="mt-6">
                   <BuilderLiabilityPolicyList isAdmin={false} />
@@ -545,7 +501,7 @@ const Dashview = () => {
                             <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">1</div>
                             <h4 className="font-medium text-gray-900">Submit Policy Request</h4>
                           </div>
-                          <p className="text-sm text-gray-600">Click "New Request" to submit your property details for builder liability coverage.</p>
+                          <p className="text-sm text-gray-600">Open the dedicated application page to submit your builder liability policy details.</p>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-blue-200">
@@ -575,7 +531,7 @@ const Dashview = () => {
 
                       <div className="flex flex-wrap gap-3">
                         <button
-                          onClick={() => setShowBuilderLiabilityForm(true)}
+                          onClick={handleOpenBuilderLiabilityForm}
                           className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center"
                         >
                           <Plus className="w-4 h-4 mr-2" />
@@ -605,11 +561,6 @@ const Dashview = () => {
                   </div>
                 </div>
               </>
-            )}
-
-            {activeSection === 'reports' && (
-              <ReportSection userPolicies={allPolicies} />
-            )}
           </main>
 
           {/* Right Sidebar */}
@@ -691,21 +642,13 @@ const Dashview = () => {
               <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-2">
                 <button
-                  onClick={() => setShowBuilderLiabilityForm(true)}
+                  onClick={handleOpenBuilderLiabilityForm}
                   className="w-full flex items-center justify-between p-3 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors group"
                 >
                   <div className="flex items-center">
                     <Plus className="w-4 h-4 text-green-600 mr-3" />
                     <span className="text-sm font-medium text-green-900">New Builder Liability Policy</span>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-green-600 group-hover:translate-x-1 transition-transform" />
-                </button>
-
-                <button
-                  onClick={() => setActiveSection('reports')}
-                  className="w-full flex items-center justify-between p-3 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors group"
-                >
-                  
                   <ArrowRight className="w-4 h-4 text-green-600 group-hover:translate-x-1 transition-transform" />
                 </button>
 
