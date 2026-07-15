@@ -11,7 +11,14 @@ import {
   Trash,
   Edit,
   UserPlus,
-  X
+  X,
+  Search,
+  Mail,
+  Phone,
+  Shield,
+  CheckCircle2,
+  XCircle,
+  Building2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -311,15 +318,27 @@ export default function AdministratorsPage() {
     try {
       if (activeTab === 'administrators') {
         const updatedAdmin = await adminApi.updateAdministratorStatus(adminId, newStatus)
-        setAdministrators(administrators.map(admin => admin._id === adminId ? updatedAdmin.data : admin))
+        if (updatedAdmin?.success && updatedAdmin?.data) {
+          setAdministrators(prev => prev.map(admin => admin._id === adminId ? updatedAdmin.data : admin))
+          toast.success(`Administrator status updated to ${newStatus}`)
+        } else {
+          throw new Error('Failed to update status')
+        }
       } else if (activeTab === 'employees') {
         const updatedEmployee = await adminApi.updateEmployeeStatus(adminId, newStatus)
-        setEmployees(employees.map(emp => emp._id === adminId ? updatedEmployee.data : emp))
+        if (updatedEmployee?.success && updatedEmployee?.data) {
+          setEmployees(prev => prev.map(emp => emp._id === adminId ? updatedEmployee.data : emp))
+          toast.success(`Employee status updated to ${newStatus}`)
+        } else {
+          throw new Error('Failed to update status')
+        }
       } else if (activeTab === 'users') {
         toast.warning('User status management is not yet implemented.')
         return
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Toggle status error:', error)
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to update status')
     }
   }
 
@@ -357,33 +376,31 @@ export default function AdministratorsPage() {
   }, [filteredData, currentPage, itemsPerPage])
 
   return (
-    <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold truncate">User Management</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">
-            Manage administrators, employees, and users across the platform
-          </p>
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/60 p-6 rounded-[2rem] border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
+          <p className="text-sm text-slate-500 font-medium mt-1">Manage administrators, employees, and users</p>
         </div>
-        <div className="flex gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
-          <Button
-            onClick={() => setShowAdminSidebar(true)}
-            className="flex-1 sm:flex-none bg-[#028835] text-white hover:bg-[#026a29] rounded-full whitespace-nowrap"
-          >
-            <PlusCircle className="mr-2 h-5 w-5" />
-            Add User
-          </Button>
-          <Button variant="outline" className="flex-1 sm:flex-none text-gray-700 whitespace-nowrap">
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Button variant="outline" className="flex-1 sm:flex-none rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
             Export
+          </Button>
+          <Button 
+            onClick={() => setShowAdminSidebar(true)} 
+            className="flex-1 sm:flex-none rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_14px_0_rgba(16,185,129,0.39)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.23)] hover:-translate-y-0.5 transition-all"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" /> Add User
           </Button>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6 overflow-x-auto">
-        <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max">
+      {/* Floating Segmented Control */}
+      <div className="flex justify-center w-full">
+        <div className="inline-flex p-1.5 bg-slate-100/80 backdrop-blur-md rounded-2xl shadow-inner border border-slate-200/60 overflow-x-auto no-scrollbar w-full sm:w-auto max-w-full">
           {[
-            { key: 'administrators', label: 'AMMC Administrators', count: administrators.length },
+            { key: 'administrators', label: 'Administrators', count: administrators.length },
             { key: 'employees', label: 'Employees', count: employees.length },
             { key: 'users', label: 'Platform Users', count: users.length }
           ].map(tab => (
@@ -391,577 +408,362 @@ export default function AdministratorsPage() {
               key={tab.key}
               onClick={() => {
                 setActiveTab(tab.key as typeof activeTab)
-                setCurrentPage(1) // Reset pagination when switching tabs
+                setCurrentPage(1)
               }}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.key
-                ? 'border-[#028835] text-[#028835]'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+              className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap min-w-fit ${
+                activeTab === tab.key
+                  ? 'text-emerald-700 bg-white shadow-sm border border-emerald-100/50'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+              }`}
             >
-              {tab.label}
-              <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">
+              <span className="relative z-10">{tab.label}</span>
+              <span className={`relative z-10 px-2 py-0.5 rounded-full text-xs font-bold transition-colors ${
+                activeTab === tab.key ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
+              }`}>
                 {tab.count}
               </span>
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-4 border-b border-gray-100">
-          <Input
-            placeholder="Filter by name or email..."
+      {/* Filter Bar */}
+      <div className="flex items-center gap-3 p-4 bg-white/80 rounded-[1.5rem] border border-slate-100 shadow-sm backdrop-blur-md">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input 
+            placeholder={`Search ${activeTab}...`}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full sm:max-w-sm"
+            className="pl-9 bg-slate-50/50 border-slate-200 rounded-xl focus-visible:ring-emerald-500 focus-visible:border-emerald-500 transition-all shadow-none"
           />
         </div>
+      </div>
+
+      {/* Data List (Card-Row Layout) */}
+      <div className="space-y-3">
         {loading ? (
-          <div className="text-center py-12">Loading {activeTab}...</div>
+          <div className="flex items-center justify-center p-12 bg-white/50 rounded-[2rem] border border-white/50 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-100 border-t-emerald-600" />
+              <p className="text-sm font-medium text-slate-500 animate-pulse">Loading {activeTab}...</p>
+            </div>
+          </div>
+        ) : paginatedData.length === 0 ? (
+          <div className="flex items-center justify-center p-12 bg-white/50 rounded-[2rem] border border-white/50 border-dashed backdrop-blur-sm text-slate-500 font-medium">
+            No {activeTab} found.
+          </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10"><Checkbox /></TableHead>
-                <TableHead>Profile</TableHead>
-                <TableHead className="hidden md:table-cell">Email Address</TableHead>
-                <TableHead className="hidden lg:table-cell">Phone Number</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden md:table-cell">Date of Reg.</TableHead>
-                <TableHead className="w-16 sm:w-24">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedData.map((item) => (
-                <TableRow key={item._id}>
-                  <TableCell><Checkbox /></TableCell>
-                  <TableCell>
-                    <div className="flex items-center min-w-0">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-[#028835] flex items-center justify-center text-white font-bold">
-                          {(() => {
-                            if ('fullname' in item) {
-                              const names = item.fullname.split(' ');
-                              return names.length >= 2 ? `${names[0][0]}${names[names.length - 1][0]}` : `${names[0][0]}${names[0][1] || ''}`;
-                            } else {
-                              return `${item.firstname[0]}${item.lastname[0]}`;
-                            }
-                          })()}
-                        </div>
-                      </div>
-                      <div className="ml-4 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate max-w-[180px] sm:max-w-xs">
-                          {'fullname' in item ? item.fullname : `${item.firstname} ${item.lastname}`}
-                        </div>
-                        <div className="text-xs sm:text-sm text-gray-500 truncate max-w-[180px] sm:max-w-xs">
-                          {'employeeRole' in item ? item.employeeRole?.role || 'N/A' :
-                            'role' in item ? item.role || 'User' : 'N/A'}
-                        </div>
+          <div className="grid gap-3">
+            {paginatedData.map((item) => {
+              const firstName = 'firstname' in item ? item.firstname : '';
+              const lastName = 'lastname' in item ? item.lastname : '';
+              const fullName = 'fullname' in item ? item.fullname : `${firstName} ${lastName}`.trim();
+              const initials = 'fullname' in item 
+                ? (item.fullname.split(' ').length >= 2 ? `${item.fullname.split(' ')[0][0]}${item.fullname.split(' ')[item.fullname.split(' ').length - 1][0]}` : `${item.fullname.split(' ')[0][0]}${item.fullname.split(' ')[0][1] || ''}`)
+                : `${firstName[0] || ''}${lastName[0] || ''}`;
+                
+              const role = 'employeeRole' in item ? item.employeeRole?.role || 'N/A' : 'role' in item ? item.role || 'User' : 'N/A';
+              
+              const isVerified = activeTab === 'users' ? ('isEmailVerified' in item && item.isEmailVerified) : false;
+              const isActive = 'employeeStatus' in item ? item.employeeStatus?.status === 'Active' : 'isActive' in item ? item.isActive === true : false;
+              
+              const statusText = activeTab === 'users' ? (isVerified ? 'Verified' : 'Unverified') : (isActive ? 'Active' : 'Inactive');
+
+              return (
+                <div key={item._id} className="group relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 md:p-5 bg-white/90 backdrop-blur-xl rounded-[1.5rem] border border-white shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-50">
+                  
+                  {/* Avatar & Main Info */}
+                  <div className="flex items-center gap-4 min-w-[250px] flex-1">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-700 font-bold shadow-sm ring-1 ring-emerald-200/50 uppercase">
+                      {initials}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                        {fullName}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                          <Shield className="h-3 w-3" />
+                          {role}
+                        </span>
+                        {item.cadastralZone && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600">
+                            <Building2 className="h-3 w-3" />
+                            {item.cadastralZone}
+                          </span>
+                        )}
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell max-w-[220px] truncate">{item.email}</TableCell>
-                  <TableCell className="hidden lg:table-cell whitespace-nowrap">{item.phonenumber}</TableCell>
-                  <TableCell>
-                    {activeTab === 'users' ? (
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${'isEmailVerified' in item && item.isEmailVerified
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                        {'isEmailVerified' in item && item.isEmailVerified ? 'Verified' : 'Unverified'}
-                      </span>
-                    ) : (
-                      <Switch
-                        checked={
-                          'employeeStatus' in item ? item.employeeStatus?.status === 'Active' :
-                            'isActive' in item ? item.isActive === true : false
-                        }
-                        onCheckedChange={() => handleToggleStatus(
-                          item._id,
-                          'employeeStatus' in item ? item.employeeStatus?.status || 'Inactive' :
-                            'isActive' in item ? (item.isActive ? 'Active' : 'Inactive') : 'Inactive'
-                        )}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell whitespace-nowrap">
-                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
-                  </TableCell>
-                  <TableCell>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="hidden md:flex flex-col gap-1.5 flex-1 min-w-[200px] px-4 border-l border-slate-100">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Mail className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="truncate">{item.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Phone className="h-3.5 w-3.5 text-slate-400" />
+                      <span>{item.phonenumber}</span>
+                    </div>
+                  </div>
+
+                  {/* Status & Actions */}
+                  <div className="flex items-center gap-6 mt-4 md:mt-0 w-full md:w-auto justify-between md:justify-end border-t border-slate-100 md:border-t-0 pt-4 md:pt-0">
+                    
+                    {/* Status Badge */}
+                    <div className="flex items-center">
+                      {activeTab === 'users' ? (
+                        <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${isVerified ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50' : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/50'}`}>
+                          {isVerified ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+                          {statusText}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${isActive ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50' : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200'}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                            {statusText}
+                          </div>
+                          <Switch
+                            checked={isActive}
+                            onCheckedChange={() => handleToggleStatus(
+                              item._id,
+                              'employeeStatus' in item ? item.employeeStatus?.status || 'Inactive' : 'isActive' in item ? (item.isActive ? 'Active' : 'Inactive') : 'Inactive'
+                            )}
+                            className="scale-75 data-[state=checked]:bg-emerald-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions Menu */}
                     <div className="flex items-center gap-1">
-                      {/* Quick delete icon button so it's clearly visible */}
+                      <Button variant="outline" size="icon" onClick={() => handleEditAdministrator(item)} className="text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 rounded-lg shadow-sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
-                            title="Delete from platform"
-                          > 
-                            <Trash className="h-4 w-4 text-red-600 hover:text-red-800" />
+                          <Button variant="outline" size="icon" className="text-red-600 border-red-200 bg-red-50 hover:bg-red-100 hover:text-red-700 rounded-lg shadow-sm">
+                            <Trash className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="rounded-[2rem] border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this account?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently remove this{' '}
-                              {activeTab === 'administrators'
-                                ? 'administrator'
-                                : activeTab === 'employees'
-                                ? 'employee'
-                                : 'platform user'}{' '}
-                              from the platform.
+                            <AlertDialogTitle className="text-xl font-bold">Delete Account?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-500">
+                              This action cannot be undone. This will permanently remove this {activeTab.slice(0, -1)} from the platform.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteAdministrator(item._id)}>
+                            <AlertDialogCancel className="rounded-xl border-slate-200 hover:bg-slate-50">Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteAdministrator(item._id)} className="rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-md">
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-
-                      {/* Overflow menu for other actions (edit, delete) */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditAdministrator(item)}>
-                            <Edit className="mr-2 h-4 w-4 text-blue-500" /> Edit
-                          </DropdownMenuItem>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Trash className="mr-2 h-4 w-4 text-red-600 hover:text-red-800" /> Delete from Platform
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently remove this{' '}
-                                  {activeTab === 'administrators'
-                                    ? 'administrator'
-                                    : activeTab === 'employees'
-                                    ? 'employee'
-                                    : 'platform user'}{' '}
-                                  from the platform.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteAdministrator(item._id)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
-        <div className="p-4 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing {paginatedData.length} of {filteredData.length} {activeTab}
+
+        {/* Pagination */}
+        {!loading && paginatedData.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 text-sm text-slate-500 font-medium">
+            <span>Showing {paginatedData.length} of {filteredData.length} {activeTab}</span>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="rounded-lg h-8 px-3">
+                Prev
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= filteredData.length} className="rounded-lg h-8 px-3">
+                Next
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={currentPage * itemsPerPage >= filteredData.length}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
+
       {/* Add Admin Modal */}
       {showAdminSidebar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden">
-            <div className="bg-[#028835] text-white p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Add {
-                  formData.userType === 'administrator' ? 'AMMC Administrator' :
-                    formData.userType === 'employee' ? 'Employee' : 'Platform User'
-                }</h2>
-                <button
-                  onClick={() => setShowAdminSidebar(false)}
-                  className="text-green-100 hover:text-white transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/20 bg-white/95 shadow-[0_32px_120px_rgba(15,23,42,0.3)] backdrop-blur-xl animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-emerald-500 to-teal-400" />
+            
+            <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-xl font-bold text-slate-900">
+                Add {formData.userType === 'administrator' ? 'AMMC Admin' : formData.userType === 'employee' ? 'Employee' : 'Platform User'}
+              </h2>
+              <button onClick={() => setShowAdminSidebar(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700">
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* User Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  User Type *
-                </label>
-                <select
-                  name="userType"
-                  value={formData.userType}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                  required
-                >
-                  <option value="administrator">AMMC Administrator</option>
-                  <option value="employee">Employee</option>
-                  <option value="user">Platform User</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="overflow-y-auto px-8 py-6 custom-scrollbar">
+              <form id="add-user-form" onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="firstname"
-                    value={formData.firstname}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                    required
-                  />
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">User Type <span className="text-red-500">*</span></label>
+                  <select name="userType" value={formData.userType} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required>
+                    <option value="administrator">AMMC Administrator</option>
+                    <option value="employee">Employee</option>
+                    <option value="user">Platform User</option>
+                  </select>
                 </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">First Name <span className="text-red-500">*</span></label>
+                    <input type="text" name="firstname" value={formData.firstname} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Last Name <span className="text-red-500">*</span></label>
+                    <input type="text" name="lastname" value={formData.lastname} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="lastname"
-                    value={formData.lastname}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                    required
-                  />
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Email Address <span className="text-red-500">*</span></label>
+                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                  required
-                />
-              </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Phone Number <span className="text-red-500">*</span></label>
+                  <input type="tel" name="phonenumber" value={formData.phonenumber} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  name="phonenumber"
-                  value={formData.phonenumber}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role *
-                </label>
-                {/* Show role select only for administrators and employees (employees are only Surveyors) */}
                 {(formData.userType === 'administrator' || formData.userType === 'employee') && (
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                    required
-                  >
-                    <option value="">Select a role</option>
-                    {formData.userType === 'administrator' && (
-                      <>
-                        <option value="Admin">Admin</option>
-                      </>
-                    )}
-                    {formData.userType === 'employee' && (
-                      <>
-                        <option value="Surveyor">Surveyor</option>
-                      </>
-                    )}
-                  </select>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Role <span className="text-red-500">*</span></label>
+                    <select name="role" value={formData.role} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required>
+                      <option value="">Select a role</option>
+                      {formData.userType === 'administrator' && <option value="Admin">Admin</option>}
+                      {formData.userType === 'employee' && <option value="Surveyor">Surveyor</option>}
+                    </select>
+                  </div>
                 )}
-              </div>
 
-              {/* Show Cadastral Zone only for employees */}
-              {formData.userType === 'employee' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cadastral Zone *
-                  </label>
-                  <select
-                    name="cadastralZone"
-                    value={formData.cadastralZone || ""}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#028835] focus:border-[#028835]"
-                    required
-                  >
-                    <option value="">Select a cadastral zone</option>
-                    {CADASTRAL_ZONES.map((zone) => (
-                      <option key={zone} value={zone}>
-                        {zone}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAdminSidebar(false)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 bg-[#028835] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Creating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4" />
-                      <span>Create {
-                        formData.userType === 'administrator' ? 'Administrator' :
-                          formData.userType === 'employee' ? 'Employee' : 'User'
-                      }</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                {formData.userType === 'employee' && (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Cadastral Zone <span className="text-red-500">*</span></label>
+                    <select name="cadastralZone" value={formData.cadastralZone || ""} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required>
+                      <option value="">Select a cadastral zone</option>
+                      {CADASTRAL_ZONES.map((zone) => (
+                        <option key={zone} value={zone}>{zone}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </form>
+            </div>
+            
+            <div className="flex justify-end gap-3 px-8 py-5 border-t border-slate-100 bg-slate-50/50">
+              <Button type="button" variant="outline" onClick={() => setShowAdminSidebar(false)} className="rounded-xl border-slate-200">Cancel</Button>
+              <Button type="submit" form="add-user-form" disabled={loading} className="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                Create User
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Edit User Modal */}
       {showEditModal && selectedAdmin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden">
-            <div className="bg-blue-600 text-white p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Edit {
-                  formData.userType === 'administrator' ? 'Administrator' :
-                    formData.userType === 'employee' ? 'Employee' : 'User'
-                }</h2>
-                <button
-                  onClick={() => {
-                    setShowEditModal(false)
-                    setSelectedAdmin(null)
-                  }}
-                  className="text-blue-100 hover:text-white transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/20 bg-white/95 shadow-[0_32px_120px_rgba(15,23,42,0.3)] backdrop-blur-xl animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-blue-500 to-indigo-400" />
+            
+            <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-xl font-bold text-slate-900">
+                Edit {formData.userType === 'administrator' ? 'Administrator' : formData.userType === 'employee' ? 'Employee' : 'User'}
+              </h2>
+              <button onClick={() => { setShowEditModal(false); setSelectedAdmin(null); }} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700">
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            <form onSubmit={handleUpdateAdministrator} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="firstname"
-                    value={formData.firstname}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
+            <div className="overflow-y-auto px-8 py-6 custom-scrollbar">
+              <form id="edit-user-form" onSubmit={handleUpdateAdministrator} className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">First Name <span className="text-red-500">*</span></label>
+                    <input type="text" name="firstname" value={formData.firstname} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" required />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Last Name <span className="text-red-500">*</span></label>
+                    <input type="text" name="lastname" value={formData.lastname} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" required />
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="lastname"
-                    value={formData.lastname}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Email Address <span className="text-red-500">*</span></label>
+                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" required />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  name="phonenumber"
-                  value={formData.phonenumber}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role *
-                </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select a role</option>
-                  {formData.userType === 'administrator' && (
-                    <>
-                      <option value="Admin">Admin</option>
-                    </>
-                  )}
-                  {formData.userType === 'employee' && (
-                    <>
-                      <option value="Surveyor">Surveyor</option>
-                      <option value="Manager">Manager</option>
-                      <option value="Clerk">Clerk</option>
-                      <option value="Analyst">Analyst</option>
-                    </>
-                  )}
-                  {formData.userType === 'user' && (
-                    <>
-                      <option value="Standard User">Standard User</option>
-                      <option value="Premium User">Premium User</option>
-                    </>
-                  )}
-                </select>
-              </div>
-
-              {/* Show Cadastral Zone only for employees */}
-              {formData.userType === 'employee' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cadastral Zone *
-                  </label>
-                  <select
-                    name="cadastralZone"
-                    value={formData.cadastralZone || ""}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="">Select a cadastral zone</option>
-                    {CADASTRAL_ZONES.map((zone) => (
-                      <option key={zone} value={zone}>
-                        {zone}
-                      </option>
-                    ))}
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Phone Number <span className="text-red-500">*</span></label>
+                  <input type="tel" name="phonenumber" value={formData.phonenumber} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" required />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Role <span className="text-red-500">*</span></label>
+                  <select name="role" value={formData.role} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" required>
+                    <option value="">Select a role</option>
+                    {formData.userType === 'administrator' && <option value="Admin">Admin</option>}
+                    {formData.userType === 'employee' && (
+                      <>
+                        <option value="Surveyor">Surveyor</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Clerk">Clerk</option>
+                        <option value="Analyst">Analyst</option>
+                      </>
+                    )}
+                    {formData.userType === 'user' && (
+                      <>
+                        <option value="Standard User">Standard User</option>
+                        <option value="Premium User">Premium User</option>
+                      </>
+                    )}
                   </select>
                 </div>
-              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status *
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
+                {formData.userType === 'employee' && (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Cadastral Zone <span className="text-red-500">*</span></label>
+                    <select name="cadastralZone" value={formData.cadastralZone || ""} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" required>
+                      <option value="">Select a cadastral zone</option>
+                      {CADASTRAL_ZONES.map((zone) => (
+                        <option key={zone} value={zone}>{zone}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEditModal(false)
-                    setSelectedAdmin(null)
-                  }}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Updating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Edit className="w-4 h-4" />
-                      <span>Update {
-                        formData.userType === 'administrator' ? 'Administrator' :
-                          formData.userType === 'employee' ? 'Employee' : 'User'
-                      }</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Status <span className="text-red-500">*</span></label>
+                  <select name="status" value={formData.status} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" required>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </form>
+            </div>
+            
+            <div className="flex justify-end gap-3 px-8 py-5 border-t border-slate-100 bg-slate-50/50">
+              <Button type="button" variant="outline" onClick={() => { setShowEditModal(false); setSelectedAdmin(null); }} className="rounded-xl border-slate-200">Cancel</Button>
+              <Button type="submit" form="edit-user-form" disabled={loading} className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white mr-2" /> : <Edit className="h-4 w-4 mr-2" />}
+                Update User
+              </Button>
+            </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

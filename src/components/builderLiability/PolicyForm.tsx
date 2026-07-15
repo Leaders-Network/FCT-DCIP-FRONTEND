@@ -718,7 +718,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
                         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as FormTab)} className="flex-1 flex flex-col min-h-0">
-                            <div className="w-full border-b border-slate-200 bg-white sticky top-[152px] z-10 px-6 sm:px-10 -mx-6 sm:-mx-10 mb-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+                            <div className="w-full border-b border-slate-200 bg-white top-[152px] z-10 px-6 sm:px-10 -mx-6 sm:-mx-10 mb-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
                                 <div className="overflow-x-auto no-scrollbar">
                                     <TabsList className="flex bg-transparent p-0 h-auto gap-0 w-max min-w-full">
                                     <TabsTrigger value="client" className={tabTriggerClass}>
