@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Surveyor as BaseSurveyor } from "@/types/api.types";
 import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Swal from "sweetalert2"
 
 type UserIdType = {
@@ -871,8 +872,16 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
 
       {/* Create/Edit Surveyor Modal - Enhanced Comprehensive Form */}
       {(showCreateModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <Dialog
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowCreateModal(false);
+              setShowEditModal(false);
+            }
+          }}
+        >
+          <DialogContent hideCloseButton className="max-h-[94vh] w-[min(94vw,80rem)] max-w-4xl overflow-hidden rounded-2xl border-0 bg-white p-0 shadow-2xl">
             {/* Header */}
             <div className="bg-green-600 text-white p-6">
               <div className="flex items-center justify-between">
@@ -897,7 +906,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
             </div>
 
             {/* Form Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+            <div className="max-h-[calc(94vh-220px)] overflow-y-auto p-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Personal Information */}
                 <div className="space-y-4">
@@ -1278,24 +1287,30 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Details Modal */}
       {showDetailsModal && selectedSurveyor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-lg font-semibold">Surveyor Details</h3>
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
+        <Dialog
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setShowDetailsModal(false);
+          }}
+        >
+          <DialogContent hideCloseButton className="max-h-[94vh] w-[min(94vw,48rem)] max-w-2xl overflow-hidden rounded-2xl border-0 bg-white p-0 shadow-2xl">
+            <div className="max-h-[94vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b p-6">
+                <h3 className="text-lg font-semibold">Surveyor Details</h3>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="space-y-4 p-6">
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Personal Information</h4>
@@ -1442,7 +1457,8 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
               </div>
             </div>
           </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
