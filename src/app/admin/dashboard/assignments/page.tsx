@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { adminApi } from "@/services/api";
 import { downloadSubmissionZipByAssignment } from "@/services/api";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -155,173 +156,172 @@ function DetailsModal({
     : "Unassigned";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(15,23,42,0.55)" }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-[2rem] border border-white/70 bg-white/95 shadow-[0_32px_120px_rgba(15,23,42,0.22)] backdrop-blur-xl">
-        {/* Gradient accent bar */}
-        <div className="h-1.5 w-full rounded-t-[2rem] bg-gradient-to-r from-[#028835] via-emerald-500 to-teal-400" />
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent hideCloseButton className="max-h-[94vh] w-[min(92vw,42rem)] max-w-xl overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 p-0 shadow-[0_32px_120px_rgba(15,23,42,0.22)] backdrop-blur-xl">
+        <div className="max-h-[94vh] overflow-y-auto">
+          {/* Gradient accent bar */}
+          <div className="h-1.5 w-full rounded-t-[2rem] bg-gradient-to-r from-[#028835] via-emerald-500 to-teal-400" />
 
-        {/* Header */}
-        <div className="relative px-6 pt-5 pb-4">
-          <button
-            onClick={onClose}
-            className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-slate-300 hover:text-slate-600"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {/* Header */}
+          <div className="relative px-6 pt-5 pb-4">
+            <button
+              onClick={onClose}
+              aria-label="Close assignment details"
+              className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-slate-300 hover:text-slate-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600">Assignment Details</p>
-          <h3 className="mt-1 text-xl font-bold text-slate-900">
-            Policy #{assignment.policyId?.policyNumber || "N/A"}
-          </h3>
-          <p className="mt-0.5 text-xs text-slate-400 break-all">ID: {assignment._id}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600">Assignment Details</p>
+            <h3 className="mt-1 text-xl font-bold text-slate-900">
+              Policy #{assignment.policyId?.policyNumber || "N/A"}
+            </h3>
+            <p className="mt-0.5 break-all text-xs text-slate-400">ID: {assignment._id}</p>
 
-          {/* Status / Priority / Overdue */}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <StatusBadge status={assignment.status} />
-            <PriorityBadge priority={assignment.priority} />
-            {overdue && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
-                <AlertTriangle className="h-3 w-3" />
-                Overdue
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Timeline strip */}
-        <div className="mx-6 mb-4 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Assigned On</p>
-            <p className="mt-1 text-sm font-semibold text-slate-800">{fmtDate(assignment.assignedAt)}</p>
-          </div>
-          <div className={`rounded-2xl border px-4 py-3 ${overdue ? "border-red-100 bg-red-50/70" : "border-slate-100 bg-slate-50/70"}`}>
-            <p className={`text-[10px] font-semibold uppercase tracking-widest ${overdue ? "text-red-400" : "text-slate-400"}`}>Deadline</p>
-            <p className={`mt-1 text-sm font-semibold ${overdue ? "text-red-700" : "text-slate-800"}`}>{fmtDate(assignment.deadline)}</p>
-          </div>
-        </div>
-
-        <div className="mx-6 mb-6 space-y-4">
-          {/* Builder */}
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-[#028835] to-emerald-600 text-white shadow-sm">
-                <Building2 className="h-3.5 w-3.5" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Builder / Contractor</p>
-            </div>
-            <div className="space-y-2.5">
-              <div className="flex items-center gap-2.5">
-                <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <p className="text-sm font-semibold text-slate-800">{assignment.policyId?.builder?.nameOfBuilder || "N/A"}</p>
-              </div>
-              {assignment.policyId?.builder?.customerEmail && (
-                <div className="flex items-center gap-2.5">
-                  <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <a href={`mailto:${assignment.policyId.builder.customerEmail}`} className="text-sm text-slate-600 hover:text-emerald-700 hover:underline">
-                    {assignment.policyId.builder.customerEmail}
-                  </a>
-                </div>
-              )}
-              {assignment.policyId?.builder?.telNo && (
-                <div className="flex items-center gap-2.5">
-                  <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <a href={`tel:${assignment.policyId.builder.telNo}`} className="text-sm text-slate-600 hover:text-emerald-700 hover:underline">
-                    {assignment.policyId.builder.telNo}
-                  </a>
-                </div>
-              )}
-              {assignment.policyId?.builder?.address && (
-                <div className="flex items-start gap-2.5">
-                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <p className="text-sm text-slate-600 leading-relaxed">{assignment.policyId.builder.address}</p>
-                </div>
+            {/* Status / Priority / Overdue */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <StatusBadge status={assignment.status} />
+              <PriorityBadge priority={assignment.priority} />
+              {overdue && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+                  <AlertTriangle className="h-3 w-3" />
+                  Overdue
+                </span>
               )}
             </div>
           </div>
 
-          {/* Surveyor */}
-          <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm">
-                <UserCheck className="h-3.5 w-3.5" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Assigned Surveyor</p>
+          {/* Timeline strip */}
+          <div className="mx-6 mb-4 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Assigned On</p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">{fmtDate(assignment.assignedAt)}</p>
             </div>
-            {assignment.surveyorId ? (
+            <div className={`rounded-2xl border px-4 py-3 ${overdue ? "border-red-100 bg-red-50/70" : "border-slate-100 bg-slate-50/70"}`}>
+              <p className={`text-[10px] font-semibold uppercase tracking-widest ${overdue ? "text-red-400" : "text-slate-400"}`}>Deadline</p>
+              <p className={`mt-1 text-sm font-semibold ${overdue ? "text-red-700" : "text-slate-800"}`}>{fmtDate(assignment.deadline)}</p>
+            </div>
+          </div>
+
+          <div className="mx-6 mb-6 space-y-4">
+            {/* Builder */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-[#028835] to-emerald-600 text-white shadow-sm">
+                  <Building2 className="h-3.5 w-3.5" />
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Builder / Contractor</p>
+              </div>
               <div className="space-y-2.5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#028835] to-emerald-600 text-xs font-bold text-white shadow-sm">
-                    {assignment.surveyorId.firstname[0]}{assignment.surveyorId.lastname[0]}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">{surveyorName}</p>
-                    <p className="text-xs text-slate-500">Surveyor</p>
-                  </div>
+                <div className="flex items-center gap-2.5">
+                  <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  <p className="text-sm font-semibold text-slate-800">{assignment.policyId?.builder?.nameOfBuilder || "N/A"}</p>
                 </div>
-                {assignment.surveyorId.email && (
+                {assignment.policyId?.builder?.customerEmail && (
                   <div className="flex items-center gap-2.5">
                     <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                    <a href={`mailto:${assignment.surveyorId.email}`} className="text-sm text-slate-600 hover:text-emerald-700 hover:underline">
-                      {assignment.surveyorId.email}
+                    <a href={`mailto:${assignment.policyId.builder.customerEmail}`} className="text-sm text-slate-600 hover:text-emerald-700 hover:underline">
+                      {assignment.policyId.builder.customerEmail}
                     </a>
                   </div>
                 )}
+                {assignment.policyId?.builder?.telNo && (
+                  <div className="flex items-center gap-2.5">
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <a href={`tel:${assignment.policyId.builder.telNo}`} className="text-sm text-slate-600 hover:text-emerald-700 hover:underline">
+                      {assignment.policyId.builder.telNo}
+                    </a>
+                  </div>
+                )}
+                {assignment.policyId?.builder?.address && (
+                  <div className="flex items-start gap-2.5">
+                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <p className="text-sm leading-relaxed text-slate-600">{assignment.policyId.builder.address}</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white">
-                  <User className="h-4 w-4 text-slate-300" />
+            </div>
+
+            {/* Surveyor */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm">
+                  <UserCheck className="h-3.5 w-3.5" />
                 </div>
-                <p className="text-sm text-slate-400 italic">No surveyor assigned yet</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Assigned Surveyor</p>
+              </div>
+              {assignment.surveyorId ? (
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#028835] to-emerald-600 text-xs font-bold text-white shadow-sm">
+                      {assignment.surveyorId.firstname[0]}{assignment.surveyorId.lastname[0]}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">{surveyorName}</p>
+                      <p className="text-xs text-slate-500">Surveyor</p>
+                    </div>
+                  </div>
+                  {assignment.surveyorId.email && (
+                    <div className="flex items-center gap-2.5">
+                      <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      <a href={`mailto:${assignment.surveyorId.email}`} className="text-sm text-slate-600 hover:text-emerald-700 hover:underline">
+                        {assignment.surveyorId.email}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white">
+                    <User className="h-4 w-4 text-slate-300" />
+                  </div>
+                  <p className="text-sm italic text-slate-400">No surveyor assigned yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Location */}
+            {(assignment.location?.address || assignment.policyId?.builder?.address) && (
+              <div className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600">Survey Location</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-slate-700">
+                    {assignment.location?.address || assignment.policyId?.builder?.address}
+                  </p>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Location */}
-          {(assignment.location?.address || assignment.policyId?.builder?.address) && (
-            <div className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600">Survey Location</p>
-                <p className="mt-0.5 text-sm text-slate-700 leading-relaxed">
-                  {assignment.location?.address || assignment.policyId?.builder?.address}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-6 py-4">
-          {assignment.status === "completed" ? (
+          {/* Footer */}
+          <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-6 py-4">
+            {assignment.status === "completed" ? (
+              <button
+                onClick={() => onDownload(assignment._id)}
+                disabled={downloading}
+                className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#028835] to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {downloading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
+                {downloading ? "Downloading…" : "Download Survey Docs"}
+              </button>
+            ) : (
+              <div />
+            )}
             <button
-              onClick={() => onDownload(assignment._id)}
-              disabled={downloading}
-              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#028835] to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={onClose}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
             >
-              {downloading ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Camera className="h-4 w-4" />
-              )}
-              {downloading ? "Downloading…" : "Download Survey Docs"}
+              Close
             </button>
-          ) : (
-            <div />
-          )}
-          <button
-            onClick={onClose}
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-          >
-            Close
-          </button>
+          </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -450,6 +450,7 @@ const AutomatedAssignmentsPage = () => {
 
         <div className="flex gap-2">
           <select
+            aria-label="Filter assignments by status"
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
@@ -464,6 +465,7 @@ const AutomatedAssignmentsPage = () => {
           </select>
 
           <select
+            aria-label="Filter assignments by priority"
             value={filters.priority}
             onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
             className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-700 focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200/60"
