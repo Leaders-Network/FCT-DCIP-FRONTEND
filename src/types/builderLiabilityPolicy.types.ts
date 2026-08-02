@@ -162,13 +162,17 @@ export const BUILDER_LIABILITY_COVERAGE_TYPES: BuilderLiabilityCoverageType[] = 
 export type TotalEstimateSumBand =
     | '0 - 50 million'
     | '50 - 100 million'
-    | '100 - 500 million'
+    | '100 - 150 million'
+    | '150 - 250 million'
+    | '250 - 500 million'
     | '500 million and above';
 
 export const TOTAL_ESTIMATE_SUM_BANDS: TotalEstimateSumBand[] = [
     '0 - 50 million',
     '50 - 100 million',
-    '100 - 500 million',
+    '100 - 150 million',
+    '150 - 250 million',
+    '250 - 500 million',
     '500 million and above'
 ];
 

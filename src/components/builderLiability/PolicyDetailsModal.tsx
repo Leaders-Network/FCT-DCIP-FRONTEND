@@ -53,6 +53,21 @@ interface PolicyDetailsModalProps {
     onClose: () => void;
 }
 
+const CONTRACTOR_CATEGORY_DETAILS: Record<number, { label: string; description: string }> = {
+    1: {
+        label: 'Large / Class A & B',
+        description: 'Multimillion-naira heavy infrastructure, multi-story structural building, and major road construction.'
+    },
+    2: {
+        label: 'Medium / Class C & D',
+        description: 'Medium-cost rehabilitation, township roads, and moderate public building construction.'
+    },
+    3: {
+        label: 'Small / Class E',
+        description: 'Low-cost minor renovations, basic supplies, and localized maintenance tasks.'
+    }
+};
+
 export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
     policy,
     isOpen,
@@ -381,6 +396,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
     const projectLga = getProjectLga(policy.project);
     const projectDistrict = getProjectDistrict(policy.project);
     const projectEstimateBand = getProjectEstimateBand(policy.project);
+    const contractorCategory = CONTRACTOR_CATEGORY_DETAILS[Number(policy.project?.categoryOfContractorId)];
     const clientName = getClientName(policy.client);
     const clientEmail = getClientEmail(policy.client);
     const clientPhone = getClientPhone(policy.client);
@@ -509,7 +525,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 {([
                                     { value: 'client',       icon: User,       label: 'Client' },
                                     { value: 'builder',      icon: Building,   label: 'Contractor' },
-                                    { value: 'organization', icon: Shield,     label: 'Assessor' },
+                                    { value: 'organization', icon: Shield,     label: 'Assessor/Consultant' },
                                     { value: 'project',      icon: Briefcase,  label: 'Project' },
                                     { value: 'workforce',    icon: Users,      label: 'Workforce' },
                                     { value: 'compliance',   icon: FileText,   label: 'Compliance' },
@@ -559,7 +575,16 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             ) : (
                                 <SectionCard icon={Building} title="Contractor / Builder Information">
                                     <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
-                                        <InfoRow label="Contractor / Company Name" value={policy.builder?.nameOfBuilder || undefined} />
+                                            <InfoRow label="Contractor / Company Name" value={policy.builder?.nameOfBuilder || undefined} />
+                                            <InfoRow label="Contractor Type"     value={getDisplayValue(policy.project?.contractorType)} />
+                                    <InfoRow label="Contractor Category" value={
+                                        contractorCategory ? (
+                                            <div className="space-y-1">
+                                                <div className="font-medium text-slate-900">{contractorCategory.label}</div>
+                                                <div className="text-sm text-slate-600">{contractorCategory.description}</div>
+                                            </div>
+                                        ) : 'Other'
+                                    } />
                                         <InfoRow label="Director of Company"       value={policy.builder?.directorOfCompany || undefined} />
                                         <InfoRow label="RC Number"                 value={policy.builder?.rcNumber || undefined} />
                                         <InfoRow label="Email Address" icon={Mail}    value={policy.builder?.customerEmail || undefined} />
@@ -578,9 +603,9 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 
                         {/* ASSESSOR */}
                         <TabsContent value="organization" className="m-0 space-y-5">
-                            <SectionCard icon={Shield} title="Assessor Details">
+                            <SectionCard icon={Shield} title="Assessor/Consultant Details">
                                 <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
-                                    <InfoRow label="Assessor Name"          value={policy.organization?.assessorName || undefined} />
+                                    <InfoRow label="Assessor/Consultant Name"          value={policy.organization?.assessorName || undefined} />
                                     <InfoRow label="Regulatory Body"        value={getDisplayValue(assessorProfessionalBody)} />
                                     <InfoRow label="Registration Number"    value={getDisplayValue(assessorRegistrationNumber)} />
                                     <InfoRow label="Practice License"       value={getDisplayValue(policy.organization?.practiceLicenseNumber)} />
@@ -617,15 +642,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <InfoRow label="Project Type"        value={getDisplayValue(policy.project?.projectType)} />
                                     <InfoRow label="Coverage Type"       value={policy.project?.coverTypeIdxDetails || undefined} />
                                     <InfoRow label="Statutory Cover"     value={(typeof policy.project?.isStatutory === 'boolean' ? policy.project.isStatutory : policy.project?.coverTypeIdx) ? 'Yes' : 'No'} />
-                                    <InfoRow label="Contractor Type"     value={getDisplayValue(policy.project?.contractorType)} />
-                                    <InfoRow label="Contractor Category" value={
-                                        policy.project?.categoryOfContractorId === 1 ? 'Class A – Minor (₦2m–₦5m)' :
-                                        policy.project?.categoryOfContractorId === 2 ? 'Class B – Small (₦5m–₦10m)' :
-                                        policy.project?.categoryOfContractorId === 3 ? 'Class C – Medium (₦10m–₦50m)' :
-                                        policy.project?.categoryOfContractorId === 4 ? 'Class D – Upper Medium (₦50m–₦250m)' :
-                                        policy.project?.categoryOfContractorId === 5 ? 'Class E – Large (₦250m–₦1B)' :
-                                        policy.project?.categoryOfContractorId === 6 ? 'Class F – Mega (₦1B+)' : 'Other'
-                                    } />
+                                    
                                     <InfoRow label="Estimated Sum Range"   value={getDisplayValue(projectEstimateBand)} />
                                     <InfoRow label="Total Estimate Ceiling" value={<span className="text-emerald-700 font-bold">{formatCurrency(policy.project?.totalEstimateSum || 0)}</span>} />
                                     <InfoRow label="Extra Hazardous" value={

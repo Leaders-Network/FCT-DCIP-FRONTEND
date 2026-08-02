@@ -211,7 +211,7 @@ const useCreateBuilderLiabilityPolicy = () => {
         try {
             // Convert string dates to Date objects if needed
             const processedData = { ...policyData };
-            if (typeof processedData.organization.yearOfRegistration === 'string') {
+            if (processedData.organization?.yearOfRegistration && typeof processedData.organization.yearOfRegistration === 'string') {
                 processedData.organization.yearOfRegistration = new Date(processedData.organization.yearOfRegistration);
             }
             if (typeof processedData.meta.date === 'string') {
