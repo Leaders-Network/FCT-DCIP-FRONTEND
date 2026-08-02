@@ -12,7 +12,9 @@ const NIOB_PROFESSIONAL_BODY = 'Nigerian Institute of Building (NIOB)';
 const TOTAL_ESTIMATE_SUM_BAND_AMOUNTS: Record<TotalEstimateSumBand, number> = {
     '0 - 50 million': 50_000_000,
     '50 - 100 million': 100_000_000,
-    '100 - 500 million': 500_000_000,
+    '100 - 150 million': 150_000_000,
+    '150 - 250 million': 250_000_000,
+    '250 - 500 million': 500_000_000,
     '500 million and above': 500_000_001
 };
 
@@ -23,9 +25,15 @@ const TOTAL_ESTIMATE_SUM_BAND_ALIASES: Record<string, TotalEstimateSumBand> = {
     '50 - 100 million': '50 - 100 million',
     '50-100 million': '50 - 100 million',
     '50 to 100 million': '50 - 100 million',
-    '100 - 500 million': '100 - 500 million',
-    '100-500 million': '100 - 500 million',
-    '100 to 500 million': '100 - 500 million',
+    '100 - 150 million': '100 - 150 million',
+    '100-150 million': '100 - 150 million',
+    '100 to 150 million': '100 - 150 million',
+    '150 - 250 million': '150 - 250 million',
+    '150-250 million': '150 - 250 million',
+    '150 to 250 million': '150 - 250 million',
+    '250 - 500 million': '250 - 500 million',
+    '250-500 million': '250 - 500 million',
+    '250 to 500 million': '250 - 500 million',
     '500 million and above': '500 million and above',
     '500 million above': '500 million and above',
     'above 500 million': '500 million and above'
@@ -95,8 +103,16 @@ export const getEstimateBandFromAmount = (value?: number | string | null) => {
         return '50 - 100 million';
     }
 
+    if (amount <= 150_000_000) {
+        return '100 - 150 million';
+    }
+
+    if (amount <= 250_000_000) {
+        return '150 - 250 million';
+    }
+
     if (amount <= 500_000_000) {
-        return '100 - 500 million';
+        return '250 - 500 million';
     }
 
     return '500 million and above';

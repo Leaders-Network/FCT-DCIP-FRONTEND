@@ -5,7 +5,6 @@ import {
     Search,
     RefreshCw,
     CheckCircle,
-    XCircle,
     AlertTriangle,
     Info,
     ChevronDown,
@@ -15,22 +14,13 @@ import {
     BadgeCheck,
 } from "lucide-react";
 import { getSurveyorAssignments } from "@/services/api";
-import { Switch } from "@/components/ui/switch";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-interface RiskFactor {
-    id: string;
-    label: string;
-    description: string;
-    multiplier: number; // expressed as fraction of x
-    active: boolean;
-    locked?: boolean; // auto-detected from policy
-    lockedValue?: boolean;
-    category: "approval" | "contractor" | "assessor" | "site" | "opinion";
-}
-
 type ContractorType = "international" | "indigenous" | "direct_labor" | "other";
+type YesNoOption = "yes" | "no";
+type ContractorClassificationOption = "suitable" | "mismatch";
+type SectionKey = "building" | "quality" | "site" | "assessor";
 
 interface PolicySummary {
     policyNumber: string;
@@ -42,6 +32,33 @@ interface PolicySummary {
     hasSiteAssessment: boolean;
     totalEstimateSum: number;
 }
+
+interface UnderwritingAnswers {
+    buildingApproval: YesNoOption | null;
+    directLabor: YesNoOption | null;
+    contractorRegistered: YesNoOption | null;
+    contractorClassification: ContractorClassificationOption | null;
+    siteHighRisk: YesNoOption | null;
+    siteEngineering: YesNoOption | null;
+    assessorEngaged: YesNoOption | null;
+    assessorName: string;
+    assessorCompany: string;
+    assessorEmail: string;
+    opinionHasRiskFactor: boolean;
+}
+
+// ─── Business rules ───────────────────────────────────────────────────────
+
+const BASE_RISK_FACTOR = 0.0025; // 0.25%
+const MAX_ADDITIONAL_LOADING = 0.5; // 0.5x
+const UNDERWRITING_LOADINGS = {
+    buildingApprovalMissing: 0.1,
+    directLabor: 0.2,
+    contractorMismatch: 0.1,
+    siteRisk: 0.1,
+    assessorUnavailable: 0.1,
+    generalOpinion: 0.1,
+} as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -80,72 +97,49 @@ const extractPolicySummary = (policyDoc: any): PolicySummary => {
     };
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+const INITIAL_ANSWERS: UnderwritingAnswers = {
+    buildingApproval: null,
+    directLabor: null,
+    contractorRegistered: null,
+    contractorClassification: null,
+    siteHighRisk: null,
+    siteEngineering: null,
+    assessorEngaged: null,
+    assessorName: "",
+    assessorCompany: "",
+    assessorEmail: "",
+    opinionHasRiskFactor: false,
+};
 
-const INITIAL_FACTORS = (overrides?: Partial<PolicySummary>): RiskFactor[] => [
-    {
-        id: "no_building_approval",
-        label: "Is building plan approval missing?",
-        description: "Select Yes when plan approval is not present. Yes adds 20% of x to the base risk.",
-        multiplier: 0.2,
-        active: false,
-        category: "approval",
-    },
-    {
-        id: "direct_labor",
-        label: "Is the construction carried out as direct labor?",
-        description: "Select Yes if the work is direct labor. Yes adds 20% of x to the base risk.",
-        multiplier: 0.2,
-        active: overrides?.isDirectLabor ?? false,
-        locked: overrides?.isDirectLabor !== undefined,
-        lockedValue: overrides?.isDirectLabor,
-        category: "contractor",
-    },
-    {
-        id: "international_contractor",
-        label: "Is the contractor international?",
-        description: "Select Yes if the contractor is international. Yes adds 20% of x to the base risk.",
-        multiplier: 0.2,
-        active: overrides?.contractorType === "international",
-        locked:
-            overrides?.contractorType !== undefined &&
-            overrides?.contractorType !== "other",
-        lockedValue: overrides?.contractorType === "international",
-        category: "contractor",
-    },
-    {
-        id: "indigenous_contractor",
-        label: "Is the contractor indigenous / locally registered?",
-        description: "Select Yes if the contractor is indigenous / locally registered. Yes adds 10% of x to the base risk.",
-        multiplier: 0.1,
-        active: overrides?.contractorType === "indigenous",
-        locked:
-            overrides?.contractorType !== undefined &&
-            overrides?.contractorType !== "other",
-        lockedValue: overrides?.contractorType === "indigenous",
-        category: "contractor",
-    },
-    {
-        id: "no_assessor",
-        label: "Is there no assessor linked to this policy?",
-        description: "Select Yes when no assessor is linked. Yes adds 10% of x to the base risk.",
-        multiplier: 0.1,
-        active: overrides?.hasAssessor !== undefined ? !overrides.hasAssessor : false,
-        locked: overrides?.hasAssessor !== undefined,
-        lockedValue: overrides?.hasAssessor !== undefined ? !overrides.hasAssessor : false,
-        category: "assessor",
-    },
-    {
-        id: "no_site_assessment",
-        label: "Has no site assessment been conducted?",
-        description: "Select Yes when no site assessment has been completed. Yes adds 10% of x to the base risk.",
-        multiplier: 0.1,
-        active: overrides?.hasSiteAssessment !== undefined
-            ? !overrides.hasSiteAssessment
-            : false,
-        category: "site",
-    },
-];
+const calculateSectionLoadings = (answers: UnderwritingAnswers, surveyOpinion: string) => {
+    const buildingApproval = answers.buildingApproval === "no" ? UNDERWRITING_LOADINGS.buildingApprovalMissing : 0;
+    const quality = (() => {
+        if (answers.directLabor === "yes") return UNDERWRITING_LOADINGS.directLabor;
+        if (answers.directLabor === "no") {
+            const contractorMismatch =
+                answers.contractorRegistered === "no" && answers.contractorClassification === "mismatch"
+                    ? UNDERWRITING_LOADINGS.contractorMismatch
+                    : 0;
+            return contractorMismatch;
+        }
+        return 0;
+    })();
+    const site = answers.siteHighRisk === "yes" || answers.siteEngineering === "yes"
+        ? UNDERWRITING_LOADINGS.siteRisk
+        : 0;
+    const assessor = answers.assessorEngaged === "no" ? UNDERWRITING_LOADINGS.assessorUnavailable : 0;
+    const opinion = surveyOpinion.trim() && answers.opinionHasRiskFactor ? UNDERWRITING_LOADINGS.generalOpinion : 0;
+
+    return {
+        buildingApproval,
+        quality,
+        site,
+        assessor,
+        opinion,
+    };
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function PremiumCalculator() {
     // ── Policy fetch ──────────────────────────────────────────────────────────
@@ -156,58 +150,71 @@ export default function PremiumCalculator() {
 
     // ── Calculator state ──────────────────────────────────────────────────────
     const [propertyValue, setPropertyValue] = useState<string>("");
-    const [factors, setFactors] = useState<RiskFactor[]>(INITIAL_FACTORS());
+    const [answers, setAnswers] = useState<UnderwritingAnswers>(INITIAL_ANSWERS);
     const [showBreakdown, setShowBreakdown] = useState(true);
     const [copied, setCopied] = useState(false);
     const [surveyOpinion, setSurveyOpinion] = useState("");
+    const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
+        building: true,
+        quality: true,
+        site: true,
+        assessor: true,
+    });
 
-    // ── Conflict guard: international & indigenous are mutually exclusive ──────
-    const resolveContractorConflict = (
-        updated: RiskFactor[],
-        changedId: string,
-        newValue: boolean
-    ): RiskFactor[] => {
-        if (!newValue) return updated;
-        if (changedId === "international_contractor") {
-            return updated.map((f) =>
-                f.id === "indigenous_contractor" ? { ...f, active: false } : f
-            );
-        }
-        if (changedId === "indigenous_contractor") {
-            return updated.map((f) =>
-                f.id === "international_contractor" ? { ...f, active: false } : f
-            );
-        }
-        // direct_labor disables contractor type flags
-        if (changedId === "direct_labor" && newValue) {
-            return updated.map((f) =>
-                f.id === "international_contractor" || f.id === "indigenous_contractor"
-                    ? { ...f, active: false }
-                    : f
-            );
-        }
-        return updated;
+    const toggleSection = (section: SectionKey) => {
+        setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
     };
 
-    const toggleFactor = (id: string) => {
-        setFactors((prev) => {
-            const updated = prev.map((f) =>
-                f.id === id && !f.locked ? { ...f, active: !f.active } : f
-            );
-            const changed = updated.find((f) => f.id === id);
-            return changed ? resolveContractorConflict(updated, id, changed.active) : updated;
+    const updateAnswer = <K extends keyof UnderwritingAnswers>(field: K, value: UnderwritingAnswers[K]) => {
+        setAnswers((prev) => {
+            const next = { ...prev, [field]: value } as UnderwritingAnswers;
+            if (field === "assessorEngaged" && value === "no") {
+                next.assessorName = "";
+                next.assessorCompany = "";
+                next.assessorEmail = "";
+            }
+            return next;
         });
     };
 
     // ── Premium maths ──────────────────────────────────────────────────────────
     const ev = parseFloat(propertyValue) || 0;
-    const premiumX = ev * 0.03;
-    const base = 0.5 * premiumX;
-    const loadings = factors
-        .filter((f) => f.active)
-        .map((f) => ({ label: f.label, amount: f.multiplier * premiumX }));
-    const totalLoading = loadings.reduce((s, l) => s + l.amount, 0);
-    const totalPremium = base + totalLoading;
+    const basePremium = ev * BASE_RISK_FACTOR;
+    const sectionLoadings = calculateSectionLoadings(answers, surveyOpinion);
+    const totalLoadingFraction = Math.min(
+        Object.values(sectionLoadings).reduce((sum, value) => sum + value, 0),
+        MAX_ADDITIONAL_LOADING
+    );
+    const totalLoadingAmount = basePremium * totalLoadingFraction;
+    const effectiveRiskFactor = BASE_RISK_FACTOR * (1 + totalLoadingFraction);
+    const totalPremium = ev * effectiveRiskFactor;
+    const loadings = [
+        {
+            label: "Building Approval",
+            multiplier: sectionLoadings.buildingApproval,
+            amount: basePremium * sectionLoadings.buildingApproval,
+        },
+        {
+            label: "Quality of Construction",
+            multiplier: sectionLoadings.quality,
+            amount: basePremium * sectionLoadings.quality,
+        },
+        {
+            label: "Site Conditions",
+            multiplier: sectionLoadings.site,
+            amount: basePremium * sectionLoadings.site,
+        },
+        {
+            label: "Assessors / Consultants",
+            multiplier: sectionLoadings.assessor,
+            amount: basePremium * sectionLoadings.assessor,
+        },
+        {
+            label: "General Surveyor Opinion",
+            multiplier: sectionLoadings.opinion,
+            amount: basePremium * sectionLoadings.opinion,
+        },
+    ].filter((item) => item.multiplier > 0);
 
     // ── Fetch policy ──────────────────────────────────────────────────────────
     const handleFetchPolicy = useCallback(async () => {
@@ -234,8 +241,14 @@ export default function PremiumCalculator() {
             }
             const summary = extractPolicySummary(match.policyId);
             setLoadedPolicy(summary);
-            // Seed factors from policy
-            setFactors(INITIAL_FACTORS(summary));
+            setAnswers((prev) => ({
+                ...prev,
+                directLabor: summary.isDirectLabor ? "yes" : null,
+                assessorEngaged: summary.hasAssessor ? "yes" : null,
+                assessorName: summary.hasAssessor ? "Policy-linked assessor" : "",
+                assessorCompany: summary.hasAssessor ? "Policy-linked consultant" : "",
+                assessorEmail: summary.hasAssessor ? "policy@example.com" : "",
+            }));
             setSurveyOpinion("");
             // Seed estimated property value directly from totalEstimateSum
             if (match.policyId?.project?.totalEstimateSum) {
@@ -253,7 +266,7 @@ export default function PremiumCalculator() {
         setLoadedPolicy(null);
         setFetchError(null);
         setPropertyValue("");
-        setFactors(INITIAL_FACTORS());
+        setAnswers(INITIAL_ANSWERS);
         setSurveyOpinion("");
     };
 
@@ -266,9 +279,10 @@ export default function PremiumCalculator() {
             surveyOpinion ? `Surveyor Opinion: ${surveyOpinion}` : "",
             ``,
             `Estimated Property Value:  ${fmt(ev)}`,
-            `Premium (x):               ${fmt(premiumX)}`,
-            `Base Risk (0.5x):          ${fmt(base)}`,
+            `Base Premium (x):          ${fmt(basePremium)}`,
+            `Effective Risk Factor:     ${(effectiveRiskFactor * 100).toFixed(2)}%`,
             ...loadings.map((l) => `  + ${l.label}: ${fmt(l.amount)}`),
+            `Total Loading (capped):   ${fmt(totalLoadingAmount)}`,
             `──────────────────────────────`,
             `TOTAL PREMIUM: ${fmt(totalPremium)}`,
         ]
@@ -331,8 +345,7 @@ export default function PremiumCalculator() {
                     </div>
                     <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-green-50 backdrop-blur-sm">
                         <Info className="w-4 h-4 inline mr-1.5 -mt-0.5" />
-                        Enter an estimated property value, the system computes the <strong>x</strong> premium, then toggle risk factors to compute the
-                        final premium. Optionally enter a policy number to auto-fill risk factors.
+                        Complete the underwriting sections below to evaluate the project. The calculator applies loading only after each section has been assessed and caps total loading at <strong>0.5x</strong> for a maximum effective factor of <strong>1.5x</strong>.
                     </div>
                 </div>
 
@@ -426,8 +439,8 @@ export default function PremiumCalculator() {
                     </h2>
                     <p className="text-xs text-gray-500 mb-4">
                         Enter the <strong>estimated property value</strong>. The system calculates the
-                        <strong> premium as 3%</strong> of that value, then applies a
-                        <strong> 0.5x base risk factor</strong> on the premium before any additional loadings.
+                        <strong> base premium as 0.25%</strong> of that value, then applies underwriting loadings up to
+                        <strong> 0.5x</strong> to produce the effective risk factor.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Input */}
@@ -447,99 +460,290 @@ export default function PremiumCalculator() {
                         </div>
                     </div>
                 </div>
-                          {/* ── Risk Loading Factors ────────────────────────────────────── */}
+                {/* ── Underwriting Assessment Flow ─────────────────────────────────── */}
                 <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                     <div className="flex flex-col gap-3 mb-1 sm:flex-row sm:items-center sm:justify-between">
                         <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-amber-500" />
-                            Risk Loading Factors
+                            Underwriting Assessment Flow
                         </h2>
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
-                                Additive only
+                                Section-based
                             </span>
                             {isValid && (
                                 <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 font-medium">
-                                    {loadings.length} factor{loadings.length !== 1 ? "s" : ""} active
+                                    {loadings.length} loading section{loadings.length !== 1 ? "s" : ""}
                                 </span>
                             )}
                         </div>
                     </div>
                     <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-xs leading-6 text-amber-900 shadow-sm">
-                        <p className="font-semibold">How to use these factors</p>
+                        <p className="font-semibold">How the workflow works</p>
                         <p>
-                            Choose <strong>Yes</strong> only when the condition applies. Every <strong>Yes</strong> adds to
-                            the base risk and <strong>increases</strong> the total premium. <strong>No</strong> means no
-                            extra loading, so the premium never drops below the base risk.
-                        </p>
-                        <p className="mt-1 text-amber-800">
-                            Factors detected from your loaded policy are locked automatically.
+                            Each section begins with a primary question. The calculator applies loading only after the relevant subsection questions in that section have been evaluated.
                         </p>
                     </div>
 
-                    <div className="divide-y divide-gray-100">
-                        {factors.map((factor) => (
-                            <div
-                                key={factor.id}
-                                className={`group flex flex-col gap-4 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center ${
-                                    factor.locked ? "opacity-75" : ""
-                                }`}
-                            >
-                                {/* Question + description */}
-                                <div className="flex-1 min-w-0 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 transition-all duration-300 group-hover:border-emerald-200 group-hover:bg-emerald-50/40">
-                                    <p className="text-sm font-semibold text-slate-800 leading-snug">
-                                        {factor.label}
-                                    </p>
-                                    <p className="mt-1 text-xs leading-5 text-slate-500">{factor.description}</p>
-                                </div>
-
-                                {/* Right side: loading amount + yes/no toggle */}
-                                <div className="flex flex-wrap items-center gap-3 flex-shrink-0 sm:justify-end">
-                                    {factor.active && isValid ? (
-                                        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                                            +{fmt(factor.multiplier * premiumX)}
-                                        </span>
-                                    ) : (
-                                        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-400">
-                                            +{factor.multiplier * 100}% of x
-                                        </span>
-                                    )}
-
-                                    <div className="flex flex-col items-end gap-1.5">
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm transition-all duration-300 group-hover:shadow-md">
-                                            <span className={`text-[10px] font-semibold uppercase tracking-wide transition-colors ${
-                                                !factor.active ? "text-gray-700" : "text-gray-400"
-                                            }`}>
-                                                No
-                                            </span>
-                                            <Switch
-                                                checked={factor.active}
-                                                onCheckedChange={() => !factor.locked && toggleFactor(factor.id)}
-                                                disabled={factor.locked}
-                                                aria-label={factor.label}
-                                                className="data-[state=checked]:bg-[#028835] data-[state=unchecked]:bg-gray-300"
-                                            />
-                                            <span className={`text-[10px] font-semibold uppercase tracking-wide transition-colors ${
-                                                factor.active ? "text-[#028835]" : "text-gray-400"
-                                            }`}>
-                                                Yes
-                                            </span>
+                    <div className="space-y-3">
+                        {[
+                            {
+                                key: "building" as SectionKey,
+                                title: "1. Building Approval",
+                                summary: answers.buildingApproval === "no"
+                                    ? "+0.1x loading"
+                                    : answers.buildingApproval === "yes"
+                                        ? "No loading"
+                                        : "Awaiting assessment",
+                                content: (
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                        <p className="text-sm font-semibold text-slate-800">Is there a valid Building Plan Approval?</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(["yes", "no"] as YesNoOption[]).map((value) => (
+                                                <button
+                                                    key={value}
+                                                    type="button"
+                                                    onClick={() => updateAnswer("buildingApproval", value)}
+                                                    className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                                                        answers.buildingApproval === value
+                                                            ? "bg-[#028835] text-white"
+                                                            : "bg-white text-slate-600 hover:bg-slate-100"
+                                                    }`}
+                                                >
+                                                    {value === "yes" ? "Yes" : "No"}
+                                                </button>
+                                            ))}
                                         </div>
-                                        <p className="text-[10px] text-slate-400 text-right leading-tight">
-                                            Yes adds loading only
+                                        <p className="text-xs text-slate-500">
+                                            {answers.buildingApproval === "no"
+                                                ? "Loading applied: +0.1x"
+                                                : answers.buildingApproval === "yes"
+                                                    ? "No loading applied from this section."
+                                                    : "Select Yes or No to determine the section loading."}
                                         </p>
                                     </div>
+                                ),
+                            },
+                            {
+                                key: "quality" as SectionKey,
+                                title: "2. Quality of Construction",
+                                summary: answers.directLabor === "yes"
+                                    ? "+0.2x loading"
+                                    : answers.directLabor === "no" && answers.contractorRegistered === "no" && answers.contractorClassification === "mismatch"
+                                        ? "+0.1x loading"
+                                        : answers.directLabor === "no"
+                                            ? "Contractor assessment pending"
+                                            : "Awaiting assessment",
+                                content: (
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                        <p className="text-sm font-semibold text-slate-800">Is this a Direct Labour Construction?</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(["yes", "no"] as YesNoOption[]).map((value) => (
+                                                <button
+                                                    key={value}
+                                                    type="button"
+                                                    onClick={() => updateAnswer("directLabor", value)}
+                                                    className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                                                        answers.directLabor === value
+                                                            ? "bg-[#028835] text-white"
+                                                            : "bg-white text-slate-600 hover:bg-slate-100"
+                                                    }`}
+                                                >
+                                                    {value === "yes" ? "Yes" : "No"}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-slate-500">
+                                            Select Yes if the project is not assigned to a commercial contractor and is being managed directly by the owner/developer.
+                                        </p>
 
-                                    {factor.locked && (
-                                        <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-500">
-                                            AUTO
-                                        </span>
-                                    )}
-                                </div>
+                                        {answers.directLabor === "yes" ? (
+                                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                                                Immediate loading applied: +0.2x. Contractor questions are not applicable.
+                                            </div>
+                                        ) : answers.directLabor === "no" ? (
+                                            <div className="space-y-3">
+                                                <p className="text-sm font-semibold text-slate-800">Is the contractor registered?</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(["yes", "no"] as YesNoOption[]).map((value) => (
+                                                        <button
+                                                            key={value}
+                                                            type="button"
+                                                            onClick={() => updateAnswer("contractorRegistered", value)}
+                                                            className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                                                                answers.contractorRegistered === value
+                                                                    ? "bg-[#028835] text-white"
+                                                                    : "bg-white text-slate-600 hover:bg-slate-100"
+                                                            }`}
+                                                        >
+                                                            {value === "yes" ? "Yes" : "No"}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                {answers.contractorRegistered === "no" && (
+                                                    <div className="space-y-3">
+                                                        <p className="text-sm font-semibold text-slate-800">Contractor Classification</p>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {([
+                                                                { value: "suitable" as ContractorClassificationOption, label: "Correct contractor category" },
+                                                                { value: "mismatch" as ContractorClassificationOption, label: "Category mismatch" },
+                                                            ]).map((option) => (
+                                                                <button
+                                                                    key={option.value}
+                                                                    type="button"
+                                                                    onClick={() => updateAnswer("contractorClassification", option.value)}
+                                                                    className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                                                                        answers.contractorClassification === option.value
+                                                                            ? "bg-[#028835] text-white"
+                                                                            : "bg-white text-slate-600 hover:bg-slate-100"
+                                                                    }`}
+                                                                >
+                                                                    {option.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-xs text-slate-500">
+                                                            {answers.contractorClassification === "mismatch"
+                                                                ? "Loading applied: +0.1x"
+                                                                : answers.contractorClassification === "suitable"
+                                                                    ? "No loading applied from this contractor mismatch rule."
+                                                                    : "Select the contractor classification outcome to complete the section."}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ),
+                            },
+                            {
+                                key: "site" as SectionKey,
+                                title: "3. Site Conditions",
+                                summary: answers.siteHighRisk === "yes" || answers.siteEngineering === "yes"
+                                    ? "+0.1x loading"
+                                    : "No site loading",
+                                content: (
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                        <div className="space-y-2">
+                                            <p className="text-sm font-semibold text-slate-800">Is the project located in a high-risk site?</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(["yes", "no"] as YesNoOption[]).map((value) => (
+                                                    <button
+                                                        key={value}
+                                                        type="button"
+                                                        onClick={() => updateAnswer("siteHighRisk", value)}
+                                                        className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                                                            answers.siteHighRisk === value
+                                                                ? "bg-[#028835] text-white"
+                                                                : "bg-white text-slate-600 hover:bg-slate-100"
+                                                        }`}
+                                                    >
+                                                        {value === "yes" ? "Yes" : "No"}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <p className="text-sm font-semibold text-slate-800">Does the project require a basement or other special engineering considerations?</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(["yes", "no"] as YesNoOption[]).map((value) => (
+                                                    <button
+                                                        key={value}
+                                                        type="button"
+                                                        onClick={() => updateAnswer("siteEngineering", value)}
+                                                        className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                                                            answers.siteEngineering === value
+                                                                ? "bg-[#028835] text-white"
+                                                                : "bg-white text-slate-600 hover:bg-slate-100"
+                                                        }`}
+                                                    >
+                                                        {value === "yes" ? "Yes" : "No"}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-slate-500">
+                                            {answers.siteHighRisk === "yes" || answers.siteEngineering === "yes"
+                                                ? "Site loading applied: +0.1x (capped)."
+                                                : "No site loading applied until a risk indicator is selected."}
+                                        </p>
+                                    </div>
+                                ),
+                            },
+                            {
+                                key: "assessor" as SectionKey,
+                                title: "4. Assessors / Consultants",
+                                summary: answers.assessorEngaged === "yes"
+                                    ? "Assessor details captured"
+                                    : answers.assessorEngaged === "no"
+                                        ? "+0.1x loading"
+                                        : "Awaiting assessment",
+                                content: (
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                        <p className="text-sm font-semibold text-slate-800">Has an Assessor / Consultant been engaged for this project?</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(["yes", "no"] as YesNoOption[]).map((value) => (
+                                                <button
+                                                    key={value}
+                                                    type="button"
+                                                    onClick={() => updateAnswer("assessorEngaged", value)}
+                                                    className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                                                        answers.assessorEngaged === value
+                                                            ? "bg-[#028835] text-white"
+                                                            : "bg-white text-slate-600 hover:bg-slate-100"
+                                                    }`}
+                                                >
+                                                    {value === "yes" ? "Yes" : "No"}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {answers.assessorEngaged === "yes" ? (
+                                            <div className="space-y-2">
+                                                <input
+                                                    value={answers.assessorName}
+                                                    onChange={(e) => updateAnswer("assessorName", e.target.value)}
+                                                    className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                                    placeholder="Assessor / consultant name"
+                                                />
+                                                <input
+                                                    value={answers.assessorCompany}
+                                                    onChange={(e) => updateAnswer("assessorCompany", e.target.value)}
+                                                    className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                                    placeholder="Company / firm"
+                                                />
+                                                <input
+                                                    value={answers.assessorEmail}
+                                                    onChange={(e) => updateAnswer("assessorEmail", e.target.value)}
+                                                    className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                                    placeholder="Email"
+                                                />
+                                                <p className="text-xs text-slate-500">This section currently does not affect the premium calculation.</p>
+                                            </div>
+                                        ) : answers.assessorEngaged === "no" ? (
+                                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                                                No assessor/consultant is assigned. A loading of +0.1x is applied from this section.
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ),
+                            },
+                        ].map((section) => (
+                            <div key={section.key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleSection(section.key)}
+                                    className="flex w-full items-center justify-between gap-3 text-left"
+                                >
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-800">{section.title}</p>
+                                        <p className="text-xs text-slate-500">{section.summary}</p>
+                                    </div>
+                                    {openSections[section.key] ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
+                                </button>
+                                {openSections[section.key] && <div className="mt-4">{section.content}</div>}
                             </div>
                         ))}
                     </div>
-
                 </div>
 
                 {/* ── Results ─────────────────────────────────────────────────── */}
@@ -556,6 +760,18 @@ export default function PremiumCalculator() {
                         <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                             Note only
                         </span>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm text-slate-600">
+                        <input
+                            id="opinion-risk-factor"
+                            type="checkbox"
+                            checked={answers.opinionHasRiskFactor}
+                            onChange={(e) => updateAnswer("opinionHasRiskFactor", e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-[#028835] focus:ring-[#028835]"
+                        />
+                        <label htmlFor="opinion-risk-factor" className="cursor-pointer">
+                            This opinion includes a risk factor
+                        </label>
                     </div>
                     <textarea
                         value={surveyOpinion}
@@ -619,20 +835,20 @@ export default function PremiumCalculator() {
                                     <span className="text-gray-600 font-medium">{fmt(ev)}</span>
                                 </div>
 
-                                {/* Premium x */}
+                                {/* Base premium x */}
                                 <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
                                     <span className="text-gray-600">
-                                        Premium (x)&nbsp;<span className="text-gray-400 text-xs">(3% of value)</span>
+                                        Base Premium (x)&nbsp;<span className="text-gray-400 text-xs">(0.25% of value)</span>
                                     </span>
-                                    <span className="text-blue-700 font-semibold">{fmt(premiumX)}</span>
+                                    <span className="text-blue-700 font-semibold">{fmt(basePremium)}</span>
                                 </div>
 
-                                {/* Base risk 0.5x */}
+                                {/* Loading amount */}
                                 <div className="flex justify-between items-center py-1.5 border-b border-dashed border-gray-200">
                                     <span className="text-gray-700 font-semibold">
-                                        Base Risk&nbsp;<span className="text-gray-400 text-xs font-normal">(0.5x)</span>
+                                        Additional Loading&nbsp;<span className="text-gray-400 text-xs font-normal">(capped at 0.5x)</span>
                                     </span>
-                                    <span className="font-semibold text-gray-900">{fmt(base)}</span>
+                                    <span className="font-semibold text-gray-900">{fmt(totalLoadingAmount)}</span>
                                 </div>
 
                                 {/* Risk Loadings */}
@@ -662,7 +878,7 @@ export default function PremiumCalculator() {
                                     <div className="flex justify-between items-center py-2 border-t border-gray-100 text-sm">
                                         <span className="text-gray-500">Total Added Loading</span>
                                         <span className="text-amber-700 font-semibold">
-                                            + {fmt(totalLoading)}
+                                            + {fmt(totalLoadingAmount)}
                                         </span>
                                     </div>
                                 )}
@@ -675,7 +891,7 @@ export default function PremiumCalculator() {
                                 <div>
                                     <p className="text-sm text-gray-600">Total Premium Payable</p>
                                     <p className="text-xs text-gray-400 mt-0.5">
-                                        0.5x base risk + {loadings.length} selected loading{loadings.length !== 1 ? "s" : ""}
+                                        0.25% base risk + {loadings.length} selected loading{loadings.length !== 1 ? "s" : ""}
                                     </p>
                                 </div>
                                 <div className="text-right">
@@ -708,28 +924,30 @@ export default function PremiumCalculator() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-400 text-xs font-mono">
                         {[
                             ["Estimated Property Value", "EV"],
-                            ["Premium (x)", "= 3% × EV"],
-                            ["Base Risk", "= 0.5x"],
+                            ["Base Risk Factor (x)", "= 0.25%"],
+                            ["Base Premium", "= EV × x"],
+                            ["Additional Loading", "= x × loading fraction"],
                             ["No Building Plan Approval", "+ 0.2x"],
                             ["Direct Labor", "+ 0.2x"],
                             ["International Contractor", "+ 0.2x"],
                             ["Indigenous Contractor", "+ 0.1x"],
                             ["No Assessor", "+ 0.1x"],
                             ["No Site Assessment", "+ 0.1x"],
+                            ["Maximum Loading", "≤ 0.5x"],
                         ].map(([label, val]) => (
                             <div key={label} className={`flex justify-between rounded-lg px-3 py-2 ${
-                                label === "Base Risk" || label === "Premium (x)" ? "bg-slate-600" : "bg-slate-700/50"
+                                label === "Base Premium" || label === "Base Risk Factor (x)" ? "bg-slate-600" : "bg-slate-700/50"
                             }`}>
                                 <span>{label}</span>
                                 <span className={`font-bold ${
-                                    label === "Base Risk" || label === "Premium (x)" ? "text-white" : "text-green-400"
+                                    label === "Base Premium" || label === "Base Risk Factor (x)" ? "text-white" : "text-green-400"
                                 }`}>{val}</span>
                             </div>
                         ))}
                     </div>
                     <p className="text-slate-500 text-xs mt-3">
-                        x = 3% of estimated property value. Base risk = 0.5x. All risk loadings are additive only.
-                        General surveyor opinion is captured as a note only. Max possible premium = <strong className="text-slate-300">1.4x</strong> (all loadings active).
+                        x = 0.25% of estimated property value. Additional loadings are additive up to a maximum of <strong className="text-slate-300">0.5x</strong>, making the highest effective factor <strong className="text-slate-300">1.5x</strong>.
+                        General surveyor opinion is captured as a note only.
                     </p>
                 </div>
             </div>
