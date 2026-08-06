@@ -43,19 +43,19 @@ export interface ClientInfo {
 }
 
 export type ProfessionalBody =
+| 'ARCON - Architects Registration council of Nigeria'
+| 'CORBON - Council of Registered Builders of Nigeria'
     | 'COREN - Council for regulation of engineering in Nigeria'
-    | 'ARCON - Architects Registration council of Nigeria'
-    | 'TOPREC - Town Planners Registration council of Nigeria'
-    | 'CORBON - Council of Registered Builders of Nigeria'
     | 'QSRBN - Quantity Surveyors Registration Board of Nigeria'
+    | 'TOPREC - Town Planners Registration council of Nigeria'
     | 'Other';
 
 export const PROFESSIONAL_BODY_OPTIONS: ProfessionalBody[] = [
-    'COREN - Council for regulation of engineering in Nigeria',
     'ARCON - Architects Registration council of Nigeria',
-    'TOPREC - Town Planners Registration council of Nigeria',
     'CORBON - Council of Registered Builders of Nigeria',
+    'COREN - Council for regulation of engineering in Nigeria',
     'QSRBN - Quantity Surveyors Registration Board of Nigeria',
+    'TOPREC - Town Planners Registration council of Nigeria',
     'Other'
 ];
 
