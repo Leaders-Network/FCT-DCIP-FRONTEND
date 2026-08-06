@@ -37,6 +37,27 @@ const TABS: TabConfig[] = [
     { id: 'recommendation', label: 'Recommendation & Submit',   shortLabel: 'Submit',       icon: Send },
 ];
 
+const CONTRACTOR_CATEGORY_OPTIONS = [
+    {
+        value: 1,
+        label: "Large / Class A & B",
+        description:
+            "Multimillion-naira heavy infrastructure, multi-story structural building, and major road construction.",
+    },
+    {
+        value: 2,
+        label: "Medium / Class C & D",
+        description:
+            "Medium-cost rehabilitation, township roads, and moderate public building construction.",
+    },
+    {
+        value: 3,
+        label: "Small / Class E",
+        description:
+            "Low-cost minor renovations, basic supplies, and localized maintenance tasks.",
+    },
+] as const;
+
 const inputCls = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:outline-none focus:ring-4 focus:ring-[#028835]/10";
 const labelCls = "mb-1.5 block text-sm font-medium text-slate-700";
 const sectionCls = "space-y-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur";
@@ -301,7 +322,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
             contractor: {
                 presentOnSite: form.contractorPresentOnSite,
                 name: form.contractorName,
-                category: form.contractorCategory,
+                category: form.contractorCategory ? Number(form.contractorCategory) : undefined,
             },
             assessor: {
                 name: form.assessorName,
@@ -679,15 +700,12 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                             </div>
                                             <div>
                                                 <label className={labelCls}>Contractor Category</label>
-                                                <select className={inputCls} value={form.contractorCategory} onChange={e => updateForm('contractorCategory', e.target.value)}>
-                                                    <option value="">Select category</option>
-                                                    <option>Category A</option>
-                                                    <option>Category B</option>
-                                                    <option>Category C</option>
-                                                    <option>Category D</option>
-                                                    <option>Category E</option>
-                                                    <option>Category F</option>
-                                                </select>
+                                                    <select className={inputCls} value={form.contractorCategory} onChange={e => updateForm('contractorCategory', e.target.value)}>
+                                                        <option value="">Select category</option>
+                                                        {CONTRACTOR_CATEGORY_OPTIONS.map(opt => (
+                                                            <option key={opt.value} value={String(opt.value)}>{opt.label}</option>
+                                                        ))}
+                                                    </select>
                                             </div>
                                         </div>
                                     )}

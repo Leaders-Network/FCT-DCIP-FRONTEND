@@ -479,7 +479,7 @@ export default function PremiumCalculator() {
                         </div>
                     </div>
                     <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-xs leading-6 text-amber-900 shadow-sm">
-                        <p className="font-semibold">How the workflow works</p>
+                        <p className="font-semibold mt-5">How the workflow works</p>
                         <p>
                             Each section begins with a primary question. The calculator applies loading only after the relevant subsection questions in that section have been evaluated.
                         </p>
