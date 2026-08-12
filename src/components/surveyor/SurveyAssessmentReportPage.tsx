@@ -150,6 +150,7 @@ const SurveyAssessmentReportPage: React.FC<SurveyAssessmentReportPageProps> = ({
 
       {submissionResult && showConfirmation && (
         <SurveySubmissionConfirmation
+          isOpen={showConfirmation}
           submissionResult={submissionResult}
           policy={assignment.policyId as any}
           onClose={() => {
