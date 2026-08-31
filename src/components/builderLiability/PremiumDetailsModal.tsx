@@ -38,7 +38,7 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
     const hasData = Boolean(premiumDetails && policy);
     const premiumAmount = premiumDetails?.amount ?? premiumDetails?.premiumAmount ?? 0;
     const currency = premiumDetails?.currency || 'NGN';
-    const defaultEmail = premiumDetails?.builder?.email || policy?.builder.customerEmail || '';
+    const defaultEmail = premiumDetails?.builder?.email || policy?.builder?.customerEmail || policy?.client?.email || '';
     const defaultReference = premiumDetails?.transactionReference || premiumDetails?.invoiceNumber || '';
 
     const formatCurrency = (value: number) =>
@@ -59,9 +59,9 @@ export const PremiumDetailsModal: React.FC<PremiumDetailsModalProps> = ({
         toast.success(`${label} copied`);
     };
 
-    const builderName = premiumDetails.builder?.name || policy.builder.nameOfBuilder || policy.client.name;
-    const builderPhone = premiumDetails.builder?.phone || policy.builder.telNo || policy.client.phoneNumber;
-    const builderEmail = premiumDetails.builder?.email || policy.builder.customerEmail || policy.client.email;
+    const builderName = premiumDetails.builder?.name || policy.builder?.nameOfBuilder || policy.client?.name;
+    const builderPhone = premiumDetails.builder?.phone || policy.builder?.telNo || policy.client?.phoneNumber;
+    const builderEmail = premiumDetails.builder?.email || policy.builder?.customerEmail || policy.client?.email;
     const projectEstimateBand = getProjectEstimateBand(policy.project) || '-';
     const projectValue = premiumDetails.estimates?.declaredProjectSum
         ? formatCurrency(premiumDetails.estimates.declaredProjectSum)
