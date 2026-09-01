@@ -30,7 +30,9 @@ export const FCT_LOCATIONS: LGA[] = [
       { value: 'orozo', label: 'Orozo' },
       { value: 'karu', label: 'Karu' },
       { value: 'nyanya', label: 'Nyanya' },
-      { value: 'gwagwa', label: 'Gwagwa' }
+      { value: 'gwagwa', label: 'Gwagwa' },
+      { value: 'katampe', label: 'Katampe' }
+
     ]
   },
   {
