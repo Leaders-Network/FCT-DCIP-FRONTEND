@@ -1093,8 +1093,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     required
                   />
                   <p className="mt-1 text-sm text-gray-500">
-                    Use a valid Nigerian or international phone number for the
-                    client.
+                    Use a valid 11-digit Nigerian or international phone number for the
+                    client.(ie 0801 *** ****)
                   </p>
                 </div>
                 <div>
@@ -1304,7 +1304,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     disabled={formData.isDirectLabor}
                   />
                   <p className="mt-1 text-sm text-gray-500">
-                    Enter a valid Nigerian or international contact number.
+                    Enter a valid 11 digit Nigerian or international contact number.(ie 0801 xxx xxxx)
                   </p>
                 </div>
                 <div>
