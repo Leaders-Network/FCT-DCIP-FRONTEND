@@ -91,11 +91,13 @@ export default function AdministratorsPage() {
   const [administrators, setAdministrators] = useState<Administrator[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [users, setUsers] = useState<User[]>([])
+  const [niaUsers, setNiaUsers] = useState<Employee[]>([])
+  const [brokerUsers, setBrokerUsers] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [activeTab, setActiveTab] = useState<'administrators' | 'employees' | 'users'>('administrators')
+  const [activeTab, setActiveTab] = useState<'administrators' | 'users' | 'nia' | 'brokers'>('administrators')
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -105,7 +107,7 @@ export default function AdministratorsPage() {
     status: "Active",
     roleId: "",
     statusId: "active",
-    userType: "administrator", // New field to track what type of user we're creating
+    userType: "administrator", // admin | user | nia | broker
     cadastralZone: ""
   })
 
@@ -131,16 +133,6 @@ export default function AdministratorsPage() {
 
       if (formData.userType === 'administrator') {
         await adminApi.createAdministrator(submitData);
-      } else if (formData.userType === 'employee') {
-        // Employees are always Surveyors
-        const surveyorPayload = {
-          firstname: formData.firstname,
-          lastname: formData.lastname,
-          email: formData.email,
-          phonenumber: formData.phonenumber,
-          cadastralZone: formData.cadastralZone,
-        };
-        await adminApi.createSurveyor(surveyorPayload);
       } else if (formData.userType === 'user') {
         // Platform users are simple users
         const userSubmitData = {
@@ -148,9 +140,27 @@ export default function AdministratorsPage() {
           email: formData.email,
           phonenumber: formData.phonenumber,
           password: 'TempPassword123!',
-          confirmPassword: 'TempPassword123!'
+          confirmPassword: 'TempPassword123!',
+          role: formData.role
         };
-        await adminApi.registerUser(userSubmitData);
+        await adminApi.createPlatformUser(userSubmitData);
+      } else if (formData.userType === 'nia') {
+        // NIA users
+        const niaSubmitData = {
+          ...submitData,
+          userType: 'nia',
+          role: formData.role
+        };
+        await adminApi.createNIAUser(niaSubmitData);
+      } else if (formData.userType === 'broker') {
+        // Broker users
+        const brokerSubmitData = {
+          ...submitData,
+          userType: 'broker',
+          role: formData.role,
+          company: formData.cadastralZone // Using cadastralZone field for company name
+        };
+        await adminApi.createBrokerUser(brokerSubmitData);
       }
 
       setShowAdminSidebar(false);
@@ -201,9 +211,9 @@ export default function AdministratorsPage() {
 
       // Fetch users
       try {
-        const userResponse = await adminApi.get<{ success: boolean; users: User[] }>('/auth/users')
-        if (userResponse?.success && userResponse?.users) {
-          setUsers(userResponse.users)
+        const userResponse = await adminApi.getUsers()
+        if (userResponse?.success && (userResponse?.data || userResponse?.users)) {
+          setUsers(userResponse.data || userResponse.users)
         } else {
           setUsers([])
         }
@@ -211,10 +221,19 @@ export default function AdministratorsPage() {
         setUsers([])
       }
 
+      const [niaResponse, brokerResponse] = await Promise.all([
+        adminApi.getUsersByRole('NIA'),
+        adminApi.getUsersByRole('Broker')
+      ])
+      setNiaUsers(niaResponse?.data || [])
+      setBrokerUsers(brokerResponse?.data || [])
+
     } catch (error) {
       setAdministrators([])
       setEmployees([])
       setUsers([])
+      setNiaUsers([])
+      setBrokerUsers([])
     } finally {
       setLoading(false)
     }
@@ -230,15 +249,21 @@ export default function AdministratorsPage() {
         await adminApi.deleteAdministrator(adminId)
         setAdministrators(administrators.filter(admin => admin._id !== adminId))
         toast.success('Administrator deleted successfully')
-      } else if (activeTab === 'employees') {
-        await adminApi.deleteEmployee(adminId)
-        setEmployees(employees.filter(emp => emp._id !== adminId))
-        toast.success('Employee deleted successfully')
       } else if (activeTab === 'users') {
         // Admin-driven soft-delete of a platform user
         await adminApi.deletePlatformUser(adminId)
         setUsers(users.filter(user => user._id !== adminId))
         toast.success('User deleted successfully')
+      } else if (activeTab === 'nia') {
+        // Delete NIA user
+        await adminApi.deleteNIAUser(adminId)
+        setNiaUsers(prev => prev.filter(user => user._id !== adminId))
+        toast.success('NIA user deleted successfully')
+      } else if (activeTab === 'brokers') {
+        // Delete Broker user
+        await adminApi.deleteBrokerUser(adminId)
+        setBrokerUsers(prev => prev.filter(user => user._id !== adminId))
+        toast.success('Broker user deleted successfully')
       }
     } catch (error) {
       toast.error('Failed to delete user. Please try again.')
@@ -272,7 +297,9 @@ export default function AdministratorsPage() {
       status: 'employeeStatus' in admin ? admin.employeeStatus?.status || "Active" : 'isEmailVerified' in admin ? (admin.isEmailVerified ? "Active" : "Inactive") : "Active",
       roleId: 'employeeRole' in admin ? admin.employeeRole?._id || "" : "",
       statusId: 'employeeStatus' in admin ? admin.employeeStatus?._id || "active" : "active",
-      userType: activeTab === 'administrators' ? 'administrator' : activeTab === 'employees' ? 'employee' : 'user',
+      userType: activeTab === 'administrators' ? 'administrator' : 
+                activeTab === 'users' ? 'user' : 
+                activeTab === 'nia' ? 'nia' : 'broker',
       cadastralZone: ('cadastralZone' in admin && admin.cadastralZone) ? String(admin.cadastralZone) : ""
     })
     setShowEditModal(true)
@@ -295,11 +322,12 @@ export default function AdministratorsPage() {
 
       if (formData.userType === 'administrator') {
         await adminApi.updateAdministrator(selectedAdmin._id, updateData)
-      } else if (formData.userType === 'employee') {
-        await adminApi.patch(`/admin/employees/${selectedAdmin._id}`, { ...updateData, cadastralZone: formData.cadastralZone })
       } else if (formData.userType === 'user') {
-        toast.warning('User editing by admin is not yet implemented.')
-        return
+        await adminApi.updatePlatformUser(selectedAdmin._id, updateData)
+      } else if (formData.userType === 'nia') {
+        await adminApi.updateNIAUser(selectedAdmin._id, updateData)
+      } else if (formData.userType === 'broker') {
+        await adminApi.updateBrokerUser(selectedAdmin._id, { ...updateData, company: formData.cadastralZone })
       }
 
       setShowEditModal(false)
@@ -324,17 +352,28 @@ export default function AdministratorsPage() {
         } else {
           throw new Error('Failed to update status')
         }
-      } else if (activeTab === 'employees') {
-        const updatedEmployee = await adminApi.updateEmployeeStatus(adminId, newStatus)
-        if (updatedEmployee?.success && updatedEmployee?.data) {
-          setEmployees(prev => prev.map(emp => emp._id === adminId ? updatedEmployee.data : emp))
-          toast.success(`Employee status updated to ${newStatus}`)
+      } else if (activeTab === 'users') {
+        const updatedUser = await adminApi.updatePlatformUserStatus(adminId, newStatus)
+        if (updatedUser?.success && updatedUser?.data) {
+          setUsers(prev => prev.map(user => user._id === adminId ? updatedUser.data : user))
+          toast.success(`User status updated to ${newStatus}`)
         } else {
           throw new Error('Failed to update status')
         }
-      } else if (activeTab === 'users') {
-        toast.warning('User status management is not yet implemented.')
-        return
+      } else if (activeTab === 'nia') {
+        await adminApi.updateAdministratorStatus(adminId, newStatus)
+        setNiaUsers(prev => prev.map(user => user._id === adminId ? {
+          ...user,
+          employeeStatus: { _id: user.employeeStatus?._id || '', status: newStatus }
+        } : user))
+        toast.success(`NIA user status updated to ${newStatus}`)
+      } else if (activeTab === 'brokers') {
+        await adminApi.updateAdministratorStatus(adminId, newStatus)
+        setBrokerUsers(prev => prev.map(user => user._id === adminId ? {
+          ...user,
+          employeeStatus: { _id: user.employeeStatus?._id || '', status: newStatus }
+        } : user))
+        toast.success(`Broker status updated to ${newStatus}`)
       }
     } catch (error: any) {
       console.error('Toggle status error:', error)
@@ -347,10 +386,12 @@ export default function AdministratorsPage() {
     switch (activeTab) {
       case 'administrators':
         return administrators
-      case 'employees':
-        return employees
       case 'users':
         return users
+      case 'nia':
+        return niaUsers
+      case 'brokers':
+        return brokerUsers
       default:
         return administrators
     }
@@ -368,7 +409,7 @@ export default function AdministratorsPage() {
         item.email.toLowerCase().includes(filter.toLowerCase()) ||
         item.phonenumber.includes(filter)
     })
-  }, [administrators, employees, users, filter, activeTab])
+  }, [administrators, employees, users, niaUsers, brokerUsers, filter, activeTab])
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
@@ -401,8 +442,9 @@ export default function AdministratorsPage() {
         <div className="inline-flex p-1.5 bg-slate-100/80 backdrop-blur-md rounded-2xl shadow-inner border border-slate-200/60 overflow-x-auto no-scrollbar w-full sm:w-auto max-w-full">
           {[
             { key: 'administrators', label: 'Administrators', count: administrators.length },
-            { key: 'employees', label: 'Employees', count: employees.length },
-            { key: 'users', label: 'Platform Users', count: users.length }
+            { key: 'users', label: 'Platform Users', count: users.length },
+            { key: 'nia', label: 'NIA Users', count: niaUsers.length },
+            { key: 'brokers', label: 'Brokers', count: brokerUsers.length }
           ].map(tab => (
             <button
               key={tab.key}
@@ -597,7 +639,9 @@ export default function AdministratorsPage() {
             
             <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-slate-100">
               <h2 className="text-xl font-bold text-slate-900">
-                Add {formData.userType === 'administrator' ? 'AMMC Admin' : formData.userType === 'employee' ? 'Employee' : 'Platform User'}
+                Add {formData.userType === 'administrator' ? 'Administrator' : 
+                     formData.userType === 'user' ? 'Platform User' : 
+                     formData.userType === 'nia' ? 'NIA User' : 'Broker User'}
               </h2>
               <button onClick={() => setShowAdminSidebar(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700">
                 <X className="h-4 w-4" />
@@ -609,9 +653,10 @@ export default function AdministratorsPage() {
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">User Type <span className="text-red-500">*</span></label>
                   <select name="userType" value={formData.userType} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required>
-                    <option value="administrator">AMMC Administrator</option>
-                    <option value="employee">Employee</option>
-                    <option value="user">Platform User</option>
+                    <option value="administrator">Admin</option>
+                    <option value="user">User</option>
+                    <option value="nia">NIA</option>
+                    <option value="broker">Broker</option>
                   </select>
                 </div>
                 
@@ -636,26 +681,46 @@ export default function AdministratorsPage() {
                   <input type="tel" name="phonenumber" value={formData.phonenumber} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required />
                 </div>
 
-                {(formData.userType === 'administrator' || formData.userType === 'employee') && (
+                {(formData.userType === 'administrator' || formData.userType === 'user' || formData.userType === 'nia' || formData.userType === 'broker') && (
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Role <span className="text-red-500">*</span></label>
                     <select name="role" value={formData.role} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required>
                       <option value="">Select a role</option>
-                      {formData.userType === 'administrator' && <option value="Admin">Admin</option>}
-                      {formData.userType === 'employee' && <option value="Surveyor">Surveyor</option>}
+                      {formData.userType === 'administrator' && (
+                        <>
+                          <option value="Super Admin">Super Admin</option>
+                          <option value="Admin">Admin</option>
+                          <option value="Manager">Manager</option>
+                        </>
+                      )}
+                      {formData.userType === 'user' && (
+                        <>
+                          <option value="Regular User">Regular User</option>
+                          <option value="Premium User">Premium User</option>
+                        </>
+                      )}
+                      {formData.userType === 'nia' && (
+                        <>
+                          <option value="NIA Admin">NIA Admin</option>
+                          <option value="NIA Officer">NIA Officer</option>
+                          <option value="NIA Reviewer">NIA Reviewer</option>
+                        </>
+                      )}
+                      {formData.userType === 'broker' && (
+                        <>
+                          <option value="Broker Admin">Broker Admin</option>
+                          <option value="Broker Agent">Broker Agent</option>
+                          <option value="Broker Reviewer">Broker Reviewer</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 )}
 
-                {formData.userType === 'employee' && (
+                {formData.userType === 'broker' && (
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Cadastral Zone <span className="text-red-500">*</span></label>
-                    <select name="cadastralZone" value={formData.cadastralZone || ""} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required>
-                      <option value="">Select a cadastral zone</option>
-                      {CADASTRAL_ZONES.map((zone) => (
-                        <option key={zone} value={zone}>{zone}</option>
-                      ))}
-                    </select>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Company/Brokerage <span className="text-red-500">*</span></label>
+                    <input type="text" name="company" value={formData.cadastralZone || ""} onChange={(e) => setFormData(prev => ({...prev, cadastralZone: e.target.value}))} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" placeholder="Enter brokerage company name" required />
                   </div>
                 )}
               </form>

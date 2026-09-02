@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Shield,
   CheckCircle,
@@ -74,7 +73,6 @@ const EnforcementPage = () => {
   const [confirmingPayment, setConfirmingPayment] = useState<string | null>(null);
   const [batchConfirming, setBatchConfirming] = useState(false);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
-  const modalRef = useRef<HTMLDivElement | null>(null);
 
   const mapPolicyForDisplay = (policy: BuilderLiabilityPolicy): EnforcementPolicy => ({
     _id: policy._id,
@@ -193,9 +191,8 @@ const EnforcementPage = () => {
   useEffect(() => {
     if (showModal) {
       document.body.style.overflow = 'hidden';
-      requestAnimationFrame(() => {
-        modalRef.current?.focus();
-      });
+      // Scroll to top when modal opens
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       
       // Add ESC key listener
       const handleEsc = (event: KeyboardEvent) => {
@@ -704,10 +701,13 @@ const EnforcementPage = () => {
 
         {showModal && selectedPolicy && typeof window !== 'undefined' && createPortal(
           <div 
-            className="fixed inset-0 z-[9999] flex items-stretch justify-stretch bg-black/60"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-[9999]"
             style={{ 
               position: 'fixed', 
-              inset: 0,
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0,
               zIndex: 9999,
               margin: 0,
               padding: 0
@@ -720,23 +720,20 @@ const EnforcementPage = () => {
             }}
           >
             <div 
-              ref={modalRef}
-              tabIndex={-1}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="enforcement-modal-title"
-              className="flex h-full w-full flex-col overflow-hidden bg-white outline-none animate-in zoom-in-95 duration-200"
+              className="bg-white w-full h-full overflow-hidden relative animate-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
               style={{
+                width: '100vw',
+                height: '100vh',
                 maxWidth: 'none',
-                maxHeight: '100vh'
+                maxHeight: 'none'
               }}
             >
               {/* Header - Fixed at top */}
-              <div className="shrink-0 border-b border-gray-200 bg-white px-8 py-6 shadow-sm">
+              <div className="sticky top-0 bg-white px-8 py-6 border-b border-gray-200 z-10 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 id="enforcement-modal-title" className="text-xl font-semibold text-gray-900">
+                    <h3 className="text-xl font-semibold text-gray-900">
                       Enforcement Policy Review
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">{selectedPolicy.policyNumber}</p>
@@ -752,9 +749,9 @@ const EnforcementPage = () => {
               </div>
 
               {/* Scrollable Content */}
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="overflow-y-auto" style={{ height: 'calc(100vh - 120px)' }}>
                 <div className="px-8 py-6 space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
                   <span className="text-sm font-medium text-green-800">
                     {viewMode === 'completed' ? 'Workflow Status' : 'Payment Status'}
                   </span>
@@ -889,11 +886,9 @@ const EnforcementPage = () => {
                     </div>
                   </div>
                 )}
-                </div>
               </div>
             </div>
-          </div>,
-          document.body
+          </div>
         )}
       </div>
     </div>

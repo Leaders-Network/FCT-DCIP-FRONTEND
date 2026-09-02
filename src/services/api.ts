@@ -1238,6 +1238,61 @@ export const adminApi = {
     return response.data;
   },
 
+  getUsers: async () => {
+    const response = await api.get('/admin/users');
+    return response.data;
+  },
+
+  getUsersByRole: async (role: 'NIA' | 'Broker') => {
+    const response = await api.get(`/admin/administrators/role/${role}`);
+    return response.data;
+  },
+
+  createNIAUser: async (userData: Record<string, unknown>) => {
+    const response = await api.post('/admin/administrators/nia', userData);
+    return response.data;
+  },
+
+  createBrokerUser: async (userData: Record<string, unknown>) => {
+    const response = await api.post('/admin/administrators/broker', userData);
+    return response.data;
+  },
+
+  createPlatformUser: async (userData: { fullname: string; email: string; phonenumber?: string; password: string; role?: string }) => {
+    const response = await api.post('/admin/users', userData);
+    return response.data;
+  },
+
+  updatePlatformUser: async (userId: string, userData: Record<string, unknown>) => {
+    const response = await api.patch(`/admin/users/${userId}`, userData);
+    return response.data;
+  },
+
+  updatePlatformUserStatus: async (userId: string, status: string) => {
+    const response = await api.patch(`/admin/users/${userId}/status`, { status });
+    return response.data;
+  },
+
+  updateNIAUser: async (userId: string, userData: Record<string, unknown>) => {
+    const response = await api.patch(`/admin/administrators/${userId}`, userData);
+    return response.data;
+  },
+
+  updateBrokerUser: async (userId: string, userData: Record<string, unknown>) => {
+    const response = await api.patch(`/admin/administrators/${userId}`, userData);
+    return response.data;
+  },
+
+  deleteNIAUser: async (userId: string) => {
+    const response = await api.delete(`/admin/administrators/${userId}`);
+    return response.data;
+  },
+
+  deleteBrokerUser: async (userId: string) => {
+    const response = await api.delete(`/admin/administrators/${userId}`);
+    return response.data;
+  },
+
   getSurveyors: async (filters?: SurveyorFilters) => {
     const queryParams = new URLSearchParams();
     if (filters) {
@@ -1259,13 +1314,13 @@ export const adminApi = {
 
   // Register a platform user (admin-initiated)
   registerUser: async (userData: { fullname: string; email: string; phonenumber?: string; password: string; confirmPassword: string }) => {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post('/admin/users', userData);
     return response.data;
   },
 
   // Admin-only: soft-delete a platform user by ID
   deletePlatformUser: async (userId: string) => {
-    const response = await api.delete(`/auth/users/${userId}`);
+    const response = await api.delete(`/admin/users/${userId}`);
     return response.data;
   },
 
