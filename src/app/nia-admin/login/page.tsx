@@ -49,7 +49,7 @@ const NIAAdminLogin = () => {
 
             if (response.ok && data.success) {
                 const employeeRole = data.employee?.employeeRole?.role;
-                const isNIAAdmin = employeeRole === 'NIA-Admin' || data.employee?.organization === 'NIA';
+                const isNIAAdmin = employeeRole === 'NIA' || employeeRole === 'NIA-Admin' || data.employee?.organization === 'NIA';
                 const isSuperAdmin = employeeRole === 'Super-admin';
 
                 // Check if user is NIA admin or Super-admin
