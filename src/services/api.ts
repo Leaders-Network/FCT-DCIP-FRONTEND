@@ -1908,6 +1908,85 @@ export const adminEnforcementAPI = {
 
     const response = await api.get(`/admin/enforcement/policies/completed${query.toString() ? `?${query.toString()}` : ''}`);
     return response.data;
+  },
+
+  getPendingPaymentPolicies: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    hasPaymentInfo?: boolean;
+  }): Promise<import("@/types/builderLiabilityPolicy.types").GetPoliciesResponse> => {
+    const query = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          query.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await api.get(`/admin/enforcement/payment/pending${query.toString() ? `?${query.toString()}` : ''}`);
+    return response.data;
+  },
+
+  confirmPayment: async (policyId: string, params?: {
+    yourRef?: string;
+    egoleRef?: string;
+    date?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      policyId: string;
+      policyNumber: string;
+      previousPaymentStatus: string;
+      currentPaymentStatus: string;
+      previousPolicyStatus: string;
+      currentPolicyStatus: string;
+      confirmationDetails: any;
+      updatedAt: string;
+    };
+    error?: string;
+  }> => {
+    const response = await api.post(`/admin/enforcement/payment/confirm/${policyId}`, params || {});
+    return response.data;
+  },
+
+  confirmPaymentsBatch: async (params: {
+    policyIds: string[];
+    autoExtract?: boolean;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      totalRequested: number;
+      policiesFound: number;
+      paymentsProcessed: number;
+      confirmationResults: {
+        successful: number;
+        failed: number;
+      };
+      policiesUpdated: number;
+      updatedPolicies: Array<{
+        policyId: string;
+        policyNumber: string;
+        updated: boolean;
+      }>;
+      extractionErrors?: Array<{
+        policyId: string;
+        policyNumber: string;
+        error: string;
+      }>;
+      updateErrors?: Array<{
+        paymentRef: string;
+        error: string;
+      }>;
+      confirmationDetails: any;
+    };
+    error?: string;
+  }> => {
+    const response = await api.post('/admin/enforcement/payment/confirm/batch', params);
+    return response.data;
   }
 };
 
