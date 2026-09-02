@@ -276,7 +276,54 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const isValidPhoneNumber = (phone: string) => {
     const normalizedPhone = phone.replace(/[\s()-]/g, "");
-    return /^(?:\+?\d{10,15}|0\d{10}|234\d{10})$/.test(normalizedPhone);
+    const cleanPhone = normalizedPhone.replace(/\D/g, "");
+    
+    // Nigerian phone number patterns - must be exactly 11 digits
+    if (normalizedPhone.startsWith('+234')) {
+      // International format: +234XXXXXXXXX (13 characters total)
+      return /^\+234[789][01]\d{8}$/.test(normalizedPhone);
+    } else if (normalizedPhone.startsWith('234')) {
+      // Without plus: 234XXXXXXXXX (13 digits)
+      return /^234[789][01]\d{8}$/.test(normalizedPhone);
+    } else {
+      // Local format: Must be exactly 11 digits starting with 0
+      if (cleanPhone.length !== 11) return false;
+      if (!cleanPhone.startsWith('0')) return false;
+      
+      // Check valid network prefixes
+      const validPrefixes = ['070', '080', '081', '090', '091', '071'];
+      const prefix = cleanPhone.substring(0, 3);
+      return validPrefixes.includes(prefix);
+    }
+  };
+
+  const isValidRCNumber = (rcNumber: string) => {
+    const cleanRC = rcNumber.trim().toUpperCase();
+    
+    // RC number should be 6-10 alphanumeric characters
+    if (!/^[A-Z0-9]{6,10}$/.test(cleanRC)) return false;
+    
+    // Must contain at least one number
+    const hasNumbers = /[0-9]/.test(cleanRC);
+    return hasNumbers;
+  };
+
+  const isValidYear = (year: string) => {
+    if (!year || year.trim() === '') return false;
+    
+    const yearNum = parseInt(year.trim(), 10);
+    const currentYear = new Date().getFullYear();
+    
+    // Year should be between 1900 and current year
+    return yearNum >= 1900 && yearNum <= currentYear;
+  };
+
+  const isValidAGIS = (agis: string) => {
+    if (!agis || agis.trim() === '') return false;
+    
+    const cleanAGIS = agis.trim().toUpperCase();
+    // AGIS should be alphanumeric and at least 3 characters
+    return /^[A-Z0-9]{3,}$/.test(cleanAGIS);
   };
   const isValidNumber = (value: unknown) => {
     if (typeof value === "string" && value.trim() === "") {
@@ -293,11 +340,11 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
       if (formData.isDirectLabor) {
         return errors;
       }
-      if (isBlank(formData.builderName))
-        errors.push("Contractor/Company Name is required.");
+      if (isBlank(formData.builderName) || (formData.builderName && formData.builderName.trim().length < 2))
+        errors.push("Contractor/Company Name must be at least 2 characters long.");
       if (
         isBlank(formData.directorOfCompany) ||
-        formData.directorOfCompany.trim().length < 2
+        (formData.directorOfCompany && formData.directorOfCompany.trim().length < 2)
       ) {
         errors.push(
           "Director of the company must be at least 2 characters long.",
@@ -310,11 +357,14 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         errors.push("A valid Email Address is required.");
       }
       if (isBlank(formData.rcNumber)) errors.push("RC Number is required.");
+      else if (!isValidRCNumber(formData.rcNumber)) {
+        errors.push("RC Number should be 6-10 alphanumeric characters with at least one number.");
+      }
       if (
         isBlank(formData.builderPhone) ||
         !isValidPhoneNumber(formData.builderPhone)
       ) {
-        errors.push("A valid phone number is required.");
+        errors.push("A valid Nigerian phone number is required (11 digits, e.g., 08012345678).");
       }
       if (isBlank(formData.identificationNumber))
         errors.push("Director's Identification Number is required.");
@@ -338,7 +388,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     }
 
     if (tab === "client") {
-      if (isBlank(formData.clientName)) errors.push("Client name is required.");
+      if (isBlank(formData.clientName) || (formData.clientName && formData.clientName.trim().length < 2)) 
+        errors.push("Client name must be at least 2 characters long.");
       if (
         isBlank(formData.clientEmail) ||
         !isValidEmail(formData.clientEmail)
@@ -349,7 +400,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         isBlank(formData.clientPhoneNumber) ||
         !isValidPhoneNumber(formData.clientPhoneNumber)
       ) {
-        errors.push("A valid client phone number is required.");
+        errors.push("A valid Nigerian client phone number is required (11 digits, e.g., 08012345678).");
       }
       if (isBlank(formData.clientIdentificationType)) {
         errors.push("Client identification type is required.");
@@ -365,6 +416,14 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
           "Client address is required and should be at least 10 characters.",
         );
       }
+      // Validate client RC number if provided (optional field)
+      if (
+        formData.clientRcNumber && 
+        !isBlank(formData.clientRcNumber) && 
+        !isValidRCNumber(formData.clientRcNumber)
+      ) {
+        errors.push("Client RC Number should be 6-10 alphanumeric characters with at least one number.");
+      }
     }
 
     if (tab === "organization") {
@@ -372,21 +431,21 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         return errors;
       }
 
-      if (isBlank(formData.assessorName))
-        errors.push("Assessors / Consultants Name is required.");
-      if (isBlank(formData.professionalRegistrationNumber)) {
-        errors.push("Professional Registration Number is required.");
+      if (isBlank(formData.assessorName) || (formData.assessorName && formData.assessorName.trim().length < 2))
+        errors.push("Assessors / Consultants Name must be at least 2 characters long.");
+      if (isBlank(formData.professionalRegistrationNumber) || (formData.professionalRegistrationNumber && formData.professionalRegistrationNumber.trim().length < 3)) {
+        errors.push("Professional Registration Number must be at least 3 characters long.");
       }
       if (
         formData.professionalBody === "Other" &&
-        isBlank(formData.otherProfessionalBodyName)
+        (isBlank(formData.otherProfessionalBodyName) || (formData.otherProfessionalBodyName && formData.otherProfessionalBodyName.trim().length < 3))
       ) {
         errors.push(
-          "Other Regulatory Body Name is required when Regulatory Body is Other.",
+          "Other Regulatory Body Name must be at least 3 characters long when Regulatory Body is Other.",
         );
       }
-      if (isBlank(formData.yearOfRegistration))
-        errors.push("Year of Registration is required.");
+      if (isBlank(formData.yearOfRegistration) || !isValidYear(formData.yearOfRegistration))
+        errors.push("Year of Registration must be a valid year between 1900 and current year.");
       if (isBlank(formData.staffStrength)) {
         errors.push("Staff Strength is required.");
       }
@@ -424,9 +483,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         errors.push("Add at least one Category of Workmen.");
       } else {
         formData.workmenCategories.forEach((category, index) => {
-          if (isBlank(category.categoryOfWorkmen)) {
+          if (isBlank(category.categoryOfWorkmen) || (category.categoryOfWorkmen && category.categoryOfWorkmen.trim().length < 2)) {
             errors.push(
-              `Category of Workmen is required for item ${index + 1}.`,
+              `Category of Workmen must be at least 2 characters for item ${index + 1}.`,
             );
           }
           if (isBlank(category.numberOfEmployment)) {
@@ -449,10 +508,10 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         errors.push("Add at least one Professional.");
       } else {
         formData.professionals.forEach((professional, index) => {
-          if (isBlank(professional.surname))
-            errors.push(`Professional ${index + 1} Surname is required.`);
-          if (isBlank(professional.otherName))
-            errors.push(`Professional ${index + 1} Other Names is required.`);
+          if (isBlank(professional.surname) || (professional.surname && professional.surname.trim().length < 2))
+            errors.push(`Professional ${index + 1} Surname must be at least 2 characters long.`);
+          if (isBlank(professional.otherName) || (professional.otherName && professional.otherName.trim().length < 2))
+            errors.push(`Professional ${index + 1} Other Names must be at least 2 characters long.`);
           if (
             !isValidNumber(professional.age) ||
             professional.age < 18 ||
@@ -462,11 +521,11 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
               `Professional ${index + 1} Age must be between 18 and 100.`,
             );
           }
-          if (isBlank(professional.nationality))
+          if (isBlank(professional.nationality) || (professional.nationality && professional.nationality.trim().length < 2))
             errors.push(`Professional ${index + 1} Nationality is required.`);
-          if (isBlank(professional.profession))
+          if (isBlank(professional.profession) || (professional.profession && professional.profession.trim().length < 2))
             errors.push(`Professional ${index + 1} Profession is required.`);
-          if (isBlank(professional.qualification))
+          if (isBlank(professional.qualification) || (professional.qualification && professional.qualification.trim().length < 2))
             errors.push(`Professional ${index + 1} Qualification is required.`);
           if (
             !isValidNumber(professional.yearsInEmployment) ||
@@ -532,17 +591,25 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
       if (isBlank(formData.totalEstimateSumBand)) {
         errors.push("Estimated Sum Range is required.");
       }
-      if (isBlank(formData.projectTitle))
-        errors.push("Property Title is required.");
-      if (isBlank(formData.workDetails))
-        errors.push("Work Details are required.");
-      if (isBlank(formData.projectAddress))
-        errors.push("Project Address is required.");
+      if (isBlank(formData.projectTitle) || (formData.projectTitle && formData.projectTitle.trim().length < 5))
+        errors.push("Property Title must be at least 5 characters long.");
+      if (isBlank(formData.workDetails) || (formData.workDetails && formData.workDetails.trim().length < 10))
+        errors.push("Work Details must be at least 10 characters long.");
+      if (isBlank(formData.projectAddress) || (formData.projectAddress && formData.projectAddress.trim().length < 10))
+        errors.push("Project Address must be at least 10 characters long.");
       if (isBlank(formData.projectLga)) errors.push("Project LGA is required.");
       if (isBlank(formData.projectDistrict))
         errors.push("Project District is required.");
       if (isBlank(formData.cadastralZone))
         errors.push("Cadastral Zone is required.");
+      // Optional AGIS/Plot Number validation - if provided, should be valid format
+      if (
+        formData.agisNo && 
+        !isBlank(formData.agisNo) && 
+        !isValidAGIS(formData.agisNo)
+      ) {
+        errors.push("Plot Number should be at least 3 alphanumeric characters.");
+      }
     }
 
     return errors;
