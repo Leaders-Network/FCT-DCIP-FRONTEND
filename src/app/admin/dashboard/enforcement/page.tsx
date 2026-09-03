@@ -73,6 +73,7 @@ const EnforcementPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('completed');
   const [confirmingPayment, setConfirmingPayment] = useState<string | null>(null);
   const [batchConfirming, setBatchConfirming] = useState(false);
+  const [manualConfirming, setManualConfirming] = useState<string | null>(null);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -120,7 +121,26 @@ const EnforcementPage = () => {
   const handleConfirmPayment = async (policyId: string) => {
     try {
       setConfirmingPayment(policyId);
-      const result = await adminEnforcementAPI.confirmPayment(policyId);
+      const policy = policies.find(item => item._id === policyId);
+      const confirmationParams = policy?.paymentExtractionDetails
+        ? {
+            yourRef: policy.paymentExtractionDetails.yourRef,
+            egoleRef: policy.paymentExtractionDetails.egoleRef,
+            date: policy.paymentExtractionDetails.date
+          }
+        : undefined;
+      console.debug('[EgolePay][admin-enforcement] Confirming payment', {
+        policyId,
+        confirmationParams
+      });
+      const result = await adminEnforcementAPI.confirmPayment(policyId, confirmationParams);
+      console.debug('[EgolePay][admin-enforcement] Confirmation response', {
+        policyId,
+        success: result.success,
+        message: result.message,
+        error: result.error,
+        data: result.data
+      });
       
       if (result.success) {
         // Show success message
@@ -163,6 +183,52 @@ const EnforcementPage = () => {
       alert(`Error in batch confirmation: ${error.message || 'Unknown error'}`);
     } finally {
       setBatchConfirming(false);
+    }
+  };
+
+  const handleManualBankConfirmation = async (policy: EnforcementPolicy) => {
+    const receiptReference = window.prompt('Bank receipt transaction reference:')?.trim();
+    if (!receiptReference) return;
+
+    const receiptDate = window.prompt('Receipt date (YYYY-MM-DD):')?.trim();
+    if (!receiptDate) return;
+
+    const amountInput = window.prompt(`Receipt amount in NGN (expected ${formatCurrency(policy.paymentInfo?.amount)}):`);
+    const amount = Number(amountInput);
+    if (!Number.isFinite(amount)) {
+      alert('Enter a valid receipt amount.');
+      return;
+    }
+
+    const reason = window.prompt('Reason for manual bank confirmation (required):')?.trim();
+    if (!reason) return;
+
+    const egoleRef = window.prompt('EgolePay reference (optional, press Cancel to skip):')?.trim() || undefined;
+    if (!window.confirm(`Confirm bank receipt ${receiptReference} for ${policy.policyNumber} and trigger NIIP withdrawal?`)) {
+      return;
+    }
+
+    try {
+      setManualConfirming(policy._id);
+      const result = await adminEnforcementAPI.manuallyConfirmBankPayment(policy._id, {
+        receiptReference,
+        egoleRef,
+        receiptDate,
+        amount,
+        reason
+      });
+
+      if (result.success) {
+        alert(`Payment confirmed and NIIP withdrawal succeeded for ${result.data?.policyNumber}.`);
+      } else {
+        alert(`Payment recorded, but NIIP withdrawal failed: ${result.message}`);
+      }
+      await fetchPolicies();
+    } catch (error: any) {
+      console.error('Manual bank confirmation error:', error);
+      alert(`Manual confirmation failed: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+    } finally {
+      setManualConfirming(null);
     }
   };
 
@@ -614,6 +680,21 @@ const EnforcementPage = () => {
                           <CheckSquare className="w-4 h-4 mr-1" />
                         )}
                         {confirmingPayment === policy._id ? 'Confirming...' : 'Confirm'}
+                      </button>
+                    )}
+
+                    {viewMode === 'pending' && (
+                      <button
+                        onClick={() => handleManualBankConfirmation(policy)}
+                        disabled={manualConfirming === policy._id || confirmingPayment === policy._id}
+                        className="flex items-center px-3 py-1.5 text-sm font-medium text-amber-700 border border-amber-600 rounded-lg hover:bg-amber-50 transition-colors disabled:opacity-50"
+                      >
+                        {manualConfirming === policy._id ? (
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <CreditCard className="w-4 h-4 mr-1" />
+                        )}
+                        {manualConfirming === policy._id ? 'Processing...' : 'Bank Receipt Override'}
                       </button>
                     )}
                     

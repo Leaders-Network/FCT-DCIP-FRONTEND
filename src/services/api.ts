@@ -2007,6 +2007,29 @@ export const adminEnforcementAPI = {
     return response.data;
   },
 
+  manuallyConfirmBankPayment: async (policyId: string, params: {
+    receiptReference: string;
+    egoleRef?: string;
+    receiptDate: string;
+    amount: number;
+    reason: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      policyId: string;
+      policyNumber: string;
+      paymentId: string;
+      paymentStatus: string;
+      policyStatus: string;
+      niipWithdrawal?: any;
+    };
+    error?: string;
+  }> => {
+    const response = await api.post(`/admin/enforcement/payment/manual-confirm/${policyId}`, params);
+    return response.data;
+  },
+
   confirmPaymentsBatch: async (params: {
     policyIds: string[];
     autoExtract?: boolean;
