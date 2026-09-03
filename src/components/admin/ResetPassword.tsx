@@ -17,8 +17,9 @@ const ResetPassword = () => {
     setError("");
 
     try {
-      const response = await sendResetPasswordOTP(email);
-      localStorage.setItem("resetEmail", email);
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await sendResetPasswordOTP(normalizedEmail);
+      localStorage.setItem("resetEmail", normalizedEmail);
 
       // Determine the correct route based on current path
       const currentPath = window.location.pathname;

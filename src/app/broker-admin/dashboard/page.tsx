@@ -2,6 +2,7 @@
 
 import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { brokerAdminAPI, triggerCsvDownload } from '@/services/api';
 import {
     FileText,
@@ -263,6 +264,30 @@ export default function BrokerAdminDashboard() {
         setCompletedPolicyModalError(null);
         setCompletedPolicyModalLoading(false);
     };
+
+    useEffect(() => {
+        if (!completedPolicyModalOpen) {
+            return;
+        }
+
+        const dashboardMain = document.querySelector('main');
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousMainOverflow = dashboardMain instanceof HTMLElement
+            ? dashboardMain.style.overflow
+            : '';
+
+        document.body.style.overflow = 'hidden';
+        if (dashboardMain instanceof HTMLElement) {
+            dashboardMain.style.overflow = 'hidden';
+        }
+
+        return () => {
+            document.body.style.overflow = previousBodyOverflow;
+            if (dashboardMain instanceof HTMLElement) {
+                dashboardMain.style.overflow = previousMainOverflow;
+            }
+        };
+    }, [completedPolicyModalOpen]);
 
     const getStatusBadge = (status: string) => {
         const badges = {
@@ -805,10 +830,10 @@ export default function BrokerAdminDashboard() {
                 )}
             </div>
 
-            {completedPolicyModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-start justify-between">
+            {completedPolicyModalOpen && typeof document !== 'undefined' && createPortal((
+                <div className="fixed inset-0 z-[100] flex min-h-dvh items-center justify-center overflow-hidden bg-black bg-opacity-50 p-4">
+                    <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white">
+                        <div className="flex shrink-0 items-start justify-between border-b border-gray-200 bg-white px-6 py-4">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900">Completed Policy Details</h2>
                                 <p className="text-sm text-gray-600 mt-1">
@@ -820,7 +845,7 @@ export default function BrokerAdminDashboard() {
                             </button>
                         </div>
 
-                        <div className="p-6">
+                        <div className="min-h-0 flex-1 overflow-y-auto p-6">
                             {completedPolicyModalLoading && (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
@@ -1030,37 +1055,13 @@ export default function BrokerAdminDashboard() {
                                             )}
                                         </SectionCard>
 
-                                        <SectionCard icon={Clock} title="Timeline" fullWidth>
-                                            {selectedCompletedPolicy.statusHistory && selectedCompletedPolicy.statusHistory.length > 0 ? (
-                                                <div className="space-y-3">
-                                                    {selectedCompletedPolicy.statusHistory.map((entry, index) => (
-                                                        <div key={`${entry.status}-${entry.changedAt}-${index}`} className="rounded-md border border-gray-200 bg-gray-50 p-3">
-                                                            <div className="flex items-center justify-between gap-3">
-                                                                <p className="text-sm font-semibold text-gray-900">{formatStatus(entry.status)}</p>
-                                                                <p className="text-xs text-gray-500">{formatDate(entry.changedAt)}</p>
-                                                            </div>
-                                                            {entry.reason && (
-                                                                <p className="text-sm text-gray-600 mt-2">{entry.reason}</p>
-                                                            )}
-                                                            {entry.changedBy && typeof entry.changedBy !== 'string' && (
-                                                                <p className="text-xs text-gray-500 mt-2">
-                                                                    Updated by {entry.changedBy.firstname} {entry.changedBy.lastname}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <p className="text-sm text-gray-500">No status history available.</p>
-                                            )}
-                                        </SectionCard>
                                     </div>
                                 </>
                             )}
                         </div>
                     </div>
                 </div>
-            )}
+            ), document.body)}
 
             {/* Claim Detail Modal - Same as claims page */}
             {selectedClaim && (
