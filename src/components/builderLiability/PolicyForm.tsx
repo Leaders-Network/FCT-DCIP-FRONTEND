@@ -200,9 +200,9 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
     // Meta Info
     // NIIP Builder's Liability product
-    productId: 556,
+    productId: 572,
     salesOutlet: "",
-    brokerAgentName: "NSIA - Nigeria Sovereign Investment Authority",
+    brokerAgentName: "NSIA - Insurance Company Ltd",
 
     // Optional fields
     priority: "medium",

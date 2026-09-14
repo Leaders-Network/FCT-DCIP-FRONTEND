@@ -26,7 +26,7 @@ const partners = [
   {
     shortName: "NSIA",
     organizationName: "NSIA Insurance",
-    subtitle: "Nouvelle Societe Interafricaine d'Assurance",
+    subtitle: "NSIA Insurance Company Limited",
     description:
       "A pan-African composite insurer providing life and non-life cover that strengthens confidence in the scheme.",
     logoSrc: "/partners/nsia-insurance.png",
