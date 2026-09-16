@@ -243,10 +243,9 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-gray-900">
-                  ₦{assignmentPolicy?.project?.totalEstimateSum?.toLocaleString() || 'N/A'}
+                  {projectEstimateBand || 'Not provided'}
                 </div>
-                <div className="text-sm text-gray-500">Stored Ceiling</div>
-                <div className="text-xs text-gray-500 mt-1">Range: {projectEstimateBand || 'Not provided'}</div>
+                <div className="text-sm text-gray-500">Sum Insured</div>
               </div>
             </div>
           </div>

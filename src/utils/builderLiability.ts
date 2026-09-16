@@ -39,6 +39,15 @@ const TOTAL_ESTIMATE_SUM_BAND_ALIASES: Record<string, TotalEstimateSumBand> = {
     'above 500 million': '500 million and above'
 };
 
+const TOTAL_ESTIMATE_SUM_BAND_LABELS: Record<TotalEstimateSumBand, string> = {
+    '0 - 50 million': '0 - 50 million',
+    '50 - 100 million': '50 - 100 million',
+    '100 - 150 million': '100 - 150 million',
+    '150 - 250 million': '150 - 250 million',
+    '250 - 500 million': 'Below 500 million',
+    '500 million and above': 'Above 500 million'
+};
+
 const hasText = (value: unknown): value is string =>
     typeof value === 'string' && value.trim().length > 0;
 
@@ -83,6 +92,11 @@ export const normalizeEstimateBand = (value: unknown): TotalEstimateSumBand | nu
 export const getEstimateAmountFromBand = (band?: string | null) => {
     const normalizedBand = normalizeEstimateBand(band);
     return normalizedBand ? TOTAL_ESTIMATE_SUM_BAND_AMOUNTS[normalizedBand] : null;
+};
+
+export const getEstimateBandLabel = (band?: string | null) => {
+    const normalizedBand = normalizeEstimateBand(band);
+    return normalizedBand ? TOTAL_ESTIMATE_SUM_BAND_LABELS[normalizedBand] : null;
 };
 
 export const getEstimateBandFromAmount = (value?: number | string | null) => {
@@ -145,8 +159,10 @@ export const getProjectDistrict = (project?: ProjectInfo | null) => {
 };
 
 export const getProjectEstimateBand = (project?: ProjectInfo | null) =>
-    normalizeEstimateBand(project?.totalEstimateSumBand) ||
-    getEstimateBandFromAmount(project?.totalEstimateSum ?? project?.totalEstimatedSum);
+    getEstimateBandLabel(
+        normalizeEstimateBand(project?.totalEstimateSumBand) ||
+        getEstimateBandFromAmount(project?.totalEstimateSum ?? project?.totalEstimatedSum)
+    );
 
 export const getClientName = (client?: ClientInfo | null) => client?.name || null;
 export const getClientEmail = (client?: ClientInfo | null) => client?.email || null;

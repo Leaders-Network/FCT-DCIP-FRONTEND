@@ -440,8 +440,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                     <div className="space-y-1 text-sm text-gray-600">
                       <p><span className="font-medium">Coverage:</span> {policy.requestDetails.coverageType}</p>
                       <p><span className="font-medium">Duration:</span> {policy.requestDetails.policyDuration}</p>
-                      <p><span className="font-medium">Building Value:</span> ₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
-                      <p><span className="font-medium">Estimated Sum Range:</span> {policy.propertyDetails.totalEstimateSumBand || 'Not provided'}</p>
+                      <p><span className="font-medium">Sum Insured:</span> {policy.propertyDetails.totalEstimateSumBand || 'Not provided'}</p>
                     </div>
                   </div>
 
@@ -623,8 +622,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                     <div className="space-y-1 text-sm text-gray-600">
                       <p><span className="font-medium">Coverage:</span> {policy.requestDetails.coverageType}</p>
                       <p><span className="font-medium">Duration:</span> {policy.requestDetails.policyDuration}</p>
-                      <p><span className="font-medium">Building Value:</span> ₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
-                      <p><span className="font-medium">Estimated Sum Range:</span> {policy.propertyDetails.totalEstimateSumBand || 'Not provided'}</p>
+                      <p><span className="font-medium">Sum Insured:</span> {policy.propertyDetails.totalEstimateSumBand || 'Not provided'}</p>
                     </div>
                   </div>
 

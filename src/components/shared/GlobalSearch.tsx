@@ -45,8 +45,7 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                             icon: <FileText className="h-5 w-5 text-purple-600" />,
                             metadata: {
                                 'Policy Number': policy.policyNumber || 'N/A',
-                                'Estimated Sum Range': getProjectEstimateBand(policy.project) || 'Not provided',
-                                'Stored Ceiling': `NGN ${policy.project?.totalEstimateSum?.toLocaleString() || '0'}`
+                                'Sum Insured': getProjectEstimateBand(policy.project) || 'Not provided'
                             }
                         });
                     });
@@ -170,8 +169,7 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                             icon: <Shield className="h-5 w-5 text-green-600" />,
                             metadata: {
                                 'Policy Number': policy.policyNumber || 'N/A',
-                                'Estimated Sum Range': getProjectEstimateBand(policy.project) || 'Not provided',
-                                'Stored Ceiling': `NGN ${policy.project?.totalEstimateSum?.toLocaleString() || '0'}`
+                                'Sum Insured': getProjectEstimateBand(policy.project) || 'Not provided'
                             }
                         });
                     });

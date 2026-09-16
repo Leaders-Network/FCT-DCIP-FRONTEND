@@ -754,12 +754,6 @@ export default function BrokerAdminDashboard() {
                                                 <div className="font-medium">
                                                     {getProjectEstimateBand(policy.project) || 'Not provided'}
                                                 </div>
-                                                <div className="mt-1 text-xs text-gray-500">
-                                                    Stored ceiling:{' '}
-                                                    {policy.project.totalEstimateSum != null
-                                                        ? formatCurrency(Number(policy.project.totalEstimateSum))
-                                                        : 'N/A'}
-                                                </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
                                                 {brokerCompany ? (
@@ -879,12 +873,9 @@ export default function BrokerAdminDashboard() {
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                            <p className="text-xs uppercase tracking-wide text-gray-500">Estimated Sum Range</p>
+                                            <p className="text-xs uppercase tracking-wide text-gray-500">Sum Insured</p>
                                             <p className="mt-2 text-sm font-semibold text-gray-900">
                                                 {getProjectEstimateBand(selectedCompletedPolicy.project) || 'Range not provided'}
-                                            </p>
-                                            <p className="mt-1 text-xs text-gray-500">
-                                                Stored ceiling: {formatCurrency(selectedCompletedPolicy.project.totalEstimateSum)}
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">

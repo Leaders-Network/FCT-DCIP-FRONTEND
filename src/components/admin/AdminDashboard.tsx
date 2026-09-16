@@ -33,6 +33,7 @@ import {
 import { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { toast } from "sonner";
 import DashboardErrorBanner from "@/components/shared/DashboardErrorBanner";
+import { getProjectEstimateBand } from "@/utils/builderLiability";
 
 interface SurveyorPerformance {
   id: string;
@@ -157,7 +158,6 @@ const AdminDashboard: React.FC = () => {
       'District',
       'LGA',
       'Cover Type',
-      'Estimated Sum Range',
       'Sum Insured',
       'Payment Status',
       'Premium Amount (NGN)',
@@ -181,8 +181,7 @@ const AdminDashboard: React.FC = () => {
         csvEscape(project.district || ''),
         csvEscape(project.lga || ''),
         csvEscape(project.coverTypeIdxDetails || ''),
-        csvEscape(project.totalEstimateSumBand || ''),
-        csvEscape(project.totalEstimateSum ?? ''),
+        csvEscape(getProjectEstimateBand(project) || ''),
         csvEscape(payment.status || ''),
         csvEscape(payment.amount ?? ''),
         csvEscape(p.createdAt || ''),

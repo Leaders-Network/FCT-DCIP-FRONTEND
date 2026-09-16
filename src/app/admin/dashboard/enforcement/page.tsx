@@ -45,6 +45,8 @@ interface EnforcementPolicy {
     status: string;
     amount?: number;
     transactionId?: string;
+    niipInvoice?: string;
+    niipReference?: string;
     paidAt?: string;
     method?: string;
     confirmedAt?: string;
@@ -60,6 +62,13 @@ interface EnforcementPolicy {
     policyId: string;
     policyNumber: string;
   };
+  clientDetails?: Record<string, any>;
+  organizationDetails?: Record<string, any>;
+  projectDetails?: Record<string, any>;
+  workforceDetails?: Record<string, any>;
+  complianceDetails?: Record<string, any>;
+  metaDetails?: Record<string, any>;
+  niipPayload?: Record<string, any>;
 }
 
 type ViewMode = 'completed' | 'pending';
@@ -95,6 +104,13 @@ const EnforcementPage = () => {
     canConfirm: (policy as any).canConfirm,
     confirmationStatus: (policy as any).confirmationStatus,
     paymentExtractionDetails: (policy as any).paymentExtractionDetails,
+    clientDetails: (policy as any).client,
+    organizationDetails: (policy as any).organization,
+    projectDetails: (policy as any).project,
+    workforceDetails: (policy as any).workforce,
+    complianceDetails: (policy as any).compliance,
+    metaDetails: (policy as any).meta,
+    niipPayload: (policy as any).niipPayload,
   });
 
   const fetchPolicies = async () => {
@@ -122,19 +138,32 @@ const EnforcementPage = () => {
     try {
       setConfirmingPayment(policyId);
       const policy = policies.find(item => item._id === policyId);
-      const confirmationParams = policy?.paymentExtractionDetails
-        ? {
-            yourRef: policy.paymentExtractionDetails.yourRef,
-            egoleRef: policy.paymentExtractionDetails.egoleRef,
-            date: policy.paymentExtractionDetails.date
-          }
-        : undefined;
-      console.debug('[EgolePay][admin-enforcement] Confirming payment', {
+      const extractedDetails = policy?.paymentExtractionDetails;
+      const amount = Number(policy?.paymentInfo?.amount);
+      const receiptReference =
+        extractedDetails?.yourRef ||
+        policy?.paymentInfo?.transactionId ||
+        `ADMIN_${policyId}_${Date.now()}`;
+      const receiptDate = extractedDetails?.date || new Date().toISOString();
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error('A valid premium amount is required before confirming payment.');
+      }
+
+      console.debug('[Admin enforcement] Confirming payment and triggering NIIP withdrawal', {
         policyId,
-        confirmationParams
+        receiptReference,
+        amount,
+        receiptDate
       });
-      const result = await adminEnforcementAPI.confirmPayment(policyId, confirmationParams);
-      console.debug('[EgolePay][admin-enforcement] Confirmation response', {
+      const result = await adminEnforcementAPI.manuallyConfirmBankPayment(policyId, {
+        receiptReference,
+        egoleRef: extractedDetails?.egoleRef,
+        receiptDate,
+        amount,
+        reason: 'Admin enforcement confirmation; EgolePay verification bypassed'
+      });
+      console.debug('[Admin enforcement] Direct NIIP withdrawal response', {
         policyId,
         success: result.success,
         message: result.message,
@@ -143,12 +172,23 @@ const EnforcementPage = () => {
       });
       
       if (result.success) {
-        // Show success message
-        alert(`Payment confirmed successfully for policy ${result.data?.policyNumber}`);
+        alert(`Payment confirmed and NIIP withdrawal succeeded for policy ${result.data?.policyNumber}`);
         // Refresh the policies list
         await fetchPolicies();
       } else {
-        alert(`Failed to confirm payment: ${result.error || result.message}`);
+        const withdrawal = result.data?.niipWithdrawal;
+        const withdrawalMessage =
+          withdrawal?.error ||
+          withdrawal?.body?.error ||
+          withdrawal?.body?.message ||
+          result.error ||
+          result.message;
+        alert(
+          `Payment was recorded, but NIIP withdrawal failed.\n\n` +
+          `Reason: ${withdrawalMessage}\n` +
+          `NIIP status: ${withdrawal?.status ?? 'unknown'}\n` +
+          `URL: ${withdrawal?.url ?? 'unknown'}`
+        );
       }
     } catch (error: any) {
       console.error('Payment confirmation error:', error);
@@ -592,6 +632,8 @@ const EnforcementPage = () => {
                 <button
                   onClick={handleBatchConfirmPayments}
                   disabled={batchConfirming}
+                  title="Confirm all selected payments and trigger NIIP wallet withdrawals without EgolePay verification."
+                  aria-label="Confirm selected payments and trigger NIIP withdrawals"
                   className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
                   {batchConfirming ? (
@@ -667,19 +709,21 @@ const EnforcementPage = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center justify-end gap-2 max-w-full">
                     {viewMode === 'pending' && policy.canConfirm && (
                       <button
                         onClick={() => handleConfirmPayment(policy._id)}
                         disabled={confirmingPayment === policy._id}
-                        className="flex items-center px-3 py-1.5 text-sm font-medium text-green-600 border border-green-600 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-50"
+                        title="Confirm this payment using the recorded premium amount and trigger the NIIP wallet withdrawal directly. EgolePay verification is bypassed."
+                        aria-label={`Confirm payment and trigger NIIP withdrawal for ${policy.policyNumber}`}
+                        className="group flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-700 border border-green-600 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-50"
                       >
                         {confirmingPayment === policy._id ? (
                           <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                         ) : (
                           <CheckSquare className="w-4 h-4 mr-1" />
                         )}
-                        {confirmingPayment === policy._id ? 'Confirming...' : 'Confirm'}
+                        {confirmingPayment === policy._id ? 'Confirming...' : 'Confirm & Withdraw'}
                       </button>
                     )}
 
@@ -687,7 +731,9 @@ const EnforcementPage = () => {
                       <button
                         onClick={() => handleManualBankConfirmation(policy)}
                         disabled={manualConfirming === policy._id || confirmingPayment === policy._id}
-                        className="flex items-center px-3 py-1.5 text-sm font-medium text-amber-700 border border-amber-600 rounded-lg hover:bg-amber-50 transition-colors disabled:opacity-50"
+                        title="Record a bank receipt manually, mark the payment as paid, and trigger the NIIP wallet withdrawal without EgolePay verification."
+                        aria-label={`Record bank receipt and trigger NIIP withdrawal for ${policy.policyNumber}`}
+                        className="group flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 border border-amber-600 rounded-lg hover:bg-amber-50 transition-colors disabled:opacity-50"
                       >
                         {manualConfirming === policy._id ? (
                           <Loader2 className="w-4 h-4 mr-1 animate-spin" />
@@ -704,6 +750,8 @@ const EnforcementPage = () => {
                         setShowModal(true);
                       }}
                       className="flex items-center px-4 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                      title="View the full policy, payment, NIIP, and enforcement details."
+                      aria-label={`View details for ${policy.policyNumber}`}
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
@@ -735,7 +783,7 @@ const EnforcementPage = () => {
                       </div>
                       <div>
                         <p className="text-gray-500">Sum Insured</p>
-                        <p className="font-semibold text-gray-900">{formatCurrency(policy.sumInsured)}</p>
+                        <p className="font-semibold text-gray-900">{policy.estimatedSumRange}</p>
                       </div>
                       <div>
                         <p className="text-gray-500">Last Updated</p>
@@ -889,13 +937,74 @@ const EnforcementPage = () => {
                       <p className="font-medium">{selectedPolicy.projectAddress}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500">Estimated Sum Range:</span>
+                      <span className="text-gray-500">Sum Insured:</span>
                       <p className="font-medium">{selectedPolicy.estimatedSumRange}</p>
                     </div>
-                    <div>
-                      <span className="text-gray-500">Sum Insured:</span>
-                      <p className="font-medium">{formatCurrency(selectedPolicy.sumInsured)}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Client Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div><span className="text-gray-500">Name:</span><p className="font-medium">{selectedPolicy.clientDetails?.name || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Email:</span><p className="font-medium break-all">{selectedPolicy.clientDetails?.email || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Phone:</span><p className="font-medium">{selectedPolicy.clientDetails?.phoneNumber || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">RC Number:</span><p className="font-medium">{selectedPolicy.clientDetails?.rcNumber || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">ID Type:</span><p className="font-medium">{selectedPolicy.clientDetails?.identificationType || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">ID Number:</span><p className="font-medium">{selectedPolicy.clientDetails?.identificationNumber || 'N/A'}</p></div>
+                      <div className="md:col-span-2"><span className="text-gray-500">Address:</span><p className="font-medium">{selectedPolicy.clientDetails?.address || 'N/A'}</p></div>
                     </div>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Organization Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div><span className="text-gray-500">Professional Body:</span><p className="font-medium">{selectedPolicy.organizationDetails?.professionalBody || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Registration Number:</span><p className="font-medium">{selectedPolicy.organizationDetails?.professionalRegistrationNumber || selectedPolicy.organizationDetails?.niobRegNo || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Specialization:</span><p className="font-medium">{selectedPolicy.organizationDetails?.areaOfSpecialization || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Permanent Staff:</span><p className="font-medium">{selectedPolicy.organizationDetails?.noOfPermanentStaff ?? 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Year Registered:</span><p className="font-medium">{selectedPolicy.organizationDetails?.yearOfRegistration ? formatDate(selectedPolicy.organizationDetails.yearOfRegistration) : 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Assessor:</span><p className="font-medium">{selectedPolicy.organizationDetails?.assessorName || 'N/A'}</p></div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Project and Coverage</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div><span className="text-gray-500">Project Title:</span><p className="font-medium">{selectedPolicy.projectDetails?.projectTitle || selectedPolicy.projectDetails?.projectName || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Project Type:</span><p className="font-medium">{selectedPolicy.projectDetails?.projectType || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Contractor Category:</span><p className="font-medium">{selectedPolicy.projectDetails?.contractorCategory || selectedPolicy.projectDetails?.categoryOfContractorId || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">Statutory Cover:</span><p className="font-medium">{selectedPolicy.projectDetails?.isStatutory ?? selectedPolicy.projectDetails?.coverTypeIdx ? 'Yes' : 'No'}</p></div>
+                      <div><span className="text-gray-500">Cadastral Zone:</span><p className="font-medium">{selectedPolicy.projectDetails?.cadastralZone || 'N/A'}</p></div>
+                      <div><span className="text-gray-500">LGA / District:</span><p className="font-medium">{[selectedPolicy.projectDetails?.lga || selectedPolicy.projectDetails?.projectLga, selectedPolicy.projectDetails?.district || selectedPolicy.projectDetails?.projectDistrict].filter(Boolean).join(' / ') || 'N/A'}</p></div>
+                      <div className="md:col-span-2"><span className="text-gray-500">Work Details:</span><p className="font-medium whitespace-pre-wrap">{selectedPolicy.projectDetails?.workDetails || 'N/A'}</p></div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Risk and Compliance</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div><span className="text-gray-500">Extra Hazardous Work:</span><p className="font-medium">{selectedPolicy.projectDetails?.extraHazardous ?? selectedPolicy.projectDetails?.extraHazardousWork ? 'Yes' : 'No'}</p></div>
+                      <div><span className="text-gray-500">Existing Insurance:</span><p className="font-medium">{selectedPolicy.complianceDetails?.HasInsurance ? 'Yes' : 'No'}</p></div>
+                      <div><span className="text-gray-500">Investigation:</span><p className="font-medium">{selectedPolicy.complianceDetails?.investigation ? 'Yes' : 'No'}</p></div>
+                      <div><span className="text-gray-500">Disciplinary Committee:</span><p className="font-medium">{selectedPolicy.complianceDetails?.disciplinaryCommittee ? 'Yes' : 'No'}</p></div>
+                      <div><span className="text-gray-500">Pre-employment Check:</span><p className="font-medium">{selectedPolicy.complianceDetails?.preEmploymentCheck ? 'Yes' : 'No'}</p></div>
+                      <div><span className="text-gray-500">Practice Outside Nigeria:</span><p className="font-medium">{selectedPolicy.complianceDetails?.PracticeOutsideNigeria || 'N/A'}</p></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <h4 className="text-sm font-semibold text-blue-950 mb-3">NIIP and Policy Metadata</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                    <div><span className="text-blue-700">NIIP Policy Number:</span><p className="font-mono font-medium break-all">{selectedPolicy.niipPayload?.policyNumber || selectedPolicy.niipPayload?.PolicyNumber || selectedPolicy.policyNumber}</p></div>
+                    <div><span className="text-blue-700">NIIP Invoice:</span><p className="font-mono font-medium break-all">{selectedPolicy.paymentInfo?.niipInvoice || selectedPolicy.niipPayload?.invoiceNumber || 'N/A'}</p></div>
+                    <div><span className="text-blue-700">NIIP Reference:</span><p className="font-mono font-medium break-all">{selectedPolicy.paymentInfo?.niipReference || selectedPolicy.niipPayload?.transactionReference || 'N/A'}</p></div>
+                    <div><span className="text-blue-700">Product ID:</span><p className="font-medium">{selectedPolicy.metaDetails?.ProductId || 'N/A'}</p></div>
+                    <div><span className="text-blue-700">Sales Outlet:</span><p className="font-medium">{selectedPolicy.metaDetails?.salesOutlet || 'N/A'}</p></div>
+                    <div><span className="text-blue-700">Broker / Agent:</span><p className="font-medium">{selectedPolicy.metaDetails?.brokerOrAgentName || 'N/A'}</p></div>
+                    <div><span className="text-blue-700">Policy Status:</span><p className="font-medium">{selectedPolicy.status}</p></div>
                   </div>
                 </div>
 

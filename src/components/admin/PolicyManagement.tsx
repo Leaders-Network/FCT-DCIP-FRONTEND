@@ -15,6 +15,7 @@ import { PolicyDetailsModal } from '@/components/builderLiability/PolicyDetailsM
 import { toast } from "sonner";
 import ExportCsvPanel from '@/components/shared/ExportCsvPanel';
 import { exportAmmcPoliciesCsv, triggerCsvDownload } from '@/services/api';
+import { getProjectEstimateBand } from '@/utils/builderLiability';
 
 // Legacy imports for backward compatibility during transition
 import { PolicyRequest } from '@/types/api.types';
@@ -668,7 +669,11 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
                   {/* Value */}
                   <div className="col-span-2 min-w-0">
-                    <p className="truncate text-sm font-bold text-slate-900">₦{policy.propertyDetails.buildingValue.toLocaleString()}</p>
+                    <p className="truncate text-sm font-bold text-slate-900">
+                      {isBuilderLiabilityPolicy(policy)
+                        ? getProjectEstimateBand(policy.originalBLPolicy.project) || 'Not provided'
+                        : `₦${policy.propertyDetails.buildingValue.toLocaleString()}`}
+                    </p>
                     <p className="mt-0.5 truncate text-xs text-slate-500">{policy.requestDetails.policyDuration}</p>
                     <p className="mt-1 truncate text-[10px] text-slate-400">{new Date(policy.createdAt).toLocaleDateString('en-NG')}</p>
                   </div>

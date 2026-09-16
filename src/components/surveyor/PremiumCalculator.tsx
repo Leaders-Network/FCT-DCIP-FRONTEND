@@ -14,6 +14,7 @@ import {
     BadgeCheck,
 } from "lucide-react";
 import { getSurveyorAssignments } from "@/services/api";
+import { getEstimateBandFromAmount, getEstimateBandLabel } from "@/utils/builderLiability";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -419,8 +420,8 @@ export default function PremiumCalculator() {
                                 </span>
                                 {loadedPolicy.totalEstimateSum > 0 && (
                                     <span>
-                                        <strong>Estimate:</strong>{" "}
-                                        {fmt(loadedPolicy.totalEstimateSum)}
+                                    <strong>Sum Insured:</strong>{" "}
+                                    {getEstimateBandLabel(getEstimateBandFromAmount(loadedPolicy.totalEstimateSum))}
                                     </span>
                                 )}
                             </div>

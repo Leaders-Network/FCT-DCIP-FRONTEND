@@ -643,8 +643,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <InfoRow label="Coverage Type"       value={policy.project?.coverTypeIdxDetails || undefined} />
                                     <InfoRow label="Statutory Cover"     value={(typeof policy.project?.isStatutory === 'boolean' ? policy.project.isStatutory : policy.project?.coverTypeIdx) ? 'Yes' : 'No'} />
                                     
-                                    <InfoRow label="Estimated Sum Range"   value={getDisplayValue(projectEstimateBand)} />
-                                    <InfoRow label="Total Estimate Ceiling" value={<span className="text-emerald-700 font-bold">{formatCurrency(policy.project?.totalEstimateSum || 0)}</span>} />
+                                    <InfoRow label="Sum Insured" value={getDisplayValue(projectEstimateBand)} />
                                     <InfoRow label="Extra Hazardous" value={
                                         policy.project?.extraHazardous
                                             ? <Badge variant="destructive" className="text-[10px]">Yes — Hazardous</Badge>

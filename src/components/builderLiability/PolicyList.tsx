@@ -804,12 +804,9 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                                             <div className="flex items-start gap-2 min-w-0">
                                                 <Building className="w-4 h-4 text-gray-400" />
                                                 <div className="min-w-0">
-                                                    <p className="text-gray-600">Estimated Sum Range</p>
+                                                    <p className="text-gray-600">Sum Insured</p>
                                                     <p className="font-medium break-words">
                                                         {getDisplayValue(projectEstimateBand)}
-                                                    </p>
-                                                    <p className="text-[11px] text-gray-500 break-words">
-                                                        Stored ceiling: {formatCurrency(policy.project.totalEstimateSum)}
                                                     </p>
                                                 </div>
                                             </div>
