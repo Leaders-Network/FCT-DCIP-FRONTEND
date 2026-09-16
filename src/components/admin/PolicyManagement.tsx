@@ -926,6 +926,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
         <PolicyDetailsModal
           policy={selectedBLPolicy}
           isOpen={showBLPolicyModal}
+          onPremiumCalculated={fetchBLPolicies}
           onClose={() => {
             setShowBLPolicyModal(false);
             setSelectedBLPolicy(null);

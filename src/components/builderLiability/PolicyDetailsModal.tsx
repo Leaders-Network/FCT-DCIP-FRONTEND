@@ -51,6 +51,7 @@ interface PolicyDetailsModalProps {
     policy: BuilderLiabilityPolicy | null;
     isOpen: boolean;
     onClose: () => void;
+    onPremiumCalculated?: () => void | Promise<void>;
 }
 
 const CONTRACTOR_CATEGORY_DETAILS: Record<number, { label: string; description: string }> = {
@@ -71,7 +72,8 @@ const CONTRACTOR_CATEGORY_DETAILS: Record<number, { label: string; description: 
 export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
     policy,
     isOpen,
-    onClose
+    onClose,
+    onPremiumCalculated
 }) => {
     const [isCalculatingPremium, setIsCalculatingPremium] = React.useState(false);
     const [isDownloadingReceipt, setIsDownloadingReceipt] = React.useState(false);
@@ -212,6 +214,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                     ? `Premium calculated. Invoice ${response.data.premiumDetails.invoiceNumber} is ready.`
                     : 'Premium calculated successfully.'
             );
+            await onPremiumCalculated?.();
         } catch (error: any) {
             const message =
                 error?.response?.data?.message ||
