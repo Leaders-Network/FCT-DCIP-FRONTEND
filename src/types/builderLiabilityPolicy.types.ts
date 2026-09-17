@@ -404,7 +404,9 @@ export interface GetPoliciesResponse {
             totalPages: number;
             totalPolicies: number;
             hasMore: boolean;
+            pageSize?: number;
         };
+        statusCounts?: Record<string, number>;
     };
 }
 
@@ -462,6 +464,11 @@ export interface PolicyFilters {
 export interface AdminPolicyFilters extends PolicyFilters {
     userId?: string;
     assignedSurveyor?: string;
+    coverageType?: string;
+    minValue?: number;
+    maxValue?: number;
+    dateFrom?: string;
+    dateTo?: string;
 }
 
 // Form Data Types (for frontend forms)

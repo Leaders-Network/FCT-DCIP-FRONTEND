@@ -1,10 +1,10 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign, Search, Filter, X, UserPlus } from 'lucide-react';
 import { Surveyor, EnhancedSurveySubmission, Assignment } from '@/types/api.types';
-import { BuilderLiabilityPolicy } from '@/types/builderLiabilityPolicy.types';
+import { AdminPolicyFilters, BuilderLiabilityPolicy, BuilderLiabilityPolicyPriority, BuilderLiabilityPolicyStatus } from '@/types/builderLiabilityPolicy.types';
 import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
 import { useBuilderLiabilityPolicies } from '@/hooks/useBuilderLiabilityPolicy';
 import { adminApi, reviewSubmission, getSubmissionByAssignment } from '@/services/api';
@@ -76,6 +76,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   // Use the new Builder Liability Policy hooks
   const {
     policies: builderLiabilityPolicies,
+    pagination,
     loading: blpLoading,
     error: blpError,
     fetchPolicies: fetchBLPolicies
@@ -89,7 +90,9 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [selectedPolicySubmissions, setSelectedPolicySubmissions] = useState<EnhancedSurveySubmission[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'submitted' | 'assigned' | 'surveyed' | 'revision_required' | 'rejected'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'submitted' | 'assigned' | 'surveyed' | 'requires_more_info' | 'rejected'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<MixedPolicy | null>(null);
@@ -126,6 +129,36 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     surveyorAssigned: ""
   });
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  const currentApiFilters = useMemo<AdminPolicyFilters>(() => ({
+    page: currentPage,
+    limit: 25,
+    status: (filters.claimStatus || (activeTab === 'all' ? 'all' : activeTab)) as BuilderLiabilityPolicyStatus | 'all',
+    search: debouncedSearch || undefined,
+    priority: (filters.priority || undefined) as BuilderLiabilityPolicyPriority | undefined,
+    coverageType: filters.coverageType || filters.insuranceType || undefined,
+    minValue: filters.minValue ? Number(filters.minValue) : undefined,
+    maxValue: filters.maxValue ? Number(filters.maxValue) : undefined,
+    dateFrom: filters.dateFrom || undefined,
+    dateTo: filters.dateTo || undefined,
+    sortBy: 'createdAt' as const,
+    sortOrder: 'desc' as const
+  }), [currentPage, activeTab, debouncedSearch, filters]);
+
+  // Policy rows are deliberately fetched by the server in small chunks. Search
+  // and filters are query inputs, not browser-side operations over every policy.
+  useEffect(() => {
+    fetchBLPolicies(currentApiFilters);
+  }, [fetchBLPolicies, currentApiFilters]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, debouncedSearch, filters]);
+
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -161,14 +194,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
         : [];
       setSurveyors(normalizedSurveyors);
 
-      // Fetch Builder Liability Policies using both hooks and direct API call
-      fetchBLPolicies();
-
-      // Also try to fetch from admin policy endpoint as backup
-      try {
-        const adminPoliciesResponse = await adminApi.getPolicies();
-      } catch (adminError) {
-      }
+      // The policy query is owned by the pagination effect above.
     } catch (error) {
       // Ensure policies is always an array even on error
       setPolicies([]);
@@ -227,62 +253,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
     } as ExtendedPolicyRequest));
   }, [builderLiabilityPolicies]);
 
-  const filteredPolicies = Array.isArray(allPoliciesForDisplay)
-    ? allPoliciesForDisplay.filter(policy => {
-      // Tab filter
-      const tabMatch = activeTab === 'all' ? true : policy.status === activeTab;
-
-      // Search filter - Updated for insurance context
-      const searchLower = searchQuery.toLowerCase();
-      const searchMatch = !searchQuery ||
-        policy.contactDetails.fullName.toLowerCase().includes(searchLower) ||
-        policy.contactDetails.email.toLowerCase().includes(searchLower) ||
-        policy.contactDetails.phoneNumber.includes(searchQuery) ||
-        policy.contactDetails.rcNumber?.toLowerCase().includes(searchLower) ||
-        policy.policyNumber?.toLowerCase().includes(searchLower) ||
-        policy._id.toLowerCase().includes(searchLower) ||
-        policy.requestDetails.coverageType.toLowerCase().includes(searchLower) ||
-        (policy.propertyDetails.fullAddress || policy.propertyDetails.address || '').toLowerCase().includes(searchLower) ||
-        policy.adminNotes?.toLowerCase().includes(searchLower) ||
-        policy.surveyNotes?.toLowerCase().includes(searchLower);
-
-      // Insurance type filter (based on coverage type)
-      const insuranceTypeMatch = !filters.insuranceType ||
-        policy.requestDetails.coverageType.toLowerCase().includes(filters.insuranceType.toLowerCase());
-
-      // Coverage type filter
-      const coverageTypeMatch = !filters.coverageType ||
-        policy.requestDetails.coverageType === filters.coverageType;
-
-      // Value range filter (insurance sum)
-      const minValueMatch = !filters.minValue ||
-        policy.propertyDetails.buildingValue >= parseFloat(filters.minValue);
-      const maxValueMatch = !filters.maxValue ||
-        policy.propertyDetails.buildingValue <= parseFloat(filters.maxValue);
-
-      // Date range filter
-      const dateFromMatch = !filters.dateFrom ||
-        new Date(policy.createdAt) >= new Date(filters.dateFrom);
-      const dateToMatch = !filters.dateTo ||
-        new Date(policy.createdAt) <= new Date(filters.dateTo);
-
-      // Priority filter
-      const priorityMatch = !filters.priority ||
-        policy.priority === filters.priority;
-
-      // Claim status filter (same as policy status)
-      const claimStatusMatch = !filters.claimStatus ||
-        policy.status === filters.claimStatus;
-
-      // Surveyor assigned filter
-      const surveyorMatch = !filters.surveyorAssigned ||
-        (policy.assignedSurveyors && policy.assignedSurveyors.includes(filters.surveyorAssigned));
-
-      return tabMatch && searchMatch && insuranceTypeMatch && coverageTypeMatch &&
-        minValueMatch && maxValueMatch && dateFromMatch && dateToMatch &&
-        priorityMatch && claimStatusMatch && surveyorMatch;
-    })
-    : [];
+  const filteredPolicies = Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay : [];
 
   const clearFilters = () => {
     setFilters({
@@ -356,7 +327,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       if ('isBuilderLiabilityPolicy' in policy && policy.isBuilderLiabilityPolicy && policy.originalBLPolicy?._id) {
         await builderLiabilityPolicyAPI.deletePolicy(policy.originalBLPolicy._id);
         // Refresh Builder Liability Policies
-        fetchBLPolicies();
+        fetchBLPolicies(currentApiFilters);
       } else {
         // Handle legacy policy deletion
         await deletePolicyRequest(policy._id);
@@ -520,7 +491,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                 <option value="surveyed">Surveyed</option>
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
-                <option value="revision_required">Needs More Info</option>
+                <option value="requires_more_info">Needs More Info</option>
                 <option value="completed">Completed</option>
               </select>
             </div>
@@ -569,12 +540,12 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       {/* Tabs */}
       <div className="flex space-x-1 overflow-x-auto pb-2 scrollbar-hide">
         {[
-          { key: 'all', label: 'All Policies', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.length : 0 },
-          { key: 'submitted', label: 'New Apps', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'submitted').length : 0 },
-          { key: 'assigned', label: 'Under Review', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'assigned').length : 0 },
-          { key: 'surveyed', label: 'Survey Complete', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'surveyed').length : 0 },
-          { key: 'revision_required', label: 'Pending Info', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'revision_required').length : 0 },
-          { key: 'rejected', label: 'Declined', count: Array.isArray(allPoliciesForDisplay) ? allPoliciesForDisplay.filter(p => p?.status === 'rejected').length : 0 }
+          { key: 'all', label: 'All Policies', count: pagination.totalPolicies },
+          { key: 'submitted', label: 'New Apps', count: (pagination as any).statusCounts?.submitted || 0 },
+          { key: 'assigned', label: 'Under Review', count: (pagination as any).statusCounts?.assigned || 0 },
+          { key: 'surveyed', label: 'Survey Complete', count: (pagination as any).statusCounts?.surveyed || 0 },
+          { key: 'requires_more_info', label: 'Pending Info', count: (pagination as any).statusCounts?.requires_more_info || 0 },
+          { key: 'rejected', label: 'Declined', count: (pagination as any).statusCounts?.rejected || 0 }
         ].map(tab => (
           <button
             key={tab.key}
@@ -597,7 +568,9 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 
       {/* Policy list */}
       <div className="rounded-[1.5rem] border border-white/70 bg-white/90 shadow-[0_8px_32px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-        {filteredPolicies.length === 0 ? (
+        {blpLoading ? (
+          <div className="py-16 text-center text-sm text-slate-500">Loading policies…</div>
+        ) : filteredPolicies.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
               <Search className="h-6 w-6 text-slate-400" />
@@ -639,7 +612,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
                 completed:         { label: "Completed",    dot: "bg-emerald-400",bg: "bg-emerald-50",border: "border-emerald-200",text: "text-emerald-700"},
                 sent_to_user:      { label: "Sent",         dot: "bg-cyan-400",   bg: "bg-cyan-50",   border: "border-cyan-200",   text: "text-cyan-700"   },
                 rejected:          { label: "Rejected",     dot: "bg-red-400",    bg: "bg-red-50",    border: "border-red-200",    text: "text-red-700"    },
-                revision_required: { label: "Needs Info",   dot: "bg-orange-400", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700" }
+                requires_more_info: { label: "Needs Info", dot: "bg-orange-400", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700" }
               };
               const cfg = statusCfg[getPolicyStatus(policy)] ?? statusCfg.submitted;
 
@@ -788,8 +761,21 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
         )}
       </div>
 
-      <div className="flex items-center justify-between px-2 text-sm text-slate-500">
-        <p>Showing <span className="font-semibold text-slate-900">{filteredPolicies.length}</span> of <span className="font-semibold text-slate-900">{allPoliciesForDisplay.length}</span> policies</p>
+      <div className="flex flex-col gap-3 px-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <p>
+          Showing <span className="font-semibold text-slate-900">{pagination.totalPolicies ? ((pagination.currentPage - 1) * 25) + 1 : 0}–{Math.min(pagination.currentPage * 25, pagination.totalPolicies)}</span> of <span className="font-semibold text-slate-900">{pagination.totalPolicies}</span> policies
+        </p>
+        {pagination.totalPages > 1 && (
+          <div className="flex items-center gap-1" aria-label="Policy pagination">
+            <button onClick={() => setCurrentPage(page => Math.max(1, page - 1))} disabled={pagination.currentPage === 1 || blpLoading} className="rounded-lg border px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, index) => {
+              const start = Math.min(Math.max(1, pagination.currentPage - 2), Math.max(1, pagination.totalPages - 4));
+              const page = start + index;
+              return <button key={page} onClick={() => setCurrentPage(page)} className={`h-8 w-8 rounded-lg ${page === pagination.currentPage ? 'bg-emerald-600 text-white' : 'border'}`}>{page}</button>;
+            })}
+            <button onClick={() => setCurrentPage(page => Math.min(pagination.totalPages, page + 1))} disabled={pagination.currentPage === pagination.totalPages || blpLoading} className="rounded-lg border px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+          </div>
+        )}
       </div>
 
       {/* Assign Surveyor Modal */}

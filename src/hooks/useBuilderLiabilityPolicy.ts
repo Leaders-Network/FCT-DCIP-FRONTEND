@@ -126,7 +126,8 @@ const useBuilderLiabilityPolicies = (isAdmin = false) => {
         currentPage: 1,
         totalPages: 0,
         totalPolicies: 0,
-        hasMore: false
+        hasMore: false,
+        statusCounts: {} as Record<string, number>
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -145,7 +146,7 @@ const useBuilderLiabilityPolicies = (isAdmin = false) => {
             }
 
             setPolicies(response.data.policies);
-            setPagination(response.data.pagination);
+            setPagination({ ...response.data.pagination, statusCounts: response.data.statusCounts || {} });
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to fetch policies';
             setError(errorMessage);
@@ -166,7 +167,8 @@ const useBuilderLiabilityPolicies = (isAdmin = false) => {
                 currentPage: 1,
                 totalPages: 1,
                 totalPolicies: response.data.policies.length,
-                hasMore: false
+                hasMore: false,
+                statusCounts: {}
             });
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to search policies';

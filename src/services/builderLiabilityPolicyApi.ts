@@ -121,7 +121,13 @@ export const builderLiabilityPolicyAPI = {
         page?: number;
         limit?: number;
         status?: string;
+        priority?: string;
         search?: string;
+        coverageType?: string;
+        minValue?: number;
+        maxValue?: number;
+        dateFrom?: string;
+        dateTo?: string;
         sortBy?: string;
         sortOrder?: 'asc' | 'desc';
     }): Promise<GetPoliciesResponse> => {
