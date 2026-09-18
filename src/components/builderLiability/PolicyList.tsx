@@ -89,9 +89,9 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         result: PaymentConfirmationResult;
         policyId?: string;
     } | null>(null);
-    const egolePayApiKey = process.env.NEXT_PUBLIC_EGOLEPAY_API_KEY || '';
+    const egolePayApiKey = process.env.EGOLEPAY_API_KEY || '';
     const egolePayMerchantId =
-        process.env.NEXT_PUBLIC_EGOLEPAY_MERCHANT_ID ||
+        process.env.EGOLEPAY_MERCHANT_ID ||
         '22C811B4-EF62-48DA-8F35-E714F3992BC4';
 
     // Seed premium state from already-calculated policies so buttons don't regress on reload
@@ -190,7 +190,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             }
 
             const sdkUrl =
-                process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL ||
+                process.env.EGOLEPAY_SDK_URL ||
                 'https://pulsebridge.egolepay.com/pulsebridge-v0.0.js';
 
             const currentScript = document.querySelector(`script[src="${sdkUrl}"]`) as HTMLScriptElement | null;
@@ -335,7 +335,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
 
             try {
                 if (!egolePayApiKey) {
-                    throw new Error('EgolePay API key is missing. Add NEXT_PUBLIC_EGOLEPAY_API_KEY to the frontend env file.');
+                    throw new Error('EgolePay API key is missing. Add EGOLEPAY_API_KEY to the frontend env file.');
                 }
 
                 if (!amount || Number(amount) <= 0) {
