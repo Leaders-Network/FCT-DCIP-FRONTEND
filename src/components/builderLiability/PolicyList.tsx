@@ -89,7 +89,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         result: PaymentConfirmationResult;
         policyId?: string;
     } | null>(null);
-    const egolePayApiKey = process.env.EGOLEPAY_API_KEY || '';
+    const egolePayApiKey = process.env.NEXT_PUBLIC_EGOLEPAY_API_KEY || '';
     const egolePayMerchantId =
         process.env.EGOLEPAY_MERCHANT_ID ||
         '22C811B4-EF62-48DA-8F35-E714F3992BC4';
@@ -190,7 +190,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
             }
 
             const sdkUrl =
-                process.env.EGOLEPAY_SDK_URL ||
+                process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL ||
                 'https://pulsebridge.egolepay.com/pulsebridge-v0.0.js';
 
             const currentScript = document.querySelector(`script[src="${sdkUrl}"]`) as HTMLScriptElement | null;
@@ -333,9 +333,17 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         const launchPayment = async () => {
             setProcessingPayment(policy._id);
 
+            console.log(
+                `
+                ${process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL}
+                ${process.env.NEXT_PUBLIC_EGOLEPAY_PUBLIC_KEY}
+                ${process.env.NEXT_PUBLIC_EGOLEPAY_API_KEY}
+                `
+            )
+
             try {
                 if (!egolePayApiKey) {
-                    throw new Error('EgolePay API key is missing. Add EGOLEPAY_API_KEY to the frontend env file.');
+                    throw new Error('EgolePay API key is missing. Add NEXT_PUBLIC_EGOLEPAY_API_KEY to the frontend env file.');
                 }
 
                 if (!amount || Number(amount) <= 0) {
