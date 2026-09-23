@@ -3,7 +3,7 @@
 import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { brokerAdminAPI, triggerCsvDownload } from '@/services/api';
+import { brokerAdminAPI, downloadPolicyCertificate, triggerCsvDownload } from '@/services/api';
 import {
     FileText,
     Clock,
@@ -102,6 +102,7 @@ export default function BrokerAdminDashboard() {
     const [completedPolicyModalOpen, setCompletedPolicyModalOpen] = useState(false);
     const [completedPolicyModalLoading, setCompletedPolicyModalLoading] = useState(false);
     const [completedPolicyModalError, setCompletedPolicyModalError] = useState<string | null>(null);
+    const [downloadingCertificate, setDownloadingCertificate] = useState(false);
     // Completed policies filters
     const [cpSearch, setCpSearch] = useState('');
     const [cpCompanyName, setCpCompanyName] = useState('');
@@ -263,6 +264,20 @@ export default function BrokerAdminDashboard() {
         setSelectedCompletedPolicy(null);
         setCompletedPolicyModalError(null);
         setCompletedPolicyModalLoading(false);
+        setDownloadingCertificate(false);
+    };
+
+    const handleDownloadCertificate = async () => {
+        if (!selectedCompletedPolicy) return;
+
+        try {
+            setDownloadingCertificate(true);
+            await downloadPolicyCertificate(selectedCompletedPolicy._id, selectedCompletedPolicy.policyNumber);
+        } catch (err) {
+            setCompletedPolicyModalError(err instanceof Error ? err.message : 'Failed to download policy certificate.');
+        } finally {
+            setDownloadingCertificate(false);
+        }
     };
 
     useEffect(() => {
@@ -857,6 +872,17 @@ export default function BrokerAdminDashboard() {
 
                             {!completedPolicyModalLoading && selectedCompletedPolicy && (
                                 <>
+                                    <div className="mb-6 flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleDownloadCertificate}
+                                            disabled={downloadingCertificate}
+                                            className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            {downloadingCertificate ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                                            {downloadingCertificate ? 'Downloading...' : 'Download Certificate'}
+                                        </button>
+                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                                             <p className="text-xs uppercase tracking-wide text-gray-500">Status</p>

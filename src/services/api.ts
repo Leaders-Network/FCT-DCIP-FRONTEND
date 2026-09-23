@@ -584,6 +584,13 @@ export const downloadProtectedFileByPath = async (
   }
 };
 
+export const downloadPolicyCertificate = async (policyId: string, policyNumber?: string) => {
+  await downloadBlobFromApi(
+    `/payment/certificate/${policyId}`,
+    `policy-certificate-${policyNumber || 'policy'}.pdf`
+  );
+};
+
 export const getSurveyorProfile = async () => {
   try {
     const response = await api.get("/surveyor/profile");

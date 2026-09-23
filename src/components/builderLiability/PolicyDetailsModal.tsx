@@ -3,7 +3,7 @@
 import React from 'react';
 import { BuilderLiabilityPolicy } from '@/types/builderLiabilityPolicy.types';
 import { builderLiabilityPolicyAPI } from '@/services/builderLiabilityPolicyApi';
-import { downloadProtectedFileByPath } from '@/services/api';
+import { downloadPolicyCertificate, downloadProtectedFileByPath } from '@/services/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -77,6 +77,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
 }) => {
     const [isCalculatingPremium, setIsCalculatingPremium] = React.useState(false);
     const [isDownloadingReceipt, setIsDownloadingReceipt] = React.useState(false);
+    const [isDownloadingCertificate, setIsDownloadingCertificate] = React.useState(false);
     const [isGeneratingSAR, setIsGeneratingSAR] = React.useState(false);
     const [premiumResult, setPremiumResult] = React.useState<null | {
         premiumAmount: number;
@@ -98,6 +99,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         setPremiumResult(null);
         setIsCalculatingPremium(false);
         setIsDownloadingReceipt(false);
+        setIsDownloadingCertificate(false);
         setIsGeneratingSAR(false);
     }, [policy?._id, isOpen]);
 
@@ -245,6 +247,22 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         }
     };
 
+    const handleDownloadCertificate = async () => {
+        try {
+            setIsDownloadingCertificate(true);
+            await downloadPolicyCertificate(policy._id, policy.policyNumber);
+            toast.success('Policy certificate downloaded successfully.');
+        } catch (error: any) {
+            toast.error(
+                error?.response?.data?.message ||
+                error?.message ||
+                'Unable to download the policy certificate right now.'
+            );
+        } finally {
+            setIsDownloadingCertificate(false);
+        }
+    };
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
             style: 'currency',
@@ -386,6 +404,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         : isPaymentPending
             ? 'Premium payment pending'
             : `Payment ${paymentStatusLabel.toLowerCase()}`;
+    const canDownloadCertificate = policy.status === 'completed' && isPaymentPaid;
 
     const getBooleanText = (value: boolean | null) => {
         if (value === null) return 'Not Provided';
@@ -985,6 +1004,12 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 <Button variant="outline" onClick={handleDownloadReceipt} disabled={isDownloadingReceipt} className="rounded-full border-emerald-200 bg-emerald-50 px-4 text-emerald-700 hover:bg-emerald-100">
                                     {isDownloadingReceipt ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Receipt className="w-3.5 h-3.5 mr-1.5" />}
                                     {isDownloadingReceipt ? 'Downloading…' : 'Receipt'}
+                                </Button>
+                            )}
+                            {canDownloadCertificate && (
+                                <Button variant="outline" onClick={handleDownloadCertificate} disabled={isDownloadingCertificate} className="rounded-full border-blue-200 bg-blue-50 px-4 text-blue-700 hover:bg-blue-100">
+                                    {isDownloadingCertificate ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1.5" />}
+                                    {isDownloadingCertificate ? 'Downloading…' : 'Certificate'}
                                 </Button>
                             )}
                             {shouldShowCalculatePremiumButton && (

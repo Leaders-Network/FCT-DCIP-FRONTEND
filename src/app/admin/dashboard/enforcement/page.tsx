@@ -23,7 +23,7 @@ import {
   Loader2,
   ExternalLink
 } from "lucide-react";
-import { adminEnforcementAPI } from "@/services/api";
+import { adminEnforcementAPI, downloadPolicyCertificate, downloadProtectedFileByPath } from "@/services/api";
 import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { getProjectEstimateBand } from "@/utils/builderLiability";
 
@@ -83,6 +83,7 @@ const EnforcementPage = () => {
   const [confirmingPayment, setConfirmingPayment] = useState<string | null>(null);
   const [batchConfirming, setBatchConfirming] = useState(false);
   const [manualConfirming, setManualConfirming] = useState<string | null>(null);
+  const [downloadingDocument, setDownloadingDocument] = useState<string | null>(null);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -269,6 +270,31 @@ const EnforcementPage = () => {
       alert(`Manual confirmation failed: ${error.response?.data?.message || error.message || 'Unknown error'}`);
     } finally {
       setManualConfirming(null);
+    }
+  };
+
+  const handleDownloadReceipt = async (policy: EnforcementPolicy) => {
+    try {
+      setDownloadingDocument(`${policy._id}-receipt`);
+      await downloadProtectedFileByPath(
+        `/payment/receipt/${policy._id}`,
+        `payment-receipt-${policy.policyNumber || 'policy'}.pdf`
+      );
+    } catch (error: any) {
+      alert(error?.response?.data?.message || error?.message || 'Unable to download the payment receipt.');
+    } finally {
+      setDownloadingDocument(null);
+    }
+  };
+
+  const handleDownloadCertificate = async (policy: EnforcementPolicy) => {
+    try {
+      setDownloadingDocument(`${policy._id}-certificate`);
+      await downloadPolicyCertificate(policy._id, policy.policyNumber);
+    } catch (error: any) {
+      alert(error?.response?.data?.message || error?.message || 'Unable to download the policy certificate.');
+    } finally {
+      setDownloadingDocument(null);
     }
   };
 
@@ -683,7 +709,7 @@ const EnforcementPage = () => {
                         className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
                       />
                     )}
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">
@@ -758,6 +784,29 @@ const EnforcementPage = () => {
                     </button>
                   </div>
                 </div>
+
+                {viewMode === 'completed' && (
+                  <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-gray-100 pt-4">
+                    <button
+                      onClick={() => handleDownloadReceipt(policy)}
+                      disabled={downloadingDocument !== null}
+                      className="flex items-center gap-1.5 rounded-lg border border-emerald-600 px-3 py-1.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50 disabled:opacity-50"
+                      title="Download the payment receipt"
+                    >
+                      {downloadingDocument === `${policy._id}-receipt` ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                      Receipt
+                    </button>
+                    <button
+                      onClick={() => handleDownloadCertificate(policy)}
+                      disabled={downloadingDocument !== null}
+                      className="flex items-center gap-1.5 rounded-lg border border-indigo-600 px-3 py-1.5 text-sm font-medium text-indigo-700 transition-colors hover:bg-indigo-50 disabled:opacity-50"
+                      title="Download the NIIP policy certificate"
+                    >
+                      {downloadingDocument === `${policy._id}-certificate` ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                      Certificate
+                    </button>
+                  </div>
+                )}
 
                 <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   {viewMode === 'completed' ? (
@@ -892,6 +941,27 @@ const EnforcementPage = () => {
                     {viewMode === 'pending' && getConfirmationStatusBadge(selectedPolicy)}
                   </div>
                 </div>
+
+                {viewMode === 'completed' && (
+                  <div className="flex flex-wrap justify-end gap-2 border-b border-gray-100 pb-5">
+                    <button
+                      onClick={() => handleDownloadReceipt(selectedPolicy)}
+                      disabled={downloadingDocument !== null}
+                      className="inline-flex items-center gap-2 rounded-lg border border-emerald-600 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                    >
+                      {downloadingDocument === `${selectedPolicy._id}-receipt` ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                      Download Receipt
+                    </button>
+                    <button
+                      onClick={() => handleDownloadCertificate(selectedPolicy)}
+                      disabled={downloadingDocument !== null}
+                      className="inline-flex items-center gap-2 rounded-lg border border-indigo-600 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+                    >
+                      {downloadingDocument === `${selectedPolicy._id}-certificate` ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                      Download Certificate
+                    </button>
+                  </div>
+                )}
 
                 <div>
                   <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
