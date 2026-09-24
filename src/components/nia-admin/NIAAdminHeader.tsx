@@ -157,9 +157,9 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="relative sticky top-3 z-20 mb-4 rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:hidden">
+    <header className="relative sticky top-3 z-30 mb-4 overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(139,92,246,0.12),_transparent_42%)]" />
-      <div className="relative flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="relative flex flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: mobile toggle + page context */}
         <div className="flex min-w-0 items-center gap-3">
           <button
@@ -192,7 +192,7 @@ const NIAAdminHeader: React.FC<NIAAdminHeaderProps> = ({ onMenuClick }) => {
         </div>
 
         {/* Right: notifications + user menu */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3 lg:w-auto">
           <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-1.5 shadow-sm backdrop-blur">
             <NotificationBell />
           </div>

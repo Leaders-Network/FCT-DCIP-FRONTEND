@@ -70,10 +70,10 @@ const Header = () => {
         `}
       >
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex justify-between items-center">
+          <div className="flex min-w-0 justify-between items-center gap-3">
             
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
+            <Link href="/" className="flex min-w-0 items-center gap-2.5 group">
               <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-green-50 flex items-center justify-center group-hover:shadow-md transition-shadow">
                 <Image
                   src="/logo.svg" 
@@ -84,8 +84,8 @@ const Header = () => {
                   className="object-contain"
                 />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[1.3rem] leading-tight font-bold text-gray-900 tracking-tight">
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-base leading-tight font-bold text-gray-900 tracking-tight sm:text-[1.3rem]">
                   Builders Liability
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-green-600 font-bold">
@@ -119,7 +119,7 @@ const Header = () => {
             </div>
 
             {/* CTA Button & Mobile Toggle */}
-            <div className="flex items-center gap-4">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-4">
               <div className="hidden md:flex items-center">
                 <Link href="/login" className="flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 shadow-[0_4px_14px_0_rgba(2,136,53,0.39)] hover:shadow-[0_6px_20px_rgba(2,136,53,0.23)] hover:-translate-y-0.5 transition-all duration-200">
                   Login to Portal

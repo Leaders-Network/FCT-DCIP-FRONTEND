@@ -634,7 +634,7 @@ export default function BrokerAdminDashboard() {
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
                     <div className="flex flex-col md:flex-row gap-3 flex-wrap">
                         {/* Search */}
-                        <div className="relative flex-1 min-w-[180px]">
+                        <div className="relative min-w-0 flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
@@ -647,7 +647,7 @@ export default function BrokerAdminDashboard() {
                         </div>
 
                         {/* Broker company name filter */}
-                        <div className="relative flex-1 min-w-[200px]">
+                        <div className="relative min-w-0 flex-1">
                             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"

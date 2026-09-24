@@ -331,14 +331,14 @@ export default function PremiumCalculator() {
             <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
 
                 {/* ── Header ─────────────────────────────────────────────────── */}
-                <div className="relative overflow-hidden rounded-[2rem] border border-emerald-200/70 bg-gradient-to-r from-[#028835] via-[#02742d] to-[#015a23] p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.25)]">
+                <div className="relative overflow-hidden rounded-[2rem] border border-emerald-200/70 bg-gradient-to-r from-[#028835] via-[#02742d] to-[#015a23] p-4 text-white shadow-[0_24px_80px_rgba(5,150,105,0.25)] sm:p-6">
                     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_45%)]" />
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-start gap-3 mb-2">
                         <div className="p-2 bg-white/20 rounded-xl">
                             <Calculator className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold">Premium Calculator</h1>
+                            <h1 className="text-xl font-bold sm:text-2xl">Premium Calculator</h1>
                             <p className="text-green-100 text-sm mt-0.5">
                                 FCT-DCIP Builder Liability — Surveyor Risk Assessment Tool
                             </p>
@@ -356,7 +356,7 @@ export default function PremiumCalculator() {
                         <Search className="w-4 h-4 text-[#028835]" />
                         Auto-fill from Policy (Optional)
                     </h2>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row">
                         <input
                             type="text"
                             placeholder="Enter policy number e.g. BL-2025-00123"
@@ -365,11 +365,11 @@ export default function PremiumCalculator() {
                             onKeyDown={(e) => e.key === "Enter" && handleFetchPolicy()}
                             className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:outline-none focus:ring-4 focus:ring-[#028835]/10"
                         />
-                        <div className="print:hidden flex gap-3">
+                        <div className="print:hidden flex flex-wrap gap-3">
                             <button
                                 onClick={handleFetchPolicy}
                                 disabled={fetchLoading || !policyInput.trim()}
-                                className="inline-flex items-center gap-2 rounded-2xl bg-[#028835] px-5 py-3 text-sm font-medium text-white shadow-md shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#026a28] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                                className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#028835] px-5 py-3 text-sm font-medium text-white shadow-md shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#026a28] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
                             >
                                 {fetchLoading ? (
                                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -433,7 +433,7 @@ export default function PremiumCalculator() {
                 </div>
 
                 {/* ── Property Valuation & Premium ─────────────────────────────────── */}
-                <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+                <div className="rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6">
                     <h2 className="text-base font-semibold text-gray-800 mb-1 flex items-center gap-2">
                         <Calculator className="w-4 h-4 text-[#028835]" />
                         Property Valuation &amp; Premium
@@ -462,7 +462,7 @@ export default function PremiumCalculator() {
                     </div>
                 </div>
                 {/* ── Underwriting Assessment Flow ─────────────────────────────────── */}
-                <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+                <div className="rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6">
                     <div className="flex flex-col gap-3 mb-1 sm:flex-row sm:items-center sm:justify-between">
                         <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-amber-500" />

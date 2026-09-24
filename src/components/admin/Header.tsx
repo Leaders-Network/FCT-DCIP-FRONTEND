@@ -178,9 +178,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="relative sticky top-3 z-40 mb-4 rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:hidden">
+    <header className="relative sticky top-3 z-30 mb-4 overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.16),_transparent_42%)]" />
-      <div className="relative flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="relative flex flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: mobile toggle + page context */}
         <div className="flex min-w-0 items-center gap-3">
           <button
@@ -214,11 +214,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         {/* Right: search + notifications + user menu */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3 lg:w-auto">
           <div className="hidden xl:block">
             <GlobalSearch
               userType="admin"
-              className="w-full min-w-[320px] max-w-[420px]"
+              className="w-full max-w-[420px]"
             />
           </div>
 

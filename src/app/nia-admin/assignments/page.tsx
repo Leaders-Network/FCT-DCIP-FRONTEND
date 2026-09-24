@@ -236,12 +236,12 @@ const NIAAutomatedAssignmentsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen min-w-0 bg-gray-50 p-3 sm:p-6">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">NIA Automated Assignments</h1>
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">NIA Automated Assignments</h1>
             <p className="text-gray-600 mt-1">
               LGA-based surveyor assignments with round-robin distribution
             </p>
@@ -315,7 +315,7 @@ const NIAAutomatedAssignmentsPage = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input

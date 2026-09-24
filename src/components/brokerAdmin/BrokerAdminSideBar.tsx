@@ -106,7 +106,7 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
 
   return (
     <aside
-      className={`fixed z-30 flex h-full flex-col overflow-hidden rounded-r-[2rem] border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl transition-all duration-300 print:hidden md:relative md:translate-x-0 ${sidebarWidth}`}
+      className={`fixed inset-y-0 left-0 z-50 flex h-screen flex-col overflow-hidden rounded-none border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl transition-all duration-300 print:hidden md:relative md:inset-auto md:h-full md:translate-x-0 md:rounded-r-[2rem] ${sidebarWidth}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-white/70 bg-gradient-to-r from-white via-white to-blue-50/70 p-4">

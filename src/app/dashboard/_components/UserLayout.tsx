@@ -213,16 +213,16 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
 
   return (
     <NotificationProvider>
-      <div className="flex h-screen gap-3 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-cyan-50/20 p-3 sm:p-4 print:block print:h-auto print:bg-white print:p-0">
+      <div className="flex h-screen gap-0 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-cyan-50/20 p-0 sm:gap-3 sm:p-4 print:block print:h-auto print:bg-white print:p-0">
         {isMobile && sidebarOpen && (
           <div
-            className="fixed inset-0 z-20 bg-black/50 print:hidden md:hidden"
+            className="fixed inset-0 z-40 bg-black/45 backdrop-blur-sm print:hidden md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         <aside
-          className={`fixed z-30 flex h-full flex-col overflow-hidden rounded-r-[2rem] border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl transition-all duration-300 print:hidden md:relative md:translate-x-0 ${sidebarWidth}`}
+          className={`fixed inset-y-0 left-0 z-50 flex h-screen flex-col overflow-hidden rounded-none border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl transition-all duration-300 print:hidden md:relative md:inset-auto md:h-full md:translate-x-0 md:rounded-r-[2rem] ${sidebarWidth}`}
         >
           <div className="flex items-center justify-between gap-3 border-b border-white/70 bg-gradient-to-r from-white via-white to-emerald-50/70 p-4">
             {sidebarOpen || isMobile ? (
@@ -328,9 +328,9 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
         </aside>
 
         <div className="flex flex-1 flex-col overflow-visible print:block print:overflow-visible print:bg-white">
-          <header className="relative sticky top-3 z-40 mb-4 overflow-visible rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:hidden">
+          <header className="sticky top-0 z-30 mb-4 overflow-hidden rounded-none border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:top-0 sm:rounded-[2rem] print:hidden">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.16),_transparent_42%)]" />
-            <div className="relative flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative flex flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 items-center gap-3">
                 <button
                   type="button"
@@ -362,7 +362,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3 lg:w-auto">
                 <div className="hidden xl:block">
                   <GlobalSearch
                     userType="user"
@@ -424,7 +424,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto rounded-[2rem] border border-white/70 bg-white/60 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl print:overflow-visible print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none sm:p-4 md:p-6">
+          <main className="flex-1 overflow-auto rounded-none border border-white/70 bg-white/60 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl print:overflow-visible print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none sm:rounded-[2rem] sm:p-4 md:p-6">
             {children}
           </main>
         </div>

@@ -528,7 +528,7 @@ const AutomatedAssignmentsPage = () => {
         ) : (
           <div className="divide-y divide-slate-100">
             {/* Table header */}
-            <div className="grid grid-cols-12 gap-4 px-5 py-3">
+            <div className="hidden grid-cols-12 gap-4 px-5 py-3 sm:grid">
               <p className="col-span-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Policy / Builder</p>
               <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Surveyor</p>
               <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</p>
@@ -542,10 +542,10 @@ const AutomatedAssignmentsPage = () => {
               return (
                 <div
                   key={asgn._id}
-                  className="grid grid-cols-12 items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50/70"
+                  className="grid grid-cols-1 items-start gap-3 px-4 py-4 transition-colors hover:bg-slate-50/70 sm:grid-cols-12 sm:items-center sm:gap-4 sm:px-5"
                 >
                   {/* Policy / Builder */}
-                  <div className="col-span-4 min-w-0">
+                  <div className="min-w-0 sm:col-span-4">
                     <p className="truncate text-sm font-semibold text-slate-900">
                       {asgn.policyId?.policyNumber || "N/A"}
                     </p>
@@ -555,7 +555,7 @@ const AutomatedAssignmentsPage = () => {
                   </div>
 
                   {/* Surveyor */}
-                  <div className="col-span-2 min-w-0">
+                  <div className="min-w-0 sm:col-span-2">
                     {asgn.surveyorId ? (
                       <>
                         <p className="truncate text-sm font-medium text-slate-800">
@@ -569,17 +569,17 @@ const AutomatedAssignmentsPage = () => {
                   </div>
 
                   {/* Status */}
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <StatusBadge status={asgn.status} />
                   </div>
 
                   {/* Priority */}
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <PriorityBadge priority={asgn.priority} />
                   </div>
 
                   {/* Deadline */}
-                  <div className="col-span-1 min-w-0">
+                  <div className="min-w-0 sm:col-span-1">
                     <p className={`text-xs font-medium ${overdue ? "text-red-600" : "text-slate-600"}`}>
                       {fmtDate(asgn.deadline)}
                     </p>
@@ -589,7 +589,7 @@ const AutomatedAssignmentsPage = () => {
                   </div>
 
                   {/* Action */}
-                  <div className="col-span-1 flex justify-end">
+                  <div className="flex justify-start sm:col-span-1 sm:justify-end">
                     <button
                       onClick={() => setSelectedAssignment(asgn)}
                       className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md"

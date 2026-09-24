@@ -417,9 +417,9 @@ export default function AdministratorsPage() {
   }, [filteredData, currentPage, itemsPerPage])
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="mx-auto min-w-0 max-w-7xl space-y-4 pb-12 sm:space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/60 p-6 rounded-[2rem] border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-[2rem] border border-white/50 bg-white/60 p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:flex-row sm:items-center sm:p-6">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
           <p className="text-sm text-slate-500 font-medium mt-1">Manage administrators, employees, and users</p>
@@ -470,8 +470,8 @@ export default function AdministratorsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex items-center gap-3 p-4 bg-white/80 rounded-[1.5rem] border border-slate-100 shadow-sm backdrop-blur-md">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col items-stretch gap-3 rounded-[1.5rem] border border-slate-100 bg-white/80 p-4 shadow-sm backdrop-blur-md sm:flex-row sm:items-center">
+        <div className="relative min-w-0 flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input 
             placeholder={`Search ${activeTab}...`}
@@ -516,7 +516,7 @@ export default function AdministratorsPage() {
                 <div key={item._id} className="group relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 md:p-5 bg-white/90 backdrop-blur-xl rounded-[1.5rem] border border-white shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-50">
                   
                   {/* Avatar & Main Info */}
-                  <div className="flex items-center gap-4 min-w-[250px] flex-1">
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-700 font-bold shadow-sm ring-1 ring-emerald-200/50 uppercase">
                       {initials}
                     </div>

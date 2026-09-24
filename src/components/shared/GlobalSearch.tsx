@@ -350,7 +350,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ userType, className = '' })
 
             {/* Search Results Dropdown */}
             {isOpen && (
-                <div className="absolute left-0 right-0 top-full z-[80] mt-3 max-h-[32rem] overflow-y-auto rounded-[1.5rem] border border-slate-200 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+                <div className="absolute left-0 right-0 top-full z-[80] mt-3 max-h-[min(32rem,calc(100vh-8rem))] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-[1.5rem] border border-slate-200 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl">
                     {/* Loading State */}
                     {loading && (
                         <div className="p-5 text-center text-slate-500">
