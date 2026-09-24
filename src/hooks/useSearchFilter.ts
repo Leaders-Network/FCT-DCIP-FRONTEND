@@ -17,7 +17,7 @@ export interface FilterOptions {
     lgas: string[];
     coverTypes: string[];
     surveyorRecommendations: string[];
-    brokerStatuses: string[];
+    underwriterStatuses: string[];
     priorities: string[];
     assignmentStatuses: string[];
 }
@@ -31,7 +31,7 @@ export interface SearchFilters {
     builderName?: string;
     policyNumber?: string;
     surveyorRecommendation?: string;
-    brokerStatus?: string;
+    underwriterStatus?: string;
     claimRequested?: boolean;
     minValue?: number;
     maxValue?: number;
@@ -180,7 +180,7 @@ export const useSearchFilter = ({
         // Extract filters
         const filterKeys: (keyof SearchFilters)[] = [
             'search', 'status', 'dateFrom', 'dateTo', 'lga', 'builderName',
-            'policyNumber', 'surveyorRecommendation', 'brokerStatus', 'coverType',
+            'policyNumber', 'surveyorRecommendation', 'underwriterStatus', 'coverType',
             'priority'
         ];
 

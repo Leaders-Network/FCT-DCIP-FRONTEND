@@ -13,11 +13,11 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { brokerAdminAPI } from "@/services/api";
+import { underwriterAdminAPI } from "@/services/api";
 import { removeAuthToken } from "@/utils/auth";
 import Swal from "sweetalert2";
 
-interface BrokerAdminSidebarProps {
+interface UnderwriterAdminSidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
   isMobile?: boolean;
@@ -25,33 +25,33 @@ interface BrokerAdminSidebarProps {
 
 const menuItems = [
   {
-    href: "/broker-admin/dashboard",
+    href: "/underwriter/dashboard",
     label: "Dashboard",
     icon: Home,
   },
   {
-    href: "/broker-admin/claims",
+    href: "/underwriter/claims",
     label: "Claims",
     icon: FileText,
   },
   {
-    href: "/broker-admin/administrators",
+    href: "/underwriter/administrators",
     label: "Administrators",
     icon: Users,
   },
   {
-    href: "/broker-admin/notifications",
+    href: "/underwriter/notifications",
     label: "Notifications",
     icon: Bell,
   },
   {
-    href: "/broker-admin/settings",
+    href: "/underwriter/settings",
     label: "Settings",
     icon: Settings,
   },
 ];
 
-const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
+const UnderwriterAdminSidebar: React.FC<UnderwriterAdminSidebarProps> = ({
   isOpen = true,
   onClose,
   isMobile = false,
@@ -85,13 +85,13 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
 
     if (result.isConfirmed) {
       try {
-        await brokerAdminAPI.logout();
+        await underwriterAdminAPI.logout();
       } catch {
         // ignore
       } finally {
-        removeAuthToken("broker-admin");
-        localStorage.removeItem("brokerAdminInfo");
-        router.push("/broker-admin/login");
+        removeAuthToken("underwriter-admin");
+        localStorage.removeItem("underwriterAdminInfo");
+        router.push("/underwriter/login");
       }
     }
   };
@@ -130,7 +130,7 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
                 Builders Liability
               </span>
               <span className="block truncate text-[11px] text-slate-500">
-                Broker Portal
+                Underwriter Portal
               </span>
             </span>
           </button>
@@ -162,7 +162,7 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive =
-            item.href === "/broker-admin/dashboard"
+            item.href === "/underwriter/dashboard"
               ? pathname === item.href
               : pathname.startsWith(item.href);
 
@@ -215,4 +215,4 @@ const BrokerAdminSidebar: React.FC<BrokerAdminSidebarProps> = ({
   );
 };
 
-export default BrokerAdminSidebar;
+export default UnderwriterAdminSidebar;

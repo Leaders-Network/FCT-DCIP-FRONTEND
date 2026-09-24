@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { brokerAdminAPI } from '@/services/api';
+import { underwriterAdminAPI } from '@/services/api';
 import { setAuthToken } from '@/utils/auth';
 
-export default function BrokerAdminLogin() {
+export default function UnderwriterAdminLogin() {
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -36,23 +36,23 @@ export default function BrokerAdminLogin() {
             }
 
             // Call login API
-            const response = await brokerAdminAPI.login(formData.email, formData.password);
+            const response = await underwriterAdminAPI.login(formData.email, formData.password);
 
             if (response.success && response.token) {
-                const responseTokenType = response.user?.tokenType === 'super-admin' ? 'super-admin' : 'broker-admin';
+                const responseTokenType = response.user?.tokenType === 'super-admin' ? 'super-admin' : 'underwriter-admin';
 
                 // Store token and user info
                 setAuthToken(response.token, responseTokenType);
-                localStorage.setItem('brokerAdminInfo', JSON.stringify({
+                localStorage.setItem('underwriterAdminInfo', JSON.stringify({
                     ...response.user,
-                    brokerAdmin: response.brokerAdmin
+                    underwriterAdmin: response.underwriterAdmin
                 }));
 
                 // Force a small delay to ensure localStorage is written
                 await new Promise(resolve => setTimeout(resolve, 100));
 
                 // Redirect to dashboard
-                window.location.href = '/broker-admin/dashboard';
+                window.location.href = '/underwriter/dashboard';
             } else {
                 setError('Invalid credentials. Please try again.');
             }
@@ -94,7 +94,7 @@ export default function BrokerAdminLogin() {
             <div className="relative hidden md:flex items-center justify-center overflow-hidden bg-black">
                 <img
                     src="/bg-hero-11.jpg"
-                    alt="Broker dashboard background"
+                    alt="Underwriter dashboard background"
                     className="absolute inset-0 object-cover w-full h-full opacity-50 scale-105 transition-transform duration-[20s] ease-out hover:scale-110"
                 />
                 {/* Modern multi-layer gradient overlay for depth */}
@@ -111,15 +111,15 @@ export default function BrokerAdminLogin() {
                                 </svg>
                             </div>
                             <div className="text-xl font-bold tracking-wider text-indigo-400 uppercase">
-                                Broker Management
+                                Underwriter Management
                             </div>
                         </div>
                         
                         <h2 className="text-4xl lg:text-5xl font-extrabold mb-6 leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
-                            Broker Admin Portal
+                            Underwriter Dashboard
                         </h2>
                         <p className="text-lg text-gray-200 leading-relaxed font-light">
-                            Securely manage insurance claims, monitor policy renewals, and oversee broker operations with real-time analytics.
+                            Securely manage insurance claims, monitor policy renewals, and oversee underwriting operations with real-time analytics.
                         </p>
                         
                         <div className="mt-10 flex gap-4">
@@ -165,7 +165,7 @@ export default function BrokerAdminLogin() {
                                         name="email"
                                         type="email"
                                         required
-                                        placeholder="broker@example.com"
+                                        placeholder="underwriter@example.com"
                                         className="block w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
                                         value={formData.email}
                                         onChange={handleChange}
@@ -222,7 +222,7 @@ export default function BrokerAdminLogin() {
                                     </div>
                                     <span className="ml-2.5 group-hover:text-gray-900 transition-colors">Remember me</span>
                                 </label>
-                                <a href="/broker-admin/reset-password" className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                                <a href="/underwriter/reset-password" className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
                                     Forgot password?
                                 </a>
                             </div>

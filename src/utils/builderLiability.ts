@@ -160,8 +160,8 @@ export const getProjectDistrict = (project?: ProjectInfo | null) => {
 
 export const getProjectEstimateBand = (project?: ProjectInfo | null) =>
     getEstimateBandLabel(
-        normalizeEstimateBand(project?.totalEstimateSumBand) ||
-        getEstimateBandFromAmount(project?.totalEstimateSum ?? project?.totalEstimatedSum)
+        getEstimateBandFromAmount(project?.totalEstimateSum ?? project?.totalEstimatedSum) ||
+        normalizeEstimateBand(project?.totalEstimateSumBand)
     );
 
 export const getClientName = (client?: ClientInfo | null) => client?.name || null;

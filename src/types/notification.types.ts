@@ -5,7 +5,7 @@
 export interface Notification {
     _id: string;
     recipientId: string;
-    recipientType: 'user' | 'employee' | 'surveyor' | 'admin' | 'nia-admin' | 'broker-admin';
+    recipientType: 'user' | 'employee' | 'surveyor' | 'admin' | 'nia-admin' | 'underwriter-admin';
     type: NotificationType;
     title: string;
     message: string;

@@ -3,6 +3,6 @@
 import React from 'react';
 import NotificationsPage from '@/components/shared/NotificationsPage';
 
-export default function BrokerAdminNotifications() {
+export default function UnderwriterAdminNotifications() {
     return <NotificationsPage />;
 }

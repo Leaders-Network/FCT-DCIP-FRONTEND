@@ -1,4 +1,4 @@
-$file = 'C:\Users\Bolajeee\Documents\LeadersNetwork\Builders-Liability-FRONTEND\src\app\broker-admin\dashboard\page.tsx'
+$file = 'C:\Users\Bolajeee\Documents\LeadersNetwork\Builders-Liability-FRONTEND\src\app\underwriter-admin\dashboard\page.tsx'
 $content = [System.IO.File]::ReadAllText($file, [System.Text.Encoding]::UTF8)
 
 $search = "            {/* Claim Detail Modal - Same as claims page */}"
@@ -22,7 +22,7 @@ $newSection = @"
                             Completed Policies (NIIP)
                         </h2>
                         <p className="text-sm text-gray-500 mt-0.5">
-                            All policies with payment completed — filterable by date range and insurance broker company.
+                            All policies with payment completed — filterable by date range and underwriter company.
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -58,12 +58,12 @@ $newSection = @"
                             />
                         </div>
 
-                        {/* Broker company name filter */}
+                        {/* Underwriter company name filter */}
                         <div className="relative flex-1 min-w-[200px]">
                             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
-                                placeholder="Insurance broker company name…"
+                                placeholder="Underwriter company name…"
                                 value={cpCompanyName}
                                 onChange={(e) => setCpCompanyName(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleApplyCpFilters()}
@@ -134,7 +134,7 @@ $newSection = @"
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGA</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sum Insured (N)</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />Broker Company</span>
+                                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />Underwriter Company</span>
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed At</th>
                             </tr>
@@ -156,10 +156,10 @@ $newSection = @"
                                     const niipPayload = policy.niipPayload as Record<string, unknown> | undefined;
                                     const meta = policy.meta as Record<string, unknown> | undefined;
                                     const webhookNiip = (paymentInfo?.webhookData as Record<string, unknown> | undefined)?.niip as Record<string, unknown> | undefined;
-                                    const brokerCompany =
+                                    const underwriterCompany =
                                         (niipPayload?.companyName as string) ||
                                         (webhookNiip?.companyName as string) ||
-                                        (meta?.brokerOrAgentName as string) ||
+                                        (meta?.underwriterOrAgentName as string) ||
                                         '';
                                     return (
                                         <tr key={String(policy._id)} className="hover:bg-gray-50">
@@ -181,10 +181,10 @@ $newSection = @"
                                                     : '—'}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
-                                                {brokerCompany ? (
+                                                {underwriterCompany ? (
                                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700 border border-indigo-100">
                                                         <Building2 className="w-3 h-3" />
-                                                        {brokerCompany}
+                                                        {underwriterCompany}
                                                     </span>
                                                 ) : '—'}
                                             </td>

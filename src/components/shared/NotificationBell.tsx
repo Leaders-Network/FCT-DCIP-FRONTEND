@@ -15,8 +15,8 @@ const NotificationBell: React.FC = () => {
 
     const notificationsPath = pathname?.startsWith('/admin/dashboard')
         ? '/admin/dashboard/notifications'
-        : pathname?.startsWith('/broker-admin')
-            ? '/broker-admin/notifications'
+        : pathname?.startsWith('/underwriter')
+            ? '/underwriter/notifications'
             : pathname?.startsWith('/nia-admin')
                 ? '/nia-admin/notifications'
                 : pathname?.startsWith('/surveyor/dashboard')

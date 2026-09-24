@@ -20,14 +20,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { brokerAdminAPI } from "@/services/api";
+import { underwriterAdminAPI } from "@/services/api";
 import { removeAuthToken } from "@/utils/auth";
 import NotificationBell from "@/components/shared/NotificationBell";
 import Swal from "sweetalert2";
 import { usePathname, useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 
-interface BrokerHeaderProps {
+interface UnderwriterHeaderProps {
   onMenuClick?: () => void;
 }
 
@@ -37,10 +37,10 @@ interface PageContext {
   icon: LucideIcon;
 }
 
-const getBrokerPageContext = (pathname: string | null): PageContext => {
+const getUnderwriterPageContext = (pathname: string | null): PageContext => {
   if (!pathname) {
     return {
-      title: "Broker Dashboard",
+      title: "Underwriter Dashboard",
       subtitle: "Manage insurance claims and track completed policies.",
       icon: LayoutDashboard,
     };
@@ -57,7 +57,7 @@ const getBrokerPageContext = (pathname: string | null): PageContext => {
   if (pathname.includes("/administrators")) {
     return {
       title: "Administrators",
-      subtitle: "Manage broker admin accounts and access.",
+      subtitle: "Manage underwriter admin accounts and access.",
       icon: Users,
     };
   }
@@ -73,22 +73,22 @@ const getBrokerPageContext = (pathname: string | null): PageContext => {
   if (pathname.includes("/settings")) {
     return {
       title: "Settings",
-      subtitle: "Configure broker portal preferences.",
+      subtitle: "Configure underwriter portal preferences.",
       icon: Settings,
     };
   }
 
   return {
-    title: "Broker Dashboard",
+    title: "Underwriter Dashboard",
     subtitle: "Manage insurance claims and track completed policies.",
     icon: LayoutDashboard,
   };
 };
 
-const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
+const UnderwriterHeader: React.FC<UnderwriterHeaderProps> = ({ onMenuClick }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const pageContext = getBrokerPageContext(pathname);
+  const pageContext = getUnderwriterPageContext(pathname);
   const PageIcon = pageContext.icon;
 
   const [adminInfo, setAdminInfo] = useState<{
@@ -96,7 +96,7 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
     email?: string;
     firstname?: string;
     lastname?: string;
-    brokerFirmName?: string;
+    underwriterFirmName?: string;
   } | null>(null);
 
   const isDarkMode =
@@ -106,7 +106,7 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("brokerAdminInfo");
+      const stored = localStorage.getItem("underwriterAdminInfo");
       if (stored) {
         setAdminInfo(JSON.parse(stored));
       }
@@ -118,7 +118,7 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
   const adminName =
     adminInfo?.fullname ||
     [adminInfo?.firstname, adminInfo?.lastname].filter(Boolean).join(" ").trim() ||
-    "Broker Admin";
+    "Underwriter";
 
   const initials = adminName
     .split(" ")
@@ -143,13 +143,13 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
 
     if (result.isConfirmed) {
       try {
-        await brokerAdminAPI.logout();
+        await underwriterAdminAPI.logout();
       } catch {
         // ignore
       } finally {
-        removeAuthToken("broker-admin");
-        localStorage.removeItem("brokerAdminInfo");
-        router.push("/broker-admin/login");
+        removeAuthToken("underwriter-admin");
+        localStorage.removeItem("underwriterAdminInfo");
+        router.push("/underwriter/login");
       }
     }
   };
@@ -175,7 +175,7 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
           <div className="min-w-0">
             <div className="mb-1 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-700">
-                Broker workspace
+                Underwriter workspace
               </span>
               <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[10px] font-medium tracking-[0.18em] text-slate-500">
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
@@ -191,7 +191,7 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
 
         {/* Right: notifications + user menu */}
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3 lg:w-auto">
-          {adminInfo?.brokerFirmName && (
+          {adminInfo?.underwriterFirmName && (
             <div className="hidden xl:flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-left shadow-sm">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
                 <Building2 className="h-4 w-4" />
@@ -201,7 +201,7 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
                   Firm
                 </p>
                 <p className="text-sm text-slate-600 font-medium truncate max-w-[140px]">
-                  {adminInfo.brokerFirmName}
+                  {adminInfo.underwriterFirmName}
                 </p>
               </div>
             </div>
@@ -222,7 +222,7 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
                     {adminName}
                   </span>
                   <span className="block text-[11px] text-slate-500">
-                    Broker admin
+                    Underwriter admin
                   </span>
                 </span>
               </button>
@@ -239,12 +239,12 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
                   {adminName}
                 </div>
                 <div className="text-xs text-slate-500">
-                  {adminInfo?.email || "Broker admin account"}
+                  {adminInfo?.email || "Underwriter admin account"}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1 bg-slate-200" />
               <DropdownMenuItem
-                onSelect={() => router.push("/broker-admin/settings")}
+                onSelect={() => router.push("/underwriter/settings")}
                 className="cursor-pointer rounded-2xl px-3 py-2.5 text-sm text-slate-700 transition-colors focus:bg-blue-50 focus:text-blue-800"
               >
                 <Settings className="h-4 w-4 text-slate-500" />
@@ -265,4 +265,4 @@ const BrokerHeader: React.FC<BrokerHeaderProps> = ({ onMenuClick }) => {
   );
 };
 
-export default BrokerHeader;
+export default UnderwriterHeader;

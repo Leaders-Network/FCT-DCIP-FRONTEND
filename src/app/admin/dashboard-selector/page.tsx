@@ -43,11 +43,11 @@ export default function DashboardSelectorPage() {
       color: 'from-purple-500 to-purple-600'
     },
     {
-      id: 'broker',
-      title: 'Broker Admin Dashboard',
-      description: 'Manage broker admins and their activities',
+      id: 'underwriter',
+      title: 'Underwriter Dashboard',
+      description: 'Manage underwriter admin activities and approvals',
       icon: '💼',
-      path: '/broker-admin/dashboard',
+      path: '/underwriter/dashboard',
       color: 'from-green-500 to-green-600'
     },
     {
@@ -113,7 +113,7 @@ export default function DashboardSelectorPage() {
         <div className="mt-12 bg-white rounded-lg shadow-md p-6">
           <p className="text-gray-600 text-center">
             As a Super Admin, you have access to all dashboard modules. You can manage administrators,
-            NIA operations, broker activities, and surveyor assignments from a centralized location.
+            NIA operations, underwriter activities, and surveyor assignments from a centralized location.
           </p>
         </div>
       </div>

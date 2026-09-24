@@ -54,17 +54,17 @@ api.interceptors.request.use(
 
     // Determine the appropriate token type based on current page context AND request URL
     // Page context takes priority since API endpoints like /policy can be used by multiple user types
-    let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor' | undefined;
+    let tokenType: 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'underwriter-admin' | 'surveyor' | undefined;
 
     // First check the current page path to determine context
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
     // Page context takes priority
-    if (currentPath.includes('/broker-admin')) {
-      tokenType = 'broker-admin';
+    if (currentPath === '/underwriter' || currentPath.startsWith('/underwriter/')) {
+      tokenType = 'underwriter-admin';
     } else if (currentPath.includes('/nia-admin')) {
       tokenType = 'nia-admin';
-    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin')) {
       tokenType = 'admin';
     } else if (currentPath.includes('/surveyor')) {
       tokenType = 'surveyor';
@@ -72,8 +72,8 @@ api.interceptors.request.use(
       tokenType = 'super-admin';
     }
     // If page context didn't determine type, check the API URL
-    else if (config.url?.includes('/broker-admin')) {
-      tokenType = 'broker-admin';
+    else if (config.url?.includes('/underwriter-admin')) {
+      tokenType = 'underwriter-admin';
     } else if (config.url?.includes('/nia-admin') || config.url?.includes('/processing-monitor')) {
       tokenType = 'nia-admin';
     } else if (config.url?.includes('/super-admin')) {
@@ -1250,7 +1250,7 @@ export const adminApi = {
     return response.data;
   },
 
-  getUsersByRole: async (role: 'NIA' | 'Broker') => {
+  getUsersByRole: async (role: 'NIA' | 'Underwriter') => {
     const response = await api.get(`/admin/administrators/role/${role}`);
     return response.data;
   },
@@ -1260,8 +1260,8 @@ export const adminApi = {
     return response.data;
   },
 
-  createBrokerUser: async (userData: Record<string, unknown>) => {
-    const response = await api.post('/admin/administrators/broker', userData);
+  createUnderwriterUser: async (userData: Record<string, unknown>) => {
+    const response = await api.post('/admin/administrators/underwriter', userData);
     return response.data;
   },
 
@@ -1285,7 +1285,7 @@ export const adminApi = {
     return response.data;
   },
 
-  updateBrokerUser: async (userId: string, userData: Record<string, unknown>) => {
+  updateUnderwriterUser: async (userId: string, userData: Record<string, unknown>) => {
     const response = await api.patch(`/admin/administrators/${userId}`, userData);
     return response.data;
   },
@@ -1295,7 +1295,7 @@ export const adminApi = {
     return response.data;
   },
 
-  deleteBrokerUser: async (userId: string) => {
+  deleteUnderwriterUser: async (userId: string) => {
     const response = await api.delete(`/admin/administrators/${userId}`);
     return response.data;
   },
@@ -1821,34 +1821,34 @@ export default api;
 // Export Builder Liability Policy API
 export { builderLiabilityPolicyAPI };
 
-// Broker Admin API functions
-export const brokerAdminAPI = {
-  // Login broker admin
-  login: async (email: string, password: string): Promise<import("../types/api.types").BrokerAdminLoginResponse> => {
-    const response = await api.post('/broker-admin/auth/login', { email, password });
+// Underwriter Admin API functions
+export const underwriterAdminAPI = {
+  // Login underwriter admin
+  login: async (email: string, password: string): Promise<import("../types/api.types").UnderwriterAdminLoginResponse> => {
+    const response = await api.post('/underwriter-admin/auth/login', { email, password });
     return response.data;
   },
 
-  // Verify broker admin token
-  verify: async (): Promise<import("../types/api.types").BrokerAdminVerifyResponse> => {
-    const response = await api.get('/broker-admin/auth/verify');
+  // Verify underwriter admin token
+  verify: async (): Promise<import("../types/api.types").UnderwriterAdminVerifyResponse> => {
+    const response = await api.get('/underwriter-admin/auth/verify');
     return response.data;
   },
 
-  // Logout broker admin
+  // Logout underwriter admin
   logout: async (): Promise<ApiResponse> => {
-    const response = await api.post('/broker-admin/auth/logout');
+    const response = await api.post('/underwriter-admin/auth/logout');
     return response.data;
   },
 
-  // Get broker dashboard data
-  getDashboardData: async (): Promise<ApiResponse<import("../types/api.types").BrokerDashboardData>> => {
-    const response = await api.get('/broker-admin/dashboard');
+  // Get underwriter dashboard data
+  getDashboardData: async (): Promise<ApiResponse<import("../types/api.types").UnderwriterDashboardData>> => {
+    const response = await api.get('/underwriter-admin/dashboard');
     return response.data;
   },
 
   // Get all claims with filters
-  getClaims: async (filters?: import("../types/api.types").BrokerClaimFilters): Promise<import("../types/api.types").BrokerClaimsResponse> => {
+  getClaims: async (filters?: import("../types/api.types").UnderwriterClaimFilters): Promise<import("../types/api.types").UnderwriterClaimsResponse> => {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -1857,13 +1857,13 @@ export const brokerAdminAPI = {
         }
       });
     }
-    const endpoint = `/broker-admin/claims${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/underwriter-admin/claims${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await api.get(endpoint);
     return response.data;
   },
 
   // Get all claims with filters (alias for consistency)
-  getAllClaims: async (filters?: import("../types/api.types").BrokerClaimFilters): Promise<import("../types/api.types").BrokerClaimsResponse> => {
+  getAllClaims: async (filters?: import("../types/api.types").UnderwriterClaimFilters): Promise<import("../types/api.types").UnderwriterClaimsResponse> => {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -1872,29 +1872,29 @@ export const brokerAdminAPI = {
         }
       });
     }
-    const endpoint = `/broker-admin/claims${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/underwriter-admin/claims${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await api.get(endpoint);
     return response.data;
   },
 
   // Get claim by ID
-  getClaimById: async (claimId: string): Promise<import("../types/api.types").BrokerClaimDetailResponse> => {
-    const response = await api.get(`/broker-admin/claims/${claimId}`);
+  getClaimById: async (claimId: string): Promise<import("../types/api.types").UnderwriterClaimDetailResponse> => {
+    const response = await api.get(`/underwriter-admin/claims/${claimId}`);
     return response.data;
   },
 
   // Update claim status
   updateClaimStatus: async (
     claimId: string,
-    statusUpdate: import("../types/api.types").BrokerStatusUpdateRequest
-  ): Promise<import("../types/api.types").BrokerStatusUpdateResponse> => {
-    const response = await api.patch(`/broker-admin/claims/${claimId}/status`, statusUpdate);
+    statusUpdate: import("../types/api.types").UnderwriterStatusUpdateRequest
+  ): Promise<import("../types/api.types").UnderwriterStatusUpdateResponse> => {
+    const response = await api.patch(`/underwriter-admin/claims/${claimId}/status`, statusUpdate);
     return response.data;
   },
 
   // Get claim analytics
   getAnalytics: async (period?: string): Promise<ApiResponse> => {
-    const endpoint = `/broker-admin/analytics${period ? `?period=${period}` : ''}`;
+    const endpoint = `/underwriter-admin/analytics${period ? `?period=${period}` : ''}`;
     const response = await api.get(endpoint);
     return response.data;
   },
@@ -1904,7 +1904,7 @@ export const brokerAdminAPI = {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
-    const url = `/broker-admin/claims/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `/underwriter-admin/claims/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await api.get(url, { responseType: 'text' });
     return response.data as string;
   },
@@ -1919,7 +1919,7 @@ export const brokerAdminAPI = {
     limit?: number;
     sortBy?: string;
     sortOrder?: string;
-  }): Promise<import("../types/api.types").BrokerCompletedPoliciesResponse> => {
+  }): Promise<import("../types/api.types").UnderwriterCompletedPoliciesResponse> => {
     const params = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -1929,14 +1929,14 @@ export const brokerAdminAPI = {
       });
     }
 
-    const url = `/broker-admin/policies/completed${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `/underwriter-admin/policies/completed${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await api.get(url);
     return response.data;
   },
 
   // Get completed policy by ID
-  getCompletedPolicyById: async (policyId: string): Promise<import("../types/api.types").BrokerCompletedPolicyDetailResponse> => {
-    const response = await api.get(`/broker-admin/policies/completed/${policyId}`);
+  getCompletedPolicyById: async (policyId: string): Promise<import("../types/api.types").UnderwriterCompletedPolicyDetailResponse> => {
+    const response = await api.get(`/underwriter-admin/policies/completed/${policyId}`);
     return response.data;
   },
 
@@ -1947,7 +1947,7 @@ export const brokerAdminAPI = {
     if (endDate) params.append('dateTo', endDate);
     if (companyName) params.append('companyName', companyName);
 
-    const url = `/broker-admin/policies/completed/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `/underwriter-admin/policies/completed/export/csv${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await api.get(url, { responseType: 'text' });
     return response.data as string;
   }

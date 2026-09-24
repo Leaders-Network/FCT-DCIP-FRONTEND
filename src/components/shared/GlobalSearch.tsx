@@ -19,7 +19,7 @@ interface SearchResult {
 }
 
 interface GlobalSearchProps {
-    userType: 'user' | 'admin' | 'surveyor' | 'nia-admin' | 'broker-admin';
+    userType: 'user' | 'admin' | 'surveyor' | 'nia-admin' | 'underwriter-admin';
     className?: string;
 }
 

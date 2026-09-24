@@ -1083,13 +1083,13 @@ export interface AdminContact {
   emergencyContact?: boolean;
 }
 
-// Broker Admin Types
-export interface BrokerAdmin {
+// Underwriter Admin Types
+export interface UnderwriterAdmin {
   _id: string;
   userId: string;
-  organization: 'Broker';
-  brokerFirmName: string;
-  brokerFirmLicense: string;
+  organization: 'Underwriter';
+  underwriterFirmName: string;
+  underwriterFirmLicense: string;
   permissions: {
     canViewClaims: boolean;
     canUpdateClaimStatus: boolean;
@@ -1123,7 +1123,7 @@ export interface BrokerAdmin {
   updatedAt: string;
 }
 
-export interface BrokerAdminLoginResponse {
+export interface UnderwriterAdminLoginResponse {
   success: boolean;
   message: string;
   token: string;
@@ -1131,37 +1131,37 @@ export interface BrokerAdminLoginResponse {
     id: string;
     email: string;
     fullname: string;
-    organization: 'Broker' | 'AMMC' | 'NIA';
+    organization: 'Underwriter' | 'AMMC' | 'NIA';
     role: string;
-    tokenType: 'broker-admin' | 'super-admin';
+    tokenType: 'underwriter-admin' | 'super-admin';
   };
-  brokerAdmin: {
+  underwriterAdmin: {
     id: string;
-    brokerFirmName: string;
-    permissions: BrokerAdmin['permissions'];
-    settings: BrokerAdmin['settings'];
+    underwriterFirmName: string;
+    permissions: UnderwriterAdmin['permissions'];
+    settings: UnderwriterAdmin['settings'];
   } | null;
 }
 
-export interface BrokerAdminVerifyResponse {
+export interface UnderwriterAdminVerifyResponse {
   success: boolean;
   user: {
     id: string;
     fullname: string;
-    organization: 'Broker' | 'AMMC' | 'NIA';
+    organization: 'Underwriter' | 'AMMC' | 'NIA';
     role: string;
-    tokenType: 'broker-admin' | 'super-admin';
+    tokenType: 'underwriter-admin' | 'super-admin';
   };
-  brokerAdmin: {
+  underwriterAdmin: {
     id: string;
-    brokerFirmName: string;
-    permissions: BrokerAdmin['permissions'];
-    settings: BrokerAdmin['settings'];
+    underwriterFirmName: string;
+    permissions: UnderwriterAdmin['permissions'];
+    settings: UnderwriterAdmin['settings'];
     status: 'active' | 'inactive' | 'suspended';
   } | null;
 }
 
-export interface BrokerClaimStatusHistory {
+export interface UnderwriterClaimStatusHistory {
   status: 'pending' | 'under_review' | 'rejected' | 'completed';
   changedAt: string;
   changedBy?: string;
@@ -1169,11 +1169,11 @@ export interface BrokerClaimStatusHistory {
   notes?: string;
 }
 
-export interface BrokerPolicyRequest extends PolicyRequest {
-  brokerStatus: 'pending' | 'under_review' | 'approved' | 'rejected' | 'completed';
-  brokerNotes?: string;
-  brokerAssignedTo?: string;
-  brokerStatusHistory: BrokerClaimStatusHistory[];
+export interface UnderwriterPolicyRequest extends PolicyRequest {
+  underwriterStatus: 'pending' | 'under_review' | 'approved' | 'rejected' | 'completed';
+  underwriterNotes?: string;
+  underwriterAssignedTo?: string;
+  underwriterStatusHistory: UnderwriterClaimStatusHistory[];
   claimRequested?: boolean;
   claimRequestedAt?: string;
   claimReason?: string;
@@ -1183,7 +1183,7 @@ export interface BrokerPolicyRequest extends PolicyRequest {
   submissionDate?: string;
 }
 
-export interface BrokerDashboardData {
+export interface UnderwriterDashboardData {
   statistics: {
     pending: number;
     under_review: number;
@@ -1202,7 +1202,7 @@ export interface BrokerDashboardData {
   }>;
 }
 
-export interface BrokerClaimFilters {
+export interface UnderwriterClaimFilters {
   status?: 'all' | 'pending' | 'under_review' | 'rejected' | 'completed';
   dateFrom?: string;
   dateTo?: string;
@@ -1213,9 +1213,9 @@ export interface BrokerClaimFilters {
   limit?: number;
 }
 
-export interface BrokerClaimsResponse {
+export interface UnderwriterClaimsResponse {
   success: boolean;
-  claims: BrokerPolicyRequest[];
+  claims: UnderwriterPolicyRequest[];
   total: number;
   page: number;
   limit: number;
@@ -1228,24 +1228,24 @@ export interface BrokerClaimsResponse {
   };
 }
 
-export interface BrokerClaimDetailResponse {
+export interface UnderwriterClaimDetailResponse {
   success: boolean;
-  claim: BrokerPolicyRequest;
+  claim: UnderwriterPolicyRequest;
 }
 
-export interface BrokerStatusUpdateRequest {
+export interface UnderwriterStatusUpdateRequest {
   status: 'under_review' | 'rejected' | 'completed';
   reason?: string;
   notes?: string;
 }
 
-export interface BrokerStatusUpdateResponse {
+export interface UnderwriterStatusUpdateResponse {
   success: boolean;
   message: string;
-  claim: BrokerPolicyRequest;
+  claim: UnderwriterPolicyRequest;
 }
 
-export interface BrokerCompletedPolicySurveyor {
+export interface UnderwriterCompletedPolicySurveyor {
   _id: string;
   firstname: string;
   lastname: string;
@@ -1253,7 +1253,7 @@ export interface BrokerCompletedPolicySurveyor {
   phonenumber?: string;
 }
 
-export interface BrokerCompletedPolicyHistoryEntry {
+export interface UnderwriterCompletedPolicyHistoryEntry {
   status: string;
   changedAt: string;
   reason?: string;
@@ -1265,41 +1265,41 @@ export interface BrokerCompletedPolicyHistoryEntry {
   };
 }
 
-export interface BrokerCompletedPolicy extends Omit<BuilderLiabilityPolicy, 'assignedSurveyors' | 'statusHistory' | 'surveyDocument'> {
-  brokerCompanyName?: string;
+export interface UnderwriterCompletedPolicy extends Omit<BuilderLiabilityPolicy, 'assignedSurveyors' | 'statusHistory' | 'surveyDocument'> {
+  underwriterCompanyName?: string;
   completedAt?: string;
   surveyDocument?: string | {
     name?: string;
     url?: string;
     publicId?: string;
   } | null;
-  assignedSurveyors?: BrokerCompletedPolicySurveyor[];
-  statusHistory?: BrokerCompletedPolicyHistoryEntry[];
-  brokerAssignedTo?: {
+  assignedSurveyors?: UnderwriterCompletedPolicySurveyor[];
+  statusHistory?: UnderwriterCompletedPolicyHistoryEntry[];
+  underwriterAssignedTo?: {
     _id: string;
-    brokerFirmName?: string;
+    underwriterFirmName?: string;
     profile?: {
       department?: string;
       position?: string;
     };
   } | null;
-  brokerNotes?: string;
+  underwriterNotes?: string;
   surveyorEstimatedValue?: number | null;
   surveyorRecommendation?: 'approve' | 'reject' | 'request_more_info' | null;
 }
 
-export interface BrokerCompletedPoliciesResponse {
+export interface UnderwriterCompletedPoliciesResponse {
   success: boolean;
-  policies: BrokerCompletedPolicy[];
+  policies: UnderwriterCompletedPolicy[];
   total: number;
   totalPages: number;
   page: number;
   limit: number;
 }
 
-export interface BrokerCompletedPolicyDetailResponse {
+export interface UnderwriterCompletedPolicyDetailResponse {
   success: boolean;
-  policy: BrokerCompletedPolicy;
+  policy: UnderwriterCompletedPolicy;
 }
 
 export type UserReportsResponse = ApiSuccessResponse<{

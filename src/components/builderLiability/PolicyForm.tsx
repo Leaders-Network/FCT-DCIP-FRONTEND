@@ -202,7 +202,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     // NIIP Builder's Liability product
     productId: 572,
     salesOutlet: "Builders Liability Platform",
-    brokerAgentName: "NSIA - Insurance company Ltd",
+    underwriterAgentName: "NSIA - Insurance company Ltd",
 
     // Optional fields
     priority: "medium",
@@ -935,7 +935,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         ProductId: formData.productId,
         date: new Date(),
         salesOutlet: formData.salesOutlet,
-        brokerOrAgentName: formData.brokerAgentName,
+        underwriterOrAgentName: formData.underwriterAgentName,
       },
       priority: formData.priority,
     } as BuilderLiabilityPolicyData;

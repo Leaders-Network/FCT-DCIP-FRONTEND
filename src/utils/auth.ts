@@ -4,7 +4,7 @@
 
 import { getCookie, setCookie, deleteCookie } from './cookies';
 
-export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'broker-admin' | 'surveyor';
+export type TokenType = 'user' | 'admin' | 'super-admin' | 'nia-admin' | 'underwriter-admin' | 'surveyor';
 
 const isBrowser = (): boolean => typeof window !== 'undefined';
 
@@ -56,7 +56,7 @@ const syncLegacySuperAdminTokens = (token: string): void => {
 const getStoredUserRole = (): string | null => {
     if (!isBrowser()) return null;
 
-    const userSources = ['superAdminInfo', 'user', 'adminInfo', 'niaAdminInfo', 'brokerAdminInfo', 'userInfo'];
+    const userSources = ['superAdminInfo', 'user', 'adminInfo', 'niaAdminInfo', 'underwriterAdminInfo', 'userInfo'];
 
     for (const key of userSources) {
         const rawValue = getStoredValue(key);
@@ -125,13 +125,13 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     const currentPath = window.location.pathname;
     let detectedType: TokenType | null = null;
 
-    if (currentPath.includes('/broker-admin')) {
-        detectedType = 'broker-admin';
+    if (currentPath === '/underwriter' || currentPath.startsWith('/underwriter/')) {
+        detectedType = 'underwriter-admin';
     } else if (currentPath.includes('/nia-admin')) {
         detectedType = 'nia-admin';
     } else if (currentPath.includes('/surveyor')) {
         detectedType = 'surveyor';
-    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin')) {
         detectedType = 'admin';
     } else if (currentPath.includes('/super-admin')) {
         detectedType = 'super-admin';
@@ -168,7 +168,7 @@ export const getAuthToken = (tokenType?: TokenType): string | null => {
     const tokenKeys = [
         'superAdminToken',  // Super admin has highest priority
         'niaAdminToken',
-        'brokerAdminToken',
+        'underwriterAdminToken',
         'adminToken',
         'surveyorToken',
         'userToken',
@@ -194,7 +194,7 @@ const getTokenKeyForType = (tokenType: string): string => {
         case 'admin': return 'adminToken';
         case 'super-admin': return 'superAdminToken';
         case 'nia-admin': return 'niaAdminToken';
-        case 'broker-admin': return 'brokerAdminToken';
+        case 'underwriter-admin': return 'underwriterAdminToken';
         case 'surveyor': return 'surveyorToken';
         default: return 'token';
     }
@@ -259,7 +259,7 @@ export const removeAuthToken = (tokenType?: TokenType): void => {
         const tokenKeys = [
             'superAdminToken',
             'niaAdminToken',
-            'brokerAdminToken',
+            'underwriterAdminToken',
             'adminToken',
             'surveyorToken',
             'userToken',
@@ -279,7 +279,7 @@ export const clearAuthTokens = (): void => {
     const tokenKeys = [
         'superAdminToken',
         'niaAdminToken',
-        'brokerAdminToken',
+        'underwriterAdminToken',
         'adminToken',
         'surveyorToken',
         'userToken',
@@ -290,7 +290,7 @@ export const clearAuthTokens = (): void => {
         'surveyorName',
         'surveyorId',
         'niaAdminInfo',
-        'brokerAdminInfo',
+        'underwriterAdminInfo',
         'adminInfo',
         'userInfo',
         'superAdminInfo'
@@ -323,13 +323,13 @@ export const getCurrentTokenType = (): string | null => {
     // First, try to detect from current URL path
     const currentPath = window.location.pathname;
 
-    if (currentPath.includes('/broker-admin')) {
-        if (getStoredValue('brokerAdminToken')) return 'broker-admin';
+    if (currentPath.includes('/underwriter')) {
+        if (getStoredValue('underwriterAdminToken')) return 'underwriter-admin';
     } else if (currentPath.includes('/nia-admin')) {
         if (getStoredValue('niaAdminToken')) return 'nia-admin';
     } else if (currentPath.includes('/surveyor')) {
         if (getStoredValue('surveyorToken')) return 'surveyor';
-    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/broker-admin')) {
+    } else if (currentPath.includes('/admin') && !currentPath.includes('/nia-admin') && !currentPath.includes('/underwriter')) {
         if (activeSuperAdminSession) return 'super-admin';
         if (getStoredValue('adminToken')) return 'admin';
     } else if (currentPath.includes('/super-admin')) {
@@ -342,7 +342,7 @@ export const getCurrentTokenType = (): string | null => {
     const tokenTypes = [
         { type: 'super-admin', key: 'superAdminToken' },
         { type: 'nia-admin', key: 'niaAdminToken' },
-        { type: 'broker-admin', key: 'brokerAdminToken' },
+        { type: 'underwriter-admin', key: 'underwriterAdminToken' },
         { type: 'admin', key: 'adminToken' },
         { type: 'surveyor', key: 'surveyorToken' },
         { type: 'user', key: 'userToken' }
@@ -373,13 +373,13 @@ export const hasAccessLevel = (requiredLevel: TokenType): boolean => {
     // Check specific access levels
     switch (requiredLevel) {
         case 'user':
-            return ['user', 'admin', 'super-admin', 'nia-admin', 'broker-admin', 'surveyor'].includes(currentType);
+            return ['user', 'admin', 'super-admin', 'nia-admin', 'underwriter-admin', 'surveyor'].includes(currentType);
         case 'admin':
             return ['admin', 'super-admin'].includes(currentType);
         case 'nia-admin':
             return ['nia-admin', 'super-admin'].includes(currentType);
-        case 'broker-admin':
-            return ['broker-admin', 'super-admin'].includes(currentType);
+        case 'underwriter-admin':
+            return ['underwriter-admin', 'super-admin'].includes(currentType);
         case 'surveyor':
             return ['surveyor', 'super-admin'].includes(currentType);
         case 'super-admin':

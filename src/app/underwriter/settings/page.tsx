@@ -5,7 +5,7 @@ import { User, Mail, Phone, Lock, Save, Eye, EyeOff, AlertCircle, CheckCircle } 
 import api from '@/services/api';
 import { extractErrorMessage } from '@/types/error.types';
 
-export default function BrokerAdminSettingsPage() {
+export default function UnderwriterAdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -69,11 +69,11 @@ export default function BrokerAdminSettingsPage() {
           phonenumber: updated.phonenumber || ''
         });
 
-        const storedAdminInfo = localStorage.getItem('brokerAdminInfo');
+        const storedAdminInfo = localStorage.getItem('underwriterAdminInfo');
         if (storedAdminInfo) {
           try {
             const parsed = JSON.parse(storedAdminInfo);
-            localStorage.setItem('brokerAdminInfo', JSON.stringify({
+            localStorage.setItem('underwriterAdminInfo', JSON.stringify({
               ...parsed,
               firstname: updated.firstname || profileData.firstname,
               lastname: updated.lastname || profileData.lastname,
@@ -81,7 +81,7 @@ export default function BrokerAdminSettingsPage() {
               email: updated.email || profileData.email
             }));
           } catch (_error) {
-            localStorage.setItem('brokerAdminInfo', JSON.stringify({
+            localStorage.setItem('underwriterAdminInfo', JSON.stringify({
               firstname: updated.firstname || profileData.firstname,
               lastname: updated.lastname || profileData.lastname,
               fullname: `${updated.firstname || profileData.firstname} ${updated.lastname || profileData.lastname}`.trim(),
@@ -138,7 +138,7 @@ export default function BrokerAdminSettingsPage() {
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">Manage your broker admin account settings</p>
+        <p className="text-gray-600 mt-1">Manage your underwriter account settings</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">

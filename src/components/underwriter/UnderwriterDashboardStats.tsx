@@ -9,7 +9,7 @@ interface StatsProps {
     completedClaims: number;
 }
 
-const BrokerDashboardStats: React.FC<StatsProps> = ({
+const UnderwriterDashboardStats: React.FC<StatsProps> = ({
     totalpolicies,
     affectedproperty,
     totalClaims,
@@ -68,4 +68,4 @@ const BrokerDashboardStats: React.FC<StatsProps> = ({
     );
 };
 
-export default BrokerDashboardStats;
+export default UnderwriterDashboardStats;

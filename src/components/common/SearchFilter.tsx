@@ -226,19 +226,19 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
                             </div>
                         )}
 
-                        {/* Broker Status Filter */}
-                        {availableFilters.includes('brokerStatus') && filterOptions?.brokerStatuses && (
+                        {/* Underwriter Status Filter */}
+                        {availableFilters.includes('underwriterStatus') && filterOptions?.underwriterStatuses && (
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Claim Status
                                 </label>
                                 <select
-                                    value={filters.brokerStatus || 'all'}
-                                    onChange={(e) => handleFilterChange('brokerStatus', e.target.value)}
+                                    value={filters.underwriterStatus || 'all'}
+                                    onChange={(e) => handleFilterChange('underwriterStatus', e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
                                     <option value="all">All Claim Statuses</option>
-                                    {filterOptions.brokerStatuses.map(status => (
+                                    {filterOptions.underwriterStatuses.map(status => (
                                         <option key={status} value={status}>
                                             {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
                                         </option>

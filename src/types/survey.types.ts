@@ -109,7 +109,7 @@ export interface AdminInfoType {
     email: string;
     organization: string;
     role?: string;
-    brokerFirmName?: string;
+    underwriterFirmName?: string;
 }
 
 // Test Results Type

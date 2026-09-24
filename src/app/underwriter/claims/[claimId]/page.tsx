@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, Calendar, User, CheckCircle, AlertCircle, Clock } from 'lucide-react';
-import { brokerAdminAPI } from '@/services/api';
-import type { BrokerPolicyRequest, BrokerStatusUpdateRequest } from '@/types/api.types';
+import { underwriterAdminAPI } from '@/services/api';
+import type { UnderwriterPolicyRequest, UnderwriterStatusUpdateRequest } from '@/types/api.types';
 
 function formatDate(dateString?: string): string {
     if (!dateString) return 'N/A';
@@ -20,12 +20,12 @@ function formatCurrency(amount?: number): string {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
 }
 
-export default function BrokerClaimPage() {
+export default function UnderwriterClaimPage() {
     const params = useParams();
     const router = useRouter();
     const claimId = (params as { claimId?: string })?.claimId;
 
-    const [claim, setClaim] = useState<BrokerPolicyRequest | null>(null);
+    const [claim, setClaim] = useState<UnderwriterPolicyRequest | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [updating, setUpdating] = useState(false);
@@ -38,10 +38,10 @@ export default function BrokerClaimPage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await brokerAdminAPI.getClaimById(claimId);
+            const res = await underwriterAdminAPI.getClaimById(claimId);
             if (res && res.claim) {
                 setClaim(res.claim);
-                setNotes(res.claim.brokerNotes || '');
+                setNotes(res.claim.underwriterNotes || '');
             } else {
                 setError('Claim not found');
             }
@@ -68,11 +68,11 @@ export default function BrokerClaimPage() {
         setUpdating(true);
         setError(null);
         try {
-            const payload: BrokerStatusUpdateRequest = { status };
+            const payload: UnderwriterStatusUpdateRequest = { status };
             if (notes.trim()) payload.notes = notes.trim();
             if (reason.trim()) payload.reason = reason.trim();
 
-            const res = await brokerAdminAPI.updateClaimStatus(claimId, payload);
+            const res = await underwriterAdminAPI.updateClaimStatus(claimId, payload);
             if (res && res.claim) {
                 setClaim(res.claim);
                 setSuccessMessage(res.message || 'Status updated successfully');
@@ -139,7 +139,7 @@ export default function BrokerClaimPage() {
         );
     }
 
-    const currentStatus = claim.brokerStatus || 'pending';
+    const currentStatus = claim.underwriterStatus || 'pending';
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">

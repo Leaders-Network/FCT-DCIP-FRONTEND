@@ -3,7 +3,7 @@
 import type React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { brokerAdminAPI, downloadPolicyCertificate, triggerCsvDownload } from '@/services/api';
+import { underwriterAdminAPI, downloadPolicyCertificate, triggerCsvDownload } from '@/services/api';
 import {
     FileText,
     Clock,
@@ -40,11 +40,11 @@ import {
     getProjectTitle
 } from '@/utils/builderLiability';
 import type {
-    BrokerDashboardData,
-    BrokerPolicyRequest,
-    BrokerClaimFilters,
-    BrokerStatusUpdateRequest,
-    BrokerCompletedPolicy
+    UnderwriterDashboardData,
+    UnderwriterPolicyRequest,
+    UnderwriterClaimFilters,
+    UnderwriterStatusUpdateRequest,
+    UnderwriterCompletedPolicy
 } from '@/types/api.types';
 
 interface StatCardProps {
@@ -72,9 +72,9 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color, tr
     </div>
 );
 
-export default function BrokerAdminDashboard() {
-    const [dashboardData, setDashboardData] = useState<BrokerDashboardData | null>(null);
-    const [claims, setClaims] = useState<BrokerPolicyRequest[]>([]);
+export default function UnderwriterAdminDashboard() {
+    const [dashboardData, setDashboardData] = useState<UnderwriterDashboardData | null>(null);
+    const [claims, setClaims] = useState<UnderwriterPolicyRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [dashboardError, setDashboardError] = useState<string | null>(null);
@@ -83,7 +83,7 @@ export default function BrokerAdminDashboard() {
     const [refreshing, setRefreshing] = useState(false);
 
     // Modal state
-    const [selectedClaim, setSelectedClaim] = useState<BrokerPolicyRequest | null>(null);
+    const [selectedClaim, setSelectedClaim] = useState<UnderwriterPolicyRequest | null>(null);
     const [modalLoading, setModalLoading] = useState(false);
     const [modalError, setModalError] = useState<string | null>(null);
     const [updating, setUpdating] = useState(false);
@@ -92,13 +92,13 @@ export default function BrokerAdminDashboard() {
     const [reason, setReason] = useState('');
 
     // ── Completed Policies state ──────────────────────────────────────────────
-    const [completedPolicies, setCompletedPolicies] = useState<BrokerCompletedPolicy[]>([]);
+    const [completedPolicies, setCompletedPolicies] = useState<UnderwriterCompletedPolicy[]>([]);
     const [completedLoading, setCompletedLoading] = useState(false);
     const [completedError, setCompletedError] = useState<string | null>(null);
     const [completedPage, setCompletedPage] = useState(1);
     const [completedTotalPages, setCompletedTotalPages] = useState(1);
     const [completedTotal, setCompletedTotal] = useState(0);
-    const [selectedCompletedPolicy, setSelectedCompletedPolicy] = useState<BrokerCompletedPolicy | null>(null);
+    const [selectedCompletedPolicy, setSelectedCompletedPolicy] = useState<UnderwriterCompletedPolicy | null>(null);
     const [completedPolicyModalOpen, setCompletedPolicyModalOpen] = useState(false);
     const [completedPolicyModalLoading, setCompletedPolicyModalLoading] = useState(false);
     const [completedPolicyModalError, setCompletedPolicyModalError] = useState<string | null>(null);
@@ -130,21 +130,21 @@ export default function BrokerAdminDashboard() {
     const fetchDashboardData = async () => {
         try {
             setDashboardError(null);
-            const response = await brokerAdminAPI.getDashboardData();
+            const response = await underwriterAdminAPI.getDashboardData();
             if (response.success && response.data) {
                 setDashboardData(response.data);
             } else {
                 setDashboardError(response.message || 'Failed to fetch dashboard data.');
             }
         } catch (err) {
-            setDashboardError('Unable to load broker dashboard data. Please contact the Gladfaith team if this persists.');
+            setDashboardError('Unable to load underwriter dashboard data. Please contact the Gladfaith team if this persists.');
         }
     };
 
     const fetchClaims = async () => {
         try {
             setLoading(true);
-            const filters: BrokerClaimFilters = {
+            const filters: UnderwriterClaimFilters = {
                 status: statusFilter,
                 page: 1,
                 limit: 10
@@ -154,7 +154,7 @@ export default function BrokerAdminDashboard() {
                 filters.policyNumber = searchQuery;
             }
 
-            const response = await brokerAdminAPI.getClaims(filters);
+            const response = await underwriterAdminAPI.getClaims(filters);
             if (response.success) {
                 setClaims(response.claims);
             }
@@ -180,7 +180,7 @@ export default function BrokerAdminDashboard() {
         setCompletedLoading(true);
         setCompletedError(null);
         try {
-            const res = await brokerAdminAPI.getCompletedPolicies({
+            const res = await underwriterAdminAPI.getCompletedPolicies({
                 search: appliedCpSearch || undefined,
                 companyName: appliedCpCompanyName || undefined,
                 dateFrom: appliedCpDateFrom || undefined,
@@ -226,12 +226,12 @@ export default function BrokerAdminDashboard() {
     const handleExportCompletedCsv = async () => {
         setCsvExporting(true);
         try {
-            const csvData = await brokerAdminAPI.exportCompletedPoliciesCsv(
+            const csvData = await underwriterAdminAPI.exportCompletedPoliciesCsv(
                 appliedCpDateFrom || undefined,
                 appliedCpDateTo || undefined,
                 appliedCpCompanyName || undefined
             );
-            triggerCsvDownload(csvData, 'completed_policies.csv');
+            triggerCsvDownload(csvData, 'underwriter_completed_policies.csv');
         } catch {
             setCompletedError('Failed to export CSV.');
         } finally {
@@ -246,7 +246,7 @@ export default function BrokerAdminDashboard() {
         setSelectedCompletedPolicy(null);
 
         try {
-            const res = await brokerAdminAPI.getCompletedPolicyById(policyId);
+            const res = await underwriterAdminAPI.getCompletedPolicyById(policyId);
             if (res.success && res.policy) {
                 setSelectedCompletedPolicy(res.policy);
             } else {
@@ -318,10 +318,10 @@ export default function BrokerAdminDashboard() {
         setModalLoading(true);
         setModalError(null);
         try {
-            const res = await brokerAdminAPI.getClaimById(claimId);
+            const res = await underwriterAdminAPI.getClaimById(claimId);
             if (res && res.claim) {
                 setSelectedClaim(res.claim);
-                setNotes(res.claim.brokerNotes || '');
+                setNotes(res.claim.underwriterNotes || '');
             } else {
                 setModalError('Claim not found');
             }
@@ -351,11 +351,11 @@ export default function BrokerAdminDashboard() {
         setUpdating(true);
         setModalError(null);
         try {
-            const payload: BrokerStatusUpdateRequest = { status };
+            const payload: UnderwriterStatusUpdateRequest = { status };
             if (notes.trim()) payload.notes = notes.trim();
             if (reason.trim()) payload.reason = reason.trim();
 
-            const res = await brokerAdminAPI.updateClaimStatus(selectedClaim._id, payload);
+            const res = await underwriterAdminAPI.updateClaimStatus(selectedClaim._id, payload);
             if (res && res.claim) {
                 setSelectedClaim(res.claim);
                 setSuccessMessage(res.message || 'Status updated successfully');
@@ -403,7 +403,7 @@ export default function BrokerAdminDashboard() {
             <div className="mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Broker Admin Dashboard</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">Underwriter Dashboard</h1>
                         <p className="text-sm text-gray-600 mt-1">Manage insurance claims and track completed policies</p>
                     </div>
                     <button
@@ -563,8 +563,8 @@ export default function BrokerAdminDashboard() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(claim.brokerStatus || 'pending')}`}>
-                                                {(claim.brokerStatus || 'pending').replace('_', ' ').toUpperCase()}
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(claim.underwriterStatus || 'pending')}`}>
+                                                {(claim.underwriterStatus || 'pending').replace('_', ' ').toUpperCase()}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -646,12 +646,12 @@ export default function BrokerAdminDashboard() {
                             />
                         </div>
 
-                        {/* Broker company name filter */}
+                        {/* Underwriter name filter */}
                         <div className="relative min-w-0 flex-1">
                             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
-                                placeholder="Insurance company name..."
+                                placeholder="Underwriter name..."
                                 value={cpCompanyName}
                                 onChange={(e) => setCpCompanyName(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleApplyCpFilters()}
@@ -722,7 +722,7 @@ export default function BrokerAdminDashboard() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGA</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estimated Sum Range</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />Insurance Company</span>
+                                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />Underwriter</span>
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed At</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -739,7 +739,7 @@ export default function BrokerAdminDashboard() {
                                 </tr>
                             ) : completedPolicies.length > 0 ? (
                                 completedPolicies.map((policy) => {
-                                    const brokerCompany = policy.brokerCompanyName || '';
+                                    const underwriterCompany = policy.underwriterCompanyName || '';
                                     return (
                                         <tr
                                             key={policy._id}
@@ -771,10 +771,10 @@ export default function BrokerAdminDashboard() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
-                                                {brokerCompany ? (
+                                                {underwriterCompany ? (
                                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700 border border-indigo-100">
                                                         <Building2 className="w-3 h-3" />
-                                                        {brokerCompany}
+                                                        {underwriterCompany}
                                                     </span>
                                                 ) : 'N/A'}
                                             </td>
@@ -893,9 +893,9 @@ export default function BrokerAdminDashboard() {
                                             </div>
                                         </div>
                                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                            <p className="text-xs uppercase tracking-wide text-gray-500">Insurance Company</p>
+                                            <p className="text-xs uppercase tracking-wide text-gray-500">Underwriter</p>
                                             <p className="mt-2 text-sm font-semibold text-gray-900">
-                                                {selectedCompletedPolicy.brokerCompanyName || selectedCompletedPolicy.meta?.brokerOrAgentName || 'N/A'}
+                                                {selectedCompletedPolicy.underwriterCompanyName || selectedCompletedPolicy.meta?.underwriterOrAgentName || 'N/A'}
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -949,16 +949,16 @@ export default function BrokerAdminDashboard() {
                                             <KeyValue label="Regulatory Body" value={getDisplayValue(getProfessionalBody(selectedCompletedPolicy.organization))} />
                                             <KeyValue label="Registration Number" value={getDisplayValue(getProfessionalRegistrationNumber(selectedCompletedPolicy.organization))} />
                                             {getProfessionalBody(selectedCompletedPolicy.organization) === 'Other' && (
-                                                <KeyValue label="Other Regulatory Body Name" value={selectedCompletedPolicy.organization.otherProfessionalBodyName || 'Not provided'} />
+                                                <KeyValue label="Other Regulatory Body Name" value={selectedCompletedPolicy.organization?.otherProfessionalBodyName || 'Not provided'} />
                                             )}
-                                            <KeyValue label="Specialization" value={selectedCompletedPolicy.organization.areaOfSpecialization || 'N/A'} />
+                                            <KeyValue label="Specialization" value={selectedCompletedPolicy.organization?.areaOfSpecialization || 'N/A'} />
                                             <KeyValue
                                                 label="Year of Registration"
-                                                value={selectedCompletedPolicy.organization.yearOfRegistration
+                                                value={selectedCompletedPolicy.organization?.yearOfRegistration
                                                     ? formatDate(String(selectedCompletedPolicy.organization.yearOfRegistration))
                                                     : 'N/A'}
                                             />
-                                            <KeyValue label="Staff Strength" value={selectedCompletedPolicy.organization.staffStrength || selectedCompletedPolicy.organization.noOfPermanentStaff || selectedCompletedPolicy.organization.permanentStaffCount} />
+                                            <KeyValue label="Staff Strength" value={selectedCompletedPolicy.organization?.staffStrength || selectedCompletedPolicy.organization?.noOfPermanentStaff || selectedCompletedPolicy.organization?.permanentStaffCount} />
                                         </SectionCard>
 
                                         <SectionCard icon={DollarSign} title="Payment">
@@ -1134,8 +1134,8 @@ export default function BrokerAdminDashboard() {
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-600">Status</p>
-                                                <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusBadge(selectedClaim.brokerStatus || 'pending')}`}>
-                                                    {(selectedClaim.brokerStatus || 'pending').replace('_', ' ').toUpperCase()}
+                                                <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusBadge(selectedClaim.underwriterStatus || 'pending')}`}>
+                                                    {(selectedClaim.underwriterStatus || 'pending').replace('_', ' ').toUpperCase()}
                                                 </span>
                                             </div>
                                             <div>
@@ -1201,7 +1201,7 @@ export default function BrokerAdminDashboard() {
 
                                         <div className="mb-3">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Rejection Reason {selectedClaim.brokerStatus === 'pending' && '(Required for rejection)'}
+                                                Rejection Reason {selectedClaim.underwriterStatus === 'pending' && '(Required for rejection)'}
                                             </label>
                                             <textarea
                                                 value={reason}
@@ -1213,7 +1213,7 @@ export default function BrokerAdminDashboard() {
                                         </div>
 
                                         <div className="flex gap-2 flex-wrap">
-                                            {selectedClaim.brokerStatus === 'pending' && (
+                                            {selectedClaim.underwriterStatus === 'pending' && (
                                                 <button
                                                     onClick={() => updateStatus('under_review')}
                                                     disabled={updating}
@@ -1223,7 +1223,7 @@ export default function BrokerAdminDashboard() {
                                                 </button>
                                             )}
 
-                                            {selectedClaim.brokerStatus === 'under_review' && (
+                                            {selectedClaim.underwriterStatus === 'under_review' && (
                                                 <>
                                                     <button
                                                         onClick={() => updateStatus('completed')}
@@ -1242,9 +1242,9 @@ export default function BrokerAdminDashboard() {
                                                 </>
                                             )}
 
-                                            {(selectedClaim.brokerStatus === 'completed' || selectedClaim.brokerStatus === 'rejected') && (
+                                            {(selectedClaim.underwriterStatus === 'completed' || selectedClaim.underwriterStatus === 'rejected') && (
                                                 <p className="text-gray-600 italic text-sm">
-                                                    This claim has been {selectedClaim.brokerStatus}. No further actions available.
+                                                    This claim has been {selectedClaim.underwriterStatus}. No further actions available.
                                                 </p>
                                             )}
                                         </div>

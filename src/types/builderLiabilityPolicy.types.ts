@@ -209,7 +209,7 @@ export interface MetaInfo {
     ProductId: number;
     date: Date | string;
     salesOutlet?: string;
-    brokerOrAgentName?: string;
+    underwriterOrAgentName?: string;
 }
 
 export interface PaymentInfo {
@@ -550,7 +550,7 @@ export interface BuilderLiabilityPolicyFormData {
     // Meta Info
     productId: number;
     salesOutlet?: string;
-    brokerAgentName?: string;
+    underwriterAgentName?: string;
 
     // Optional fields
     priority?: BuilderLiabilityPolicyPriority;

@@ -3,12 +3,12 @@
 import React from 'react';
 import NotificationDetailsPage from '@/components/shared/NotificationDetailsPage';
 
-interface BrokerAdminNotificationDetailsProps {
+interface UnderwriterAdminNotificationDetailsProps {
     params: {
         id: string;
     };
 }
 
-export default function BrokerAdminNotificationDetails({ params }: BrokerAdminNotificationDetailsProps) {
+export default function UnderwriterAdminNotificationDetails({ params }: UnderwriterAdminNotificationDetailsProps) {
     return <NotificationDetailsPage notificationId={params.id} />;
 }

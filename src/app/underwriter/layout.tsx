@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getAuthToken } from '@/utils/auth';
-import BrokerAdminSidebar from '@/components/brokerAdmin/BrokerAdminSideBar';
-import BrokerHeader from '@/components/brokerAdmin/BrokerHeader';
+import UnderwriterAdminSidebar from '@/components/underwriter/UnderwriterSideBar';
+import UnderwriterHeader from '@/components/underwriter/Underwriter';
 import { NotificationProvider } from '@/context/NotificationContext';
 
-export default function BrokerAdminLayout({
+export default function UnderwriterAdminLayout({
     children,
 }: {
     children: React.ReactNode;
@@ -40,11 +40,11 @@ export default function BrokerAdminLayout({
     }, [pathname, isMobile]);
 
     const isPublicAuthPage = [
-        '/broker-admin/login',
-        '/broker-admin/reset-password',
-        '/broker-admin/otp',
-        '/broker-admin/new-password',
-        '/broker-admin/registration-success'
+        '/underwriter/login',
+        '/underwriter/reset-password',
+        '/underwriter/otp',
+        '/underwriter/new-password',
+        '/underwriter/registration-success'
     ].includes(pathname || '');
 
     useEffect(() => {
@@ -54,10 +54,10 @@ export default function BrokerAdminLayout({
         }
 
         // Check if user is authenticated
-        const token = getAuthToken('broker-admin');
+        const token = getAuthToken('underwriter-admin');
 
         if (!token) {
-            router.push('/broker-admin/login');
+            router.push('/underwriter/login');
         }
     }, [isPublicAuthPage, router]);
 
@@ -78,14 +78,14 @@ export default function BrokerAdminLayout({
                     />
                 )}
 
-                <BrokerAdminSidebar
+                <UnderwriterAdminSidebar
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                     isMobile={isMobile}
                 />
 
                 <div className="flex min-w-0 flex-1 flex-col overflow-visible print:block print:overflow-visible print:bg-white">
-                    <BrokerHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+                    <UnderwriterHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
                     <main className="min-w-0 flex-1 overflow-y-auto rounded-none border border-white/70 bg-white/60 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[2rem] sm:p-4 md:p-6 print:overflow-visible print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none">
                         {children}

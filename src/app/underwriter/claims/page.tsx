@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { brokerAdminAPI, triggerCsvDownload } from '@/services/api';
+import { underwriterAdminAPI, triggerCsvDownload } from '@/services/api';
 import ExportCsvPanel from '@/components/shared/ExportCsvPanel';
 import {
     FileText,
@@ -17,13 +17,13 @@ import {
     Clock
 } from 'lucide-react';
 import type {
-    BrokerPolicyRequest,
-    BrokerClaimFilters,
-    BrokerStatusUpdateRequest
+    UnderwriterPolicyRequest,
+    UnderwriterClaimFilters,
+    UnderwriterStatusUpdateRequest
 } from '@/types/api.types';
 
-export default function BrokerClaimsListPage() {
-    const [claims, setClaims] = useState<BrokerPolicyRequest[]>([]);
+export default function UnderwriterClaimsListPage() {
+    const [claims, setClaims] = useState<UnderwriterPolicyRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -34,7 +34,7 @@ export default function BrokerClaimsListPage() {
     const [refreshing, setRefreshing] = useState(false);
 
     // Modal state
-    const [selectedClaim, setSelectedClaim] = useState<BrokerPolicyRequest | null>(null);
+    const [selectedClaim, setSelectedClaim] = useState<UnderwriterPolicyRequest | null>(null);
     const [modalLoading, setModalLoading] = useState(false);
     const [modalError, setModalError] = useState<string | null>(null);
     const [updating, setUpdating] = useState(false);
@@ -51,7 +51,7 @@ export default function BrokerClaimsListPage() {
         try {
             setLoading(true);
             setError(null);
-            const filters: BrokerClaimFilters = {
+            const filters: UnderwriterClaimFilters = {
                 status: statusFilter,
                 page: currentPage,
                 limit: 15
@@ -61,7 +61,7 @@ export default function BrokerClaimsListPage() {
                 filters.policyNumber = searchQuery;
             }
 
-            const response = await brokerAdminAPI.getClaims(filters);
+            const response = await underwriterAdminAPI.getClaims(filters);
             if (response.success) {
                 setClaims(response.claims);
                 setTotalPages(response.totalPages || 1);
@@ -119,10 +119,10 @@ export default function BrokerClaimsListPage() {
         setModalLoading(true);
         setModalError(null);
         try {
-            const res = await brokerAdminAPI.getClaimById(claimId);
+            const res = await underwriterAdminAPI.getClaimById(claimId);
             if (res && res.claim) {
                 setSelectedClaim(res.claim);
-                setNotes(res.claim.brokerNotes || '');
+                setNotes(res.claim.underwriterNotes || '');
             } else {
                 setModalError('Claim not found');
             }
@@ -152,11 +152,11 @@ export default function BrokerClaimsListPage() {
         setUpdating(true);
         setModalError(null);
         try {
-            const payload: BrokerStatusUpdateRequest = { status };
+            const payload: UnderwriterStatusUpdateRequest = { status };
             if (notes.trim()) payload.notes = notes.trim();
             if (reason.trim()) payload.reason = reason.trim();
 
-            const res = await brokerAdminAPI.updateClaimStatus(selectedClaim._id, payload);
+            const res = await underwriterAdminAPI.updateClaimStatus(selectedClaim._id, payload);
             if (res && res.claim) {
                 setSelectedClaim(res.claim);
                 setSuccessMessage(res.message || 'Status updated successfully');
@@ -210,8 +210,8 @@ export default function BrokerClaimsListPage() {
             {/* Export Panel */}
             <ExportCsvPanel
                 onExport={async (startDate, endDate) => {
-                    const csv = await brokerAdminAPI.exportClaimsCsv(startDate, endDate);
-                    triggerCsvDownload(csv, 'broker_claims.csv');
+                    const csv = await underwriterAdminAPI.exportClaimsCsv(startDate, endDate);
+                    triggerCsvDownload(csv, 'underwriter_claims.csv');
                 }}
                 buttonLabel="Export Claims CSV"
                 className="mb-6"
@@ -317,8 +317,8 @@ export default function BrokerClaimsListPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(claim.brokerStatus || 'pending')}`}>
-                                                {(claim.brokerStatus || 'pending').replace('_', ' ').toUpperCase()}
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(claim.underwriterStatus || 'pending')}`}>
+                                                {(claim.underwriterStatus || 'pending').replace('_', ' ').toUpperCase()}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -433,8 +433,8 @@ export default function BrokerClaimsListPage() {
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-600">Status</p>
-                                                <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusBadge(selectedClaim.brokerStatus || 'pending')}`}>
-                                                    {(selectedClaim.brokerStatus || 'pending').replace('_', ' ').toUpperCase()}
+                                                <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusBadge(selectedClaim.underwriterStatus || 'pending')}`}>
+                                                    {(selectedClaim.underwriterStatus || 'pending').replace('_', ' ').toUpperCase()}
                                                 </span>
                                             </div>
                                             <div>
@@ -502,7 +502,7 @@ export default function BrokerClaimsListPage() {
 
                                         <div className="mb-3">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Rejection Reason {selectedClaim.brokerStatus === 'pending' && '(Required for rejection)'}
+                                                Rejection Reason {selectedClaim.underwriterStatus === 'pending' && '(Required for rejection)'}
                                             </label>
                                             <textarea
                                                 value={reason}
@@ -514,7 +514,7 @@ export default function BrokerClaimsListPage() {
                                         </div>
 
                                         <div className="flex gap-2 flex-wrap">
-                                            {selectedClaim.brokerStatus === 'pending' && (
+                                            {selectedClaim.underwriterStatus === 'pending' && (
                                                 <button
                                                     onClick={() => updateStatus('under_review')}
                                                     disabled={updating}
@@ -524,7 +524,7 @@ export default function BrokerClaimsListPage() {
                                                 </button>
                                             )}
 
-                                            {selectedClaim.brokerStatus === 'under_review' && (
+                                            {selectedClaim.underwriterStatus === 'under_review' && (
                                                 <>
                                                     <button
                                                         onClick={() => updateStatus('completed')}
@@ -543,9 +543,9 @@ export default function BrokerClaimsListPage() {
                                                 </>
                                             )}
 
-                                            {(selectedClaim.brokerStatus === 'completed' || selectedClaim.brokerStatus === 'rejected') && (
+                                            {(selectedClaim.underwriterStatus === 'completed' || selectedClaim.underwriterStatus === 'rejected') && (
                                                 <p className="text-gray-600 italic text-sm">
-                                                    This claim has been {selectedClaim.brokerStatus}. No further actions available.
+                                                    This claim has been {selectedClaim.underwriterStatus}. No further actions available.
                                                 </p>
                                             )}
                                         </div>

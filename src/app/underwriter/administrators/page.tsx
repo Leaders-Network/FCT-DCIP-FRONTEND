@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import BrokerAdminManagement from "@/components/admin/BrokerAdminManagement";
+import UnderwriterAdminManagement from "@/components/admin/UnderwriterAdminManagement";
 import { hasAccessLevel, getAuthToken } from "@/utils/auth";
 
-export default function BrokerAdministratorsPage() {
+export default function UnderwriterAdministratorsPage() {
     const [isChecking, setIsChecking] = useState(true);
     const [isAllowed, setIsAllowed] = useState(false);
 
@@ -27,12 +27,12 @@ export default function BrokerAdministratorsPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="bg-white shadow-md rounded-lg p-6 text-center max-w-lg space-y-3">
-                    <h2 className="text-xl font-semibold text-gray-900">Broker Admin Management</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Underwriter Admin Management</h2>
                     <p className="text-sm text-gray-700">
-                        This page is reserved for managing broker administrators on the platform.
+                        This page is reserved for managing underwriter administrators on the platform.
                     </p>
                     <p className="text-sm text-gray-600">
-                        If a broker needs to be registered or onboarded, please contact the Gladfaith team to initiate the process.
+                        If an underwriter needs to be registered or onboarded, please contact the Gladfaith team to initiate the process.
                     </p>
                     <p className="text-sm text-red-600 font-medium">
                         Access is restricted to Super Admins. Please sign in with a super-admin account to proceed.
@@ -42,5 +42,5 @@ export default function BrokerAdministratorsPage() {
         );
     }
 
-    return <BrokerAdminManagement />;
+    return <UnderwriterAdminManagement />;
 }

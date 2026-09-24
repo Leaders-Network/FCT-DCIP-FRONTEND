@@ -13,8 +13,8 @@ const Success = () => {
 
     if (currentPath.includes('/nia-admin')) {
       loginRoute = '/nia-admin/login';
-    } else if (currentPath.includes('/broker-admin')) {
-      loginRoute = '/broker-admin/login';
+    } else if (currentPath.includes('/underwriter')) {
+      loginRoute = '/underwriter/login';
     } else if (currentPath.includes('/surveyor')) {
       loginRoute = '/surveyor';
     } else if (currentPath.includes('/dashboard') || currentPath.includes('/reset-password')) {

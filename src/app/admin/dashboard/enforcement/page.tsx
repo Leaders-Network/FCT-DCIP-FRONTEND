@@ -1073,7 +1073,7 @@ const EnforcementPage = () => {
                     <div><span className="text-blue-700">NIIP Reference:</span><p className="font-mono font-medium break-all">{selectedPolicy.paymentInfo?.niipReference || selectedPolicy.niipPayload?.transactionReference || 'N/A'}</p></div>
                     <div><span className="text-blue-700">Product ID:</span><p className="font-medium">{selectedPolicy.metaDetails?.ProductId || 'N/A'}</p></div>
                     <div><span className="text-blue-700">Sales Outlet:</span><p className="font-medium">{selectedPolicy.metaDetails?.salesOutlet || 'N/A'}</p></div>
-                    <div><span className="text-blue-700">Broker / Agent:</span><p className="font-medium">{selectedPolicy.metaDetails?.brokerOrAgentName || 'N/A'}</p></div>
+                    <div><span className="text-blue-700">Underwriter / Agent:</span><p className="font-medium">{selectedPolicy.metaDetails?.underwriterOrAgentName || 'N/A'}</p></div>
                     <div><span className="text-blue-700">Policy Status:</span><p className="font-medium">{selectedPolicy.status}</p></div>
                   </div>
                 </div>

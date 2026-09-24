@@ -92,7 +92,7 @@ export default function ClaimsPage() {
               <p>Claims can only be submitted for completed Builder Liability policies.</p>
               <p>Provide detailed information about the incident or damage.</p>
               <p>Upload supporting documents to speed up processing.</p>
-              <p>Claims are reviewed by our broker admin team within 2-3 business days.</p>
+              <p>Claims are reviewed by our underwriter team within 2-3 business days.</p>
               <p>You’ll receive notifications about claim status updates.</p>
             </div>
           </div>

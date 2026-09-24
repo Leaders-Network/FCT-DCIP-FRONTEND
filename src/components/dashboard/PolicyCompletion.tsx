@@ -202,7 +202,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
       });
 
       if (response.data?.success) {
-        toast.success('Claim request submitted successfully! The broker admin will review your claim.');
+        toast.success('Claim request submitted successfully! The underwriter will review your claim.');
         setShowClaimModal(false);
         setSelectedPolicyForClaim(null);
         setClaimReason('');
@@ -697,7 +697,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2 text-center">Request Insurance Claim</h3>
               <p className="text-sm text-gray-500 mb-4 text-center">
-                Please provide a reason for your claim request. This will be reviewed by the broker admin.
+                Please provide a reason for your claim request. This will be reviewed by the underwriter.
               </p>
 
               <form onSubmit={(e) => { e.preventDefault(); handleSubmitClaim(); }} className="space-y-4">

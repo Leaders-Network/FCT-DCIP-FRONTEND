@@ -92,12 +92,12 @@ export default function AdministratorsPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [niaUsers, setNiaUsers] = useState<Employee[]>([])
-  const [brokerUsers, setBrokerUsers] = useState<Employee[]>([])
+  const [underwriterUsers, setUnderwriterUsers] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [activeTab, setActiveTab] = useState<'administrators' | 'users' | 'nia' | 'brokers'>('administrators')
+  const [activeTab, setActiveTab] = useState<'administrators' | 'users' | 'nia' | 'underwriters'>('administrators')
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -107,7 +107,7 @@ export default function AdministratorsPage() {
     status: "Active",
     roleId: "",
     statusId: "active",
-    userType: "administrator", // admin | user | nia | broker
+    userType: "administrator", // admin | user | nia | underwriter
     cadastralZone: ""
   })
 
@@ -152,15 +152,15 @@ export default function AdministratorsPage() {
           role: formData.role
         };
         await adminApi.createNIAUser(niaSubmitData);
-      } else if (formData.userType === 'broker') {
-        // Broker users
-        const brokerSubmitData = {
+      } else if (formData.userType === 'underwriter') {
+        // Underwriter users
+        const underwriterSubmitData = {
           ...submitData,
-          userType: 'broker',
+          userType: 'underwriter',
           role: formData.role,
           company: formData.cadastralZone // Using cadastralZone field for company name
         };
-        await adminApi.createBrokerUser(brokerSubmitData);
+        await adminApi.createUnderwriterUser(underwriterSubmitData);
       }
 
       setShowAdminSidebar(false);
@@ -221,19 +221,19 @@ export default function AdministratorsPage() {
         setUsers([])
       }
 
-      const [niaResponse, brokerResponse] = await Promise.all([
+      const [niaResponse, underwriterResponse] = await Promise.all([
         adminApi.getUsersByRole('NIA'),
-        adminApi.getUsersByRole('Broker')
+        adminApi.getUsersByRole('Underwriter')
       ])
       setNiaUsers(niaResponse?.data || [])
-      setBrokerUsers(brokerResponse?.data || [])
+      setUnderwriterUsers(underwriterResponse?.data || [])
 
     } catch (error) {
       setAdministrators([])
       setEmployees([])
       setUsers([])
       setNiaUsers([])
-      setBrokerUsers([])
+      setUnderwriterUsers([])
     } finally {
       setLoading(false)
     }
@@ -259,11 +259,11 @@ export default function AdministratorsPage() {
         await adminApi.deleteNIAUser(adminId)
         setNiaUsers(prev => prev.filter(user => user._id !== adminId))
         toast.success('NIA user deleted successfully')
-      } else if (activeTab === 'brokers') {
-        // Delete Broker user
-        await adminApi.deleteBrokerUser(adminId)
-        setBrokerUsers(prev => prev.filter(user => user._id !== adminId))
-        toast.success('Broker user deleted successfully')
+      } else if (activeTab === 'underwriters') {
+        // Delete Underwriter user
+        await adminApi.deleteUnderwriterUser(adminId)
+        setUnderwriterUsers(prev => prev.filter(user => user._id !== adminId))
+        toast.success('Underwriter user deleted successfully')
       }
     } catch (error) {
       toast.error('Failed to delete user. Please try again.')
@@ -299,7 +299,7 @@ export default function AdministratorsPage() {
       statusId: 'employeeStatus' in admin ? admin.employeeStatus?._id || "active" : "active",
       userType: activeTab === 'administrators' ? 'administrator' : 
                 activeTab === 'users' ? 'user' : 
-                activeTab === 'nia' ? 'nia' : 'broker',
+                activeTab === 'nia' ? 'nia' : 'underwriter',
       cadastralZone: ('cadastralZone' in admin && admin.cadastralZone) ? String(admin.cadastralZone) : ""
     })
     setShowEditModal(true)
@@ -326,8 +326,8 @@ export default function AdministratorsPage() {
         await adminApi.updatePlatformUser(selectedAdmin._id, updateData)
       } else if (formData.userType === 'nia') {
         await adminApi.updateNIAUser(selectedAdmin._id, updateData)
-      } else if (formData.userType === 'broker') {
-        await adminApi.updateBrokerUser(selectedAdmin._id, { ...updateData, company: formData.cadastralZone })
+      } else if (formData.userType === 'underwriter') {
+        await adminApi.updateUnderwriterUser(selectedAdmin._id, { ...updateData, company: formData.cadastralZone })
       }
 
       setShowEditModal(false)
@@ -367,13 +367,13 @@ export default function AdministratorsPage() {
           employeeStatus: { _id: user.employeeStatus?._id || '', status: newStatus }
         } : user))
         toast.success(`NIA user status updated to ${newStatus}`)
-      } else if (activeTab === 'brokers') {
+      } else if (activeTab === 'underwriters') {
         await adminApi.updateAdministratorStatus(adminId, newStatus)
-        setBrokerUsers(prev => prev.map(user => user._id === adminId ? {
+        setUnderwriterUsers(prev => prev.map(user => user._id === adminId ? {
           ...user,
           employeeStatus: { _id: user.employeeStatus?._id || '', status: newStatus }
         } : user))
-        toast.success(`Broker status updated to ${newStatus}`)
+        toast.success(`Underwriter status updated to ${newStatus}`)
       }
     } catch (error: any) {
       console.error('Toggle status error:', error)
@@ -390,8 +390,8 @@ export default function AdministratorsPage() {
         return users
       case 'nia':
         return niaUsers
-      case 'brokers':
-        return brokerUsers
+      case 'underwriters':
+        return underwriterUsers
       default:
         return administrators
     }
@@ -409,7 +409,7 @@ export default function AdministratorsPage() {
         item.email.toLowerCase().includes(filter.toLowerCase()) ||
         item.phonenumber.includes(filter)
     })
-  }, [administrators, employees, users, niaUsers, brokerUsers, filter, activeTab])
+  }, [administrators, employees, users, niaUsers, underwriterUsers, filter, activeTab])
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
@@ -444,7 +444,7 @@ export default function AdministratorsPage() {
             { key: 'administrators', label: 'Administrators', count: administrators.length },
             { key: 'users', label: 'Platform Users', count: users.length },
             { key: 'nia', label: 'NIA Users', count: niaUsers.length },
-            { key: 'brokers', label: 'Brokers', count: brokerUsers.length }
+            { key: 'underwriters', label: 'Underwriters', count: underwriterUsers.length }
           ].map(tab => (
             <button
               key={tab.key}
@@ -641,7 +641,7 @@ export default function AdministratorsPage() {
               <h2 className="text-xl font-bold text-slate-900">
                 Add {formData.userType === 'administrator' ? 'Administrator' : 
                      formData.userType === 'user' ? 'Platform User' : 
-                     formData.userType === 'nia' ? 'NIA User' : 'Broker User'}
+                     formData.userType === 'nia' ? 'NIA User' : 'Underwriter User'}
               </h2>
               <button onClick={() => setShowAdminSidebar(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700">
                 <X className="h-4 w-4" />
@@ -656,7 +656,7 @@ export default function AdministratorsPage() {
                     <option value="administrator">Admin</option>
                     <option value="user">User</option>
                     <option value="nia">NIA</option>
-                    <option value="broker">Broker</option>
+                    <option value="underwriter">Underwriter</option>
                   </select>
                 </div>
                 
@@ -681,7 +681,7 @@ export default function AdministratorsPage() {
                   <input type="tel" name="phonenumber" value={formData.phonenumber} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required />
                 </div>
 
-                {(formData.userType === 'administrator' || formData.userType === 'user' || formData.userType === 'nia' || formData.userType === 'broker') && (
+                {(formData.userType === 'administrator' || formData.userType === 'user' || formData.userType === 'nia' || formData.userType === 'underwriter') && (
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Role <span className="text-red-500">*</span></label>
                     <select name="role" value={formData.role} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" required>
@@ -706,21 +706,21 @@ export default function AdministratorsPage() {
                           <option value="NIA Reviewer">NIA Reviewer</option>
                         </>
                       )}
-                      {formData.userType === 'broker' && (
+                      {formData.userType === 'underwriter' && (
                         <>
-                          <option value="Broker Admin">Broker Admin</option>
-                          <option value="Broker Agent">Broker Agent</option>
-                          <option value="Broker Reviewer">Broker Reviewer</option>
+                          <option value="Underwriter Admin">Underwriter Admin</option>
+                          <option value="Underwriter Agent">Underwriter Agent</option>
+                          <option value="Underwriter Reviewer">Underwriter Reviewer</option>
                         </>
                       )}
                     </select>
                   </div>
                 )}
 
-                {formData.userType === 'broker' && (
+                {formData.userType === 'underwriter' && (
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Company/Brokerage <span className="text-red-500">*</span></label>
-                    <input type="text" name="company" value={formData.cadastralZone || ""} onChange={(e) => setFormData(prev => ({...prev, cadastralZone: e.target.value}))} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" placeholder="Enter brokerage company name" required />
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Company/Underwriterage <span className="text-red-500">*</span></label>
+                    <input type="text" name="company" value={formData.cadastralZone || ""} onChange={(e) => setFormData(prev => ({...prev, cadastralZone: e.target.value}))} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all" placeholder="Enter underwriterage company name" required />
                   </div>
                 )}
               </form>

@@ -14,10 +14,10 @@ import {
     Eye
 } from 'lucide-react';
 import api from '@/services/api';
-import type { BrokerPolicyRequest } from '@/types/api.types';
+import type { UnderwriterPolicyRequest } from '@/types/api.types';
 
 // Use the proper type from api.types.ts
-type Claim = BrokerPolicyRequest;
+type Claim = UnderwriterPolicyRequest;
 
 interface ClaimsListProps {
     refreshTrigger?: number;
@@ -108,7 +108,7 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                 text: 'text-yellow-800',
                 icon: Clock,
                 label: 'Pending Review',
-                description: 'Your claim is waiting to be reviewed by the broker'
+                description: 'Your claim is waiting to be reviewed by the underwriter'
             },
             under_review: {
                 bg: 'bg-blue-50',
@@ -218,14 +218,14 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
             {/* Claims Grid */}
             <div className="grid grid-cols-1 gap-6">
                 {claims.map((claim) => {
-                    // Use brokerStatus for claim status, fallback to status if not available
-                    const claimStatus = claim.brokerStatus || claim.status || 'pending';
+                    // Use underwriterStatus for claim status, fallback to status if not available
+                    const claimStatus = claim.underwriterStatus || claim.status || 'pending';
                     const statusConfig = getStatusConfig(claimStatus as any);
                     const StatusIcon = statusConfig.icon;
 
-                    // Get the latest update from broker status history
-                    const lastUpdate = claim.brokerStatusHistory && claim.brokerStatusHistory.length > 0
-                        ? claim.brokerStatusHistory[claim.brokerStatusHistory.length - 1]
+                    // Get the latest update from underwriter status history
+                    const lastUpdate = claim.underwriterStatusHistory && claim.underwriterStatusHistory.length > 0
+                        ? claim.underwriterStatusHistory[claim.underwriterStatusHistory.length - 1]
                         : null;
 
                     return (
@@ -371,8 +371,8 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusConfig(claimDetails.brokerStatus || claimDetails.status).bg} ${getStatusConfig(claimDetails.brokerStatus || claimDetails.status).text}`}>
-                                                {getStatusConfig(claimDetails.brokerStatus || claimDetails.status).label}
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusConfig(claimDetails.underwriterStatus || claimDetails.status).bg} ${getStatusConfig(claimDetails.underwriterStatus || claimDetails.status).text}`}>
+                                                {getStatusConfig(claimDetails.underwriterStatus || claimDetails.status).label}
                                             </span>
                                         </div>
                                         <div>
@@ -448,11 +448,11 @@ export const ClaimsList: React.FC<ClaimsListProps> = ({ refreshTrigger }) => {
                                     )}
 
                                     {/* Status History */}
-                                    {claimDetails.brokerStatusHistory && claimDetails.brokerStatusHistory.length > 0 && (
+                                    {claimDetails.underwriterStatusHistory && claimDetails.underwriterStatusHistory.length > 0 && (
                                         <div>
                                             <h4 className="text-sm font-semibold text-gray-900 mb-3">Status History</h4>
                                             <div className="space-y-3">
-                                                {claimDetails.brokerStatusHistory.map((history: any, index: number) => {
+                                                {claimDetails.underwriterStatusHistory.map((history: any, index: number) => {
                                                     const config = getStatusConfig(history.status);
                                                     const HistoryIcon = config.icon;
                                                     return (

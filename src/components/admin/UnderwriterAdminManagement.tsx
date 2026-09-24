@@ -18,10 +18,10 @@ import {
     AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/context/useAuth";
-import { BrokerAdmin, Employee } from "@/types/api.types";
+import { UnderwriterAdmin, Employee } from "@/types/api.types";
 
-// Extended BrokerAdmin interface for management UI with populated userId
-interface BrokerAdminWithUser extends Omit<BrokerAdmin, 'userId'> {
+// Extended UnderwriterAdmin interface for management UI with populated userId
+interface UnderwriterAdminWithUser extends Omit<UnderwriterAdmin, 'userId'> {
     userId: {
         _id: string;
         firstname: string;
@@ -32,14 +32,14 @@ interface BrokerAdminWithUser extends Omit<BrokerAdmin, 'userId'> {
     };
 }
 
-interface BrokerAdminFormData {
+interface UnderwriterAdminFormData {
     firstname: string;
     lastname: string;
     email: string;
     phonenumber: string;
     password: string;
-    brokerFirmName: string;
-    brokerFirmLicense: string;
+    underwriterFirmName: string;
+    underwriterFirmLicense: string;
     licenseNumber: string;
     department: string;
     position: string;
@@ -52,7 +52,7 @@ interface BrokerAdminFormData {
     };
 }
 
-interface BrokerAdminStats {
+interface UnderwriterAdminStats {
     total: number;
     active: number;
     inactive: number;
@@ -60,10 +60,10 @@ interface BrokerAdminStats {
     totalFirms: number;
 }
 
-interface BrokerAdminManagementProps {
-    onCreateBrokerAdmin?: (data: BrokerAdminFormData) => Promise<void>;
-    onUpdateBrokerAdmin?: (id: string, data: Partial<BrokerAdminFormData>) => Promise<void>;
-    onDeleteBrokerAdmin?: (id: string) => Promise<void>;
+interface UnderwriterAdminManagementProps {
+    onCreateUnderwriterAdmin?: (data: UnderwriterAdminFormData) => Promise<void>;
+    onUpdateUnderwriterAdmin?: (id: string, data: Partial<UnderwriterAdminFormData>) => Promise<void>;
+    onDeleteUnderwriterAdmin?: (id: string) => Promise<void>;
 }
 
 const isEmployee = (user: unknown): user is Employee => {
@@ -77,22 +77,22 @@ const isEmployee = (user: unknown): user is Employee => {
     );
 };
 
-const BrokerAdminManagement = ({
-    onCreateBrokerAdmin,
-    onUpdateBrokerAdmin,
-    onDeleteBrokerAdmin,
-}: BrokerAdminManagementProps) => {
+const UnderwriterAdminManagement = ({
+    onCreateUnderwriterAdmin,
+    onUpdateUnderwriterAdmin,
+    onDeleteUnderwriterAdmin,
+}: UnderwriterAdminManagementProps) => {
     const { user } = useAuth();
     const isSuperAdmin = isEmployee(user) && user.employeeRole.role === "Super-admin";
-    const [brokerAdmins, setBrokerAdmins] = useState<BrokerAdminWithUser[]>([]);
+    const [underwriterAdmins, setUnderwriterAdmins] = useState<UnderwriterAdminWithUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
-    const [selectedBrokerAdmin, setSelectedBrokerAdmin] = useState<BrokerAdminWithUser | null>(null);
-    const [stats, setStats] = useState<BrokerAdminStats>({
+    const [selectedUnderwriterAdmin, setSelectedUnderwriterAdmin] = useState<UnderwriterAdminWithUser | null>(null);
+    const [stats, setStats] = useState<UnderwriterAdminStats>({
         total: 0,
         active: 0,
         inactive: 0,
@@ -100,17 +100,17 @@ const BrokerAdminManagement = ({
         totalFirms: 0
     });
     const [showPassword, setShowPassword] = useState(false);
-    const [formData, setFormData] = useState<BrokerAdminFormData>({
+    const [formData, setFormData] = useState<UnderwriterAdminFormData>({
         firstname: "",
         lastname: "",
         email: "",
         phonenumber: "",
         password: "",
-        brokerFirmName: "",
-        brokerFirmLicense: "",
+        underwriterFirmName: "",
+        underwriterFirmLicense: "",
         licenseNumber: "",
         department: "Claims Management",
-        position: "Broker Administrator",
+        position: "Underwriter Administrator",
         permissions: {
             canViewClaims: true,
             canUpdateClaimStatus: true,
@@ -127,11 +127,11 @@ const BrokerAdminManagement = ({
             email: "",
             phonenumber: "",
             password: "",
-            brokerFirmName: "",
-            brokerFirmLicense: "",
+            underwriterFirmName: "",
+            underwriterFirmLicense: "",
             licenseNumber: "",
             department: "Claims Management",
-            position: "Broker Administrator",
+            position: "Underwriter Administrator",
             permissions: {
                 canViewClaims: true,
                 canUpdateClaimStatus: true,
@@ -144,16 +144,16 @@ const BrokerAdminManagement = ({
     };
 
     useEffect(() => {
-        fetchBrokerAdmins();
+        fetchUnderwriterAdmins();
         fetchStats();
     }, [statusFilter, searchTerm]);
 
-    const fetchBrokerAdmins = async () => {
+    const fetchUnderwriterAdmins = async () => {
         setLoading(true);
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.get<{ success: boolean; data: BrokerAdminWithUser[] }>('/broker-admin/management', {
+            const response = await adminApi.get<{ success: boolean; data: UnderwriterAdminWithUser[] }>('/underwriter-admin/management', {
                 params: {
                     status: statusFilter !== "all" ? statusFilter : undefined,
                     search: searchTerm || undefined,
@@ -163,12 +163,12 @@ const BrokerAdminManagement = ({
             });
 
             if (response && typeof response === 'object' && 'success' in response && response.success && 'data' in response && response.data) {
-                setBrokerAdmins(response.data);
+                setUnderwriterAdmins(response.data);
             } else {
-                setBrokerAdmins([]);
+                setUnderwriterAdmins([]);
             }
         } catch (error) {
-            setBrokerAdmins([]);
+            setUnderwriterAdmins([]);
         } finally {
             setLoading(false);
         }
@@ -178,7 +178,7 @@ const BrokerAdminManagement = ({
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.get<{ success: boolean; data: typeof stats }>('/broker-admin/management/stats');
+            const response = await adminApi.get<{ success: boolean; data: typeof stats }>('/underwriter-admin/management/stats');
 
             if (response && 'success' in response && response.success && 'data' in response && response.data) {
                 setStats(response.data);
@@ -187,85 +187,85 @@ const BrokerAdminManagement = ({
         }
     };
 
-    const handleCreateBrokerAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleCreateUnderwriterAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.post<{ success: boolean; data: BrokerAdmin }>('/broker-admin/management', formData);
+            const response = await adminApi.post<{ success: boolean; data: UnderwriterAdmin }>('/underwriter-admin/management', formData);
 
             if (response && 'success' in response && response.success) {
-                alert('Broker admin created successfully!');
+                alert('Underwriter created successfully!');
                 setShowCreateModal(false);
                 resetForm();
-                fetchBrokerAdmins();
+                fetchUnderwriterAdmins();
                 fetchStats();
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to create broker admin';
+            const errorMessage = error instanceof Error ? error.message : 'Failed to create underwriter';
             alert(errorMessage);
         }
     };
 
-    const handleUpdateBrokerAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleUpdateUnderwriterAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if (!selectedBrokerAdmin) return;
+        if (!selectedUnderwriterAdmin) return;
 
         try {
             const { adminApi } = await import("@/services/api");
 
             const response = await adminApi.patch<{ success: boolean }>(
-                `/broker-admin/management/${selectedBrokerAdmin._id}`,
+                `/underwriter-admin/management/${selectedUnderwriterAdmin._id}`,
                 formData
             );
 
             const data = (response as unknown as { data?: { success?: boolean } }).data;
 
             if (data?.success) {
-                alert('Broker admin updated successfully!');
+                alert('Underwriter updated successfully!');
                 setShowEditModal(false);
-                setSelectedBrokerAdmin(null);
+                setSelectedUnderwriterAdmin(null);
                 resetForm();
-                fetchBrokerAdmins();
+                fetchUnderwriterAdmins();
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to update broker admin';
+            const errorMessage = error instanceof Error ? error.message : 'Failed to update underwriter';
             alert(errorMessage);
         }
     };
 
-    const handleReactivateBrokerAdmin = async (id: string) => {
-        if (!confirm('Are you sure you want to reactivate this broker admin? This will restore their access.')) {
+    const handleReactivateUnderwriterAdmin = async (id: string) => {
+        if (!confirm('Are you sure you want to reactivate this underwriter? This will restore their access.')) {
             return;
         }
 
         try {
             const { adminApi } = await import("@/services/api");
 
-            const response = await adminApi.patch<{ success: boolean }>(`/broker-admin/management/${id}/reactivate`);
+            const response = await adminApi.patch<{ success: boolean }>(`/underwriter-admin/management/${id}/reactivate`);
 
             const data = (response as unknown as { data?: { success?: boolean } }).data;
 
             if (data?.success) {
-                alert('Broker admin reactivated successfully!');
-                fetchBrokerAdmins();
+                alert('Underwriter reactivated successfully!');
+                fetchUnderwriterAdmins();
                 fetchStats();
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to reactivate broker admin';
+            const errorMessage = error instanceof Error ? error.message : 'Failed to reactivate underwriter';
             alert(errorMessage);
         }
     };
 
-    const handleDeleteBrokerAdmin = async (id: string, permanent = false) => {
+    const handleDeleteUnderwriterAdmin = async (id: string, permanent = false) => {
         const action = permanent ? 'permanently delete' : 'deactivate';
         const warning = permanent
-            ? 'This will permanently delete the broker admin and all associated data. This action cannot be undone!'
+            ? 'This will permanently delete the underwriter and all associated data. This action cannot be undone!'
             : 'This will disable their access but preserve their data for audit purposes.';
 
-        if (!confirm(`Are you sure you want to ${action} this broker admin? ${warning}`)) {
+        if (!confirm(`Are you sure you want to ${action} this underwriter? ${warning}`)) {
             return;
         }
 
@@ -273,8 +273,8 @@ const BrokerAdminManagement = ({
             const { adminApi } = await import("@/services/api");
 
             const endpoint = permanent
-                ? `/broker-admin/management/${id}?permanent=true`
-                : `/broker-admin/management/${id}`;
+                ? `/underwriter-admin/management/${id}?permanent=true`
+                : `/underwriter-admin/management/${id}`;
 
             const response = await adminApi.delete<{ success: boolean }>(endpoint);
 
@@ -282,38 +282,38 @@ const BrokerAdminManagement = ({
 
             if (data?.success) {
                 const message = permanent
-                    ? 'Broker admin permanently deleted!'
-                    : 'Broker admin deactivated successfully!';
+                    ? 'Underwriter permanently deleted!'
+                    : 'Underwriter deactivated successfully!';
                 alert(message);
-                fetchBrokerAdmins();
+                fetchUnderwriterAdmins();
                 fetchStats();
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : `Failed to ${action} broker admin`;
+            const errorMessage = error instanceof Error ? error.message : `Failed to ${action} underwriter`;
             alert(errorMessage);
         }
     };
 
-    const openEditModal = (brokerAdmin: BrokerAdminWithUser) => {
-    setSelectedBrokerAdmin(brokerAdmin);
+    const openEditModal = (underwriterAdmin: UnderwriterAdminWithUser) => {
+    setSelectedUnderwriterAdmin(underwriterAdmin);
     setFormData({
-        firstname: brokerAdmin.userId.firstname,
-        lastname: brokerAdmin.userId.lastname,
-        email: brokerAdmin.userId.email,
-        phonenumber: brokerAdmin.userId.phonenumber,
+        firstname: underwriterAdmin.userId.firstname,
+        lastname: underwriterAdmin.userId.lastname,
+        email: underwriterAdmin.userId.email,
+        phonenumber: underwriterAdmin.userId.phonenumber,
         password: "",
-        brokerFirmName: brokerAdmin.brokerFirmName,
-        brokerFirmLicense: brokerAdmin.brokerFirmLicense,
-        licenseNumber: brokerAdmin.profile.licenseNumber,
-        department: brokerAdmin.profile.department,
-        position: brokerAdmin.profile.position,
-        permissions: brokerAdmin.permissions
+        underwriterFirmName: underwriterAdmin.underwriterFirmName,
+        underwriterFirmLicense: underwriterAdmin.underwriterFirmLicense,
+        licenseNumber: underwriterAdmin.profile.licenseNumber,
+        department: underwriterAdmin.profile.department,
+        position: underwriterAdmin.profile.position,
+        permissions: underwriterAdmin.permissions
     });
     setShowEditModal(true);
     };
 
-    const openDetailsModal = (brokerAdmin: BrokerAdminWithUser) => {
-        setSelectedBrokerAdmin(brokerAdmin);
+    const openDetailsModal = (underwriterAdmin: UnderwriterAdminWithUser) => {
+        setSelectedUnderwriterAdmin(underwriterAdmin);
         setShowDetailsModal(true);
     };
 
@@ -323,7 +323,7 @@ const BrokerAdminManagement = ({
         if (type === 'checkbox') {
             const checked = (e.target as HTMLInputElement).checked;
             if (name.startsWith('permissions.')) {
-                const permissionKey = name.split('.')[1] as keyof BrokerAdminFormData['permissions'];
+                const permissionKey = name.split('.')[1] as keyof UnderwriterAdminFormData['permissions'];
                 setFormData(prev => ({
                     ...prev,
                     permissions: {
@@ -359,8 +359,8 @@ const BrokerAdminManagement = ({
     <div className="p-6 bg-gray-50 min-h-screen">
         {/* Header */}
         <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Broker Admin Management</h1>
-            <p className="text-gray-600">Manage broker administrator accounts and permissions</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Underwriter Management</h1>
+            <p className="text-gray-600">Manage underwriter administrator accounts and permissions</p>
         </div>
 
         {/* Statistics Cards */}
@@ -404,7 +404,7 @@ const BrokerAdminManagement = ({
             <div className="bg-white p-4 rounded-lg shadow">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm text-gray-600">Broker Firms</p>
+                        <p className="text-sm text-gray-600">Underwriter Firms</p>
                         <p className="text-2xl font-bold text-purple-600">{stats.totalFirms}</p>
                     </div>
                     <Building2 className="w-8 h-8 text-purple-500" />
@@ -446,23 +446,23 @@ const BrokerAdminManagement = ({
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                         <Plus className="w-5 h-5" />
-                        Add Broker Admin
+                        Add Underwriter
                     </button>
                 )}
             </div>
         </div>
 
-        {/* Broker Admins Table */}
+        {/* Underwriters Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
             {loading ? (
                 <div className="p-8 text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading broker admins...</p>
+                    <p className="mt-4 text-gray-600">Loading underwriters...</p>
                 </div>
-            ) : brokerAdmins.length === 0 ? (
+            ) : underwriterAdmins.length === 0 ? (
                 <div className="p-8 text-center">
                     <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No broker admins found</p>
+                    <p className="text-gray-600">No underwriters found</p>
                 </div>
             ) : (
                 <div className="overflow-x-auto">
@@ -473,7 +473,7 @@ const BrokerAdminManagement = ({
                                     Admin
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Broker Firm
+                                    Underwriter Firm
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Position
@@ -490,7 +490,7 @@ const BrokerAdminManagement = ({
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {brokerAdmins.map((admin) => (
+                            {underwriterAdmins.map((admin) => (
                                 <tr key={admin._id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -508,8 +508,8 @@ const BrokerAdminManagement = ({
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-sm text-gray-900">{admin.brokerFirmName}</div>
-                                        <div className="text-sm text-gray-500">{admin.brokerFirmLicense}</div>
+                                        <div className="text-sm text-gray-900">{admin.underwriterFirmName}</div>
+                                        <div className="text-sm text-gray-500">{admin.underwriterFirmLicense}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="text-sm text-gray-900">{admin.profile.position}</div>
@@ -559,7 +559,7 @@ const BrokerAdminManagement = ({
                                                     {admin.status === 'inactive' ? (
                                                         // Show reactivate option for inactive admins
                                                         <button
-                                                            onClick={() => handleReactivateBrokerAdmin(admin._id)}
+                                                            onClick={() => handleReactivateUnderwriterAdmin(admin._id)}
                                                             className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2"
                                                         >
                                                             <CheckCircle className="w-4 h-4" />
@@ -568,7 +568,7 @@ const BrokerAdminManagement = ({
                                                     ) : (
                                                         // Show deactivate option for active admins
                                                         <button
-                                                            onClick={() => handleDeleteBrokerAdmin(admin._id, false)}
+                                                            onClick={() => handleDeleteUnderwriterAdmin(admin._id, false)}
                                                             className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2"
                                                         >
                                                             <XCircle className="w-4 h-4" />
@@ -578,7 +578,7 @@ const BrokerAdminManagement = ({
 
                                                     {/* Always show permanent delete option */}
                                                     <button
-                                                        onClick={() => handleDeleteBrokerAdmin(admin._id, true)}
+                                                        onClick={() => handleDeleteUnderwriterAdmin(admin._id, true)}
                                                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -601,8 +601,8 @@ const BrokerAdminManagement = ({
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div className="p-6">
-                        <h2 className="text-2xl font-bold mb-4">Add New Broker Admin</h2>
-                        <form onSubmit={handleCreateBrokerAdmin} className="space-y-4">
+                        <h2 className="text-2xl font-bold mb-4">Add New Underwriter</h2>
+                        <form onSubmit={handleCreateUnderwriterAdmin} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -691,12 +691,12 @@ const BrokerAdminManagement = ({
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Broker Firm Name *
+                                    Underwriter Firm Name *
                                 </label>
                                 <input
                                     type="text"
-                                    name="brokerFirmName"
-                                    value={formData.brokerFirmName}
+                                    name="underwriterFirmName"
+                                    value={formData.underwriterFirmName}
                                     onChange={handleInputChange}
                                     required
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -706,12 +706,12 @@ const BrokerAdminManagement = ({
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Broker Firm License *
+                                        Underwriter Firm License *
                                     </label>
                                     <input
                                         type="text"
-                                        name="brokerFirmLicense"
-                                        value={formData.brokerFirmLicense}
+                                        name="underwriterFirmLicense"
+                                        value={formData.underwriterFirmLicense}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -813,7 +813,7 @@ const BrokerAdminManagement = ({
                                     type="submit"
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                 >
-                                    Create Broker Admin
+                                    Create Underwriter
                                 </button>
                                 <button
                                     type="button"
@@ -833,20 +833,20 @@ const BrokerAdminManagement = ({
         )}
 
         {/* Edit Modal */}
-        {showEditModal && selectedBrokerAdmin && (
+        {showEditModal && selectedUnderwriterAdmin && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div className="p-6">
-                        <h2 className="text-2xl font-bold mb-4">Edit Broker Admin</h2>
-                        <form onSubmit={handleUpdateBrokerAdmin} className="space-y-4">
+                        <h2 className="text-2xl font-bold mb-4">Edit Underwriter</h2>
+                        <form onSubmit={handleUpdateUnderwriterAdmin} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Broker Firm Name *
+                                    Underwriter Firm Name *
                                 </label>
                                 <input
                                     type="text"
-                                    name="brokerFirmName"
-                                    value={formData.brokerFirmName}
+                                    name="underwriterFirmName"
+                                    value={formData.underwriterFirmName}
                                     onChange={handleInputChange}
                                     required
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -856,12 +856,12 @@ const BrokerAdminManagement = ({
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Broker Firm License *
+                                        Underwriter Firm License *
                                     </label>
                                     <input
                                         type="text"
-                                        name="brokerFirmLicense"
-                                        value={formData.brokerFirmLicense}
+                                        name="underwriterFirmLicense"
+                                        value={formData.underwriterFirmLicense}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -963,13 +963,13 @@ const BrokerAdminManagement = ({
                                     type="submit"
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                 >
-                                    Update Broker Admin
+                                    Update Underwriter
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setShowEditModal(false);
-                                        setSelectedBrokerAdmin(null);
+                                        setSelectedUnderwriterAdmin(null);
                                         resetForm();
                                     }}
                                     className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
@@ -984,13 +984,13 @@ const BrokerAdminManagement = ({
         )}
 
         {/* Details Modal */}
-        {showDetailsModal && selectedBrokerAdmin && (
+        {showDetailsModal && selectedUnderwriterAdmin && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div className="p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold">Broker Admin Details</h2>
-                            {getStatusBadge(selectedBrokerAdmin.status)}
+                            <h2 className="text-2xl font-bold">Underwriter Details</h2>
+                            {getStatusBadge(selectedUnderwriterAdmin.status)}
                         </div>
 
                         <div className="space-y-6">
@@ -1003,20 +1003,20 @@ const BrokerAdminManagement = ({
                                     <div>
                                         <p className="text-sm text-gray-600">Name</p>
                                         <p className="font-medium">
-                                            {selectedBrokerAdmin.userId.firstname} {selectedBrokerAdmin.userId.lastname}
+                                            {selectedUnderwriterAdmin.userId.firstname} {selectedUnderwriterAdmin.userId.lastname}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Email</p>
-                                        <p className="font-medium">{selectedBrokerAdmin.userId.email}</p>
+                                        <p className="font-medium">{selectedUnderwriterAdmin.userId.email}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Phone</p>
-                                        <p className="font-medium">{selectedBrokerAdmin.userId.phonenumber}</p>
+                                        <p className="font-medium">{selectedUnderwriterAdmin.userId.phonenumber}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Organization</p>
-                                        <p className="font-medium">{selectedBrokerAdmin.userId.organization}</p>
+                                        <p className="font-medium">{selectedUnderwriterAdmin.userId.organization}</p>
                                     </div>
                                 </div>
                             </div>
@@ -1024,28 +1024,28 @@ const BrokerAdminManagement = ({
                             <div>
                                 <h3 className="text-lg font-semibold mb-3 flex items-center">
                                     <Building2 className="w-5 h-5 mr-2" />
-                                    Broker Firm Information
+                                    Underwriter Firm Information
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
                                     <div>
                                         <p className="text-sm text-gray-600">Firm Name</p>
-                                        <p className="font-medium">{selectedBrokerAdmin.brokerFirmName}</p>
+                                        <p className="font-medium">{selectedUnderwriterAdmin.underwriterFirmName}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Firm License</p>
-                                        <p className="font-medium">{selectedBrokerAdmin.brokerFirmLicense}</p>
+                                        <p className="font-medium">{selectedUnderwriterAdmin.underwriterFirmLicense}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">License Number</p>
-                                        <p className="font-medium">{selectedBrokerAdmin.profile.licenseNumber}</p>
+                                        <p className="font-medium">{selectedUnderwriterAdmin.profile.licenseNumber}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Department</p>
-                                        <p className="font-medium">{selectedBrokerAdmin.profile.department}</p>
+                                        <p className="font-medium">{selectedUnderwriterAdmin.profile.department}</p>
                                     </div>
                                     <div className="col-span-2">
                                         <p className="text-sm text-gray-600">Position</p>
-                                        <p className="font-medium">{selectedBrokerAdmin.profile.position}</p>
+                                        <p className="font-medium">{selectedUnderwriterAdmin.profile.position}</p>
                                     </div>
                                 </div>
                             </div>
@@ -1058,7 +1058,7 @@ const BrokerAdminManagement = ({
                                 <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm">View Claims</span>
-                                        {selectedBrokerAdmin.permissions.canViewClaims ? (
+                                        {selectedUnderwriterAdmin.permissions.canViewClaims ? (
                                             <CheckCircle className="w-5 h-5 text-green-500" />
                                         ) : (
                                             <XCircle className="w-5 h-5 text-red-500" />
@@ -1066,7 +1066,7 @@ const BrokerAdminManagement = ({
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm">Update Claim Status</span>
-                                        {selectedBrokerAdmin.permissions.canUpdateClaimStatus ? (
+                                        {selectedUnderwriterAdmin.permissions.canUpdateClaimStatus ? (
                                             <CheckCircle className="w-5 h-5 text-green-500" />
                                         ) : (
                                             <XCircle className="w-5 h-5 text-red-500" />
@@ -1075,7 +1075,7 @@ const BrokerAdminManagement = ({
                                    
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm">Access Analytics</span>
-                                        {selectedBrokerAdmin.permissions.canAccessAnalytics ? (
+                                        {selectedUnderwriterAdmin.permissions.canAccessAnalytics ? (
                                             <CheckCircle className="w-5 h-5 text-green-500" />
                                         ) : (
                                             <XCircle className="w-5 h-5 text-red-500" />
@@ -1083,7 +1083,7 @@ const BrokerAdminManagement = ({
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm">Manage Admins</span>
-                                        {selectedBrokerAdmin.permissions.canManageAdmins ? (
+                                        {selectedUnderwriterAdmin.permissions.canManageAdmins ? (
                                             <CheckCircle className="w-5 h-5 text-green-500" />
                                         ) : (
                                             <XCircle className="w-5 h-5 text-red-500" />
@@ -1096,7 +1096,7 @@ const BrokerAdminManagement = ({
                                 <button
                                     onClick={() => {
                                         setShowDetailsModal(false);
-                                        setSelectedBrokerAdmin(null);
+                                        setSelectedUnderwriterAdmin(null);
                                     }}
                                     className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
                                 >
@@ -1112,4 +1112,4 @@ const BrokerAdminManagement = ({
 );
 };
 
-export default BrokerAdminManagement;
+export default UnderwriterAdminManagement;
