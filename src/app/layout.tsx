@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthProvider";
 //always run npm run lint to heck errors before deployment 
 import CookieConsent from "@/components/CookieConsent"
 import { Toaster} from "sonner"
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 
 export const metadata: Metadata = {
@@ -64,6 +65,7 @@ export default function RootLayout({
             },
           }}
         />
+        <SpeedInsights />
       </body>
 
 
