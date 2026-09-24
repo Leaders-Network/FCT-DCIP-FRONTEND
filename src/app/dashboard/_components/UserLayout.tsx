@@ -328,7 +328,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
         </aside>
 
         <div className="flex flex-1 flex-col overflow-visible print:block print:overflow-visible print:bg-white">
-          <header className="sticky top-0 z-30 mb-4 overflow-hidden rounded-none border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:top-0 sm:rounded-[2rem] print:hidden">
+          <header className="sticky top-0 z-30 mb-4 overflow-visible rounded-none border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:top-0 sm:rounded-[2rem] print:hidden">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.16),_transparent_42%)]" />
             <div className="relative flex flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 items-center gap-3">
