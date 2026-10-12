@@ -274,28 +274,20 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
   const isBlank = (value: unknown) => String(value ?? "").trim().length === 0;
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const isValidPhoneNumber = (phone: string) => {
-    const normalizedPhone = phone.replace(/[\s()-]/g, "");
-    const cleanPhone = normalizedPhone.replace(/\D/g, "");
-    
-    // Nigerian phone number patterns - must be exactly 11 digits
-    if (normalizedPhone.startsWith('+234')) {
-      // International format: +234XXXXXXXXX (13 characters total)
-      return /^\+234[789][01]\d{8}$/.test(normalizedPhone);
-    } else if (normalizedPhone.startsWith('234')) {
-      // Without plus: 234XXXXXXXXX (13 digits)
-      return /^234[789][01]\d{8}$/.test(normalizedPhone);
-    } else {
-      // Local format: Must be exactly 11 digits starting with 0
-      if (cleanPhone.length !== 11) return false;
-      if (!cleanPhone.startsWith('0')) return false;
-      
-      // Check valid network prefixes
-      const validPrefixes = ['070', '080', '081', '090', '091', '071'];
-      const prefix = cleanPhone.substring(0, 3);
-      return validPrefixes.includes(prefix);
+  // Phone numbers are stored as 11-digit local numbers (e.g. 08012345678);
+  // the downstream API rejects anything longer than 11 characters.
+  const sanitizePhoneInput = (raw: string) => {
+    let digits = raw.replace(/\D/g, "");
+    if (digits.startsWith("234") && digits.length > 11) {
+      digits = "0" + digits.slice(3);
     }
+    return digits.slice(0, 11);
   };
+  const isValidPhoneNumber = (phone: string) =>
+    /^0[789][01]\d{8}$/.test(sanitizePhoneInput(phone));
+
+  const sanitizeRCInput = (raw: string) =>
+    raw.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 10);
 
   const isValidRCNumber = (rcNumber: string) => {
     const cleanRC = rcNumber.trim().toUpperCase();
@@ -845,12 +837,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
               identityNo: formData.identificationNumber,
             },
             address: formData.builderAddress,
-            telNo: formData.builderPhone,
+            telNo: sanitizePhoneInput(formData.builderPhone),
           },
       client: {
         name: formData.clientName,
         email: formData.clientEmail,
-        phoneNumber: formData.clientPhoneNumber,
+        phoneNumber: sanitizePhoneInput(formData.clientPhoneNumber),
         identificationType: formData.clientIdentificationType,
         identificationNumber: formData.clientIdentificationNumber,
         address: formData.clientAddress,
@@ -1154,14 +1146,19 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     id="clientPhoneNumber"
                     value={formData.clientPhoneNumber}
                     onChange={(e) =>
-                      handleInputChange("clientPhoneNumber", e.target.value)
+                      handleInputChange(
+                        "clientPhoneNumber",
+                        sanitizePhoneInput(e.target.value),
+                      )
                     }
-                    placeholder="Enter client phone number"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="08012345678"
                     required
                   />
                   <p className="mt-1 text-sm text-gray-500">
-                    Use a valid 11-digit Nigerian or international phone number for the
-                    client.(ie 0801 *** ****)
+                    Use a valid 11-digit Nigerian phone number for the client
+                    (e.g. 08012345678). Digits only.
                   </p>
                 </div>
                 <div>
@@ -1215,8 +1212,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     id="clientRcNumber"
                     value={formData.clientRcNumber}
                     onChange={(e) =>
-                      handleInputChange("clientRcNumber", e.target.value)
+                      handleInputChange(
+                        "clientRcNumber",
+                        sanitizeRCInput(e.target.value),
+                      )
                     }
+                    maxLength={10}
                     placeholder="Enter RC number if client is a registered company"
                   />
                   <p className="mt-1 text-sm text-gray-500">
@@ -1348,8 +1349,12 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     id="rcNumber"
                     value={formData.rcNumber}
                     onChange={(e) =>
-                      handleInputChange("rcNumber", e.target.value)
+                      handleInputChange(
+                        "rcNumber",
+                        sanitizeRCInput(e.target.value),
+                      )
                     }
+                    maxLength={10}
                     required={!formData.isDirectLabor}
                     disabled={formData.isDirectLabor}
                   />
@@ -1365,13 +1370,19 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     id="builderPhone"
                     value={formData.builderPhone}
                     onChange={(e) =>
-                      handleInputChange("builderPhone", e.target.value)
+                      handleInputChange(
+                        "builderPhone",
+                        sanitizePhoneInput(e.target.value),
+                      )
                     }
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="08012345678"
                     required={!formData.isDirectLabor}
                     disabled={formData.isDirectLabor}
                   />
                   <p className="mt-1 text-sm text-gray-500">
-                    Enter a valid 11 digit Nigerian or international contact number.(ie 0801 xxx xxxx)
+                    Enter a valid 11-digit Nigerian contact number (e.g. 08012345678). Digits only.
                   </p>
                 </div>
                 <div>
