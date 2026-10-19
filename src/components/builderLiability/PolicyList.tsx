@@ -333,14 +333,6 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
         const launchPayment = async () => {
             setProcessingPayment(policy._id);
 
-            console.log(
-                `
-                ${process.env.NEXT_PUBLIC_EGOLEPAY_SDK_URL}
-                ${process.env.NEXT_PUBLIC_EGOLEPAY_PUBLIC_KEY}
-                ${process.env.NEXT_PUBLIC_EGOLEPAY_API_KEY}
-                `
-            )
-
             try {
                 if (!egolePayApiKey) {
                     throw new Error('EgolePay API key is missing. Add NEXT_PUBLIC_EGOLEPAY_API_KEY to the frontend env file.');
