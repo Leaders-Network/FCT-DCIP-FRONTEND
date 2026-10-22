@@ -406,7 +406,7 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                             if (result.pending) {
                                 setPendingPaymentConfirmation({ reference, policyId: policy._id });
                                 toast.message(
-                                    'Payment is pending confirmation. Verification will retry automatically.'
+                                    'Payment is awaiting EgolePay verification. Do not pay again; verification will retry automatically.'
                                 );
                                 return;
                             }
