@@ -14,8 +14,8 @@ Read **Part 1 — Production safety protocol** there before starting any item. T
 ## Items with frontend work
 | ID | Risk | Summary | Coordinate with backend? |
 |---|---|---|---|
-| P0-09 | 🟢 | Remove debug/test pages; delete `utils/niaTokenSetup.ts`, `utils/testNIALogin.ts`; remove EgolePay key logs in `PolicyList.tsx` | No |
-| P0-10 (Migrate stage) | 🔴 | Reset-password screens send `resetToken` | Yes — after BE "Expand" |
+| P0-09 | 🟢 | Remove debug/test pages; delete `utils/niaTokenSetup.ts`, `utils/testNIALogin.ts`; remove EgolePay key logs in `PolicyList.tsx` | No | ((#11) PR - https://github.com/Leaders-Network/FCT-DCIP-BACKEND/pull/11)
+| P0-10 (Migrate stage) | 🔴 | Reset-password screens send `resetToken` | Yes — after BE "Expand" | ((#12) PR - https://github.com/Leaders-Network/FCT-DCIP-BACKEND/pull/12)
 | P0-20 | 🔴 | Fix stored XSS in `SARReportGenerator.tsx` | No |
 | P0-21 | 🟡 | Remove hardcoded API key fallbacks (check Vercel env first) | No |
 | P0-22 | 🔴 | Swap EgolePay keys and new `API_KEY` in Vercel env during rotation | Yes |
