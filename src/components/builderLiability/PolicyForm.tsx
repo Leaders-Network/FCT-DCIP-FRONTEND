@@ -641,10 +641,15 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     };
   };
 
-  const formIsComplete = React.useMemo(
-    () => FORM_TABS.every((tab) => getTabValidationErrors(tab).length === 0),
+  const incompleteSections = React.useMemo(
+    () =>
+      FORM_TABS.map((tab) => ({
+        tab,
+        errors: getTabValidationErrors(tab),
+      })).filter(({ errors }) => errors.length > 0),
     [formData, hasAssessorConsultant],
   );
+  const formIsComplete = incompleteSections.length === 0;
 
   const handleInputChange = (
     field: keyof BuilderLiabilityPolicyFormData,
@@ -1610,7 +1615,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                       handleInputChange("assessorName", e.target.value)
                     }
                     placeholder="Enter assessor or consultant name"
-                    required
+                    required={hasAssessorConsultant}
+                    disabled={!hasAssessorConsultant}
                   />
                   <p className="mt-1 text-sm text-gray-500">
                     Enter the assessor or consultant&apos;s full name for this
@@ -1624,6 +1630,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     onValueChange={(value) =>
                       handleInputChange("professionalBody", value)
                     }
+                    disabled={!hasAssessorConsultant}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select regulatory body" />
@@ -1658,7 +1665,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                       )
                     }
                     placeholder="Enter assessor or consultant registration number"
-                    required
+                    required={hasAssessorConsultant}
+                    disabled={!hasAssessorConsultant}
                   />
                   <p className="mt-1 text-sm text-gray-500">
                     Enter the registration number issued by the selected
@@ -1680,7 +1688,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                         )
                       }
                       placeholder="Enter regulatory body name"
-                      required
+                      required={hasAssessorConsultant}
+                      disabled={!hasAssessorConsultant}
                     />
                   </div>
                 )}
@@ -1695,6 +1704,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                       handleInputChange("practiceLicenseNumber", e.target.value)
                     }
                     placeholder="Enter valid practice license number"
+                    disabled={!hasAssessorConsultant}
                   />
                   <p className="mt-1 text-sm text-gray-500">
                     Provide the assessor or consultant&apos;s current and valid
@@ -1712,7 +1722,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     onChange={(e) =>
                       handleInputChange("yearOfRegistration", e.target.value)
                     }
-                    required
+                    required={hasAssessorConsultant}
+                    disabled={!hasAssessorConsultant}
                   />
                 </div>
                 <div>
@@ -1726,6 +1737,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                       handleInputChange("areaOfSpecialization", e.target.value)
                     }
                     placeholder="e.g. Structural engineering"
+                    disabled={!hasAssessorConsultant}
                   />
                 </div>
                 <div>
@@ -1735,6 +1747,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     onValueChange={(value) =>
                       handleInputChange("staffStrength", value)
                     }
+                    disabled={!hasAssessorConsultant}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select staff strength" />
@@ -2669,9 +2682,17 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
                     Application Incomplete
                   </p>
                   <p className="text-xs text-amber-700 mt-1">
-                    Please review previous sections and ensure all required
-                    fields are filled out before submitting.
+                    The following fields still need attention. You can also
+                    click Submit Application to open the first affected section.
                   </p>
+                  <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-amber-800">
+                    {incompleteSections.map(({ tab, errors }) => (
+                      <li key={tab}>
+                        <span className="font-semibold capitalize">{tab}:</span>{" "}
+                        {errors.join(" ")}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>
@@ -2716,7 +2737,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
               ) : (
                 <Button
                   type="submit"
-                  disabled={loading || !formIsComplete}
+                  disabled={loading}
                   className="flex-1 sm:flex-none rounded-full px-8 bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
                 >
                   {loading ? (
