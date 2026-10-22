@@ -314,8 +314,8 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
     if (!agis || agis.trim() === '') return false;
     
     const cleanAGIS = agis.trim().toUpperCase();
-    // AGIS should be alphanumeric and at least 3 characters
-    return /^[A-Z0-9]{3,}$/.test(cleanAGIS);
+    // Plot numbers may be a single digit/letter or an alphanumeric reference.
+    return /^[A-Z0-9]+$/.test(cleanAGIS);
   };
   const isValidNumber = (value: unknown) => {
     if (typeof value === "string" && value.trim() === "") {
@@ -600,7 +600,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
         !isBlank(formData.agisNo) && 
         !isValidAGIS(formData.agisNo)
       ) {
-        errors.push("Plot Number should be at least 3 alphanumeric characters.");
+        errors.push("Plot Number should contain only letters and numbers.");
       }
     }
 
