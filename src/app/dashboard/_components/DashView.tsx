@@ -233,7 +233,10 @@ const Dashview = () => {
           const isPaid = payStatus === 'paid';
           const isRejected = payStatus === 'rejected' || payStatus === 'failed' || status === 'rejected';
           const isCompleted = status === 'completed' || isPaid;
-          const isPaymentDue = status === 'payment_pending' || payStatus === 'pending';
+          const isPaymentDue =
+            status === 'payment_pending' ||
+            payStatus === 'pending' ||
+            payStatus === 'pending_verification';
           const isApproved = isPaid || status === 'approved' || status === 'completed';
           const isPending = ['payment_pending', 'submitted', 'draft', 'requires_more_info', 'sent_to_user', 'surveyed', 'approved', 'revision_required'].includes(status);
           const isAssigned = status === 'assigned';

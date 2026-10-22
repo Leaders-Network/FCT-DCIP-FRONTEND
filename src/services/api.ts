@@ -306,11 +306,11 @@ export const resetPasswordOTP = (email: string) =>
 export const verifyOTP = (email: string, otp: string) =>
   api.post("/auth/verify-otp-employee", { email, otp });
 
-export const resetPassword = (newpassword: string) =>
-  api.patch("/auth/employee-reset-password", { newpassword });
+export const resetPassword = (newpassword: string, resetToken: string) =>
+  api.patch("/auth/employee-reset-password", { newpassword, resetToken });
 
-export const verifyOTPAndResetPassword = (email: string, otp: string, newpassword: string) =>
-  api.patch("/auth/employee-reset-password", { email, otp, newpassword });
+export const verifyOTPAndResetPassword = (email: string, resetToken: string, newpassword: string) =>
+  api.patch("/auth/employee-reset-password", { email, resetToken, newpassword });
 
 export const resendOTP = (email: string) =>
   api.post("/auth/resend-otp", { email });
