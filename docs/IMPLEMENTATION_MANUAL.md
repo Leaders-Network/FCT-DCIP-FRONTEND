@@ -14,29 +14,23 @@ Read **Part 1 — Production safety protocol** there before starting any item. T
 ## Items with frontend work
 | ID | Risk | Summary | Coordinate with backend? |
 |---|---|---|---|
-| P0-09 | 🟢 | Remove debug/test pages; delete `utils/niaTokenSetup.ts`, `utils/testNIALogin.ts`; remove EgolePay key logs in `PolicyList.tsx` | No | ((#11) PR - https://github.com/Leaders-Network/FCT-DCIP-BACKEND/pull/11)
-| P0-10 (Migrate stage) | 🔴 | Reset-password screens send `resetToken` | Yes — after BE "Expand" | ((#12) PR - https://github.com/Leaders-Network/FCT-DCIP-BACKEND/pull/12)
-| P0-12 (Code staged; rollout pending) | 🔴 | Display `pending_verification`, keep verification polling active, and warn citizens not to pay twice | Yes — deploy with BE flag off first |
-| P0-20 | 🔴 | Fix stored XSS in `SARReportGenerator.tsx` | No |
-| P0-21 | 🟡 | Remove hardcoded API key fallbacks (check Vercel env first) | No |
-| P0-22 | 🔴 | Swap EgolePay keys and new `API_KEY` in Vercel env during rotation | Yes |
-| P0-23 | 🟢 | Purge committed `.env` from git history (after rotation) | No |
-| P2-19 | 🟡 | Remove calls/screens for non-existent backend routes | Confirm screens with AMMC |
-| P2-20 | 🟡 | One API client, one portal per PR | Later uses BE OpenAPI (P2-14) |
-| P2-21 | 🟡 | One session helper; no URL/super-admin token guessing | No |
-| P2-22 | 🟡 | `src/middleware.ts` portal guards (UX only) | No |
-| P2-23 | 🟢 | Remove clutter & unused components (verify with `knip`) | No |
-| P2-24 | 🟡 | Break up god files; merge duplicate shells / NIA–AMMC pairs | No |
-| P2-25 | 🟢 | ESLint flat config, `ignoreDuringBuilds: false`, dedupe types | No |
-| P3-01 / P3-02 | 🔴/🟡 | Cookie-based sessions; stop storing tokens in `localStorage` | Yes — expand/contract |
-| P3-11 | 🟡 | Security headers; CSP in Report-Only first | No |
-| P3-12 | 🟡 | EgolePay: merchant ID from env, amount/reference from backend | Yes |
-| P4-04 | — | Playwright end-to-end tests on staging | — |
-| P4-08 | — | CI: lint, type-check, build, gitleaks, CodeQL | — |
+| [x] P0-09 | 🟢 | Remove debug/test pages; delete `utils/niaTokenSetup.ts`, `utils/testNIALogin.ts`; remove EgolePay key logs in `PolicyList.tsx` | No |
+| [x] P0-10 (Migrate stage) | 🔴 | Reset-password screens send `resetToken` — implemented and tested | Yes — after BE "Expand" |
+| [ ] P0-20 | 🔴 | Fix stored XSS in `SARReportGenerator.tsx` | No |
+| [ ] P0-21 | 🟡 | Remove hardcoded API key fallbacks (check Vercel env first) | No |
+| [ ] P0-22 | 🔴 | Swap EgolePay keys and new `API_KEY` in Vercel env during rotation | Yes |
+| [ ] P0-23 | 🟢 | Purge committed `.env` from git history (after rotation) | No |
+| [ ] P2-19 | 🟡 | Remove calls/screens for non-existent backend routes | Confirm screens with AMMC |
+| [ ] P2-20 | 🟡 | One API client, one portal per PR | Later uses BE OpenAPI (P2-14) |
+| [ ] P2-21 | 🟡 | One session helper; no URL/super-admin token guessing | No |
+| [ ] P2-22 | 🟡 | `src/middleware.ts` portal guards (UX only) | No |
+| [ ] P2-23 | 🟢 | Remove clutter & unused components (verify with `knip`) | No |
+| [ ] P2-24 | 🟡 | Break up god files; merge duplicate shells / NIA–AMMC pairs | No |
+| [ ] P2-25 | 🟢 | ESLint flat config, `ignoreDuringBuilds: false`, dedupe types | No |
+| [ ] P3-01 / P3-02 | 🔴/🟡 | Cookie-based sessions; stop storing tokens in `localStorage` | Yes — expand/contract |
+| [ ] P3-11 | 🟡 | Security headers; CSP in Report-Only first | No |
+| [ ] P3-12 | 🟡 | EgolePay: merchant ID from env, amount/reference from backend | Yes |
+| [ ] P4-04 | — | Playwright end-to-end tests on staging | — |
+| [ ] P4-08 | — | CI: lint, type-check, build, gitleaks, CodeQL | — |
 
-## P0-12 frontend tracking
-
-- [x] Add the `pending_verification` payment type and citizen/admin status presentation.
-- [x] Keep a pending confirmation in the polling flow and show a do-not-repay message.
-- [ ] Validate the full EgolePay callback → pending/verified → NIIP flow against the deployed backend with `ENFORCE_PAYMENT_VERIFICATION=false`.
-- [ ] Enable enforcement only after the backend measurement, written-provider-evidence and seven-day observe gates pass.
+- [x] **P0-10 migrate implementation (2026-10-22):** implemented and locally tested on `item/P0-10-reset-token`. Reset screens retain the `resetToken` returned by OTP verification and submit it with the password change; the remaining legacy API helper does the same. Deployment must still follow backend expand → frontend staging verification → backend contract.
