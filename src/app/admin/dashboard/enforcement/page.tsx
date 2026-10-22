@@ -435,6 +435,13 @@ const EnforcementPage = () => {
           Paid
         </span>
       );
+    } else if (paymentStatus === 'pending_verification') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+          <AlertTriangle className="w-3 h-3 mr-1" />
+          Verification Pending
+        </span>
+      );
     } else if (['pending', 'processing', 'initialized'].includes(paymentStatus || '')) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">

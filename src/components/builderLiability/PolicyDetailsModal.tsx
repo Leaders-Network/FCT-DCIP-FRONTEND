@@ -348,7 +348,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
     const isPaymentPaid = paymentStatusToken === 'paid' || Boolean(paymentInfo.paidAt);
     const isPaymentPending =
         !isPaymentPaid &&
-        (['pending', 'not_started'].includes(paymentStatusToken) ||
+        (['pending', 'pending_verification', 'not_started'].includes(paymentStatusToken) ||
             actualStatus === 'payment_pending');
     const paymentStatusLabel = paymentStatusToken
         .replace(/_/g, ' ')

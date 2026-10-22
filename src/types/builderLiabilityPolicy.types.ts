@@ -213,7 +213,7 @@ export interface MetaInfo {
 }
 
 export interface PaymentInfo {
-    status: 'not_started' | 'pending' | 'paid' | 'rejected' | 'failed';
+    status: 'not_started' | 'pending' | 'pending_verification' | 'paid' | 'rejected' | 'failed';
     amount?: number;
     transactionId?: string;
     method?: 'external_payment_service' | 'bank_transfer' | 'card' | 'other';
