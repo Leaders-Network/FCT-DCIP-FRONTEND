@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [bolajeee]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # TypeScript compile check: catches type errors without producing output
+      - run: npm run type-check
+
+      - run: npm test
+
+      # Real production build. Dummy values are fine: NEXT_PUBLIC_* vars only get
+      # inlined into the bundle, and nothing here calls a live API.
+      # TODO: `npm run lint` is broken (ESLint 9 installed, but next lint on Next 14
+      # expects ESLint 8). Fix the toolchain, then add a lint step here.
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://example.invalid/api/v1
+          NEXT_PUBLIC_API_KEY: ci
+          NEXT_TELEMETRY_DISABLED: 1
