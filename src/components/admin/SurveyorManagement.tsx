@@ -16,6 +16,11 @@ import { Surveyor as BaseSurveyor } from "@/types/api.types";
 import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Swal from "sweetalert2"
+import { Pagination } from "@/components/common/Pagination";
+import { useClientPagination } from "@/hooks/useClientPagination";
+
+// Multiples of 12 so the 1, 2 and 3 column card grids always fill their rows.
+const SURVEYOR_PAGE_SIZES = [12, 24, 48, 96];
 
 type UserIdType = {
   _id?: string;
@@ -381,6 +386,12 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
     return filtered;
   }, [surveyors, searchTerm, statusFilter, specializationFilter]);
 
+  const pagination = useClientPagination(
+    filteredSurveyors,
+    SURVEYOR_PAGE_SIZES[0],
+    `${searchTerm}|${statusFilter}|${specializationFilter}`
+  );
+
   const getStatusBadge = (status: string) => {
     const colors = {
       Active: "bg-green-100 text-green-800",
@@ -728,7 +739,7 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
       )}
 
       <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${fetching ? 'opacity-50 pointer-events-none' : ''}`}>
-        {filteredSurveyors.map((surveyor) => (
+        {pagination.pageItems.map((surveyor) => (
           <div key={surveyor._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -862,6 +873,19 @@ const SurveyorManagement: React.FC<SurveyorManagementProps> = ({
           </div>
         ))}
       </div>
+
+      {!fetching && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalRecords={pagination.totalRecords}
+          limit={pagination.limit}
+          onPageChange={pagination.setPage}
+          onLimitChange={pagination.setLimit}
+          limitOptions={SURVEYOR_PAGE_SIZES}
+          className="mt-6 rounded-lg border shadow-sm"
+        />
+      )}
 
       {filteredSurveyors.length === 0 && (
         <div className="text-center py-12">

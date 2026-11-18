@@ -66,8 +66,9 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     isAdmin = false,
     onPolicySelect
 }) => {
-    const { policies, loading, error, fetchPolicies } = useBuilderLiabilityPolicies(isAdmin);
+    const { policies, pagination, loading, error, fetchPolicies } = useBuilderLiabilityPolicies(isAdmin);
 
+    const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
@@ -94,6 +95,10 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
     const egolePayMerchantId =
         process.env.EGOLEPAY_MERCHANT_ID ||
         '22C811B4-EF62-48DA-8F35-E714F3992BC4';
+
+    useEffect(() => {
+        fetchPolicies({ page });
+    }, [page, fetchPolicies]);
 
     // Seed premium state from already-calculated policies so buttons don't regress on reload
     useEffect(() => {
@@ -893,6 +898,33 @@ export const BuilderLiabilityPolicyList: React.FC<PolicyListProps> = ({
                             </CardContent>
                         </Card>
                     ))}
+                </div>
+            )}
+
+            {/* Pagination */}
+            {!searchQuery && statusFilter === 'all' && priorityFilter === 'all' && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                    <p className="text-sm text-gray-600">
+                        Page {pagination.currentPage} of {pagination.totalPages} &middot; {pagination.totalPolicies} policies
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            disabled={loading || pagination.currentPage <= 1}
+                        >
+                            Previous
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPage((p) => p + 1)}
+                            disabled={loading || !pagination.hasMore}
+                        >
+                            Next
+                        </Button>
+                    </div>
                 </div>
             )}
 

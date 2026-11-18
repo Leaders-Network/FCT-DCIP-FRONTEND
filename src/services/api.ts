@@ -1958,7 +1958,9 @@ export const adminEnforcementAPI = {
     page?: number;
     limit?: number;
     search?: string;
-  }): Promise<import("@/types/builderLiabilityPolicy.types").GetPoliciesResponse> => {
+    /** YYYY-MM, matched against the payment date in WAT */
+    month?: string;
+  }): Promise<import("@/types/builderLiabilityPolicy.types").GetEnforcementPoliciesResponse<import("@/types/builderLiabilityPolicy.types").CompletedEnforcementStats>> => {
     const query = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -1977,7 +1979,9 @@ export const adminEnforcementAPI = {
     limit?: number;
     search?: string;
     hasPaymentInfo?: boolean;
-  }): Promise<import("@/types/builderLiabilityPolicy.types").GetPoliciesResponse> => {
+    /** YYYY-MM, matched against the policy creation date in WAT */
+    month?: string;
+  }): Promise<import("@/types/builderLiabilityPolicy.types").GetEnforcementPoliciesResponse<import("@/types/builderLiabilityPolicy.types").PendingEnforcementStats>> => {
     const query = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {

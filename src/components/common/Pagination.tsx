@@ -26,6 +26,8 @@ export const Pagination: React.FC<PaginationProps> = ({
     limitOptions = [10, 20, 50, 100],
     className = ""
 }) => {
+    const limitSelectId = React.useId();
+
     // Calculate displayed records range
     const startRecord = (currentPage - 1) * limit + 1;
     const endRecord = Math.min(currentPage * limit, totalRecords);
@@ -76,20 +78,20 @@ export const Pagination: React.FC<PaginationProps> = ({
     }
 
     return (
-        <div className={`flex items-center justify-between bg-white px-4 py-3 border-t border-gray-200 ${className}`}>
+        <div className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white px-4 py-3 border-t border-gray-200 ${className}`}>
             {/* Records info */}
-            <div className="flex items-center text-sm text-gray-700">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-700">
                 <span>
                     Showing {startRecord} to {endRecord} of {totalRecords} results
                 </span>
 
                 {showLimitSelector && onLimitChange && (
-                    <div className="ml-4 flex items-center">
-                        <label htmlFor="limit-select" className="mr-2 text-sm text-gray-700">
+                    <div className="flex items-center">
+                        <label htmlFor={limitSelectId} className="mr-2 text-sm text-gray-700">
                             Show:
                         </label>
                         <select
-                            id="limit-select"
+                            id={limitSelectId}
                             value={limit}
                             onChange={(e) => onLimitChange(parseInt(e.target.value))}
                             className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -105,7 +107,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             </div>
 
             {/* Pagination controls */}
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center overflow-x-auto">
                 {/* First page */}
                 <button
                     onClick={() => onPageChange(1)}

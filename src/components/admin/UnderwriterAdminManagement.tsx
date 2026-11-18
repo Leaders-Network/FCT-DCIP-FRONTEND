@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/useAuth";
 import { UnderwriterAdmin, Employee } from "@/types/api.types";
+import { Pagination } from "@/components/common/Pagination";
+import { useClientPagination } from "@/hooks/useClientPagination";
 
 // Extended UnderwriterAdmin interface for management UI with populated userId
 interface UnderwriterAdminWithUser extends Omit<UnderwriterAdmin, 'userId'> {
@@ -100,6 +102,7 @@ const UnderwriterAdminManagement = ({
         totalFirms: 0
     });
     const [showPassword, setShowPassword] = useState(false);
+    const pagination = useClientPagination(underwriterAdmins, 10, `${statusFilter}|${searchTerm}`);
     const [formData, setFormData] = useState<UnderwriterAdminFormData>({
         firstname: "",
         lastname: "",
@@ -490,7 +493,7 @@ const UnderwriterAdminManagement = ({
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {underwriterAdmins.map((admin) => (
+                            {pagination.pageItems.map((admin) => (
                                 <tr key={admin._id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -593,6 +596,17 @@ const UnderwriterAdminManagement = ({
                         </tbody>
                     </table>
                 </div>
+            )}
+
+            {!loading && (
+                <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    totalRecords={pagination.totalRecords}
+                    limit={pagination.limit}
+                    onPageChange={pagination.setPage}
+                    onLimitChange={pagination.setLimit}
+                />
             )}
         </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Shield,
@@ -24,8 +24,18 @@ import {
   ExternalLink
 } from "lucide-react";
 import { adminEnforcementAPI, downloadPolicyCertificate, downloadProtectedFileByPath } from "@/services/api";
-import type { BuilderLiabilityPolicy } from "@/types/builderLiabilityPolicy.types";
+import type {
+  BuilderLiabilityPolicy,
+  CompletedEnforcementStats,
+  PendingEnforcementStats
+} from "@/types/builderLiabilityPolicy.types";
 import { getProjectEstimateBand } from "@/utils/builderLiability";
+import { Pagination } from "@/components/common/Pagination";
+import { DEFAULT_PAGE_SIZE_OPTIONS } from "@/hooks/useClientPagination";
+import { useDebounce } from "@/hooks/useDebounce";
+import { recentMonths } from "@/utils/pagination";
+
+const MONTH_OPTIONS = recentMonths(24);
 
 interface EnforcementPolicy {
   _id: string;
@@ -85,7 +95,16 @@ const EnforcementPage = () => {
   const [manualConfirming, setManualConfirming] = useState<string | null>(null);
   const [downloadingDocument, setDownloadingDocument] = useState<string | null>(null);
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [month, setMonth] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [completedStats, setCompletedStats] = useState<CompletedEnforcementStats | null>(null);
+  const [pendingStats, setPendingStats] = useState<PendingEnforcementStats | null>(null);
+  const debouncedSearch = useDebounce(searchQuery.trim(), 400);
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const latestRequest = useRef(0);
 
   const mapPolicyForDisplay = (policy: BuilderLiabilityPolicy): EnforcementPolicy => ({
     _id: policy._id,
@@ -114,26 +133,49 @@ const EnforcementPage = () => {
     niipPayload: (policy as any).niipPayload,
   });
 
-  const fetchPolicies = async () => {
+  const fetchPolicies = useCallback(async () => {
+    // Ignore responses that arrive after a newer request has been sent.
+    const requestId = ++latestRequest.current;
+    const params = { page, limit, search: debouncedSearch, month };
+
     try {
       setLoading(true);
-      let response;
-      
+      let fetchedPolicies: BuilderLiabilityPolicy[] = [];
+      let pagination;
+
       if (viewMode === 'completed') {
-        response = await adminEnforcementAPI.getCompletedPolicies({ page: 1, limit: 250 });
+        const response = await adminEnforcementAPI.getCompletedPolicies(params);
+        if (requestId !== latestRequest.current) return;
+        fetchedPolicies = response.data?.policies || [];
+        pagination = response.data?.pagination;
+        setCompletedStats(response.data?.stats ?? null);
       } else {
-        response = await adminEnforcementAPI.getPendingPaymentPolicies({ page: 1, limit: 250, hasPaymentInfo: true });
+        const response = await adminEnforcementAPI.getPendingPaymentPolicies({ ...params, hasPaymentInfo: true });
+        if (requestId !== latestRequest.current) return;
+        fetchedPolicies = response.data?.policies || [];
+        pagination = response.data?.pagination;
+        setPendingStats(response.data?.stats ?? null);
       }
-      
-      const fetchedPolicies = response.data?.policies || [];
+
       setPolicies(fetchedPolicies.map(mapPolicyForDisplay));
+      setTotalPages(Math.max(pagination?.totalPages || 1, 1));
+      setTotalRecords(pagination?.totalPolicies ?? fetchedPolicies.length);
+
+      // A refresh after confirming the last item on the last page can leave
+      // the current page past the end; step back to the new last page.
+      if (pagination && pagination.totalPages > 0 && page > pagination.totalPages) {
+        setPage(pagination.totalPages);
+      }
     } catch (error) {
+      if (requestId !== latestRequest.current) return;
       console.error('Error fetching policies:', error);
       setPolicies([]);
+      setTotalPages(1);
+      setTotalRecords(0);
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
-  };
+  }, [viewMode, page, limit, debouncedSearch, month]);
 
   const handleConfirmPayment = async (policyId: string) => {
     try {
@@ -309,7 +351,7 @@ const EnforcementPage = () => {
   };
 
   const selectAllPolicies = () => {
-    const confirmablePolicies = filteredPolicies.filter(p => p.canConfirm).map(p => p._id);
+    const confirmablePolicies = policies.filter(p => p.canConfirm).map(p => p._id);
     setSelectedPolicies(new Set(confirmablePolicies));
   };
 
@@ -317,9 +359,22 @@ const EnforcementPage = () => {
     setSelectedPolicies(new Set());
   };
 
+  // A new view, month or search starts again from page 1 with nothing selected.
+  useEffect(() => {
+    setPage(1);
+    setSelectedPolicies(new Set());
+  }, [viewMode, month, debouncedSearch]);
+
   useEffect(() => {
     fetchPolicies();
-  }, [viewMode]);
+  }, [fetchPolicies]);
+
+  const handleLimitChange = (nextLimit: number) => {
+    setLimit(nextLimit);
+    setPage(1);
+  };
+
+  const selectedMonthLabel = MONTH_OPTIONS.find(option => option.value === month)?.label;
 
   // Lock scroll when modal is open
   useEffect(() => {
@@ -352,41 +407,25 @@ const EnforcementPage = () => {
     };
   }, [showModal]);
 
-  const filteredPolicies = useMemo(() => {
-    if (!searchQuery) {
-      return policies;
-    }
-
-    const normalizedSearch = searchQuery.toLowerCase();
-    return policies.filter((policy) =>
-      policy.policyNumber?.toLowerCase().includes(normalizedSearch) ||
-      policy.builderName.toLowerCase().includes(normalizedSearch) ||
-      policy.email.toLowerCase().includes(normalizedSearch) ||
-      policy.projectAddress.toLowerCase().includes(normalizedSearch)
-    );
-  }, [policies, searchQuery]);
-
+  // Completed totals come from the server and cover every matching policy.
+  // Pending "ready" and "review" counts can only be worked out per page.
   const stats = useMemo(() => {
-    const today = new Date().toDateString();
-
     if (viewMode === 'completed') {
       return {
-        totalPolicies: policies.length,
-        totalSumInsured: policies.reduce((sum, policy) => sum + (policy.sumInsured || 0), 0),
-        totalPremiumPaid: policies.reduce((sum, policy) => sum + Number(policy.paymentInfo?.amount || 0), 0),
-        paidToday: policies.filter((policy) =>
-          policy.paymentInfo?.paidAt && new Date(policy.paymentInfo.paidAt).toDateString() === today
-        ).length,
+        totalPolicies: completedStats?.totalPolicies ?? totalRecords,
+        totalSumInsured: completedStats?.totalSumInsured ?? 0,
+        totalPremiumPaid: completedStats?.totalPremiumPaid ?? 0,
+        paidToday: completedStats?.paidToday ?? 0,
       };
     } else {
       return {
-        totalPending: policies.length,
+        totalPending: pendingStats?.totalPending ?? totalRecords,
         canConfirm: policies.filter(p => p.canConfirm).length,
         needsReview: policies.filter(p => !p.canConfirm).length,
         selected: selectedPolicies.size,
       };
     }
-  }, [policies, selectedPolicies, viewMode]);
+  }, [policies, selectedPolicies, viewMode, completedStats, pendingStats, totalRecords]);
 
   const formatCurrency = (amount?: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -602,7 +641,7 @@ const EnforcementPage = () => {
                     <CheckSquare className="h-5 w-5 text-green-600" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-600">Ready to Confirm</p>
+                    <p className="text-sm font-medium text-gray-600">Ready to Confirm <span className="font-normal text-gray-400">(this page)</span></p>
                     <p className="text-xl font-semibold text-gray-900">{(stats as any).canConfirm}</p>
                   </div>
                 </div>
@@ -614,7 +653,7 @@ const EnforcementPage = () => {
                     <XCircle className="h-5 w-5 text-red-600" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-600">Need Review</p>
+                    <p className="text-sm font-medium text-gray-600">Need Review <span className="font-normal text-gray-400">(this page)</span></p>
                     <p className="text-xl font-semibold text-gray-900">{(stats as any).needsReview}</p>
                   </div>
                 </div>
@@ -684,15 +723,43 @@ const EnforcementPage = () => {
         )}
 
         <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by policy number, builder name, email, or address..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="flex flex-col gap-3 md:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by policy number, builder name, email, or address..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="relative md:w-56">
+              <Calendar className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <select
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                aria-label="Filter by month"
+                title={viewMode === 'completed' ? 'Filter by the month the payment was made' : 'Filter by the month the policy was created'}
+                className="w-full appearance-none rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-8 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All months</option>
+                {MONTH_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {month && (
+              <button
+                onClick={() => setMonth("")}
+                className="flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              >
+                <X className="h-4 w-4" />
+                Clear month
+              </button>
+            )}
           </div>
         </div>
 
@@ -700,10 +767,12 @@ const EnforcementPage = () => {
           {loading ? (
             <div className="text-center py-8">
               <RefreshCw className="w-8 h-8 animate-spin mx-auto text-blue-600 mb-2" />
-              <p className="text-gray-600">Loading completed policies...</p>
+              <p className="text-gray-600">
+                {viewMode === 'completed' ? 'Loading completed policies...' : 'Loading pending payments...'}
+              </p>
             </div>
-          ) : filteredPolicies.length > 0 ? (
-            filteredPolicies.map((policy) => (
+          ) : policies.length > 0 ? (
+            policies.map((policy) => (
               <div key={policy._id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-start space-x-3 flex-1">
@@ -877,8 +946,9 @@ const EnforcementPage = () => {
                 {viewMode === 'completed' ? 'No completed paid policies found' : 'No pending payment policies found'}
               </h3>
               <p className="text-gray-500">
-                {searchQuery ? "Try adjusting your search." : 
-                  viewMode === 'completed' 
+                {searchQuery || month
+                  ? `Nothing matches${selectedMonthLabel ? ` in ${selectedMonthLabel}` : ''}${searchQuery ? ' for this search' : ''}. Try another month or search.`
+                  : viewMode === 'completed'
                     ? "Completed and paid enforcement records will appear here."
                     : "Policies with pending payments that need confirmation will appear here."
                 }
@@ -886,6 +956,19 @@ const EnforcementPage = () => {
             </div>
           )}
         </div>
+
+        {!loading && policies.length > 0 && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            limit={limit}
+            onPageChange={setPage}
+            onLimitChange={handleLimitChange}
+            limitOptions={DEFAULT_PAGE_SIZE_OPTIONS}
+            className="mt-4 rounded-lg border shadow-sm"
+          />
+        )}
 
         {showModal && selectedPolicy && typeof window !== 'undefined' && createPortal(
           <div 

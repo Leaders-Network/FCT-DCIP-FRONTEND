@@ -410,6 +410,25 @@ export interface GetPoliciesResponse {
     };
 }
 
+// Totals across every policy matching the filters, not just the current page.
+export interface CompletedEnforcementStats {
+    totalPolicies: number;
+    totalSumInsured: number;
+    totalPremiumPaid: number;
+    paidToday: number;
+}
+
+// canConfirm and needsManualReview cover the returned page only.
+export interface PendingEnforcementStats {
+    totalPending: number;
+    canConfirm: number;
+    needsManualReview: number;
+}
+
+export interface GetEnforcementPoliciesResponse<Stats> extends GetPoliciesResponse {
+    data: GetPoliciesResponse['data'] & { stats?: Stats };
+}
+
 export interface UpdatePolicyResponse {
     success: boolean;
     message: string;
