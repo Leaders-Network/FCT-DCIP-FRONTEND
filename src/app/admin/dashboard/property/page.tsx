@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { getAdminProperties } from "@/services/api";
 import { toast } from "sonner";
+import { Pagination } from "@/components/common/Pagination";
+import { useClientPagination } from "@/hooks/useClientPagination";
 
 interface AdminProperty {
   _id: string;
@@ -38,7 +40,15 @@ export default function PropertiesPage() {
   const [showActionsDropdown, setShowActionsDropdown] = useState<string | null>(null)
   const [propertyToDelete, setPropertyToDelete] = useState<AdminProperty | null>(null)
 
-  const statusOptions = ["Active", "Expired", "Blacklisted", "Processing", "Inactive", "Pending", "Cancelled"]
+  // Deleting a row keeps the current page (it is clamped if it empties);
+  // changing a filter or search goes back to page 1.
+  const pagination = useClientPagination(
+    filteredProperties,
+    20,
+    `${activeFilters.join(",")}|${searchKeyword}|${dateFrom}|${dateTo}`
+  )
+
+  const statusOptions = ["Active","Expired", "Blacklisted", "Processing", "Inactive", "Pending", "Cancelled"]
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -393,8 +403,8 @@ export default function PropertiesPage() {
                     </td>
                   </tr>
                 ))
-              ) : filteredProperties.map((property, index) => (
-                <tr key={index} className="hover:bg-gray-50">
+              ) : pagination.pageItems.map((property) => (
+                <tr key={property._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Checkbox
                       checked={selectedProperties.includes(property._id)}
@@ -465,6 +475,17 @@ export default function PropertiesPage() {
             </tbody>
           </table>
         </div>
+
+        {!loading && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalRecords={pagination.totalRecords}
+            limit={pagination.limit}
+            onPageChange={pagination.setPage}
+            onLimitChange={pagination.setLimit}
+          />
+        )}
       </div>
 
       <AddNewProperty isOpen={showPropertySidebar} onClose={() => setShowPropertySidebar(false)} />

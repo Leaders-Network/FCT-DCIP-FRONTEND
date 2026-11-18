@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Pagination } from "@/components/common/Pagination";
+import { useClientPagination } from "@/hooks/useClientPagination";
 import {
   Search,
   RefreshCw,
@@ -335,6 +337,7 @@ const AutomatedAssignmentsPage = () => {
   const [filters, setFilters] = useState({ status: "all", priority: "all", search: "" });
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [isDownloadingDocs, setIsDownloadingDocs] = useState(false);
+  const pagination = useClientPagination(assignments, 20, filters);
 
   const handleDownloadDocs = async (assignmentId: string) => {
     setIsDownloadingDocs(true);
@@ -537,7 +540,7 @@ const AutomatedAssignmentsPage = () => {
               <p className="col-span-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 text-right">Action</p>
             </div>
 
-            {assignments.map((asgn) => {
+            {pagination.pageItems.map((asgn) => {
               const overdue = isOverdue(asgn.deadline, asgn.status);
               return (
                 <div
@@ -603,10 +606,22 @@ const AutomatedAssignmentsPage = () => {
             })}
           </div>
         )}
+
+        {!loading && !error && assignments.length > 0 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalRecords={pagination.totalRecords}
+            limit={pagination.limit}
+            onPageChange={pagination.setPage}
+            onLimitChange={pagination.setLimit}
+            className="rounded-b-[1.5rem] border-slate-100 bg-transparent"
+          />
+        )}
       </div>
 
-      {/* Floating count */}
-      {!loading && assignments.length > 0 && (
+      {/* Floating count (the paginator shows its own once there is more than one page) */}
+      {!loading && assignments.length > 0 && pagination.totalPages <= 1 && (
         <p className="text-right text-xs text-slate-400">
           Showing {assignments.length} assignment{assignments.length !== 1 ? "s" : ""}
         </p>
