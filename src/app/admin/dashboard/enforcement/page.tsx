@@ -24,6 +24,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { adminEnforcementAPI, downloadPolicyCertificate, downloadProtectedFileByPath } from "@/services/api";
+import type { EnforcementConfirmationOutcome } from "@/services/api";
 import type {
   BuilderLiabilityPolicy,
   CompletedEnforcementStats,
@@ -36,6 +37,19 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { recentMonths } from "@/utils/pagination";
 
 const MONTH_OPTIONS = recentMonths(24);
+
+const BATCH_OUTCOME_LABELS: Record<EnforcementConfirmationOutcome, string> = {
+  confirmed: 'Confirmed by EgolePay, NIIP withdrawal succeeded',
+  already_paid: 'Already paid, nothing changed',
+  niip_failed: 'Confirmed by EgolePay, but NIIP withdrawal failed (retry from the policy)',
+  pending_verification: 'EgolePay returned no amount; held as pending verification',
+  not_confirmed: 'EgolePay has not confirmed this payment; nothing changed',
+  amount_mismatch: 'Amount does not match the premium; nothing changed',
+  no_premium: 'Premium not calculated yet; nothing changed',
+  missing_details: 'No EgolePay reference on this policy; use manual bank confirmation',
+  not_found: 'Policy not found',
+  error: 'Error'
+};
 
 interface EnforcementPolicy {
   _id: string;
@@ -250,20 +264,30 @@ const EnforcementPage = () => {
     try {
       setBatchConfirming(true);
       const result = await adminEnforcementAPI.confirmPaymentsBatch({
-        policyIds: Array.from(selectedPolicies),
-        autoExtract: true
+        policyIds: Array.from(selectedPolicies)
       });
-      
-      if (result.success) {
-        alert(`Batch confirmation completed! ${result.data.policiesUpdated} policies updated successfully.`);
-        setSelectedPolicies(new Set());
-        await fetchPolicies();
-      } else {
-        alert(`Batch confirmation failed: ${result.error || result.message}`);
-      }
+
+      const results = result.data?.results ?? [];
+      const lines = results.map(item => {
+        const label = item.policyNumber || item.policyId;
+        const detail = BATCH_OUTCOME_LABELS[item.outcome] || item.outcome;
+        const extra = item.outcome === 'amount_mismatch'
+          ? ` (expected ${item.expectedAmount}, EgolePay reported ${item.verifiedAmount})`
+          : item.error ? ` (${item.error})` : '';
+        return `• ${label}: ${detail}${extra}`;
+      });
+
+      alert(
+        `${result.message}\n\n` +
+        (lines.length > 0 ? lines.join('\n') : (result.error || 'No results returned.'))
+      );
+
+      // Some policies may have changed even when others failed, so always refresh.
+      setSelectedPolicies(new Set());
+      await fetchPolicies();
     } catch (error: any) {
       console.error('Batch confirmation error:', error);
-      alert(`Error in batch confirmation: ${error.message || 'Unknown error'}`);
+      alert(`Error in batch confirmation: ${error.response?.data?.message || error.message || 'Unknown error'}`);
     } finally {
       setBatchConfirming(false);
     }
