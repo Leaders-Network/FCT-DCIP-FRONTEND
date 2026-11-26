@@ -48,7 +48,9 @@ const NewPassword = () => {
 
       // Determine the correct route based on current path
       const currentPath = window.location.pathname;
-      let successRoute = '/admin/registration-success';
+      // Admins get their own reset-success page; /admin/registration-success is
+      // the employee-registration screen, which links to the dashboard.
+      let successRoute = '/admin/reset-success';
       if (currentPath.includes('/nia-admin')) {
         successRoute = '/nia-admin/registration-success';
       } else if (currentPath.includes('/underwriter')) {
