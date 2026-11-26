@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { adminApi } from '@/services/api'
+import { adminApi, getAvailableRoles } from '@/services/api'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Switch } from '@/components/ui/switch'
@@ -84,6 +84,17 @@ interface Employee {
 
 type UserManagementItem = Administrator | User | Employee;
 
+type RoleOption = { _id: string; role: string };
+
+// /auth/available-roles returns { availableRoles: [{ _id, role }] }; entries can be
+// null when a seeded role (e.g. Staff) does not exist.
+const extractRoleOptions = (response: unknown): RoleOption[] => {
+  const list = (response as { availableRoles?: unknown })?.availableRoles;
+  if (!Array.isArray(list)) return [];
+  return list.filter((item): item is RoleOption =>
+    Boolean(item && typeof item._id === 'string' && typeof item.role === 'string'));
+};
+
 export default function AdministratorsPage() {
   const [showAdminSidebar, setShowAdminSidebar] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -93,6 +104,10 @@ export default function AdministratorsPage() {
   const [users, setUsers] = useState<User[]>([])
   const [niaUsers, setNiaUsers] = useState<Employee[]>([])
   const [underwriterUsers, setUnderwriterUsers] = useState<Employee[]>([])
+  // Roles the signed-in admin may assign, from /auth/available-roles (real Role ids).
+  const [assignableRoles, setAssignableRoles] = useState<RoleOption[]>([])
+  // Values when the edit modal opened, so only real changes are sent.
+  const [editOriginal, setEditOriginal] = useState<{ roleId: string; roleName: string; status: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -241,6 +256,9 @@ export default function AdministratorsPage() {
 
   useEffect(() => {
     fetchAllData()
+    getAvailableRoles()
+      .then(response => setAssignableRoles(extractRoleOptions(response)))
+      .catch(() => setAssignableRoles([]))
   }, [])
 
   const handleDeleteAdministrator = async (adminId: string) => {
@@ -288,14 +306,19 @@ export default function AdministratorsPage() {
       lastName = admin.lastname || '';
     }
 
+    const roleName = 'employeeRole' in admin ? admin.employeeRole?.role || "" : 'role' in admin ? admin.role || "" : "";
+    const roleId = 'employeeRole' in admin ? admin.employeeRole?._id || "" : "";
+    const status = 'employeeStatus' in admin ? admin.employeeStatus?.status || "Active" : 'isEmailVerified' in admin ? (admin.isEmailVerified ? "Active" : "Inactive") : "Active";
+    setEditOriginal({ roleId, roleName, status })
+
     setFormData({
       firstname: firstName,
       lastname: lastName,
       email: admin.email,
       phonenumber: admin.phonenumber,
-      role: 'employeeRole' in admin ? admin.employeeRole?.role || "" : 'role' in admin ? admin.role || "" : "",
-      status: 'employeeStatus' in admin ? admin.employeeStatus?.status || "Active" : 'isEmailVerified' in admin ? (admin.isEmailVerified ? "Active" : "Inactive") : "Active",
-      roleId: 'employeeRole' in admin ? admin.employeeRole?._id || "" : "",
+      role: roleName,
+      status,
+      roleId,
       statusId: 'employeeStatus' in admin ? admin.employeeStatus?._id || "active" : "active",
       userType: activeTab === 'administrators' ? 'administrator' : 
                 activeTab === 'users' ? 'user' : 
@@ -311,31 +334,52 @@ export default function AdministratorsPage() {
 
     setLoading(true)
     try {
-      const updateData = {
-        firstname: formData.firstname,
-        lastname: formData.lastname,
-        email: formData.email,
-        phonenumber: formData.phonenumber,
-        roleId: formData.roleId || formData.role,
-        statusId: formData.statusId || (formData.status === "Active" ? "active" : "inactive")
+      const statusChanged = formData.status !== editOriginal?.status
+
+      if (formData.userType === 'user') {
+        // Platform users: the endpoint reads fullname and status (no staff role).
+        await adminApi.updatePlatformUser(selectedAdmin._id, {
+          fullname: `${formData.firstname} ${formData.lastname}`.trim(),
+          email: formData.email,
+          phonenumber: formData.phonenumber,
+          ...(statusChanged ? { status: formData.status } : {})
+        })
+      } else {
+        // Staff accounts: send roleId only when an administrator's role really
+        // changed. NIA/underwriter roles are read-only here (they drive portal access).
+        const roleChanged = formData.userType === 'administrator' &&
+          Boolean(formData.roleId) && formData.roleId !== editOriginal?.roleId
+        const updateData = {
+          firstname: formData.firstname,
+          lastname: formData.lastname,
+          email: formData.email,
+          phonenumber: formData.phonenumber,
+          ...(roleChanged ? { roleId: formData.roleId } : {})
+        }
+
+        if (formData.userType === 'administrator') {
+          await adminApi.updateAdministrator(selectedAdmin._id, updateData)
+        } else if (formData.userType === 'nia') {
+          await adminApi.updateNIAUser(selectedAdmin._id, updateData)
+        } else if (formData.userType === 'underwriter') {
+          await adminApi.updateUnderwriterUser(selectedAdmin._id, { ...updateData, company: formData.cadastralZone })
+        }
+
+        // Status lives on a separate endpoint that takes the status name.
+        if (statusChanged) {
+          await adminApi.updateAdministratorStatus(selectedAdmin._id, formData.status)
+        }
       }
 
-      if (formData.userType === 'administrator') {
-        await adminApi.updateAdministrator(selectedAdmin._id, updateData)
-      } else if (formData.userType === 'user') {
-        await adminApi.updatePlatformUser(selectedAdmin._id, updateData)
-      } else if (formData.userType === 'nia') {
-        await adminApi.updateNIAUser(selectedAdmin._id, updateData)
-      } else if (formData.userType === 'underwriter') {
-        await adminApi.updateUnderwriterUser(selectedAdmin._id, { ...updateData, company: formData.cadastralZone })
-      }
-
+      toast.success('User updated successfully')
       setShowEditModal(false)
       setSelectedAdmin(null)
+      setEditOriginal(null)
 
       // Refresh data
       await fetchAllData()
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to update user')
     } finally {
       setLoading(false)
     }
@@ -776,25 +820,29 @@ export default function AdministratorsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Role <span className="text-red-500">*</span></label>
-                  <select name="role" value={formData.role} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" required>
-                    <option value="">Select a role</option>
-                    {formData.userType === 'administrator' && <option value="Admin">Admin</option>}
-                    {formData.userType === 'employee' && (
-                      <>
-                        <option value="Surveyor">Surveyor</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Clerk">Clerk</option>
-                        <option value="Analyst">Analyst</option>
-                      </>
-                    )}
-                    {formData.userType === 'user' && (
-                      <>
-                        <option value="Standard User">Standard User</option>
-                        <option value="Premium User">Premium User</option>
-                      </>
-                    )}
-                  </select>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Role</label>
+                  {formData.userType === 'administrator' ? (
+                    <select name="roleId" value={formData.roleId} onChange={handleChange} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                      {/* Keep the current role visible even when this admin can't assign it (e.g. Super-admin). */}
+                      {editOriginal?.roleId && !assignableRoles.some(option => option._id === editOriginal.roleId) && (
+                        <option value={editOriginal.roleId} disabled>{editOriginal.roleName || 'Current role'}</option>
+                      )}
+                      {!editOriginal?.roleId && <option value="">Select a role</option>}
+                      {assignableRoles.map(option => (
+                        <option key={option._id} value={option._id}>{option.role}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.userType === 'user' ? 'Citizen' : (formData.role || 'N/A')}
+                      disabled
+                      className="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600"
+                    />
+                  )}
+                  {formData.userType === 'administrator' && assignableRoles.length === 0 && (
+                    <p className="mt-1 text-xs text-slate-500">You can't change roles with your current permissions.</p>
+                  )}
                 </div>
 
                 {formData.userType === 'employee' && (
