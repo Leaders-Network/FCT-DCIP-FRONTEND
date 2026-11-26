@@ -1953,6 +1953,34 @@ export const underwriterAdminAPI = {
   }
 };
 
+// Per-policy outcome of an EgolePay-verified admin confirmation (single or batch).
+export type EnforcementConfirmationOutcome =
+  | 'confirmed'
+  | 'already_paid'
+  | 'niip_failed'
+  | 'pending_verification'
+  | 'not_confirmed'
+  | 'amount_mismatch'
+  | 'no_premium'
+  | 'missing_details'
+  | 'not_found'
+  | 'error';
+
+export interface EnforcementConfirmationResult {
+  policyId: string;
+  policyNumber?: string;
+  outcome: EnforcementConfirmationOutcome;
+  error?: string | null;
+  expectedAmount?: number;
+  verifiedAmount?: number;
+  policyStatus?: string;
+  niipWithdrawal?: {
+    success: boolean;
+    error: string | null;
+    transactionReference: string | null;
+  };
+}
+
 export const adminEnforcementAPI = {
   getCompletedPolicies: async (params?: {
     page?: number;
@@ -2002,16 +2030,7 @@ export const adminEnforcementAPI = {
   }): Promise<{
     success: boolean;
     message: string;
-    data?: {
-      policyId: string;
-      policyNumber: string;
-      previousPaymentStatus: string;
-      currentPaymentStatus: string;
-      previousPolicyStatus: string;
-      currentPolicyStatus: string;
-      confirmationDetails: any;
-      updatedAt: string;
-    };
+    data?: EnforcementConfirmationResult;
     error?: string;
   }> => {
     const response = await api.post(`/admin/enforcement/payment/confirm/${policyId}`, params || {});
@@ -2043,34 +2062,15 @@ export const adminEnforcementAPI = {
 
   confirmPaymentsBatch: async (params: {
     policyIds: string[];
-    autoExtract?: boolean;
   }): Promise<{
     success: boolean;
     message: string;
     data: {
       totalRequested: number;
       policiesFound: number;
-      paymentsProcessed: number;
-      confirmationResults: {
-        successful: number;
-        failed: number;
-      };
       policiesUpdated: number;
-      updatedPolicies: Array<{
-        policyId: string;
-        policyNumber: string;
-        updated: boolean;
-      }>;
-      extractionErrors?: Array<{
-        policyId: string;
-        policyNumber: string;
-        error: string;
-      }>;
-      updateErrors?: Array<{
-        paymentRef: string;
-        error: string;
-      }>;
-      confirmationDetails: any;
+      summary: Partial<Record<EnforcementConfirmationOutcome, number>>;
+      results: EnforcementConfirmationResult[];
     };
     error?: string;
   }> => {
