@@ -8,15 +8,11 @@ const nextConfig = {
         // Allow production builds with TypeScript warnings (not errors)
         ignoreBuildErrors: false,
     },
-    images: {
-        domains: ['localhost'],
-        remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: '**',
-            },
-        ],
-    },
+    // Every next/image in the app loads a local /public file, so the image
+    // optimizer allows no remote hosts. The previous `hostname: '**'` made
+    // /_next/image an open proxy for any site. Add a specific host here if a
+    // remote image is ever needed.
+    images: {},
     // Optimize for Vercel deployment
     experimental: {
         optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
