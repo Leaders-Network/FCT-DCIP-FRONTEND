@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Sidebar from "@/components/admin/Sidebar";
 import Header from "@/components/admin/Header";
 import { NotificationProvider } from "@/context/NotificationContext";
+import RequireSession from "@/components/shared/RequireSession";
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -33,6 +34,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
   }, [pathname, isMobile]);
 
   return (
+    <RequireSession area="admin">
     <NotificationProvider>
       <div className="flex h-screen min-w-0 gap-0 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-cyan-50/20 p-0 sm:gap-3 sm:p-4 print:block print:h-auto print:bg-white print:p-0">
         {/* Mobile Overlay */}
@@ -58,5 +60,6 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         </div>
       </div>
     </NotificationProvider>
+    </RequireSession>
   );
 }
