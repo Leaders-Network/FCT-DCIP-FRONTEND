@@ -19,6 +19,22 @@ const na = (v: unknown, fallback = 'N/A'): string => {
     return s === '' ? fallback : s;
 };
 
+// P0-20: every value in the report comes from the policy, and surveyors type
+// most of it. Escape it so it renders as text and never as markup or script.
+const HTML_ESCAPES: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+};
+export const escapeHtml = (v: unknown): string =>
+    String(v ?? '').replace(/[&<>"']/g, (ch) => HTML_ESCAPES[ch]);
+
+// Second line of defence inside the report itself (popup and downloaded file):
+// no scripts, no external loads, no form posts. Only the inline <style> runs.
+const REPORT_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'";
+
 const fmtDate = (d: string | Date | undefined | null): string => {
     if (!d) return 'N/A';
     try {
@@ -66,15 +82,15 @@ const riskLevelLabel: Record<string, string> = {
 function row(label: string, value: string): string {
     return `
       <tr>
-        <td class="label">${label}</td>
-        <td class="value">${value}</td>
+        <td class="label">${escapeHtml(label)}</td>
+        <td class="value">${escapeHtml(value)}</td>
       </tr>`;
 }
 
 function section(title: string, body: string): string {
     return `
     <div class="section">
-      <div class="section-title">${title}</div>
+      <div class="section-title">${escapeHtml(title)}</div>
       <table>${body}</table>
     </div>`;
 }
@@ -162,7 +178,8 @@ function buildHTML(policy: BuilderLiabilityPolicy): string {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SAR – ${policyNo}</title>
+  <meta http-equiv="Content-Security-Policy" content="${REPORT_CSP}" />
+  <title>SAR – ${escapeHtml(policyNo)}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -286,9 +303,9 @@ function buildHTML(policy: BuilderLiabilityPolicy): string {
   <div class="cover-logo">Builders Liability Scheme</div>
   <div class="cover-title">Survey Assessment Report (SAR)</div>
   <div class="cover-meta">
-    <span>Policy Number <span class="ml">${policyNo}</span></span>
-    <span>Report Date <span class="ml">${reportDate}</span></span>
-    <span>Status <span class="ml">${na(get('surveyorRecommendation') ? recLabel : policy.status)}</span></span>
+    <span>Policy Number <span class="ml">${escapeHtml(policyNo)}</span></span>
+    <span>Report Date <span class="ml">${escapeHtml(reportDate)}</span></span>
+    <span>Status <span class="ml">${escapeHtml(na(get('surveyorRecommendation') ? recLabel : policy.status))}</span></span>
   </div>
 </div>
 
@@ -378,14 +395,14 @@ ${section('9. Policy Reference', [
 <!-- ════ 10. RECOMMENDATION ════ -->
 <div class="rec-box${recValue === 'reject' ? ' reject' : recValue === 'request_more_info' ? ' info' : ''}">
   <div class="rec-label">Surveyor Recommendation</div>
-  <div class="rec-value">${recLabel}</div>
-  ${p.surveyNotes ? `<div class="rec-notes">${p.surveyNotes}</div>` : ''}
+  <div class="rec-value">${escapeHtml(recLabel)}</div>
+  ${p.surveyNotes ? `<div class="rec-notes">${escapeHtml(p.surveyNotes)}</div>` : ''}
 </div>
 
 <!-- ════ FOOTER ════ -->
 <div class="footer">
   <span>Builders Liability Scheme — Survey Assessment Report</span>
-  <span>Policy #${policyNo} | Generated ${new Date().toLocaleString('en-NG')}</span>
+  <span>Policy #${escapeHtml(policyNo)} | Generated ${new Date().toLocaleString('en-NG')}</span>
 </div>
 
 </div><!-- /body -->
@@ -395,21 +412,75 @@ ${section('9. Policy Reference', [
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
+// The report frame may print and share the blob's origin (so the opener can
+// call print() on it), but it may NOT run scripts, submit forms, open pop-ups
+// or navigate the window. Never add allow-scripts: combined with
+// allow-same-origin it would let the frame remove its own sandbox.
+export const REPORT_FRAME_SANDBOX = 'allow-same-origin allow-modals';
+
+const SHELL_CSS = `
+  html, body { margin: 0; height: 100%; }
+  body { display: flex; flex-direction: column; font-family: 'Segoe UI', Arial, sans-serif; background: #fff; }
+  .sar-bar { display: flex; justify-content: flex-end; padding: 8px 12px; background: #f0f9f4; border-bottom: 1px solid #d1e7da; }
+  .sar-bar button { font: inherit; font-size: 10pt; font-weight: 600; color: #fff; background: #028835; border: 0; border-radius: 999px; padding: 6px 16px; cursor: pointer; }
+  .sar-bar button:hover { background: #025c24; }
+  .sar-frame { flex: 1; width: 100%; border: 0; }
+  @media print { .sar-bar { display: none; } }
+`;
+
 /**
  * Opens the SAR in a new window and triggers the browser print dialog.
  * The user can choose "Save as PDF" from the print destination to get a PDF file.
+ *
+ * P0-20: the report is never written into the popup. The popup gets a fixed
+ * shell built with DOM APIs, and the report loads from a blob URL inside a
+ * sandboxed iframe, so even markup that slipped past escaping cannot run script.
  */
 export function openSARReport(policy: BuilderLiabilityPolicy): void {
-    const html = buildHTML(policy);
     const win = window.open('', '_blank', 'width=900,height=700');
     if (!win) {
         alert('Could not open report window. Please allow pop-ups for this site.');
         return;
     }
-    win.document.write(html);
-    win.document.close();
-    // Small delay so styles fully load before print dialog
-    setTimeout(() => win.print(), 600);
+
+    const html = buildHTML(policy);
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+    const doc = win.document;
+
+    // textContent / property assignments only: nothing here is parsed as HTML.
+    doc.title = `SAR – ${na(policy.policyNumber)}`;
+    const style = doc.createElement('style');
+    style.textContent = SHELL_CSS;
+    doc.head.appendChild(style);
+
+    const frame = doc.createElement('iframe');
+    frame.className = 'sar-frame';
+    frame.title = 'Survey Assessment Report';
+    frame.setAttribute('sandbox', REPORT_FRAME_SANDBOX);
+
+    // Print the report frame itself; printing the shell would clip the report
+    // to the window height.
+    const printReport = () => {
+        const target = frame.contentWindow;
+        if (target) target.print();
+        else win.print();
+    };
+
+    const bar = doc.createElement('div');
+    bar.className = 'sar-bar';
+    const printButton = doc.createElement('button');
+    printButton.type = 'button';
+    printButton.textContent = 'Print / Save as PDF';
+    printButton.addEventListener('click', printReport);
+    bar.appendChild(printButton);
+
+    // Same behaviour as before: open the print dialog once the report has loaded.
+    frame.addEventListener('load', () => setTimeout(printReport, 300), { once: true });
+    win.addEventListener('pagehide', () => URL.revokeObjectURL(url), { once: true });
+
+    frame.src = url;
+    doc.body.appendChild(bar);
+    doc.body.appendChild(frame);
 }
 
 /**
