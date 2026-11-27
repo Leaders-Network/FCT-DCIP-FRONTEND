@@ -1,13 +1,14 @@
 import SurveyAssessmentReportPage from "@/components/surveyor/SurveyAssessmentReportPage";
 
 interface SurveyAssessmentReportRouteProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function SurveyAssessmentReportRoute({
+export default async function SurveyAssessmentReportRoute({
   params,
 }: SurveyAssessmentReportRouteProps) {
-  return <SurveyAssessmentReportPage assignmentId={params.id} />;
+  const { id } = await params;
+  return <SurveyAssessmentReportPage assignmentId={id} />;
 }
