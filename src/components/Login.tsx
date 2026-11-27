@@ -7,7 +7,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
-import ChatWidget from "./ChatWidget";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -380,7 +379,6 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
           </>
         )}
       </button>
-      <ChatWidget />
     </>
   );
 }
