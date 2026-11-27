@@ -499,7 +499,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             <DialogTitle className="text-xl font-bold text-white sm:text-2xl leading-tight">
                                 {clientName || 'Policy Details'}
                             </DialogTitle>
-                            <p className="mt-0.5 text-sm text-slate-500 truncate max-w-md">
+                            <p className="mt-0.5 text-sm text-emerald-50 truncate max-w-md">
                                 {projectTitle || projectAddress || 'No project title provided'}
                             </p>
                         </div>
