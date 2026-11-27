@@ -109,8 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           router.push("/admin/dashboard-selector");
         } else if (role === 'Admin') {
           router.push("/admin/dashboard");
-        } else if (role === 'Staff') {
-          router.push("/admin/dashboard");
         } else if (role === 'Surveyor') {
           router.push("/surveyor/dashboard");
         } else {
