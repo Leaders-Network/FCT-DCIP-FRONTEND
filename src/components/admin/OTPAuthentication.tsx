@@ -58,8 +58,15 @@ const OTPAuthentication = () => {
       });
       return;
     }
-    // A single box can receive several digits from SMS/email autofill.
-    fillFrom(index, value.length > 1 ? value : value.slice(-1));
+    // Typing into a box that already holds a digit (caret beside it rather
+    // than over it) yields "old + new". Keep only the new digit for this box.
+    const current = otp[index];
+    let incoming = value;
+    if (current && value.length === 2 && value.includes(current)) {
+      incoming = value.startsWith(current) ? value.slice(1) : value.slice(0, 1);
+    }
+    // A single box can still receive several digits from SMS/email autofill.
+    fillFrom(index, incoming);
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -182,6 +189,11 @@ const OTPAuthentication = () => {
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={(e) => handlePaste(index, e)}
                 onFocus={(e) => e.target.select()}
+                onMouseUp={(e) => {
+                  // Keep the digit selected on every click so typing replaces it.
+                  e.preventDefault();
+                  e.currentTarget.select();
+                }}
               />
             ))}
           </div>
