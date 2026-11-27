@@ -17,7 +17,7 @@ export default function StatusPage({ code, title, body, children }: StatusPagePr
           <Image src="/logo.svg" alt="" width={40} height={40} priority />
           <span className="text-left leading-tight">
             <span className="block text-lg font-bold text-slate-900">Builders Liability</span>
-            <span className="block text-xs font-semibold uppercase tracking-wider text-[#028835]">FCT-DCIP portal</span>
+            <span className="block text-xs font-semibold uppercase tracking-wider text-[#028835]">Portal</span>
           </span>
         </div>
         <p className="font-mono text-sm font-semibold text-[#028835]">{code}</p>
