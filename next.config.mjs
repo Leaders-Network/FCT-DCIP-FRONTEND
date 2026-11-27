@@ -21,8 +21,7 @@ const nextConfig = {
     compiler: {
         removeConsole: process.env.NODE_ENV === 'production',
     },
-    // Enable SWC minification
-    swcMinify: true,
+    // swcMinify was removed in Next 15 (SWC minification is always on).
 };
 
 export default nextConfig;

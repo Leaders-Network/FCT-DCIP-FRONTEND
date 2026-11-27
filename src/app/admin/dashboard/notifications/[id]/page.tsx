@@ -1,14 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { use } from 'react';
 import NotificationDetailsPage from '@/components/shared/NotificationDetailsPage';
 
 interface AdminNotificationDetailsProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 export default function AdminNotificationDetails({ params }: AdminNotificationDetailsProps) {
-    return <NotificationDetailsPage notificationId={params.id} />;
+    const { id } = use(params);
+    return <NotificationDetailsPage notificationId={id} />;
 }

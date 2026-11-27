@@ -926,7 +926,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
 // Legacy Policy Details Modal Component
 interface LegacyPolicyDetailsModalProps {
   policy: PolicyRequest;
-  getStatusBadge: (status: string) => JSX.Element;
+  getStatusBadge: (status: string) => React.JSX.Element;
   onClose: () => void;
 }
 
