@@ -103,6 +103,17 @@ const StatCard = ({ icon, label, value, color, subtitle }: StatCardProps) => (
     </div>
 );
 
+/** A usable display name, or null for blanks and the generic "Surveyor" placeholder. */
+const cleanSurveyorName = (value?: string | null): string | null => {
+    const name = (value || "").trim().replace(/\s+/g, " ");
+    if (!name || name.toLowerCase() === "surveyor") return null;
+    return name;
+};
+
+/** The backend defaults `rating` to 0 for surveyors nobody has rated yet. */
+const ratingFromProfile = (value: unknown): number | null =>
+    typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+
 const UnifiedSurveyorDashboard = () => {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [stats, setStats] = useState({
@@ -123,14 +134,8 @@ const UnifiedSurveyorDashboard = () => {
     }, []);
 
     useEffect(() => {
-        const safeName = (value?: string) => {
-            const name = (value || "").trim().replace(/\s+/g, " ");
-            if (!name || name.toLowerCase() === "surveyor") return null;
-            return name;
-        };
-
         const applyName = (value?: string) => {
-            const name = safeName(value);
+            const name = cleanSurveyorName(value);
             if (name) {
                 setSurveyorName(name);
                 localStorage.setItem("surveyorName", name);
@@ -154,17 +159,9 @@ const UnifiedSurveyorDashboard = () => {
             }
 
             const nameCookie = getCookie("surveyorName");
-            if (applyName(nameCookie || undefined)) return;
-
-            try {
-                const profileResponse = await getSurveyorProfile();
-                const surveyor = profileResponse?.data;
-                const firstName = surveyor?.userId?.firstname || "";
-                const lastName = surveyor?.userId?.lastname || "";
-                applyName(`${firstName} ${lastName}`);
-            } catch (error) {
-                // ignore
-            }
+            applyName(nameCookie || undefined);
+            // Otherwise fetchSurveyorData fills the name from the profile it
+            // already loads for the rating, so the profile is fetched once.
         };
 
         const onNameUpdated = () => {
@@ -187,14 +184,22 @@ const UnifiedSurveyorDashboard = () => {
             const assignmentsResponse = await getSurveyorAssignments({ status: 'all', page: 1, limit: 100 });
             const fetchedAssignments: Assignment[] = assignmentsResponse?.data?.assignments || [];
 
-            // The rating lives on the surveyor profile. If it is missing or the
-            // call fails, show "not rated" rather than an invented score.
+            // One profile call supplies the rating and, when no name is stored
+            // yet, the display name. A missing or zero rating means "not rated".
             let rating: number | null = null;
             try {
                 const profileResponse = await getSurveyorProfile();
-                const profileRating = profileResponse?.data?.rating;
-                if (typeof profileRating === 'number' && Number.isFinite(profileRating)) {
-                    rating = profileRating;
+                const surveyor = profileResponse?.data;
+                rating = ratingFromProfile(surveyor?.rating);
+                const profileName = cleanSurveyorName(
+                    `${surveyor?.userId?.firstname || ""} ${surveyor?.userId?.lastname || ""}`
+                );
+                if (profileName) {
+                    // Keep a name already resolved from storage; only replace the placeholder.
+                    setSurveyorName((prev) => cleanSurveyorName(prev) ?? profileName);
+                    if (!cleanSurveyorName(localStorage.getItem("surveyorName"))) {
+                        localStorage.setItem("surveyorName", profileName);
+                    }
                 }
             } catch {
                 rating = null;
