@@ -327,7 +327,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
           </nav>
         </aside>
 
-        <div className="flex flex-1 flex-col overflow-visible print:block print:overflow-visible print:bg-white">
+        <div className="flex min-w-0 flex-1 flex-col overflow-visible print:block print:overflow-visible print:bg-white">
           <header className="sticky top-0 z-30 mb-4 overflow-visible rounded-none border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:top-0 sm:rounded-[2rem] print:hidden">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.16),_transparent_42%)]" />
             <div className="relative flex flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:flex-row lg:items-center lg:justify-between">
@@ -424,7 +424,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto rounded-none border border-white/70 bg-white/60 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl print:overflow-visible print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none sm:rounded-[2rem] sm:p-4 md:p-6">
+          <main className="min-w-0 flex-1 overflow-auto rounded-none border border-white/70 bg-white/60 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl print:overflow-visible print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none sm:rounded-[2rem] sm:p-4 md:p-6">
             {children}
           </main>
         </div>

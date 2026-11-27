@@ -1,6 +1,7 @@
 
 "use client";
 
+import ListSkeleton from "@/components/shared/ListSkeleton";
 import React, { useState, useEffect, useMemo } from 'react';
 import { Eye, Users, Calendar, CheckCircle, XCircle, Clock, Trash2, MoreVertical, DollarSign, Search, Filter, X, UserPlus } from 'lucide-react';
 import { Surveyor, EnhancedSurveySubmission, Assignment } from '@/types/api.types';
@@ -569,7 +570,7 @@ const PolicyManagement: React.FC<PolicyManagementProps> = ({ }) => {
       {/* Policy list */}
       <div className="rounded-[1.5rem] border border-white/70 bg-white/90 shadow-[0_8px_32px_rgba(15,23,42,0.06)] backdrop-blur-xl">
         {blpLoading ? (
-          <div className="py-16 text-center text-sm text-slate-500">Loading policies…</div>
+          <ListSkeleton rows={6} label="Loading policies" />
         ) : filteredPolicies.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">

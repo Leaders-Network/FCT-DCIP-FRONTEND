@@ -98,7 +98,7 @@ const NIAAdminDashboard = () => {
 
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
-            setFriendlyError('We could not load the NIA admin dashboard. Please refresh, and contact the Gladfaith team if it persists.');
+            setFriendlyError('We could not load the NIA dashboard. Check your connection and try again.');
         } finally {
             setLoading(false);
         }
@@ -140,11 +140,13 @@ const NIAAdminDashboard = () => {
 
     const adminInfo = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('niaAdminInfo') || '{}') : {};
     const adminName = adminInfo.name || 'NIA Admin';
+    // After a failed load the counts are unknown, not zero.
+    const statValue = (value: number) => (friendlyError ? '—' : value);
 
     return (
             <div className="space-y-6">
             {friendlyError && (
-                <DashboardErrorBanner message={friendlyError} />
+                <DashboardErrorBanner message={friendlyError} onRetry={fetchDashboardData} retrying={loading} />
             )}
             {/* Welcome Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
@@ -172,7 +174,7 @@ const NIAAdminDashboard = () => {
                         </div>
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Total Policies</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats.totalPolicies}</p>
+                            <p className="text-2xl font-bold text-gray-900">{statValue(stats.totalPolicies)}</p>
                         </div>
                     </div>
                 </div>
@@ -184,8 +186,8 @@ const NIAAdminDashboard = () => {
                         </div>
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Active Surveyors</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats.activeSurveyors}</p>
-                            <p className="text-xs text-gray-500">of {stats.totalSurveyors} total</p>
+                            <p className="text-2xl font-bold text-gray-900">{statValue(stats.activeSurveyors)}</p>
+                            {!friendlyError && <p className="text-xs text-gray-500">of {stats.totalSurveyors} total</p>}
                         </div>
                     </div>
                 </div>
@@ -197,7 +199,7 @@ const NIAAdminDashboard = () => {
                         </div>
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Total Assignments</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats.totalAssignments}</p>
+                            <p className="text-2xl font-bold text-gray-900">{statValue(stats.totalAssignments)}</p>
                         </div>
                     </div>
                 </div>
@@ -209,7 +211,7 @@ const NIAAdminDashboard = () => {
                         </div>
                         <div className="ml-4">
                             <p className="text-sm font-medium text-gray-600">Completed</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats.assignmentsByStatus.completed}</p>
+                            <p className="text-2xl font-bold text-gray-900">{statValue(stats.assignmentsByStatus.completed)}</p>
                         </div>
                     </div>
                 </div>

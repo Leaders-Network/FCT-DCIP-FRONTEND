@@ -137,7 +137,7 @@ export default function UnderwriterAdminDashboard() {
                 setDashboardError(response.message || 'Failed to fetch dashboard data.');
             }
         } catch (err) {
-            setDashboardError('Unable to load underwriter dashboard data. Please contact the Gladfaith team if this persists.');
+            setDashboardError('We could not load the underwriter dashboard. Check your connection and try again.');
         }
     };
 
@@ -419,7 +419,7 @@ export default function UnderwriterAdminDashboard() {
 
             {/* Statistics */}
             {dashboardError ? (
-                <DashboardErrorBanner message={dashboardError} className="mb-8" />
+                <DashboardErrorBanner message={dashboardError} className="mb-8" onRetry={fetchDashboardData} />
             ) : (
                 dashboardData && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">

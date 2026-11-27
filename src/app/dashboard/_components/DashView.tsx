@@ -272,10 +272,10 @@ const Dashview = () => {
         setSurveyedPolicies(completedPolicies);
 
       } catch (error) {
+        // Prefer the API's own message; a bare network failure has none.
         const message =
           (error as any)?.response?.data?.message ||
-          (error as any)?.message ||
-          "Failed to load dashboard statistics.";
+          "We could not load your policies. Check your connection and refresh the page.";
         setStatsError(message);
         toast.error(message);
         // Set fallback values if API fails
@@ -314,7 +314,7 @@ const Dashview = () => {
         </div>
 
         {statsError && (
-          <div className="rounded-[1.5rem] border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm">
+          <div role="alert" className="rounded-[1.5rem] border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm">
             {statsError}
           </div>
         )}
@@ -332,7 +332,7 @@ const Dashview = () => {
                   {[
                     {
                       title: "Approved Policies",
-                      count: loading ? "..." : stats.active,
+                      count: loading ? "..." : statsError ? "—" : stats.active,
                       color: "bg-[#fda5fc]",
                       icon: (
                         <svg
@@ -352,7 +352,7 @@ const Dashview = () => {
                     },
                     {
                       title: "Rejected Policies",
-                      count: loading ? "..." : stats.expired,
+                      count: loading ? "..." : statsError ? "—" : stats.expired,
                       color: "bg-[#7be0d4]",
                       icon: (
                         <svg
@@ -370,7 +370,7 @@ const Dashview = () => {
                     },
                     {
                       title: "Pending Policies",
-                      count: loading ? "..." : stats.pending,
+                      count: loading ? "..." : statsError ? "—" : stats.pending,
                       color: "bg-[#fad572]",
                       icon: (
                         <svg
@@ -392,7 +392,7 @@ const Dashview = () => {
                     },
                     {
                       title: "Assigned Policies",
-                      count: loading ? "..." : stats.collaborators,
+                      count: loading ? "..." : statsError ? "—" : stats.collaborators,
                       color: "bg-[#8b9fef]",
                       icon: (
                         <svg
