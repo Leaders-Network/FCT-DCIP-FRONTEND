@@ -1,14 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { use } from 'react';
 import NotificationDetailsPage from '@/components/shared/NotificationDetailsPage';
 
 interface SurveyorNotificationDetailsProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 export default function SurveyorNotificationDetails({ params }: SurveyorNotificationDetailsProps) {
-    return <NotificationDetailsPage notificationId={params.id} />;
+    const { id } = use(params);
+    return <NotificationDetailsPage notificationId={id} />;
 }

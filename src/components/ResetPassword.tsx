@@ -49,7 +49,7 @@ interface ApiError {
  * - Responsive design
  * - Background image carousel
  */
-export function ResetPassword(): JSX.Element {
+export function ResetPassword(): React.JSX.Element {
   const router = useRouter();
 
   // Constants
@@ -194,7 +194,7 @@ export function ResetPassword(): JSX.Element {
     }
   };
 
-  const renderEmailStep = (): JSX.Element => (
+  const renderEmailStep = (): React.JSX.Element => (
     <div className="w-full">
       <div className="mb-8">
         <h2 className="text-black text-3xl md:text-4xl font-bold mb-3">
@@ -272,7 +272,7 @@ export function ResetPassword(): JSX.Element {
     </div>
   );
 
-  const renderOtpStep = (): JSX.Element => (
+  const renderOtpStep = (): React.JSX.Element => (
     <div className="w-full">
       <div className="mb-8">
         <h2 className="text-black text-3xl md:text-4xl font-bold mb-3">
@@ -347,7 +347,7 @@ export function ResetPassword(): JSX.Element {
     </div>
   );
 
-  const renderPasswordStep = (): JSX.Element => (
+  const renderPasswordStep = (): React.JSX.Element => (
     <div className="w-full">
       <div className="mb-8">
         <h2 className="text-black text-3xl md:text-4xl font-bold mb-3">
@@ -451,7 +451,7 @@ export function ResetPassword(): JSX.Element {
     </div>
   );
 
-  const renderSuccessStep = (): JSX.Element => (
+  const renderSuccessStep = (): React.JSX.Element => (
     <div className="w-full text-center">
       <div className="mb-8">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">

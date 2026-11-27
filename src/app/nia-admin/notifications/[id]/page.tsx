@@ -1,14 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { use } from 'react';
 import NotificationDetailsPage from '@/components/shared/NotificationDetailsPage';
 
 interface NIAAdminNotificationDetailsProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 export default function NIAAdminNotificationDetails({ params }: NIAAdminNotificationDetailsProps) {
-    return <NotificationDetailsPage notificationId={params.id} />;
+    const { id } = use(params);
+    return <NotificationDetailsPage notificationId={id} />;
 }
