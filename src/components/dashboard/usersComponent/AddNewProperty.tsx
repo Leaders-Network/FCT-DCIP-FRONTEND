@@ -243,7 +243,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
           } transition-transform duration-300 ease-in-out overflow-y-auto`}
       >
         <div className="flex flex-col h-full">
-          <div className="bg-[#028835] flex justify-between items-center p-4">
+          <div className="bg-brand flex justify-between items-center p-4">
             <h2 className="text-white text-lg font-bold flex items-center gap-2">
               <Image
                 src="/dashboard/plus.png"
@@ -327,7 +327,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
                       name="category"
                       value={formData.category}
                       onChange={handleChange}
-                      className="w-full p-4 bg-transparent appearance-none focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-transparent rounded-lg"
+                      className="w-full p-4 bg-transparent appearance-none focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent rounded-lg"
                       required
                       disabled={categories.length === 0}
                     >
@@ -360,7 +360,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
                     value={formData.address}
                     onChange={handleChange}
                     placeholder="Enter the complete property address..."
-                    className="w-full p-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-transparent resize-none"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
                     rows={3}
                     required
                     disabled={categories.length === 0}
@@ -378,7 +378,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
                     value={formData.contactOnProperty}
                     onChange={handleChange}
                     placeholder="e.g., +234 XXX XXX XXXX"
-                    className="w-full p-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#028835] focus:border-transparent"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                     required
                     disabled={categories.length === 0}
                   />
@@ -436,7 +436,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
                         ))}
                       </div>
 
-                      <label className="flex items-center justify-center w-full p-4 border-2 border-dashed border-[#028835] rounded-lg cursor-pointer hover:bg-green-50 transition-colors">
+                      <label className="flex items-center justify-center w-full p-4 border-2 border-dashed border-brand rounded-lg cursor-pointer hover:bg-green-50 transition-colors">
                         <input
                           type="file"
                           accept="image/*"
@@ -445,7 +445,7 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
                           className="hidden"
                           disabled={categories.length === 0}
                         />
-                        <div className="flex items-center space-x-2 text-[#028835]">
+                        <div className="flex items-center space-x-2 text-brand">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -505,8 +505,8 @@ const AddNewProperty: React.FC<AddNewPropertyProps> = ({ isOpen, onClose, onProp
               <button
                 type="submit"
                 disabled={loading || categories.length === 0}
-                className={`mt-6 w-full bg-[#028835] hover:bg-[#026a29] text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center gap-3 transition-all duration-200 shadow-lg ${loading || categories.length === 0
-                  ? "opacity-50 cursor-not-allowed hover:bg-[#028835]"
+                className={`mt-6 w-full bg-brand hover:bg-brand-dark text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center gap-3 transition-all duration-200 shadow-lg ${loading || categories.length === 0
+                  ? "opacity-50 cursor-not-allowed hover:bg-brand"
                   : "hover:shadow-xl transform hover:-translate-y-0.5"
                   }`}
               >

@@ -55,7 +55,7 @@ const InsurancePage: React.FC = () => {
   return (
     <>
       <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-[#015a23] via-[#028835] to-emerald-500 p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.22)]">
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-brand-darker via-brand to-emerald-500 p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.22)]">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_36%)]" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
@@ -75,7 +75,7 @@ const InsurancePage: React.FC = () => {
               onClick={handleOpenNewPolicyPage}
               className="inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/15 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-black/10 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#028835] shadow-sm">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-brand shadow-sm">
                 <Plus className="h-5 w-5" />
               </span>
               New Policy
@@ -89,13 +89,13 @@ const InsurancePage: React.FC = () => {
             <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-slate-100/90 h-[3.5rem]">
               <TabsTrigger
                 value="builder-liability"
-                className="rounded-2xl py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-[#028835] data-[state=active]:shadow-sm"
+                className="rounded-2xl py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-brand data-[state=active]:shadow-sm"
               >
                 Builder Liability
               </TabsTrigger>
               <TabsTrigger
                 value="new-policy"
-                className="rounded-2xl py-3 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-[#028835] data-[state=active]:shadow-sm"
+                className="rounded-2xl py-3 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-brand data-[state=active]:shadow-sm"
               >
                 New Policy
               </TabsTrigger>
@@ -143,7 +143,7 @@ const InsurancePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleOpenNewPolicyPage}
-                    className="inline-flex items-center gap-3 rounded-2xl bg-[#028835] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700"
+                    className="inline-flex items-center gap-3 rounded-2xl bg-brand px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700"
                   >
                     <Plus className="h-4 w-4" />
                     Start Builder Liability Application

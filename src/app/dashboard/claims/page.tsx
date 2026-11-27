@@ -35,7 +35,7 @@ export default function ClaimsPage() {
 
   return (
     <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-[#015a23] via-[#028835] to-emerald-500 p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.22)]">
+      <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-brand-darker via-brand to-emerald-500 p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.22)]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_36%)]" />
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
@@ -53,7 +53,7 @@ export default function ClaimsPage() {
               onClick={() => setShowSubmissionForm(true)}
               className="inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/15 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-black/10 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#028835] shadow-sm">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-brand shadow-sm">
                 <Plus className="h-5 w-5" />
               </span>
               Submit New Claim

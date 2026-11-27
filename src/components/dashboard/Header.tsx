@@ -36,7 +36,7 @@ const Header = () => {
           />
           <div className="flex items-center">
             <span className="mr-2 font-semibold">{firstName}</span>
-            <div className="w-8 h-8 bg-[#028835] rounded-md flex items-center justify-center text-white">
+            <div className="w-8 h-8 bg-brand rounded-md flex items-center justify-center text-white">
               {initials}
             </div>
           </div>

@@ -74,7 +74,7 @@ export default function CookieConsent() {
             </p>
             <a
               href="/privacy-policy"
-              className="inline-block mt-2 text-sm text-[#028835] hover:text-[#026c2a] underline transition-colors"
+              className="inline-block mt-2 text-sm text-brand hover:text-brand-dark underline transition-colors"
             >
               Privacy Policy
             </a>
@@ -96,7 +96,7 @@ export default function CookieConsent() {
             </button>
             <button
               onClick={handleAcceptAll}
-              className="flex-1 sm:flex-none px-6 py-2 rounded-lg bg-[#028835] text-white font-medium hover:bg-[#026c2a] transition"
+              className="flex-1 sm:flex-none px-6 py-2 rounded-lg bg-brand text-white font-medium hover:bg-brand-dark transition"
             >
               Accept All
             </button>
@@ -129,7 +129,7 @@ export default function CookieConsent() {
                   type="checkbox"
                   checked
                   disabled
-                  className="h-5 w-5 accent-[#028835] cursor-not-allowed"
+                  className="h-5 w-5 accent-brand cursor-not-allowed"
                 />
               </div>
 
@@ -150,7 +150,7 @@ export default function CookieConsent() {
                       analytics: e.target.checked,
                     })
                   }
-                  className="h-5 w-5 accent-[#028835] cursor-pointer"
+                  className="h-5 w-5 accent-brand cursor-pointer"
                 />
               </div>
 
@@ -171,7 +171,7 @@ export default function CookieConsent() {
                       marketing: e.target.checked,
                     })
                   }
-                  className="h-5 w-5 accent-[#028835] cursor-pointer"
+                  className="h-5 w-5 accent-brand cursor-pointer"
                 />
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function CookieConsent() {
               </button>
               <button
                 onClick={handleSavePreferences}
-                className="w-full sm:w-auto px-6 py-2 rounded-lg bg-[#028835] text-white font-medium hover:bg-[#026c2a] transition"
+                className="w-full sm:w-auto px-6 py-2 rounded-lg bg-brand text-white font-medium hover:bg-brand-dark transition"
               >
                 Save Preferences
               </button>

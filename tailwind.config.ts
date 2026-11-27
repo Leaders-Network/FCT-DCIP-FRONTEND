@@ -10,6 +10,13 @@ const config: Config = {
   theme: {
   	extend: {
   		colors: {
+  			// AMMC brand green. Use bg-brand / text-brand rather than hex literals.
+  			brand: {
+  				DEFAULT: '#028835',
+  				dark: '#026c2a',
+  				darker: '#015a23',
+  				soft: '#E8F5E9'
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

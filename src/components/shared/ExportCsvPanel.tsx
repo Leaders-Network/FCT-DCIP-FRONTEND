@@ -117,7 +117,7 @@ const ExportCsvPanel: React.FC<ExportCsvPanelProps> = ({
         </p>
       )}
 
-      <p className="mt-3 text-xs text-gray-400">
+      <p className="mt-3 text-xs text-gray-500">
         Leave dates empty to export all records.
       </p>
     </div>

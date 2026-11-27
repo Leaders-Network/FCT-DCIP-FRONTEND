@@ -58,7 +58,7 @@ const HowItWorks = () => {
               className="group relative z-10 flex flex-col items-center bg-white p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:border-emerald-100 text-center h-full"
             >
               {/* Step Number indicator */}
-              <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold text-sm flex items-center justify-center border-4 border-white transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-600">
+              <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold text-sm flex items-center justify-center border-4 border-white transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-600">
                 {index + 1}
               </div>
 

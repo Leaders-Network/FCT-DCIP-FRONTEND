@@ -437,7 +437,7 @@ const EnhancedSurveyorDashboard = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h2 className="text-lg font-semibold text-gray-900">Recent Assignments</h2>
-                    <Link href="/surveyor/dashboard/assignments" className="text-[#028835] hover:text-green-700 text-sm font-medium">
+                    <Link href="/surveyor/dashboard/assignments" className="text-brand hover:text-green-700 text-sm font-medium">
                         View All
                     </Link>
                 </div>
@@ -549,7 +549,7 @@ const EnhancedSurveyorDashboard = () => {
                                             )}
                                             <Link
                                                 href={`/surveyor/dashboard/assignments/${assignment._id}`}
-                                                className="text-[#028835] hover:text-green-700 text-sm font-medium flex items-center"
+                                                className="text-brand hover:text-green-700 text-sm font-medium flex items-center"
                                             >
                                                 <Eye className="w-4 h-4 mr-1" />
                                                 View Details

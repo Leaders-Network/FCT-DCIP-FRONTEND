@@ -171,7 +171,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
               {assignment.status === 'assigned' && (
                 <button
                   onClick={() => router.push(`/surveyor/dashboard/assignments/${assignmentId}/survey-assessment-report`)}
-                  className="w-full rounded-full bg-gradient-to-r from-[#028835] to-emerald-700 px-6 py-3 font-medium text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835] sm:w-auto"
+                  className="w-full rounded-full bg-gradient-to-r from-brand to-emerald-700 px-6 py-3 font-medium text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand sm:w-auto"
                 >
                   Start Survey
                 </button>
@@ -442,14 +442,14 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleContactUser('phone')}
-                    className="flex-1 inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                    className="flex-1 inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand"
                   >
                     <Phone className="h-4 w-4 mr-2" />
                     Call Contractor
                   </button>
                   <button
                     onClick={() => handleContactUser('email')}
-                    className="flex-1 inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                    className="flex-1 inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand"
                   >
                     <Mail className="h-4 w-4 mr-2" />
                     Email Contractor
@@ -620,7 +620,7 @@ const AssignmentDetail: React.FC<AssignmentDetailProps> = ({ assignmentId }) => 
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => router.push(`/surveyor/dashboard/assignments/${assignmentId}/survey-assessment-report`)}
-                className="flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-[#028835] to-emerald-700 px-6 py-3 font-medium text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                className="flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-brand to-emerald-700 px-6 py-3 font-medium text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand"
               >
                 <FileText className="h-5 w-5 mr-2" />
                 Start Survey Process

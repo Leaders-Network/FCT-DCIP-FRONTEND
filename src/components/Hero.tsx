@@ -136,7 +136,7 @@ const Hero: React.FC = () => {
             className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/20 bg-white/95 shadow-[0_32px_120px_rgba(15,23,42,0.3)] backdrop-blur-xl animate-in zoom-in-95 duration-200"
           >
             {/* Gradient accent bar */}
-            <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-[#028835] via-emerald-500 to-teal-400" />
+            <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-brand via-emerald-500 to-teal-400" />
             
             {/* Close button */}
             <button

@@ -295,14 +295,14 @@ const SurveySubmissionConfirmation: React.FC<SurveySubmissionConfirmationProps> 
                             <button
                                 onClick={handleDownloadDocs}
                                 disabled={isDownloading}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#028835] px-5 py-3 font-medium text-[#028835] transition-colors hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-brand px-5 py-3 font-medium text-brand transition-colors hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <Download className="h-4 w-4" />
                                 {isDownloading ? "Downloading..." : "Download Survey Documents"}
                             </button>
                             <button
                                 onClick={onClose}
-                                className="rounded-lg bg-[#028835] px-5 py-3 font-medium text-white transition-colors hover:bg-green-700"
+                                className="rounded-lg bg-brand px-5 py-3 font-medium text-white transition-colors hover:bg-green-700"
                             >
                                 Return to Dashboard
                             </button>

@@ -29,7 +29,7 @@ const Header = () => {
   return (
     <header className="relative z-[60]">
       {/* Top bar - NOT fixed */}
-      <div className="bg-[#028835] py-2 hidden md:block">
+      <div className="bg-brand py-2 hidden md:block">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex justify-between items-center text-xs font-medium">
             <div className="flex items-center space-x-6">

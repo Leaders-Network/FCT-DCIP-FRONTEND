@@ -28,7 +28,7 @@ const Users = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return 'bg-[#028835]'
+      case 'Active': return 'bg-brand'
       case 'Suspended': return 'bg-gray-500'
       case 'Inactive': return 'bg-red-500'
       default: return 'bg-gray-200'
@@ -63,7 +63,7 @@ const Users = () => {
           <h1 className="text-2xl font-bold">Administrator</h1>
           <button
             onClick={openForm}
-            className="bg-[#028835] text-white px-4 py-2 rounded-full flex items-center text-sm sm:text-base"
+            className="bg-brand text-white px-4 py-2 rounded-full flex items-center text-sm sm:text-base"
           >
             <span className="bg-black rounded-full w-6 h-6 pt-[2px] items-center justify-center mr-2 leading-none">
               +
@@ -114,7 +114,7 @@ const Users = () => {
                               ? "bg-[#FBD673]"
                               : getInitials(`${user.firstname} ${user.lastname}`) === "CC"
                                 ? "bg-[#F2A4F1]"
-                                : "bg-[#028835]"
+                                : "bg-brand"
                           }`}
                       >
                         {getInitials(`${user.firstname} ${user.lastname}`)}
@@ -149,7 +149,7 @@ const Users = () => {
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                  <button className="text-white rounded-md hover:text-green-900 bg-[#028835] px-2 sm:px-3 py-1 sm:py-[6px]">
+                  <button className="text-white rounded-md hover:text-green-900 bg-brand px-2 sm:px-3 py-1 sm:py-[6px]">
                     View Profile
                   </button>
                 </td>

@@ -58,7 +58,7 @@ const CONTRACTOR_CATEGORY_OPTIONS = [
     },
 ] as const;
 
-const inputCls = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:outline-none focus:ring-4 focus:ring-[#028835]/10";
+const inputCls = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10";
 const labelCls = "mb-1.5 block text-sm font-medium text-slate-700";
 const sectionCls = "space-y-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur";
 const sectionTitleCls = "flex items-center gap-2 text-sm font-semibold text-slate-800";
@@ -85,10 +85,10 @@ const RadioOption: React.FC<{
             value={value}
             checked={checked}
             onChange={onChange}
-            className="mt-0.5 h-4 w-4 accent-[#028835]"
+            className="mt-0.5 h-4 w-4 accent-brand"
         />
         <div>
-            <span className={`text-sm font-medium ${checked ? 'text-[#028835]' : 'text-slate-700'}`}>{label}</span>
+            <span className={`text-sm font-medium ${checked ? 'text-brand' : 'text-slate-700'}`}>{label}</span>
             {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
         </div>
     </label>
@@ -104,7 +104,7 @@ const CheckboxOption: React.FC<{
             type="checkbox"
             checked={checked}
             onChange={onChange}
-            className="h-4 w-4 accent-[#028835] rounded"
+            className="h-4 w-4 accent-brand rounded"
         />
         <span className="text-sm text-gray-700">{label}</span>
     </label>
@@ -413,7 +413,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
             >
 
                 {/* ── Header ───────────────────────────────────────────────── */}
-                <div className="flex-shrink-0 bg-gradient-to-r from-[#028835] via-[#02742d] to-[#025c24] px-5 py-5 text-white sm:px-6">
+                <div className="flex-shrink-0 bg-gradient-to-r from-brand via-[#02742d] to-[#025c24] px-5 py-5 text-white sm:px-6">
                     <div className="flex items-start justify-between gap-4">
                         <div className="space-y-2">
                             <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-50">
@@ -472,7 +472,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                     onClick={() => goToTab(idx)}
                                     className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all duration-300 ${
                                         isCurrent
-                                            ? 'bg-[#028835] text-white shadow-md shadow-emerald-200/60'
+                                            ? 'bg-brand text-white shadow-md shadow-emerald-200/60'
                                             : isDone
                                                 ? 'border border-emerald-200 bg-emerald-50/80 text-emerald-700 hover:-translate-y-0.5 hover:bg-emerald-100'
                                                 : 'border border-slate-200 bg-white text-slate-400 hover:-translate-y-0.5 hover:border-emerald-200 hover:text-slate-600 hover:shadow-sm'
@@ -970,12 +970,12 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                                 {/* Drop zone */}
                                 <label
                                     htmlFor="survey-file-upload"
-                                    className="flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-300 p-10 text-center cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:border-[#028835] hover:bg-emerald-50/30 hover:shadow-sm"
+                                    className="flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-300 p-10 text-center cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:border-brand hover:bg-emerald-50/30 hover:shadow-sm"
                                 >
                                     <Upload className="w-10 h-10 text-gray-400 mb-3" />
                                     <p className="text-sm font-medium text-gray-700">Drag & drop files here</p>
                                     <p className="text-xs text-gray-500 mt-1">or click to select files</p>
-                                    <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#028835] px-4 py-2 text-sm text-white transition-all duration-300 hover:bg-green-700">
+                                    <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm text-white transition-all duration-300 hover:bg-green-700">
                                         <Camera className="w-4 h-4" /> Choose Files
                                     </span>
                                     <input id="survey-file-upload" type="file" multiple accept=".jpg,.jpeg,.png,.pdf"
@@ -1028,7 +1028,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
 
                                 <div className={sectionCls}>
                                     <p className={sectionTitleCls}>
-                                        <CheckCircle className="w-4 h-4 text-[#028835]" />
+                                        <CheckCircle className="w-4 h-4 text-brand" />
                                         Recommendation Status
                                     </p>
                                     <p className="text-xs text-gray-500">Select your professional recommendation based on the site assessment.</p>
@@ -1101,7 +1101,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                             </button>
                             {activeTabIndex < TABS.length - 1 && (
                                 <button type="button" onClick={() => goToTab(activeTabIndex + 1)}
-                                    className="rounded-full bg-[#028835] px-4 py-2 text-sm text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-lg">
+                                    className="rounded-full bg-brand px-4 py-2 text-sm text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-lg">
                                     Next →
                                 </button>
                             )}
@@ -1117,7 +1117,7 @@ const SurveySubmissionModal: React.FC<SurveySubmissionModalProps> = ({
                             </button>
                             {activeTab.id === 'recommendation' && (
                                 <button type="submit" disabled={loading || !form.recommendedAction}
-                                    className="flex items-center gap-2 rounded-full bg-[#028835] px-5 py-2 text-sm text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50">
+                                    className="flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50">
                                     {loading
                                         ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /><span>Submitting…</span></>
                                         : <><Send className="w-4 h-4" /><span>Submit SAR</span></>

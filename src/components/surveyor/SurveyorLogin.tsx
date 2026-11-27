@@ -165,7 +165,7 @@ const handleLogin = async (e: React.FormEvent) => {
           priority
         />
         {/* Modern multi-layer gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#028835]/90 via-black/60 to-black/90 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand/90 via-black/60 to-black/90 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         
         {/* Glassmorphic content container */}
@@ -240,7 +240,7 @@ const handleLogin = async (e: React.FormEvent) => {
                     type="email"
                     required
                     placeholder="surveyor@example.com"
-                    className="block w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#028835]/20 focus:border-[#028835] transition-all duration-200 sm:text-sm"
+                    className="block w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all duration-200 sm:text-sm"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -255,7 +255,7 @@ const handleLogin = async (e: React.FormEvent) => {
                       type={showPassword ? "text" : "password"}
                       required
                       placeholder="Enter your password"
-                      className="block w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#028835]/20 focus:border-[#028835] transition-all duration-200 sm:text-sm pr-12"
+                      className="block w-full px-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all duration-200 sm:text-sm pr-12"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -288,12 +288,12 @@ const handleLogin = async (e: React.FormEvent) => {
                       type="checkbox"
                       className="peer sr-only"
                     />
-                    <div className="h-5 w-5 border border-gray-300 rounded peer-checked:bg-[#028835] peer-checked:border-[#028835] transition-all"></div>
+                    <div className="h-5 w-5 border border-gray-300 rounded peer-checked:bg-brand peer-checked:border-brand transition-all"></div>
                     <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path></svg>
                   </div>
                   <span className="ml-2.5 group-hover:text-gray-900 transition-colors">Remember me</span>
                 </label>
-                <a href="/surveyor/reset-password" className="font-semibold text-[#028835] hover:text-green-800 transition-colors">
+                <a href="/surveyor/reset-password" className="font-semibold text-brand hover:text-green-800 transition-colors">
                   Forgot password?
                 </a>
               </div>
@@ -303,7 +303,7 @@ const handleLogin = async (e: React.FormEvent) => {
                 disabled={loading || !email || !password}
                 className={`group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-semibold rounded-xl text-white transition-all duration-300 shadow-sm ${loading || !email || !password
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
-                  : 'bg-gradient-to-r from-[#028835] to-[#016828] hover:shadow-[0_8px_20px_rgba(2,136,53,0.3)] hover:-translate-y-0.5'
+                  : 'bg-gradient-to-r from-brand to-[#016828] hover:shadow-[0_8px_20px_rgba(2,136,53,0.3)] hover:-translate-y-0.5'
                   }`}
               >
                 {loading ? (
@@ -325,7 +325,7 @@ const handleLogin = async (e: React.FormEvent) => {
             Need access?{" "}
             <a
               href="/contact"
-              className="font-semibold text-gray-700 hover:text-[#028835] transition-colors"
+              className="font-semibold text-gray-700 hover:text-brand transition-colors"
             >
               Contact Administrator
             </a>

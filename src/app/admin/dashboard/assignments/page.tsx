@@ -129,7 +129,7 @@ function StatCard({
         <Icon className={`h-5 w-5 ${iconColor}`} />
       </div>
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
         <p className={`text-2xl font-bold ${valueColor ?? "text-slate-900"}`}>{value}</p>
       </div>
     </div>
@@ -162,7 +162,7 @@ function DetailsModal({
       <DialogContent hideCloseButton className="max-h-[94vh] w-[min(92vw,42rem)] max-w-xl overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 p-0 shadow-[0_32px_120px_rgba(15,23,42,0.22)] backdrop-blur-xl">
         <div className="max-h-[94vh] overflow-y-auto">
           {/* Gradient accent bar */}
-          <div className="h-1.5 w-full rounded-t-[2rem] bg-gradient-to-r from-[#028835] via-emerald-500 to-teal-400" />
+          <div className="h-1.5 w-full rounded-t-[2rem] bg-gradient-to-r from-brand via-emerald-500 to-teal-400" />
 
           {/* Header */}
           <div className="relative px-6 pt-5 pb-4">
@@ -178,7 +178,7 @@ function DetailsModal({
             <h3 className="mt-1 text-xl font-bold text-slate-900">
               Policy #{assignment.policyId?.policyNumber || "N/A"}
             </h3>
-            <p className="mt-0.5 break-all text-xs text-slate-400">ID: {assignment._id}</p>
+            <p className="mt-0.5 break-all text-xs text-slate-500">ID: {assignment._id}</p>
 
             {/* Status / Priority / Overdue */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -196,11 +196,11 @@ function DetailsModal({
           {/* Timeline strip */}
           <div className="mx-6 mb-4 grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Assigned On</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Assigned On</p>
               <p className="mt-1 text-sm font-semibold text-slate-800">{fmtDate(assignment.assignedAt)}</p>
             </div>
             <div className={`rounded-2xl border px-4 py-3 ${overdue ? "border-red-100 bg-red-50/70" : "border-slate-100 bg-slate-50/70"}`}>
-              <p className={`text-[10px] font-semibold uppercase tracking-widest ${overdue ? "text-red-400" : "text-slate-400"}`}>Deadline</p>
+              <p className={`text-[10px] font-semibold uppercase tracking-widest ${overdue ? "text-red-400" : "text-slate-500"}`}>Deadline</p>
               <p className={`mt-1 text-sm font-semibold ${overdue ? "text-red-700" : "text-slate-800"}`}>{fmtDate(assignment.deadline)}</p>
             </div>
           </div>
@@ -209,7 +209,7 @@ function DetailsModal({
             {/* Builder */}
             <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
               <div className="mb-3 flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-[#028835] to-emerald-600 text-white shadow-sm">
+                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-emerald-600 text-white shadow-sm">
                   <Building2 className="h-3.5 w-3.5" />
                 </div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Builder / Contractor</p>
@@ -255,7 +255,7 @@ function DetailsModal({
               {assignment.surveyorId ? (
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#028835] to-emerald-600 text-xs font-bold text-white shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-emerald-600 text-xs font-bold text-white shadow-sm">
                       {assignment.surveyorId.firstname[0]}{assignment.surveyorId.lastname[0]}
                     </div>
                     <div>
@@ -277,7 +277,7 @@ function DetailsModal({
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white">
                     <User className="h-4 w-4 text-slate-300" />
                   </div>
-                  <p className="text-sm italic text-slate-400">No surveyor assigned yet</p>
+                  <p className="text-sm italic text-slate-500">No surveyor assigned yet</p>
                 </div>
               )}
             </div>
@@ -302,7 +302,7 @@ function DetailsModal({
               <button
                 onClick={() => onDownload(assignment._id)}
                 disabled={downloading}
-                className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#028835] to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {downloading ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
@@ -521,7 +521,7 @@ const AutomatedAssignmentsPage = () => {
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-700">No assignments found</p>
-              <p className="mt-0.5 text-xs text-slate-400">
+              <p className="mt-0.5 text-xs text-slate-500">
                 {filters.search || filters.status !== "all" || filters.priority !== "all"
                   ? "Try adjusting your filters"
                   : "Assignments will appear here once policies are submitted"}
@@ -532,12 +532,12 @@ const AutomatedAssignmentsPage = () => {
           <div className="divide-y divide-slate-100">
             {/* Table header */}
             <div className="hidden grid-cols-12 gap-4 px-5 py-3 sm:grid">
-              <p className="col-span-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Policy / Builder</p>
-              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Surveyor</p>
-              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</p>
-              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Priority</p>
-              <p className="col-span-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Deadline</p>
-              <p className="col-span-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 text-right">Action</p>
+              <p className="col-span-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Policy / Builder</p>
+              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Surveyor</p>
+              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Status</p>
+              <p className="col-span-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Priority</p>
+              <p className="col-span-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Deadline</p>
+              <p className="col-span-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 text-right">Action</p>
             </div>
 
             {pagination.pageItems.map((asgn) => {
@@ -564,10 +564,10 @@ const AutomatedAssignmentsPage = () => {
                         <p className="truncate text-sm font-medium text-slate-800">
                           {asgn.surveyorId.firstname} {asgn.surveyorId.lastname}
                         </p>
-                        <p className="truncate text-xs text-slate-400">{asgn.surveyorId.email}</p>
+                        <p className="truncate text-xs text-slate-500">{asgn.surveyorId.email}</p>
                       </>
                     ) : (
-                      <span className="text-xs text-slate-400 italic">Unassigned</span>
+                      <span className="text-xs text-slate-500 italic">Unassigned</span>
                     )}
                   </div>
 
@@ -622,7 +622,7 @@ const AutomatedAssignmentsPage = () => {
 
       {/* Floating count (the paginator shows its own once there is more than one page) */}
       {!loading && assignments.length > 0 && pagination.totalPages <= 1 && (
-        <p className="text-right text-xs text-slate-400">
+        <p className="text-right text-xs text-slate-500">
           Showing {assignments.length} assignment{assignments.length !== 1 ? "s" : ""}
         </p>
       )}
