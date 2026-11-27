@@ -63,7 +63,7 @@ const Hero: React.FC = () => {
           alt={`Background ${index + 1}`}
           fill
           priority={index === 0}
-          className={`object-cover transition-all duration-[2500ms] ease-in-out transform ${
+          className={`object-cover transition-all [transition-duration:2500ms] ease-in-out transform ${
             index === currentImage ? "opacity-100 scale-100" : "opacity-0 scale-105"
           }`}
         />

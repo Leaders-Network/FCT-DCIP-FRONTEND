@@ -78,7 +78,7 @@ export function Login() {
             alt={`Background ${index + 1}`}
             fill
             priority={index === 0}
-            className={`object-cover transition-opacity duration-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
+            className={`object-cover transition-opacity [transition-duration:2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
           />
         ))}
         {/* Modern multi-layer gradient overlay for depth */}
