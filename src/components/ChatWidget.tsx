@@ -54,8 +54,8 @@ export default function ChatWidget() {
               />
               <h4 className="text-sm font-semibold">Builders Liability Support</h4>
             </div>
-            <button onClick={() => setOpen(false)}>
-              <X size={18} />
+            <button type="button" onClick={() => setOpen(false)} aria-label="Close chat">
+              <X size={18} aria-hidden="true" />
             </button>
           </div>
 
@@ -114,6 +114,7 @@ export default function ChatWidget() {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage(message)}
               placeholder="Type your message..."
+              aria-label="Message"
               className="flex-1 border border-gray-300 rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-600"
             />
             <button
@@ -128,7 +129,10 @@ export default function ChatWidget() {
 
       {/* Chat icon */}
       <button
+        type="button"
         onClick={() => setOpen(!open)}
+        aria-label={open ? "Close chat" : "Chat with support"}
+        aria-expanded={open}
         className="rounded-full flex items-center justify-center text-white shadow-lg transition hover:scale-105 flex-shrink-0"
         style={{
           backgroundColor: brandColor,

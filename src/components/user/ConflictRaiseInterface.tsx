@@ -352,7 +352,7 @@ const ConflictRaiseInterface: React.FC<ConflictRaiseInterfaceProps> = ({
                                 </p>
                             </div>
                         </div>
-                        <button
+                        <button aria-label="Close"
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-600 transition-colors"
                         >

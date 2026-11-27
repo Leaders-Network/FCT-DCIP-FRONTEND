@@ -31,7 +31,7 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
       <div className="bg-white rounded-lg w-full max-w-lg">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold">Property Details</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button aria-label="Close" onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X size={24} />
           </button>
         </div>
