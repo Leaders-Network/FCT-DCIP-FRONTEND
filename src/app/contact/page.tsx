@@ -49,7 +49,7 @@ const ContactPage = () => {
       </section>
 
       {/* Contact Form Section */}
-      <section className="py-16 px-6 md:px-16 bg-white flex-grow">
+      <section className="py-16 px-6 md:px-16 bg-white flex-grow overflow-x-clip">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10">
           {/* Form */}
           <div data-aos="fade-right" data-aos-delay="300">
