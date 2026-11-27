@@ -131,7 +131,7 @@ const Header = () => {
                 <Link 
                   key={link.path}
                   href={link.path} 
-                  className={`relative px-4 py-2 text-[0.95rem] font-semibold rounded-lg transition-colors overflow-hidden group
+                  className={`relative px-2.5 lg:px-4 py-2 text-[0.95rem] font-semibold rounded-lg transition-colors overflow-hidden group
                     ${pathname === link.path ? 'text-green-700' : 'text-gray-600 hover:text-green-700'}
                   `}
                 >
@@ -147,7 +147,7 @@ const Header = () => {
             {/* CTA Button & Mobile Toggle */}
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
               <div className="hidden md:flex items-center">
-                <Link href="/login" className="flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 shadow-[0_4px_14px_0_rgba(2,136,53,0.39)] hover:shadow-[0_6px_20px_rgba(2,136,53,0.23)] hover:-translate-y-0.5 transition-all duration-200">
+                <Link href="/login" className="flex items-center justify-center px-4 lg:px-6 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 shadow-[0_4px_14px_0_rgba(2,136,53,0.39)] hover:shadow-[0_6px_20px_rgba(2,136,53,0.23)] hover:-translate-y-0.5 transition-all duration-200">
                   Login to Portal
                 </Link>
               </div>

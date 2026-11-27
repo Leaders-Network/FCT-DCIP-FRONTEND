@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
 import { activeSocialLinks } from "@/constants/socialLinks";
+import Image from "next/image";
 
 const SOCIAL_ICONS = {
   facebook: Facebook,
@@ -10,7 +11,6 @@ const SOCIAL_ICONS = {
   linkedin: Linkedin,
   youtube: Youtube,
 } as const;
-import Image from "next/image";
 
 const Footer = () => {
   return (
