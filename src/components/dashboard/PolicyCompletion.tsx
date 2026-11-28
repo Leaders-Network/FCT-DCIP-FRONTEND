@@ -488,7 +488,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                           ? policy.surveyDocument
                           : policy.surveyDocument!.url
                       )}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Download Survey Report
@@ -498,7 +498,7 @@ const PolicyCompletion: React.FC<PolicyCompletionProps> = () => {
                   {policy.status === 'approved' ? (
                     <button
                       onClick={() => window.open("https://askniid.org/verifypolicy.aspx", "_blank")}
-                      className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#028835] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#028835]"
+                      className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand"
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Download Permit

@@ -44,7 +44,7 @@ const InsuranceSidebar: React.FC<InsuranceSidebarProps> = ({ isOpen, onClose }) 
         } transition-transform duration-300 ease-in-out overflow-y-auto`}
       >
         <div className="flex flex-col h-full">
-          <div className="bg-[#028835] flex justify-between items-center p-4">
+          <div className="bg-brand flex justify-between items-center p-4">
             <h2 className="text-white text-lg font-bold flex items-center gap-2">POLICY RENEWAL</h2>
             <button onClick={onClose} className="bg-[#DF342E] p-2 rounded">
               <svg
@@ -92,7 +92,7 @@ const InsuranceSidebar: React.FC<InsuranceSidebarProps> = ({ isOpen, onClose }) 
               <button
                 type="submit"
                 disabled={loading}
-                className={`mt-auto bg-[#028835] text-white font-semibold p-4 rounded flex items-center justify-center gap-2 ${
+                className={`mt-auto bg-brand text-white font-semibold p-4 rounded flex items-center justify-center gap-2 ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >

@@ -192,7 +192,7 @@ export default function PropertiesPage() {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "Verified":
-        return "bg-[#028835] text-white w-20 h-8 flex items-center justify-center"
+        return "bg-brand text-white w-20 h-8 flex items-center justify-center"
       case "Processing":
         return "bg-[#4FB8CB] text-white w-20 h-8 flex items-center justify-center"
       case "Expired":
@@ -226,7 +226,7 @@ export default function PropertiesPage() {
           )}
           <Button
             onClick={() => setShowPropertySidebar(true)}
-            className="bg-[#028835] text-white hover:bg-[#026a29] rounded-full"
+            className="bg-brand text-white hover:bg-brand-dark rounded-full"
           >
             <PlusCircle className="mr-2 h-5 w-5" />
             New Property
@@ -296,7 +296,7 @@ export default function PropertiesPage() {
                               onChange={(e) => setSearchKeyword(e.target.value)}
                               className="w-full p-2 border rounded"
                             />
-                            <Button className="w-full mt-2 bg-[#028835] text-white" onClick={handleKeywordSearch}>
+                            <Button className="w-full mt-2 bg-brand text-white" onClick={handleKeywordSearch}>
                               Search
                             </Button>
                           </div>
@@ -321,7 +321,7 @@ export default function PropertiesPage() {
                                 className="w-full p-2 border rounded"
                               />
                             </div>
-                            <Button onClick={handleDateSearch} className="w-full bg-[#028835] text-white">
+                            <Button onClick={handleDateSearch} className="w-full bg-brand text-white">
                               Search
                             </Button>
                           </div>

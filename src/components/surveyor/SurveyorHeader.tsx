@@ -208,7 +208,7 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#028835] to-emerald-700 text-white shadow-lg shadow-emerald-200/60">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-emerald-700 text-white shadow-lg shadow-emerald-200/60">
             <PageIcon className="h-5 w-5" />
           </div>
 
@@ -235,7 +235,7 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Active workspace
               </p>
               <p className="text-sm text-slate-500">Assignments, reports, premiums</p>
@@ -248,8 +248,8 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="group flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#028835]/20">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#028835] to-emerald-700 text-sm font-bold text-white shadow-md shadow-emerald-200/60 transition-transform duration-300 group-hover:scale-105">
+              <button className="group flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-3 py-2.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand/20">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-emerald-700 text-sm font-bold text-white shadow-md shadow-emerald-200/60 transition-transform duration-300 group-hover:scale-105">
                   {initials}
                 </span>
                 <span className="hidden text-left sm:block">
@@ -267,7 +267,7 @@ const SurveyorHeader: React.FC<SurveyorHeaderProps> = ({ onMenuClick }) => {
               className="w-64 rounded-3xl border border-slate-200/80 bg-white/95 p-2 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl"
             >
               <DropdownMenuLabel className="px-3 py-2">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
                   Signed in as
                 </div>
                 <div className="mt-1 text-sm font-semibold text-slate-900">

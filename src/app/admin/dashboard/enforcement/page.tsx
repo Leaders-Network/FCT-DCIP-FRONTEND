@@ -665,7 +665,7 @@ const EnforcementPage = () => {
                     <CheckSquare className="h-5 w-5 text-green-600" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-600">Ready to Confirm <span className="font-normal text-gray-400">(this page)</span></p>
+                    <p className="text-sm font-medium text-gray-600">Ready to Confirm <span className="font-normal text-gray-500">(this page)</span></p>
                     <p className="text-xl font-semibold text-gray-900">{(stats as any).canConfirm}</p>
                   </div>
                 </div>
@@ -677,7 +677,7 @@ const EnforcementPage = () => {
                     <XCircle className="h-5 w-5 text-red-600" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-600">Need Review <span className="font-normal text-gray-400">(this page)</span></p>
+                    <p className="text-sm font-medium text-gray-600">Need Review <span className="font-normal text-gray-500">(this page)</span></p>
                     <p className="text-xl font-semibold text-gray-900">{(stats as any).needsReview}</p>
                   </div>
                 </div>

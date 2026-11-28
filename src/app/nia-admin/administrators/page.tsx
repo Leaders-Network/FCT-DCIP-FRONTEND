@@ -346,7 +346,7 @@ const NIAAdministratorsPage = () => {
                                             {getStatusBadge(admin.status)}
                                         </div>
                                     </div>
-                                    <button className="text-gray-400 hover:text-gray-600">
+                                    <button className="text-gray-500 hover:text-gray-600">
                                         <MoreVertical className="w-4 h-4" />
                                     </button>
                                 </div>

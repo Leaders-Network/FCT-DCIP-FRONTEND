@@ -44,7 +44,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
           priority
         />
         {/* Modern multi-layer gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#028835]/90 via-black/60 to-black/90 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand/90 via-black/60 to-black/90 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         
         {/* Glassmorphic content container */}

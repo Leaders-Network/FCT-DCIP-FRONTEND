@@ -101,7 +101,7 @@ function WorkloadBar({ current, max }: { current: number; max: number }) {
   return (
     <div>
       <div className="mb-1 flex justify-between">
-        <span className="text-[10px] font-medium text-slate-400">Workload</span>
+        <span className="text-[10px] font-medium text-slate-500">Workload</span>
         <span className="text-[10px] font-semibold text-slate-600">{current}/{max} ({pct}%)</span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-slate-100">
@@ -264,7 +264,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
       <div className="relative flex h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-[0_32px_120px_rgba(15,23,42,0.25)] backdrop-blur-xl">
 
         {/* Gradient accent bar */}
-        <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-[#028835] via-emerald-500 to-teal-400" />
+        <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-brand via-emerald-500 to-teal-400" />
 
         {/* Header */}
         <div className="flex shrink-0 items-start justify-between px-6 py-5 border-b border-slate-100">
@@ -291,7 +291,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
             {/* Priority + deadline */}
             <div className="space-y-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assignment Info</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Assignment Info</p>
               <div className={`flex items-center gap-2 rounded-2xl border px-3 py-2 ${priCfg.bg} ${priCfg.border}`}>
                 <Flag className={`h-3.5 w-3.5 ${priCfg.text}`} />
                 <span className={`text-xs font-semibold ${priCfg.text}`}>{priCfg.label} Priority</span>
@@ -306,7 +306,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
             {/* Property */}
             <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Property</p>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Property</p>
               <InfoRow label="Type" value={assignment.policyId.propertyDetails.propertyType} />
               <InfoRow label="Value" value={`₦${assignment.policyId.propertyDetails.buildingValue.toLocaleString()}`} />
               <div className="flex items-start gap-2 border-b border-slate-100 py-2 last:border-0">
@@ -317,7 +317,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
 
             {/* Client */}
             <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Client Contact</p>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Client Contact</p>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <User className="h-3 w-3 shrink-0 text-slate-400" />
@@ -471,7 +471,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                           {/* Avatar */}
                           <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm ${
                             surveyor.availability === "available"
-                              ? "bg-gradient-to-br from-[#028835] to-emerald-600"
+                              ? "bg-gradient-to-br from-brand to-emerald-600"
                               : surveyor.availability === "busy"
                               ? "bg-gradient-to-br from-amber-500 to-orange-500"
                               : "bg-gradient-to-br from-slate-400 to-slate-500"
@@ -549,7 +549,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-700">No surveyors found</p>
-                    <p className="mt-0.5 text-xs text-slate-400">Try adjusting your filters to see more surveyors.</p>
+                    <p className="mt-0.5 text-xs text-slate-500">Try adjusting your filters to see more surveyors.</p>
                   </div>
                 </div>
               )}
@@ -568,11 +568,11 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                       <p className="text-xs font-semibold text-slate-800 truncate">
                         {selectedSurveyor.firstname} {selectedSurveyor.lastname}
                       </p>
-                      <p className="text-[10px] text-slate-400">Selected for assignment</p>
+                      <p className="text-[10px] text-slate-500">Selected for assignment</p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400">Select a surveyor above to proceed</p>
+                  <p className="text-xs text-slate-500">Select a surveyor above to proceed</p>
                 )}
 
                 <div className="flex shrink-0 items-center gap-2">
@@ -585,7 +585,7 @@ const AMMCAssignmentManagement: React.FC<AMMCAssignmentManagementProps> = ({
                   <button
                     onClick={handleAssignSurveyor}
                     disabled={!selectedSurveyor || assigning}
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#028835] to-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand to-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {assigning ? (
                       <>

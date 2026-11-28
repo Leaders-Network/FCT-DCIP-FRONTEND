@@ -216,7 +216,7 @@ function ResetPasswordForm({
       <button
         type="submit"
         disabled={isLoading}
-        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+        className={`w-full md:w-[200px] h-[50px] bg-brand rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
           }`}
       >
         {isLoading ? "Sending..." : "Send code"}

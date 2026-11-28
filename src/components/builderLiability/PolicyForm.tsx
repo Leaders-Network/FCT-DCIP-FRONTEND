@@ -985,7 +985,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
               Save Draft
             </button>
             {lastSaved && (
-              <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+              <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
                 Auto-saved at {lastSaved.toLocaleTimeString()}
               </span>
             )}
@@ -994,7 +994,7 @@ export const BuilderLiabilityPolicyForm: React.FC<PolicyFormProps> = ({
 
         {/* Progress Bar */}
         <div className="hidden sm:block">
-          <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
+          <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">
             <span>
               Step {currentIndex + 1} of {FORM_TABS.length}
             </span>

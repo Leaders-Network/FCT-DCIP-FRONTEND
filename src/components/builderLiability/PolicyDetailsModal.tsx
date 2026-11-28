@@ -460,12 +460,12 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
         full?: boolean;
     }) => (
         <div className={full ? 'col-span-full' : ''}>
-            <dt className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-0.5">
+            <dt className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-0.5">
                 {Icon && <Icon className="w-3 h-3" />}
                 {label}
             </dt>
             <dd className="text-sm font-medium text-slate-900 leading-snug">
-                {value ?? <span className="text-slate-400 italic text-xs">Not provided</span>}
+                {value ?? <span className="text-slate-500 italic text-xs">Not provided</span>}
             </dd>
         </div>
     );
@@ -499,7 +499,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                             <DialogTitle className="text-xl font-bold text-white sm:text-2xl leading-tight">
                                 {clientName || 'Policy Details'}
                             </DialogTitle>
-                            <p className="mt-0.5 text-sm text-slate-400 truncate max-w-md">
+                            <p className="mt-0.5 text-sm text-emerald-50 truncate max-w-md">
                                 {projectTitle || projectAddress || 'No project title provided'}
                             </p>
                         </div>
@@ -694,9 +694,9 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <div className="space-y-3">
                                         {policy.workforce.categoryOfWorkmen.map((workman, index) => (
                                             <div key={index} className="grid grid-cols-3 gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100">
-                                                <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Category</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.categoryOfWorkmen}</dd></div>
-                                                <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Employees</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.numberOfEmployment}</dd></div>
-                                                <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Years</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.yearsOfEmployment}</dd></div>
+                                                <div><dt className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Category</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.categoryOfWorkmen}</dd></div>
+                                                <div><dt className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Employees</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.numberOfEmployment}</dd></div>
+                                                <div><dt className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Years</dt><dd className="text-sm font-medium text-slate-900 mt-0.5">{workman.yearsOfEmployment}</dd></div>
                                             </div>
                                         ))}
                                     </div>
@@ -709,10 +709,10 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                             <div key={index} className="p-3 rounded-lg bg-slate-50 border border-slate-100">
                                                 <p className="text-sm font-semibold text-slate-900 mb-2">{prof.surname} {prof.otherName}</p>
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                                    <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Profession</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.profession}</dd></div>
-                                                    <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Qualification</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.qualification}</dd></div>
-                                                    <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Experience</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.yearsInEmployment} yrs</dd></div>
-                                                    <div><dt className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Gender / Age</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.gender}, {prof.age}</dd></div>
+                                                    <div><dt className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Profession</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.profession}</dd></div>
+                                                    <div><dt className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Qualification</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.qualification}</dd></div>
+                                                    <div><dt className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Experience</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.yearsInEmployment} yrs</dd></div>
+                                                    <div><dt className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Gender / Age</dt><dd className="text-xs text-slate-700 mt-0.5">{prof.gender}, {prof.age}</dd></div>
                                                 </div>
                                             </div>
                                         ))}
@@ -759,7 +759,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                     <div>
                                         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Premium Amount</p>
                                         <p className="text-3xl font-bold text-slate-900 mt-1">
-                                            {premiumAmount !== null ? formatCurrency(premiumAmount) : <span className="text-slate-400 text-xl italic">Not yet calculated</span>}
+                                            {premiumAmount !== null ? formatCurrency(premiumAmount) : <span className="text-slate-500 text-xl italic">Not yet calculated</span>}
                                         </p>
                                     </div>
                                     <div className="flex flex-col items-start sm:items-end gap-1">
@@ -825,7 +825,7 @@ export const PolicyDetailsModal: React.FC<PolicyDetailsModalProps> = ({
                                 </dl>
                                 {policy.statusHistory && policy.statusHistory.length > 0 && (
                                     <div>
-                                        <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Status History</h4>
+                                        <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Status History</h4>
                                         <div className="space-y-0">
                                             {policy.statusHistory.map((history, index) => (
                                                 <div key={index} className="flex gap-3 pb-4 last:pb-0">

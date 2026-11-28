@@ -514,7 +514,7 @@ const ProcessingMonitorPage = () => {
                                                                             <p className="text-xs text-gray-600">
                                                                                 {activity.propertyAddress}
                                                                             </p>
-                                                                            <span className="text-xs text-gray-400">•</span>
+                                                                            <span className="text-xs text-gray-500">•</span>
                                                                             <p className="text-xs text-gray-600">
                                                                                 {new Date(activity.timestamp).toLocaleString()}
                                                                             </p>
