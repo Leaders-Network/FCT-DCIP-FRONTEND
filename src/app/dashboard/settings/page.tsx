@@ -121,11 +121,11 @@ export default function UserSettingsPage() {
   };
 
   const inputClass =
-    "w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pl-11 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#028835]/10";
+    "w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pl-11 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/10";
 
   return (
     <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-[#015a23] via-[#028835] to-emerald-500 p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.22)]">
+      <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-brand-darker via-brand to-emerald-500 p-6 text-white shadow-[0_24px_80px_rgba(5,150,105,0.22)]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_36%)]" />
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
@@ -164,7 +164,7 @@ export default function UserSettingsPage() {
             onClick={() => setActiveTab("profile")}
             className={`rounded-[1.25rem] px-4 py-3 text-sm font-medium transition-all duration-300 ${
               activeTab === "profile"
-                ? "bg-white text-[#028835] shadow-sm"
+                ? "bg-white text-brand shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -175,7 +175,7 @@ export default function UserSettingsPage() {
             onClick={() => setActiveTab("password")}
             className={`rounded-[1.25rem] px-4 py-3 text-sm font-medium transition-all duration-300 ${
               activeTab === "password"
-                ? "bg-white text-[#028835] shadow-sm"
+                ? "bg-white text-brand shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -262,7 +262,7 @@ export default function UserSettingsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#028835] to-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand to-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -331,7 +331,7 @@ export default function UserSettingsPage() {
                     type={field.visible ? "text" : "password"}
                     value={field.value}
                     onChange={(e) => field.setter(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pl-11 pr-11 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#028835]/10"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 pl-11 pr-11 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/10"
                     required
                     minLength={6}
                   />
@@ -367,7 +367,7 @@ export default function UserSettingsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#028835] to-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand to-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
                   <>

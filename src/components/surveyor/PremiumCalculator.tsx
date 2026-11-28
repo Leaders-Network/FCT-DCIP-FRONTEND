@@ -331,7 +331,7 @@ export default function PremiumCalculator() {
             <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
 
                 {/* ── Header ─────────────────────────────────────────────────── */}
-                <div className="relative overflow-hidden rounded-[2rem] border border-emerald-200/70 bg-gradient-to-r from-[#028835] via-[#02742d] to-[#015a23] p-4 text-white shadow-[0_24px_80px_rgba(5,150,105,0.25)] sm:p-6">
+                <div className="relative overflow-hidden rounded-[2rem] border border-emerald-200/70 bg-gradient-to-r from-brand via-[#02742d] to-brand-darker p-4 text-white shadow-[0_24px_80px_rgba(5,150,105,0.25)] sm:p-6">
                     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_45%)]" />
                     <div className="flex items-start gap-3 mb-2">
                         <div className="p-2 bg-white/20 rounded-xl">
@@ -340,7 +340,7 @@ export default function PremiumCalculator() {
                         <div>
                             <h1 className="text-xl font-bold sm:text-2xl">Premium Calculator</h1>
                             <p className="text-green-100 text-sm mt-0.5">
-                                FCT-DCIP Builder Liability — Surveyor Risk Assessment Tool
+                                Builders Liability Portal — Surveyor Risk Assessment Tool
                             </p>
                         </div>
                     </div>
@@ -353,7 +353,7 @@ export default function PremiumCalculator() {
                 {/* ── Policy Lookup ───────────────────────────────────────────── */}
                 <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                     <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                        <Search className="w-4 h-4 text-[#028835]" />
+                        <Search className="w-4 h-4 text-brand" />
                         Auto-fill from Policy (Optional)
                     </h2>
                     <div className="flex flex-col gap-3 sm:flex-row">
@@ -363,13 +363,13 @@ export default function PremiumCalculator() {
                             value={policyInput}
                             onChange={(e) => setPolicyInput(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleFetchPolicy()}
-                            className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:outline-none focus:ring-4 focus:ring-[#028835]/10"
+                            className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10"
                         />
                         <div className="print:hidden flex flex-wrap gap-3">
                             <button
                                 onClick={handleFetchPolicy}
                                 disabled={fetchLoading || !policyInput.trim()}
-                                className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#028835] px-5 py-3 text-sm font-medium text-white shadow-md shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#026a28] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+                                className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-3 text-sm font-medium text-white shadow-md shadow-emerald-200/50 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#026a28] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
                             >
                                 {fetchLoading ? (
                                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -435,7 +435,7 @@ export default function PremiumCalculator() {
                 {/* ── Property Valuation & Premium ─────────────────────────────────── */}
                 <div className="rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6">
                     <h2 className="text-base font-semibold text-gray-800 mb-1 flex items-center gap-2">
-                        <Calculator className="w-4 h-4 text-[#028835]" />
+                        <Calculator className="w-4 h-4 text-brand" />
                         Property Valuation &amp; Premium
                     </h2>
                     <p className="text-xs text-gray-500 mb-4">
@@ -456,7 +456,7 @@ export default function PremiumCalculator() {
                                 placeholder="e.g. 50,000,000"
                                 value={propertyValue}
                                 onChange={(e) => setPropertyValue(e.target.value)}
-                                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:outline-none focus:ring-4 focus:ring-[#028835]/10"
+                                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10"
                             />
                         </div>
                     </div>
@@ -507,7 +507,7 @@ export default function PremiumCalculator() {
                                                     onClick={() => updateAnswer("buildingApproval", value)}
                                                     className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                                                         answers.buildingApproval === value
-                                                            ? "bg-[#028835] text-white"
+                                                            ? "bg-brand text-white"
                                                             : "bg-white text-slate-600 hover:bg-slate-100"
                                                     }`}
                                                 >
@@ -546,7 +546,7 @@ export default function PremiumCalculator() {
                                                     onClick={() => updateAnswer("directLabor", value)}
                                                     className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                                                         answers.directLabor === value
-                                                            ? "bg-[#028835] text-white"
+                                                            ? "bg-brand text-white"
                                                             : "bg-white text-slate-600 hover:bg-slate-100"
                                                     }`}
                                                 >
@@ -573,7 +573,7 @@ export default function PremiumCalculator() {
                                                             onClick={() => updateAnswer("contractorRegistered", value)}
                                                             className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                                                                 answers.contractorRegistered === value
-                                                                    ? "bg-[#028835] text-white"
+                                                                    ? "bg-brand text-white"
                                                                     : "bg-white text-slate-600 hover:bg-slate-100"
                                                             }`}
                                                         >
@@ -595,7 +595,7 @@ export default function PremiumCalculator() {
                                                                     onClick={() => updateAnswer("contractorClassification", option.value)}
                                                                     className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                                                                         answers.contractorClassification === option.value
-                                                                            ? "bg-[#028835] text-white"
+                                                                            ? "bg-brand text-white"
                                                                             : "bg-white text-slate-600 hover:bg-slate-100"
                                                                     }`}
                                                                 >
@@ -635,7 +635,7 @@ export default function PremiumCalculator() {
                                                         onClick={() => updateAnswer("siteHighRisk", value)}
                                                         className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                                                             answers.siteHighRisk === value
-                                                                ? "bg-[#028835] text-white"
+                                                                ? "bg-brand text-white"
                                                                 : "bg-white text-slate-600 hover:bg-slate-100"
                                                         }`}
                                                     >
@@ -654,7 +654,7 @@ export default function PremiumCalculator() {
                                                         onClick={() => updateAnswer("siteEngineering", value)}
                                                         className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                                                             answers.siteEngineering === value
-                                                                ? "bg-[#028835] text-white"
+                                                                ? "bg-brand text-white"
                                                                 : "bg-white text-slate-600 hover:bg-slate-100"
                                                         }`}
                                                     >
@@ -690,7 +690,7 @@ export default function PremiumCalculator() {
                                                     onClick={() => updateAnswer("assessorEngaged", value)}
                                                     className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                                                         answers.assessorEngaged === value
-                                                            ? "bg-[#028835] text-white"
+                                                            ? "bg-brand text-white"
                                                             : "bg-white text-slate-600 hover:bg-slate-100"
                                                     }`}
                                                 >
@@ -768,7 +768,7 @@ export default function PremiumCalculator() {
                             type="checkbox"
                             checked={answers.opinionHasRiskFactor}
                             onChange={(e) => updateAnswer("opinionHasRiskFactor", e.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 text-[#028835] focus:ring-[#028835]"
+                            className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
                         />
                         <label htmlFor="opinion-risk-factor" className="cursor-pointer">
                             This opinion includes a risk factor
@@ -779,13 +779,13 @@ export default function PremiumCalculator() {
                         onChange={(e) => setSurveyOpinion(e.target.value)}
                         rows={4}
                         placeholder="Add your professional opinion here..."
-                        className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#028835] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#028835]/10"
+                        className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm shadow-sm transition-all duration-300 placeholder:text-slate-400 focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/10"
                     />
                 </div>
 
                 <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl print:shadow-none">
                     {/* Result header */}
-                    <div className="flex flex-col gap-3 bg-gradient-to-r from-[#028835] to-[#015a23] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-3 bg-gradient-to-r from-brand to-brand-darker px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                         <h2 className="text-white font-semibold flex items-center gap-2">
                             <CheckCircle className="w-4 h-4" />
                             Premium Summary
@@ -839,7 +839,7 @@ export default function PremiumCalculator() {
                                 {/* Base premium x */}
                                 <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
                                     <span className="text-gray-600">
-                                        Base Premium (x)&nbsp;<span className="text-gray-400 text-xs">(0.25% of value)</span>
+                                        Base Premium (x)&nbsp;<span className="text-gray-500 text-xs">(0.25% of value)</span>
                                     </span>
                                     <span className="text-blue-700 font-semibold">{fmt(basePremium)}</span>
                                 </div>
@@ -847,14 +847,14 @@ export default function PremiumCalculator() {
                                 {/* Loading amount */}
                                 <div className="flex justify-between items-center py-1.5 border-b border-dashed border-gray-200">
                                     <span className="text-gray-700 font-semibold">
-                                        Additional Loading&nbsp;<span className="text-gray-400 text-xs font-normal">(capped at 0.5x)</span>
+                                        Additional Loading&nbsp;<span className="text-gray-500 text-xs font-normal">(capped at 0.5x)</span>
                                     </span>
                                     <span className="font-semibold text-gray-900">{fmt(totalLoadingAmount)}</span>
                                 </div>
 
                                 {/* Risk Loadings */}
                                 {loadings.length === 0 ? (
-                                    <div className="py-2 text-gray-400 text-xs italic">
+                                    <div className="py-2 text-gray-500 text-xs italic">
                                         No loadings selected — total premium = base risk only.
                                     </div>
                                 ) : (
@@ -864,7 +864,7 @@ export default function PremiumCalculator() {
                                             className="flex justify-between items-center py-1.5"
                                         >
                                             <span className="text-gray-600 flex items-center gap-1.5">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-[#028835] inline-block" />
+                                                <span className="w-1.5 h-1.5 rounded-full bg-brand inline-block" />
                                                 {l.label}
                                             </span>
                                             <span className="text-amber-700 font-medium">
@@ -888,15 +888,15 @@ export default function PremiumCalculator() {
 
                         {/* Grand Total */}
                         {isValid && (
-                            <div className="bg-gradient-to-r from-[#028835]/10 to-blue-50 rounded-xl p-5 flex items-center justify-between">
+                            <div className="bg-gradient-to-r from-brand/10 to-blue-50 rounded-xl p-5 flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600">Total Premium Payable</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">
+                                    <p className="text-xs text-gray-500 mt-0.5">
                                         0.25% base risk + {loadings.length} selected loading{loadings.length !== 1 ? "s" : ""}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-3xl font-bold text-[#028835]">
+                                    <p className="text-3xl font-bold text-brand">
                                         {fmt(totalPremium)}
                                     </p>
                                 </div>

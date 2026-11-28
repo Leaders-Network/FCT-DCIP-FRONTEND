@@ -12,7 +12,7 @@ const Button: React.FC<ButtonProps> = ({ title, onClick, isDisabled, isLoading }
   return (
     <button 
       className={`w-[200px] h-[50px] rounded-full text-white text-base font-semibold flex items-center justify-evenly ${
-        isLoading || isDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#028835]'
+        isLoading || isDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand'
       }`}
       onClick={onClick}
       disabled={isDisabled || isLoading}

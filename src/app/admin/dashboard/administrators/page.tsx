@@ -87,7 +87,7 @@ type UserManagementItem = Administrator | User | Employee;
 type RoleOption = { _id: string; role: string };
 
 // /auth/available-roles returns { availableRoles: [{ _id, role }] }; entries can be
-// null when a seeded role (e.g. Staff) does not exist.
+// null when a seeded role does not exist.
 const extractRoleOptions = (response: unknown): RoleOption[] => {
   const list = (response as { availableRoles?: unknown })?.availableRoles;
   if (!Array.isArray(list)) return [];
@@ -345,7 +345,7 @@ export default function AdministratorsPage() {
           ...(statusChanged ? { status: formData.status } : {})
         })
       } else {
-        // Staff accounts: send roleId only when an administrator's role really
+        // Employee accounts: send roleId only when an administrator's role really
         // changed. NIA/underwriter roles are read-only here (they drive portal access).
         const roleChanged = formData.userType === 'administrator' &&
           Boolean(formData.roleId) && formData.roleId !== editOriginal?.roleId

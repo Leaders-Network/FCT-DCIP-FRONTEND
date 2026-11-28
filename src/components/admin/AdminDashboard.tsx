@@ -124,7 +124,7 @@ const AdminDashboard: React.FC = () => {
 
     } catch (error: unknown) {
       setError('Failed to load dashboard data. Please try refreshing.');
-      setFriendlyError('We couldn’t load the admin dashboard right now. Please refresh, and contact the Gladfaith team if it keeps failing.');
+      setFriendlyError('We could not load the admin dashboard. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -375,7 +375,7 @@ const AdminDashboard: React.FC = () => {
 
         {/* Error Message */}
         {friendlyError && (
-          <DashboardErrorBanner message={friendlyError} className="mb-6" />
+          <DashboardErrorBanner message={friendlyError} className="mb-6" onRetry={fetchDashboardData} retrying={loading} />
         )}
         {error && !friendlyError && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">

@@ -6,6 +6,23 @@ import Link from 'next/link';
 import { CgMenuLeft, CgClose } from 'react-icons/cg';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { activeSocialLinks } from '@/constants/socialLinks';
+
+const NAV_LINKS = [
+  { name: 'Home', path: '/' },
+  { name: 'About', path: '/about' },
+  { name: 'Insurance', path: '/insurance-options' },
+  { name: 'FAQ', path: '/faq' },
+  { name: 'Contact', path: '/contact' },
+];
+
+const SOCIAL_ICONS = {
+  facebook: FaFacebookF,
+  instagram: FaInstagram,
+  twitter: FaTwitter,
+  linkedin: FaLinkedinIn,
+  youtube: null,
+} as const;
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,10 +43,20 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Escape closes the mobile menu.
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isMenuOpen]);
+
   return (
     <header className="relative z-[60]">
       {/* Top bar - NOT fixed */}
-      <div className="bg-[#028835] py-2 hidden md:block">
+      <div className="bg-brand py-2 hidden md:block">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex justify-between items-center text-xs font-medium">
             <div className="flex items-center space-x-6">
@@ -43,18 +70,22 @@ const Header = () => {
               </div>
             </div>
             <div className="flex items-center space-x-5">
-              <a href="#" className="text-white/80 hover:text-white hover:scale-110 transition-all">
-                <FaFacebookF size={14} />
-              </a>
-              <a href="#" className="text-white/80 hover:text-white hover:scale-110 transition-all">
-                <FaInstagram size={14} />
-              </a>
-              <a href="#" className="text-white/80 hover:text-white hover:scale-110 transition-all">
-                <FaTwitter size={14} />
-              </a>
-              <a href="#" className="text-white/80 hover:text-white hover:scale-110 transition-all">
-                <FaLinkedinIn size={14} />
-              </a>
+              {activeSocialLinks().map((link) => {
+                const Icon = SOCIAL_ICONS[link.network];
+                if (!Icon) return null;
+                return (
+                  <a
+                    key={link.network}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={link.label}
+                    className="text-white/80 hover:text-white hover:scale-110 transition-all"
+                  >
+                    <Icon size={14} aria-hidden="true" />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -89,23 +120,18 @@ const Header = () => {
                   Builders Liability
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-green-600 font-bold">
-                  FCT-DCIP Portal
+                  Portal
                 </span>
               </div>
             </Link>
 
             {/* Desktop menu */}
             <div className="hidden md:flex items-center space-x-1">
-              {[
-                { name: 'Home', path: '/' },
-                { name: 'About', path: '/about' },
-                { name: 'FAQ', path: '/faq' },
-                { name: 'Contact', path: '/contact' }
-              ].map((link) => (
+              {NAV_LINKS.map((link) => (
                 <Link 
                   key={link.path}
                   href={link.path} 
-                  className={`relative px-4 py-2 text-[0.95rem] font-semibold rounded-lg transition-colors overflow-hidden group
+                  className={`relative px-2.5 lg:px-4 py-2 text-[0.95rem] font-semibold rounded-lg transition-colors overflow-hidden group
                     ${pathname === link.path ? 'text-green-700' : 'text-gray-600 hover:text-green-700'}
                   `}
                 >
@@ -121,7 +147,7 @@ const Header = () => {
             {/* CTA Button & Mobile Toggle */}
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
               <div className="hidden md:flex items-center">
-                <Link href="/login" className="flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 shadow-[0_4px_14px_0_rgba(2,136,53,0.39)] hover:shadow-[0_6px_20px_rgba(2,136,53,0.23)] hover:-translate-y-0.5 transition-all duration-200">
+                <Link href="/login" className="flex items-center justify-center px-4 lg:px-6 py-2.5 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 shadow-[0_4px_14px_0_rgba(2,136,53,0.39)] hover:shadow-[0_6px_20px_rgba(2,136,53,0.23)] hover:-translate-y-0.5 transition-all duration-200">
                   Login to Portal
                 </Link>
               </div>
@@ -130,7 +156,9 @@ const Header = () => {
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors"
-                aria-label="Toggle menu"
+                aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isMenuOpen}
+                aria-controls="mobile-menu"
               >
                 {isMenuOpen ? <CgClose size={24} /> : <CgMenuLeft size={24} />}
               </button>
@@ -140,14 +168,12 @@ const Header = () => {
         </div>
 
         {/* Mobile menu dropdown */}
-        <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div
+          id="mobile-menu"
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96 opacity-100' : 'invisible max-h-0 opacity-0'}`}
+        >
           <div className="px-4 py-4 space-y-2 bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-xl">
-            {[
-              { name: 'Home', path: '/' },
-              { name: 'About', path: '/about' },
-              { name: 'FAQ', path: '/faq' },
-              { name: 'Contact', path: '/contact' }
-            ].map((link) => (
+            {NAV_LINKS.map((link) => (
               <Link 
                 key={link.path}
                 href={link.path} 

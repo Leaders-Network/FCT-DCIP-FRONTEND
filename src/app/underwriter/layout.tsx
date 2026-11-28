@@ -1,18 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { getAuthToken } from '@/utils/auth';
+import { usePathname } from 'next/navigation';
 import UnderwriterAdminSidebar from '@/components/underwriter/UnderwriterSideBar';
 import UnderwriterHeader from '@/components/underwriter/Underwriter';
 import { NotificationProvider } from '@/context/NotificationContext';
+import RequireSession from "@/components/shared/RequireSession";
 
 export default function UnderwriterAdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const router = useRouter();
     const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
@@ -47,20 +46,6 @@ export default function UnderwriterAdminLayout({
         '/underwriter/registration-success'
     ].includes(pathname || '');
 
-    useEffect(() => {
-        // Skip auth check for public auth pages
-        if (isPublicAuthPage) {
-            return;
-        }
-
-        // Check if user is authenticated
-        const token = getAuthToken('underwriter-admin');
-
-        if (!token) {
-            router.push('/underwriter/login');
-        }
-    }, [isPublicAuthPage, router]);
-
     // Public auth pages render without dashboard chrome
     if (isPublicAuthPage) {
         return <>{children}</>;
@@ -68,6 +53,7 @@ export default function UnderwriterAdminLayout({
 
     // Render with sidebar and header for authenticated pages
     return (
+        <RequireSession area="underwriter-admin">
         <NotificationProvider>
             <div className="flex h-screen min-w-0 gap-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/20 p-0 sm:gap-3 sm:p-4 print:block print:h-auto print:bg-white print:p-0">
                 {/* Mobile Overlay */}
@@ -93,5 +79,6 @@ export default function UnderwriterAdminLayout({
                 </div>
             </div>
         </NotificationProvider>
+        </RequireSession>
     );
 }

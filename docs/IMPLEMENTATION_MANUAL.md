@@ -1,4 +1,4 @@
-# FCT-DCIP Implementation Manual — Frontend pointer
+# Builders Liability Portal Implementation Manual — Frontend pointer
 
 The single source of truth for the cleanup, security and scaling programme lives in the **backend repo**:
 `FCT-DCIP-BACKEND/docs/IMPLEMENTATION_MANUAL.md` (branch `hardening/phase-0`).

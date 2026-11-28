@@ -51,9 +51,9 @@ const ResetPassword = () => {
         <form onSubmit={handleSubmit}>
           <div className="mb-8">
             <Input
-              label=""
+              label="Email address"
               type="email"
-              placeholder="Enter your email Address"
+              autoComplete="email"
               value={email}
               handleChange={setEmail}
               required
@@ -61,7 +61,7 @@ const ResetPassword = () => {
           </div>
 
           {error && (
-            <div className="mb-4 text-red-500 text-sm">{error}</div>
+            <div role="alert" className="mb-4 text-red-600 text-sm">{error}</div>
           )}
 
           <div className="flex items-center justify-between mb-6">

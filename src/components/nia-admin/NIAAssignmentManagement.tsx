@@ -215,7 +215,7 @@ const NIAAssignmentManagement: React.FC<NIAAssignmentManagementProps> = ({
                 {assignment.policyId.propertyDetails.propertyType} - {assignment.policyId.propertyDetails.address}
               </p>
             </div>
-            <button
+            <button aria-label="Close"
               onClick={onClose}
               className="text-blue-100 hover:text-white transition-colors"
             >

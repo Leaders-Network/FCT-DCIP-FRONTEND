@@ -140,7 +140,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                     <option value="">--Select Role--</option>
                     <option value="super-admin">Super Admin</option>
                     <option value="admin">Admin</option>
-                    <option value="staff">Staff</option>
                   </select>
                 </div>
 

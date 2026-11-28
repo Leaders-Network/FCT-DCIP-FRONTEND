@@ -194,7 +194,7 @@ export default function Verify() {
             alt={`Background ${index + 1}`}
             fill
             priority={index === 0}
-            className={`object-cover transition-opacity duration-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"
+            className={`object-cover transition-opacity [transition-duration:2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"
               }`}
           />
         ))}
@@ -337,7 +337,7 @@ function VerifyForm({
       <button
         type="submit"
         disabled={isLoading}
-        className={`w-full md:w-[200px] h-[50px] bg-[#028835] rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+        className={`w-full md:w-[200px] h-[50px] bg-brand rounded-full text-white text-sm md:text-base font-semibold flex items-center justify-center md:justify-evenly ${isLoading ? "opacity-50 cursor-not-allowed" : ""
           }`}
       >
         {isLoading ? "Verifying..." : "Verify OTP"}

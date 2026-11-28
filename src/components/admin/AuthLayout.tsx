@@ -40,11 +40,11 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
           src="/abuja-bg.png"
           alt="Dashboard background illustration"
           fill
-          className="object-cover opacity-50 scale-105 transition-transform duration-[20s] ease-out hover:scale-110"
+          className="object-cover opacity-50 scale-105 transition-transform [transition-duration:20s] ease-out hover:scale-110"
           priority
         />
         {/* Modern multi-layer gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#028835]/90 via-black/60 to-black/90 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand/90 via-black/60 to-black/90 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         
         {/* Glassmorphic content container */}

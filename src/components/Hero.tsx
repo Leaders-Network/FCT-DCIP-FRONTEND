@@ -63,7 +63,7 @@ const Hero: React.FC = () => {
           alt={`Background ${index + 1}`}
           fill
           priority={index === 0}
-          className={`object-cover transition-all duration-[2500ms] ease-in-out transform ${
+          className={`object-cover transition-all [transition-duration:2500ms] ease-in-out transform ${
             index === currentImage ? "opacity-100 scale-100" : "opacity-0 scale-105"
           }`}
         />
@@ -86,7 +86,7 @@ const Hero: React.FC = () => {
             <div className="relative z-10 rounded-[2rem] border border-white/10 bg-white/5 p-8 md:p-12 shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-md">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 mb-6 backdrop-blur-sm">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-xs font-semibold uppercase tracking-widest text-emerald-300">FCT-DCIP Portal</span>
+                <span className="text-xs font-semibold uppercase tracking-widest text-emerald-300">Builders Liability Portal</span>
               </div>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-[1.15] tracking-tight">
@@ -136,7 +136,7 @@ const Hero: React.FC = () => {
             className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/20 bg-white/95 shadow-[0_32px_120px_rgba(15,23,42,0.3)] backdrop-blur-xl animate-in zoom-in-95 duration-200"
           >
             {/* Gradient accent bar */}
-            <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-[#028835] via-emerald-500 to-teal-400" />
+            <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-brand via-emerald-500 to-teal-400" />
             
             {/* Close button */}
             <button
@@ -154,7 +154,7 @@ const Hero: React.FC = () => {
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
                       <ShieldCheck className="h-6 w-6" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900">Welcome to FCT-DCIP</h2>
+                    <h2 className="text-2xl font-bold text-slate-900">Welcome to the Builders Liability Portal</h2>
                     <p className="mt-2 text-sm text-slate-500">
                       Select an option below to access the Builders Liability portal.
                     </p>

@@ -126,7 +126,7 @@ const AssignmentsList = () => {
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        className="w-full rounded-full border border-white/70 bg-white/90 px-4 py-3 text-sm shadow-sm transition-all duration-300 focus:border-[#028835] focus:outline-none focus:ring-2 focus:ring-[#028835]/20 sm:w-auto"
+                        className="w-full rounded-full border border-white/70 bg-white/90 px-4 py-3 text-sm shadow-sm transition-all duration-300 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 sm:w-auto"
                     >
                         <option value="all">All Assignments</option>
                         <option value="assigned">Assigned</option>
@@ -221,7 +221,7 @@ const AssignmentsList = () => {
                                     <div className="lg:ml-6">
                                         <Link
                                             href={`/surveyor/dashboard/assignments/${assignment._id}`}
-                                            className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#028835] to-emerald-700 px-5 py-2.5 text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg lg:w-auto"
+                                            className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-brand to-emerald-700 px-5 py-2.5 text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg lg:w-auto"
                                         >
                                             <Eye className="h-4 w-4 mr-2" />
                                             View Details

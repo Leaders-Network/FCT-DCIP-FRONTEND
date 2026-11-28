@@ -97,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
             onClick={() => !isMobile && toggleSidebar()}
             className="flex min-w-0 items-center gap-3 text-left transition-transform duration-300 hover:-translate-y-0.5"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#028835] to-emerald-700 shadow-lg shadow-emerald-200/60">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-emerald-700 shadow-lg shadow-emerald-200/60">
               <Image
                 src="/logo.svg"
                 alt="Builders Liability Logo"
@@ -156,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile }) => {
               title={!showExpanded ? item.label : undefined}
               className={`group mb-1.5 flex items-center rounded-2xl px-4 py-3 transition-all duration-300 ${
                 isActive
-                  ? "bg-gradient-to-r from-[#028835] to-[#0a7f37] text-white shadow-lg shadow-emerald-200/60"
+                  ? "bg-gradient-to-r from-brand to-[#0a7f37] text-white shadow-lg shadow-emerald-200/60"
                   : "text-slate-700 hover:-translate-y-0.5 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-md"
               } ${!showExpanded ? "justify-center px-0" : ""}`}
             >

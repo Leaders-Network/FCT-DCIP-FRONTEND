@@ -84,7 +84,7 @@ const AboutPage = () => {
       </section>
 
       {/* Mission & Vision */}
-      <section className="py-16 px-6 md:px-16 bg-gray-100">
+      <section className="py-16 px-6 md:px-16 bg-gray-100 overflow-x-clip">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-3xl font-semibold mb-10 text-gray-900">
             Our Mission & Vision

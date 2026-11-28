@@ -273,7 +273,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
               <div key={step} className="flex items-center">
                 <div
                   className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 ${step === currentStep
-                    ? "bg-[#028835] text-white"
+                    ? "bg-brand text-white"
                     : step < currentStep
                       ? "bg-green-200 text-green-800"
                       : "bg-gray-200 text-gray-500"
@@ -327,7 +327,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   <input
                     required
                     type="text"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.propertyDetails.plotNumber}
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "plotNumber", e.target.value)
@@ -343,7 +343,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   {!customZoneMode ? (
                     <select
                       required
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm bg-white"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm bg-white"
                       value={formData.propertyDetails.cadastralZone}
                       onChange={(e) => {
                         if (e.target.value === 'Other') {
@@ -367,7 +367,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                       <input
                         required
                         type="text"
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                         value={formData.propertyDetails.cadastralZone}
                         onChange={(e) =>
                           handleInputChange("propertyDetails", "cadastralZone", e.target.value)
@@ -396,7 +396,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   <input
                     required
                     type="text"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.propertyDetails.district}
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "district", e.target.value)
@@ -412,7 +412,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                 </label>
                 <textarea
                   required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                   rows={3}
                   value={formData.propertyDetails.fullAddress}
                   onChange={(e) =>
@@ -432,7 +432,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   </label>
                   <select
                     required
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.propertyDetails.propertyType}
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "propertyType", e.target.value)
@@ -453,7 +453,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   </label>
                   <select
                     required
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.propertyDetails.constructionMaterial}
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "constructionMaterial", e.target.value)
@@ -478,7 +478,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     required
                     type="number"
                     min="0"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.propertyDetails.buildingValue}
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "buildingValue", Number(e.target.value))
@@ -496,7 +496,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     type="number"
                     min="1900"
                     max={new Date().getFullYear()}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.propertyDetails.yearBuilt}
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "yearBuilt", Number(e.target.value))
@@ -512,7 +512,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                     required
                     type="number"
                     min="0"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.propertyDetails.squareFootage}
                     onChange={(e) =>
                       handleInputChange("propertyDetails", "squareFootage", Number(e.target.value))
@@ -536,7 +536,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                 <input
                   required
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                   value={formData.contactDetails.fullName}
                   onChange={(e) =>
                     handleInputChange("contactDetails", "fullName", e.target.value)
@@ -568,7 +568,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   <input
                     required
                     type="tel"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.contactDetails.phoneNumber}
                     onChange={(e) =>
                       handleInputChange("contactDetails", "phoneNumber", e.target.value)
@@ -584,7 +584,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                 </label>
                 <input
                   type="tel"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                   value={formData.contactDetails.alternatePhone}
                   onChange={(e) =>
                     handleInputChange("contactDetails", "alternatePhone", e.target.value)
@@ -600,7 +600,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                 <input
                   required
                   type="text"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                   value={formData.contactDetails.rcNumber}
                   onChange={(e) =>
                     handleInputChange("contactDetails", "rcNumber", e.target.value.toUpperCase())
@@ -627,7 +627,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   </label>
                   <select
                     required
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                     value={formData.requestDetails.coverageType}
                     onChange={(e) =>
                       handleInputChange("requestDetails", "coverageType", e.target.value)
@@ -674,7 +674,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                   Special Requests or Notes
                 </label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#028835] text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                   rows={3}
                   value={formData.requestDetails.specialRequests}
                   onChange={(e) =>
@@ -702,7 +702,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="px-4 sm:px-6 py-2 text-sm bg-[#028835] text-white rounded-md hover:bg-green-700"
+                  className="px-4 sm:px-6 py-2 text-sm bg-brand text-white rounded-md hover:bg-green-700"
                 >
                   Next
                 </button>
@@ -710,7 +710,7 @@ const PolicyRequestForm: React.FC<PolicyRequestFormProps> = ({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 sm:px-6 py-2 text-sm bg-[#028835] text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 sm:px-6 py-2 text-sm bg-brand text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? "Submitting..." : "Submit"}
                 </button>

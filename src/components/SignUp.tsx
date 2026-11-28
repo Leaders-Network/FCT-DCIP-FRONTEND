@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import ChatWidget from "./ChatWidget";
 
 const signUpSchema = z.object({
   fullName: z.string().min(1, "Full Name is required"),
@@ -86,7 +85,7 @@ export default function SignUp() {
             alt={`Background ${index + 1}`}
             fill
             priority={index === 0}
-            className={`object-cover transition-opacity duration-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"
+            className={`object-cover transition-opacity [transition-duration:2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"
               }`}
           />
         ))}
@@ -295,7 +294,7 @@ function InputField({ id, type, label, value, onChange, error }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder=" "
-        className="peer w-full h-10 md:h-12 px-4 pt-3 pr-12 rounded-xl bg-gray-50/50 border border-gray-200 text-gray-900 text-sm md:text-base focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#028835]/20 focus:border-[#028835] transition-all duration-200"
+        className="peer w-full h-10 md:h-12 px-4 pt-3 pr-12 rounded-xl bg-gray-50/50 border border-gray-200 text-gray-900 text-sm md:text-base focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all duration-200"
       />
       <label
         htmlFor={id}
@@ -435,7 +434,7 @@ function SignUpButton({
       <button
         onClick={handleSubmit}
         disabled={isLoading}
-        className={`group w-full h-12 md:h-14 bg-gradient-to-r from-[#028835] to-green-700 rounded-xl text-white text-sm md:text-base font-semibold flex items-center justify-center transition-all duration-300 shadow-sm mt-4 ${isLoading ? "opacity-50 cursor-not-allowed shadow-none" : "hover:shadow-[0_8px_20px_rgba(2,136,53,0.3)] hover:-translate-y-0.5"
+        className={`group w-full h-12 md:h-14 bg-gradient-to-r from-brand to-green-700 rounded-xl text-white text-sm md:text-base font-semibold flex items-center justify-center transition-all duration-300 shadow-sm mt-4 ${isLoading ? "opacity-50 cursor-not-allowed shadow-none" : "hover:shadow-[0_8px_20px_rgba(2,136,53,0.3)] hover:-translate-y-0.5"
           }`}
       >
         {isLoading ? "Sending OTP..." : "Sign Up"}
@@ -443,7 +442,6 @@ function SignUpButton({
           <MoveRight color="#028835" size={16} />
         </span>
       </button>
-      <ChatWidget />
     </>
   );
 }

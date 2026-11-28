@@ -697,7 +697,7 @@ const InquiryDetailsModal: React.FC<{
               <h2 className="text-xl font-bold">Inquiry Details</h2>
               <p className="text-blue-100 mt-1">{inquiry.referenceId}</p>
             </div>
-            <button
+            <button aria-label="Close"
               onClick={onClose}
               className="text-blue-100 hover:text-white"
             >
@@ -890,7 +890,7 @@ const ResponseModal: React.FC<{
               <h2 className="text-xl font-bold">Send Response</h2>
               <p className="text-purple-100 mt-1">{inquiry.referenceId}</p>
             </div>
-            <button
+            <button aria-label="Close"
               onClick={onClose}
               className="text-purple-100 hover:text-white"
             >

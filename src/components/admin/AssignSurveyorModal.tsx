@@ -199,7 +199,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
                 className="!w-[min(96vw,80rem)] !max-h-[94vh] !overflow-hidden !rounded-[2rem] !border !border-white/70 !bg-white/95 !p-0 !shadow-[0_32px_120px_rgba(15,23,42,0.25)] backdrop-blur-xl"
             >
                 <div className="flex max-h-[94vh] flex-col">
-                    <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-[#028835] via-emerald-500 to-teal-400" />
+                    <div className="h-1.5 w-full shrink-0 bg-gradient-to-r from-brand via-emerald-500 to-teal-400" />
 
                     <DialogHeader className="shrink-0 border-b border-slate-100 px-6 py-5 text-left sm:px-8">
                         <div className="flex items-start justify-between gap-4">
@@ -325,7 +325,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
                                     <div className="space-y-6">
                                         <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 space-y-3">
                                             <div>
-                                                <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                                <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                                     Policy Holder
                                                 </label>
                                                 <p className="mt-0.5 text-sm font-medium text-slate-800">
@@ -333,7 +333,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
                                                 </p>
                                             </div>
                                             <div>
-                                                <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                                <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                                     Address
                                                 </label>
                                                 <p className="mt-0.5 text-sm leading-relaxed text-slate-600">
@@ -431,7 +431,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
                                         </div>
                                     </>
                                 ) : (
-                                    <span className="text-xs text-slate-400">No surveyor selected</span>
+                                    <span className="text-xs text-slate-500">No surveyor selected</span>
                                 )}
                             </div>
 
@@ -450,7 +450,7 @@ const AssignSurveyorModal: React.FC<AssignSurveyorModalProps> = ({
                                         (isReassign && !newAssignmentData.instructions) ||
                                         assigning
                                     }
-                                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#028835] to-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand to-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {assigning ? (
                                         <>
