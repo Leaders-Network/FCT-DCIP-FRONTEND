@@ -103,6 +103,17 @@ const StatCard = ({ icon, label, value, color, subtitle }: StatCardProps) => (
     </div>
 );
 
+/** A usable display name, or null for blanks and the generic "Surveyor" placeholder. */
+const cleanSurveyorName = (value?: string | null): string | null => {
+    const name = (value || "").trim().replace(/\s+/g, " ");
+    if (!name || name.toLowerCase() === "surveyor") return null;
+    return name;
+};
+
+/** The backend defaults `rating` to 0 for surveyors nobody has rated yet. */
+const ratingFromProfile = (value: unknown): number | null =>
+    typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+
 const UnifiedSurveyorDashboard = () => {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [stats, setStats] = useState({
@@ -110,8 +121,9 @@ const UnifiedSurveyorDashboard = () => {
         assigned: 0,
         inProgress: 0,
         completed: 0,
-        rating: 0
+        rating: null as number | null,
     });
+    const [loadFailed, setLoadFailed] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [friendlyError, setFriendlyError] = useState<string | null>(null);
@@ -122,14 +134,8 @@ const UnifiedSurveyorDashboard = () => {
     }, []);
 
     useEffect(() => {
-        const safeName = (value?: string) => {
-            const name = (value || "").trim().replace(/\s+/g, " ");
-            if (!name || name.toLowerCase() === "surveyor") return null;
-            return name;
-        };
-
         const applyName = (value?: string) => {
-            const name = safeName(value);
+            const name = cleanSurveyorName(value);
             if (name) {
                 setSurveyorName(name);
                 localStorage.setItem("surveyorName", name);
@@ -153,17 +159,9 @@ const UnifiedSurveyorDashboard = () => {
             }
 
             const nameCookie = getCookie("surveyorName");
-            if (applyName(nameCookie || undefined)) return;
-
-            try {
-                const profileResponse = await getSurveyorProfile();
-                const surveyor = profileResponse?.data;
-                const firstName = surveyor?.userId?.firstname || "";
-                const lastName = surveyor?.userId?.lastname || "";
-                applyName(`${firstName} ${lastName}`);
-            } catch (error) {
-                // ignore
-            }
+            applyName(nameCookie || undefined);
+            // Otherwise fetchSurveyorData fills the name from the profile it
+            // already loads for the rating, so the profile is fetched once.
         };
 
         const onNameUpdated = () => {
@@ -180,35 +178,48 @@ const UnifiedSurveyorDashboard = () => {
         setLoading(true);
         setError(null);
         setFriendlyError(null);
+        setLoadFailed(false);
 
         try {
             const assignmentsResponse = await getSurveyorAssignments({ status: 'all', page: 1, limit: 100 });
+            const fetchedAssignments: Assignment[] = assignmentsResponse?.data?.assignments || [];
 
-            const fetchedAssignments = assignmentsResponse?.data?.assignments || [];
-            if (fetchedAssignments.length) {
-                setAssignments(fetchedAssignments);
-
-                const total = fetchedAssignments.length;
-                const assigned = fetchedAssignments.filter((a: Assignment) => a.status === 'assigned').length;
-                const inProgress = fetchedAssignments.filter((a: Assignment) =>
-                    a.status === 'accepted' || a.status === 'in_progress'
-                ).length;
-                const completed = fetchedAssignments.filter((a: Assignment) => a.status === 'completed').length;
-
-                setStats({
-                    total,
-                    assigned,
-                    inProgress,
-                    completed,
-                    rating: 4.5
-                });
-            } else {
-                setAssignments([]);
-                setFriendlyError("No surveyor assignments found. If this seems wrong, please contact the Gladfaith team.");
+            // One profile call supplies the rating and, when no name is stored
+            // yet, the display name. A missing or zero rating means "not rated".
+            let rating: number | null = null;
+            try {
+                const profileResponse = await getSurveyorProfile();
+                const surveyor = profileResponse?.data;
+                rating = ratingFromProfile(surveyor?.rating);
+                const profileName = cleanSurveyorName(
+                    `${surveyor?.userId?.firstname || ""} ${surveyor?.userId?.lastname || ""}`
+                );
+                if (profileName) {
+                    // Keep a name already resolved from storage; only replace the placeholder.
+                    setSurveyorName((prev) => cleanSurveyorName(prev) ?? profileName);
+                    if (!cleanSurveyorName(localStorage.getItem("surveyorName"))) {
+                        localStorage.setItem("surveyorName", profileName);
+                    }
+                }
+            } catch {
+                rating = null;
             }
+
+            // No assignments is a normal state, shown by the list's empty state.
+            setAssignments(fetchedAssignments);
+            setStats({
+                total: fetchedAssignments.length,
+                assigned: fetchedAssignments.filter((a) => a.status === 'assigned').length,
+                inProgress: fetchedAssignments.filter((a) =>
+                    a.status === 'accepted' || a.status === 'in_progress'
+                ).length,
+                completed: fetchedAssignments.filter((a) => a.status === 'completed').length,
+                rating,
+            });
         } catch (err) {
+            setLoadFailed(true);
             setError("Failed to load dashboard data. Please try again later.");
-            setFriendlyError("We couldn't load your survey dashboard right now. Please refresh or contact the Gladfaith team.");
+            setFriendlyError("We could not load your assignments. Check your connection and try again.");
         } finally {
             setLoading(false);
         }
@@ -216,6 +227,9 @@ const UnifiedSurveyorDashboard = () => {
 
     const firstName = surveyorName.split(" ")[0];
     const recentAssignments = assignments.slice(0, 5);
+    // After a failed load the counts are unknown, not zero.
+    const statValue = (value: number) => (loadFailed ? '—' : value);
+    const ratingText = stats.rating === null ? 'Not rated yet' : `${stats.rating.toFixed(1)}/5.0`;
 
     const getStatusBadge = (status: string) => {
         const baseClasses = "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium shadow-sm";
@@ -313,7 +327,7 @@ const UnifiedSurveyorDashboard = () => {
     return (
         <div className="space-y-6 sm:space-y-8">
             {friendlyError && (
-                <DashboardErrorBanner message={friendlyError} />
+                <DashboardErrorBanner message={friendlyError} onRetry={fetchSurveyorData} />
             )}
 
             {/* Header */}
@@ -329,10 +343,10 @@ const UnifiedSurveyorDashboard = () => {
                     <div className="sm:text-right">
                         <div className="flex items-center sm:justify-end space-x-2">
                             <Award className="w-5 h-5" />
-                            <span className="text-xl font-bold">{stats.rating}</span>
-                            <span className="text-sm opacity-75">/5.0</span>
+                            <span className="text-xl font-bold">{stats.rating === null ? '—' : stats.rating.toFixed(1)}</span>
+                            {stats.rating !== null && <span className="text-sm opacity-75">/5.0</span>}
                         </div>
-                        <p className="text-sm mt-1 opacity-75">Your Rating</p>
+                        <p className="text-sm mt-1 opacity-75">{stats.rating === null ? "Not rated yet" : "Your rating"}</p>
                     </div>
                 </div>
             </div>
@@ -352,11 +366,11 @@ const UnifiedSurveyorDashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
-                <StatCard icon={FileText} label="Total Assignments" value={stats.total} color="blue" />
-                <StatCard icon={Clock} label="New Assignments" value={stats.assigned} color="yellow" />
-                <StatCard icon={ClipboardList} label="In Progress" value={stats.inProgress} color="purple" />
-                <StatCard icon={CheckCircle} label="Completed" value={stats.completed} color="green" />
-                <StatCard icon={Award} label="Rating" value={`${stats.rating}/5.0`} color="orange" subtitle="Performance score" />
+                <StatCard icon={FileText} label="Total Assignments" value={statValue(stats.total)} color="blue" />
+                <StatCard icon={Clock} label="New Assignments" value={statValue(stats.assigned)} color="yellow" />
+                <StatCard icon={ClipboardList} label="In Progress" value={statValue(stats.inProgress)} color="purple" />
+                <StatCard icon={CheckCircle} label="Completed" value={statValue(stats.completed)} color="green" />
+                <StatCard icon={Award} label="Rating" value={ratingText} color="orange" subtitle="Performance score" />
             </div>
 
             {/* Recent Assignments */}
@@ -456,9 +470,13 @@ const UnifiedSurveyorDashboard = () => {
                     ) : (
                         <div className="m-4 rounded-3xl border border-dashed border-gray-200 bg-slate-50/70 p-12 text-center text-gray-500">
                             <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                            <h3 className="mt-4 text-lg font-medium text-gray-900">No assignments yet</h3>
+                            <h3 className="mt-4 text-lg font-medium text-gray-900">
+                                {loadFailed ? "Assignments could not be loaded" : "No assignments yet"}
+                            </h3>
                             <p className="mt-1 text-sm text-gray-500">
-                                New assignments will appear here when they are assigned to you
+                                {loadFailed
+                                    ? "Use Try again above to reload your assignments."
+                                    : "New survey assignments for your LGA appear here as soon as they are routed to you."}
                             </p>
                         </div>
                     )}
@@ -510,7 +528,7 @@ const UnifiedSurveyorDashboard = () => {
                         </div>
                         <div>
                             <h3 className="font-semibold text-gray-900">Performance</h3>
-                            <p className="text-sm text-gray-500">Rating: {stats.rating}/5.0</p>
+                            <p className="text-sm text-gray-500">Rating: {ratingText}</p>
                         </div>
                     </div>
                 </div>
