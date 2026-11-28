@@ -74,13 +74,13 @@ const NewPassword = () => {
       <h2 className="text-xl md:text-3xl font-bold mb-7">
         Enter new password
       </h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {error && <p role="alert" className="text-red-600 mb-4">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <Input
-            label=""
+            label="New password"
             type="password"
-            placeholder="Enter new password"
+            autoComplete="new-password"
             value={newpassword}
             handleChange={setNewPassword}
             required
@@ -88,9 +88,9 @@ const NewPassword = () => {
         </div>
         <div className="mb-6">
           <Input
-            label=""
+            label="Confirm new password"
             type="password"
-            placeholder="Confirm new password"
+            autoComplete="new-password"
             value={confirmPassword}
             handleChange={setConfirmPassword}
             required

@@ -40,7 +40,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
           src="/abuja-bg.png"
           alt="Dashboard background illustration"
           fill
-          className="object-cover opacity-50 scale-105 transition-transform duration-[20s] ease-out hover:scale-110"
+          className="object-cover opacity-50 scale-105 transition-transform [transition-duration:20s] ease-out hover:scale-110"
           priority
         />
         {/* Modern multi-layer gradient overlay for depth */}

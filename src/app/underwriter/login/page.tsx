@@ -95,7 +95,7 @@ export default function UnderwriterAdminLogin() {
                 <img
                     src="/bg-hero-11.jpg"
                     alt="Underwriter dashboard background"
-                    className="absolute inset-0 object-cover w-full h-full opacity-50 scale-105 transition-transform duration-[20s] ease-out hover:scale-110"
+                    className="absolute inset-0 object-cover w-full h-full opacity-50 scale-105 transition-transform [transition-duration:20s] ease-out hover:scale-110"
                 />
                 {/* Modern multi-layer gradient overlay for depth */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/90 via-black/60 to-black/90 mix-blend-multiply" />
