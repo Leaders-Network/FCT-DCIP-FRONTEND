@@ -60,9 +60,9 @@ const AdminLogin: React.FC = () => {
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <Input
-            label=""
+            label="Email address"
             type="email"
-            placeholder="Enter your email Address"
+            autoComplete="email"
             value={email}
             handleChange={setEmail}
             required
@@ -70,15 +70,15 @@ const AdminLogin: React.FC = () => {
         </div>
         <div className="mb-6">
           <Input
-            label=""
+            label="Password"
             type="password"
-            placeholder="Enter your password"
+            autoComplete="current-password"
             value={password}
             handleChange={setPassword}
             required
           />
         </div>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {error && <p role="alert" className="text-red-600 mb-4">{error}</p>}
         <div className="flex items-center justify-between mb-6">
           <Button
             title="Log-in"

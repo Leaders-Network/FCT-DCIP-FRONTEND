@@ -38,7 +38,7 @@ const HowItWorks = () => {
             Process Overview
           </h2>
           <h3 data-aos="fade-up" data-aos-delay="100" className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 tracking-tight">
-            How FCT-DCIP Works
+            How the Builders Liability Portal Works
           </h3>
           <p data-aos="fade-up" data-aos-delay="200" className="text-lg text-slate-600">
             A streamlined and secure process to ensure compliance, safety, and comprehensive insurance coverage for your construction projects.

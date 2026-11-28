@@ -136,7 +136,7 @@ async function searchAPI(searchQuery: string, userType: string): Promise<SearchR
                             results.push({
                                 id: `employee-${employee._id}`,
                                 title: `${employee.firstname || ''} ${employee.lastname || ''}`.trim(),
-                                subtitle: `${employee.employeeRole?.role || 'Staff'} | ${employee.email || 'No email'}`,
+                                subtitle: `${employee.employeeRole?.role || 'Employee'} | ${employee.email || 'No email'}`,
                                 type: 'user',
                                 url: userType === 'admin' ? `/admin/dashboard/administrators/${employee._id}` : `/nia-admin/administrators/${employee._id}`,
                                 icon: <Users className="h-5 w-5 text-indigo-600" />,

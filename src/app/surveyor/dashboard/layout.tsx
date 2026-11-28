@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import SurveyorSidebar from "@/components/surveyor/SurveyorSidebar";
 import SurveyorHeader from "@/components/surveyor/SurveyorHeader";
 import { NotificationProvider } from "@/context/NotificationContext";
+import RequireSession from "@/components/shared/RequireSession";
 
 interface SurveyorLayoutProps {
   children: React.ReactNode;
@@ -37,6 +38,7 @@ const SurveyorLayout: React.FC<SurveyorLayoutProps> = ({ children }) => {
   }, [pathname, isMobile]);
 
   return (
+    <RequireSession area="surveyor">
     <NotificationProvider>
       <div className="flex h-screen min-w-0 gap-0 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-cyan-50/20 p-0 sm:gap-3 sm:p-4 print:block print:h-auto print:bg-white print:p-0">
         {/* Mobile Overlay */}
@@ -61,6 +63,7 @@ const SurveyorLayout: React.FC<SurveyorLayoutProps> = ({ children }) => {
         </div>
       </div>
     </NotificationProvider>
+    </RequireSession>
   );
 };
 

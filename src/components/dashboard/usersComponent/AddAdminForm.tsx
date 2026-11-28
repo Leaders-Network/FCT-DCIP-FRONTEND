@@ -189,7 +189,6 @@ const AddAdminForm: React.FC<AddAdminFormProps> = ({ isOpen, onClose, onAdminAdd
                       Super Admin
                     </option>
                     <option value="67097fb4f07f5547278be6a4">Admin</option>
-                    <option value="67097fb4f07f5547278be6a5">Staff</option>
                   </select>
                   <label className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 left-4 z-10 origin-[0] peer-focus:text-green-500">
                     Role

@@ -29,14 +29,14 @@ const Page = () => {
                     <main className="grid w-full max-w-5xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
                         <section className="space-y-6 text-center lg:text-left">
                             <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-200 backdrop-blur">
-                                Verify access
+                                Reset password
                             </p>
                             <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-5xl">
-                                Confirm your sign-in with a one-time code.
+                                Check your email for a reset code.
                             </h2>
                             <p className="max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
-                                We use OTP verification to keep your surveyor account secure while giving you a
-                                fast path back into the dashboard.
+                                Enter the code we sent to confirm it is you, then choose a new password for your
+                                surveyor account.
                             </p>
                         </section>
 

@@ -89,7 +89,7 @@ const Header = () => {
                   Builders Liability
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-green-600 font-bold">
-                  FCT-DCIP Portal
+                  Portal
                 </span>
               </div>
             </Link>

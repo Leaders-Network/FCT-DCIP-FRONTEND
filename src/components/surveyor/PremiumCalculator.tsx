@@ -340,7 +340,7 @@ export default function PremiumCalculator() {
                         <div>
                             <h1 className="text-xl font-bold sm:text-2xl">Premium Calculator</h1>
                             <p className="text-green-100 text-sm mt-0.5">
-                                FCT-DCIP Builder Liability — Surveyor Risk Assessment Tool
+                                Builders Liability Portal — Surveyor Risk Assessment Tool
                             </p>
                         </div>
                     </div>
