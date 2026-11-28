@@ -32,7 +32,7 @@ export interface Employee {
   updatedAt: string;
 }
 
-export type RoleType = 'Super-admin' | 'Admin' | 'Staff' | 'Surveyor';
+export type RoleType = 'Super-admin' | 'Admin' | 'Surveyor';
 
 export const enum UserRoles {
   SUPER_ADMIN = "67097fb3f07f5547278be69b",

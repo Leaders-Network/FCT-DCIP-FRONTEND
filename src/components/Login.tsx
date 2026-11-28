@@ -7,7 +7,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import { z } from "zod";
 import { useAuth } from "@/context/useAuth";
 import { toast } from "sonner";
-import ChatWidget from "./ChatWidget";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -78,7 +77,7 @@ export function Login() {
             alt={`Background ${index + 1}`}
             fill
             priority={index === 0}
-            className={`object-cover transition-opacity duration-[2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
+            className={`object-cover transition-opacity [transition-duration:2000ms] ${index === currentImage ? "opacity-100" : "opacity-0"}`}
           />
         ))}
         {/* Modern multi-layer gradient overlay for depth */}
@@ -380,7 +379,6 @@ function LoginButton({ email, password, validateForm }: { email: string; passwor
           </>
         )}
       </button>
-      <ChatWidget />
     </>
   );
 }

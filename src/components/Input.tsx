@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, useState } from 'react';
+import React, { InputHTMLAttributes, useId, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -10,6 +10,8 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChan
 
 const Input: React.FC<InputProps> = ({ label, value, handleChange, action, type, ...props }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const generatedId = useId();
+  const inputId = props.id ?? generatedId;
   const isPasswordField = type === 'password';
   const inputType = isPasswordField ? (showPassword ? 'text' : 'password') : type;
 
@@ -21,6 +23,7 @@ const Input: React.FC<InputProps> = ({ label, value, handleChange, action, type,
     <div className="mb-4 relative">
       <input
         {...props}
+        id={inputId}
         type={inputType}
         value={value}
         onChange={(e) => handleChange(e.target.value)}
@@ -28,7 +31,7 @@ const Input: React.FC<InputProps> = ({ label, value, handleChange, action, type,
         className="peer w-full p-3 md:p-4 border border-gray-300 outline-none bg-gray-100 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent pr-12"
       />
       <label
-        htmlFor={props.id}
+        htmlFor={inputId}
         className="absolute text-sm text-gray-500 duration-300 transform -translate-y-1/2 top-1/2 left-4 z-10 origin-[0] 
                    peer-focus:text-xs peer-focus:top-2 peer-focus:translate-y-0
                    peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0

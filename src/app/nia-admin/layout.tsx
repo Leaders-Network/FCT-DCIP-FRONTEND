@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import NIAAdminSidebar from '@/components/nia-admin/NIAAdminSidebar';
 import NIAAdminHeader from '@/components/nia-admin/NIAAdminHeader';
 import { NotificationProvider } from '@/context/NotificationContext';
+import RequireSession from "@/components/shared/RequireSession";
 
 interface NIAAdminLayoutProps {
     children: React.ReactNode;
@@ -50,6 +51,7 @@ const NIAAdminLayout: React.FC<NIAAdminLayoutProps> = ({ children }) => {
     }
 
     return (
+        <RequireSession area="nia-admin">
         <NotificationProvider>
             <div className="flex h-screen min-w-0 gap-0 bg-gradient-to-br from-slate-50 via-violet-50/30 to-cyan-50/20 p-0 sm:gap-3 sm:p-4 print:block print:h-auto print:bg-white print:p-0">
                 {/* Mobile Overlay */}
@@ -79,6 +81,7 @@ const NIAAdminLayout: React.FC<NIAAdminLayoutProps> = ({ children }) => {
                 </div>
             </div>
         </NotificationProvider>
+        </RequireSession>
     );
 };
 
