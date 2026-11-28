@@ -108,7 +108,7 @@ const NIASurveyorManagement: React.FC<NIASurveyorManagementProps> = ({
                                         'View surveyor details'}
                             </p>
                         </div>
-                        <button
+                        <button aria-label="Close"
                             onClick={onClose}
                             className="text-blue-100 hover:text-white transition-colors"
                         >

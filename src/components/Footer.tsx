@@ -1,7 +1,16 @@
 import React from "react";
 import Link from "next/link";
-import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, Linkedin } from "lucide-react";
+import { activeSocialLinks } from "@/constants/socialLinks";
 import Image from "next/image";
+
+const SOCIAL_ICONS = {
+  facebook: Facebook,
+  instagram: Instagram,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  youtube: Youtube,
+} as const;
 
 const Footer = () => {
   return (
@@ -71,20 +80,25 @@ const Footer = () => {
             <p className="mb-2">+234 806 006 0826</p>
             <p className="mb-2">dsasore01@gmail.com</p>
             <p>Zone 6, Juba Street, Wuse, Development control Abuja</p>
-            <div className="flex space-x-4 mt-4">
-              <a href="#" className="hover:text-green-300 transition-colors">
-                <Facebook />
-              </a>
-              <a href="#" className="hover:text-green-300 transition-colors">
-                <Twitter />
-              </a>
-              <a href="#" className="hover:text-green-300 transition-colors">
-                <Instagram />
-              </a>
-              <a href="#" className="hover:text-green-300 transition-colors">
-                <Youtube />
-              </a>
-            </div>
+            {activeSocialLinks().length > 0 && (
+              <div className="flex space-x-4 mt-4">
+                {activeSocialLinks().map((link) => {
+                  const Icon = SOCIAL_ICONS[link.network];
+                  return (
+                    <a
+                      key={link.network}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={link.label}
+                      className="hover:text-green-300 transition-colors"
+                    >
+                      <Icon aria-hidden="true" />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
         <div className="border-t border-green-700 mt-8 pt-8 text-center">

@@ -417,7 +417,7 @@ const MergedReportDetailsModal: React.FC<MergedReportDetailsModalProps> = ({
             <FileText className="w-6 h-6 text-blue-600" />
             <h2 className="text-xl font-semibold text-gray-900">Merged Report Details</h2>
           </div>
-          <button
+          <button aria-label="Close"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
