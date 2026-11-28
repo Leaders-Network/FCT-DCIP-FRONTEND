@@ -18,7 +18,7 @@ const InsuranceOptions = () => {
             <div className="relative rounded-[2.5rem] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
               <Image
                 src="/about.png"
-                alt="FCT-DCIP Team"
+                alt="Builders Liability Portal team"
                 width={700}
                 height={500}
                 className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
@@ -56,7 +56,7 @@ const InsuranceOptions = () => {
           {/* Right Column: Text Content */}
           <div data-aos="fade-left" data-aos-duration="1000" data-aos-delay="200" className="w-full lg:w-1/2">
             <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-600 mb-3">
-              About FCT-DCIP
+              About the Builders Liability Portal
             </h2>
             <h3 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight leading-tight">
               Securing Abuja's <br className="hidden lg:block"/> Construction Future
